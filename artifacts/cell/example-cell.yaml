@@ -1,0 +1,14 @@
+apiVersion: vick.wso2.com/v1alpha1
+kind: Cell
+metadata:
+  name: my-cell
+spec:
+  # Currently not applied
+  gateway:
+    http:
+      port: 80
+      routes:
+      - match:
+        - uri: /foo
+        - uri: /bar
+        service: server-time-us
