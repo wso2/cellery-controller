@@ -1,0 +1,151 @@
+# todo: check possibility of auto generation
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    istio-injection: enabled
+  name: vick-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vick-controller
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - namespaces
+  - secrets
+  - configmaps
+  - endpoints
+  - services
+  - events
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+#- apiGroups:
+#  - extensions
+#  resources:
+#  - deployments
+#  verbs:
+#  - get
+#  - list
+#  - create
+#  - update
+#  - delete
+#  - patch
+#  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
+  - vick.wso2.com
+  resources:
+  - cells
+  - services
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vick-controller
+  namespace: vick-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: vick-system-controller-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vick-controller
+subjects:
+- kind: ServiceAccount
+  name: vick-controller
+  namespace: vick-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: cells.vick.wso2.com
+spec:
+  group: vick.wso2.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Cell
+    plural: cells
+    singular: cell
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: services.vick.wso2.com
+spec:
+  group: vick.wso2.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Service
+    plural: services
+    singular: service
+    shortNames:
+    - vservice
+    - vsvc
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: vick-controller
+  namespace: vick-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vick-controller
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: vick-controller
+    spec:
+      containers:
+      - name: vick-controller
+        image: "mirage20/vick-controller:latest"
+      serviceAccountName: vick-controller
