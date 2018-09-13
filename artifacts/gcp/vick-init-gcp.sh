@@ -58,6 +58,9 @@ echo "Installing Knative"
 #KNATIVE_HOME=/Users/vickdev/wso2/VICK/vick-init/knative-0.1.1
 #kubectl apply -f $KNATIVE_HOME/release.yaml
 
+#Install nginx-ingress for control plane ingress
+kubectl apply -f mandatory.yaml
+
 #Init VICK
 echo "Installing VICK"
 #kubectl apply -f $VICK_HOME/vic-init.yaml
