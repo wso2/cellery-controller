@@ -35,7 +35,7 @@ spec:
 #Create credential for docker registry docker.wso2.com.
 apiVersion: v1
 data:
-  .dockerconfigjson: eyJhdXRocyI6eyJkb2NrZXIud3NvMi5jb20iOnsidXNlcm5hbWUiOiJ2aWNrLXNldHVwQHdzbzIuY29tIiwicGFzc3dvcmQiOiJGU3k0QFdZeTZEeldidnoiLCJlbWFpbCI6InZpY2stc2V0dXBAd3NvMi5jb20iLCJhdXRoIjoiZG1samF5MXpaWFIxY0VCM2MyOHlMbU52YlRwR1UzazBRRmRaZVRaRWVsZGlkbm89In19fQ==
+  .dockerconfigjson: xxxx==
 kind: Secret
 metadata:
   name: wso2creds
