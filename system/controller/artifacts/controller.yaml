@@ -1,0 +1,21 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: vick-controller
+  namespace: vick-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vick-controller
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: vick-controller
+    spec:
+      containers:
+      - name: vick-controller
+        image: "mirage20/vick-controller:latest"
+      serviceAccountName: vick-controller

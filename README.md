@@ -21,7 +21,7 @@
         
 ### Installing VICK
 
-    kubectl apply -f https://raw.githubusercontent.com/Mirage20/vick-test/master/artifacts/vick.yaml
+    kubectl apply -f https://raw.githubusercontent.com/wso2/product-vick/master/build/target/vick.yaml
     
 * Wait until vick controller get started. Run the following command for watch the pod status
 
@@ -49,7 +49,7 @@ spec:
 ```
 Or use
 
-    kubectl apply -f https://raw.githubusercontent.com/Mirage20/vick-test/master/artifacts/cell/example-cell.yaml
+    kubectl apply -f https://raw.githubusercontent.com/wso2/product-vick/master/samples/cell/example-cell.yaml
 
 ### Deploying a Service to the Cell
 
@@ -69,7 +69,7 @@ spec:
 ```
 Or use
 
-    kubectl apply -f https://raw.githubusercontent.com/Mirage20/vick-test/master/artifacts/service/example-service.yaml
+    kubectl apply -f https://raw.githubusercontent.com/wso2/product-vick/master/samples/cell/example-service.yaml
 
 ### Check the deployment using kubectl
 
@@ -99,8 +99,8 @@ and send a request
 
 NOTE: This will also delete all the services within that cell
 
-    kubectl delete -f https://raw.githubusercontent.com/Mirage20/vick-test/master/artifacts/cell/example-cell.yaml
+    kubectl delete -f https://raw.githubusercontent.com/wso2/product-vick/master/samples/cell/example-cell.yaml
 
 ### Uninstall VICK
 
-    kubectl delete -f https://raw.githubusercontent.com/Mirage20/vick-test/master/artifacts/vick.yaml
+    kubectl delete -f https://raw.githubusercontent.com/wso2/product-vick/master/build/target/vick.yaml
