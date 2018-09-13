@@ -68,12 +68,13 @@ func main() {
 	vickInformerFactory := vickinformers.NewSharedInformerFactory(vickClient, time.Second*30)
 
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
+	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
 	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
 	cellInformer := vickInformerFactory.Vick().V1alpha1().Cells()
 
 	// Create crd controllers
-	cellController := cell.NewController(kubeClient, cellInformer)
+	cellController := cell.NewController(kubeClient, cellInformer, networkPolicyInformer)
 	serviceController := service.NewController(kubeClient, vickClient, k8sServiceInformer, cellInformer, serviceInformer, deploymentInformer)
 
 	// Start informers
@@ -86,6 +87,7 @@ func main() {
 		deploymentInformer.Informer().HasSynced,
 		k8sServiceInformer.Informer().HasSynced,
 		cellInformer.Informer().HasSynced,
+		networkPolicyInformer.Informer().HasSynced,
 		serviceInformer.Informer().HasSynced); !ok {
 		glog.Fatal("failed to wait for caches to sync")
 	}

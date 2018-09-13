@@ -20,4 +20,5 @@ package resources
 
 const (
 	istioSidecarInjectAnnotation = "sidecar.istio.io/inject"
+	CellServiceTypeService = "user-service"
 )

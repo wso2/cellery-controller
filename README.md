@@ -2,7 +2,8 @@
 
 ### Prerequisite
 
-* Kubernetes v1.10.5 cluster with Istio 1.0.1 installed
+* Kubernetes v1.10.5 cluster with Istio 1.0.1 installed or Kubernetes v1.11.3 cluster with Istio 1.0.2 installed.
+* Kubernetes network plugin. (Ex: Calico)
  
 <!--
 ###Starting a cluster

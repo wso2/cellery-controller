@@ -20,6 +20,7 @@ package cell
 
 import (
 	"fmt"
+	"github.com/wso2/product-vick/pkg/controller/cell/resources"
 
 	"github.com/golang/glog"
 	"github.com/wso2/product-vick/pkg/controller"
@@ -32,22 +33,27 @@ import (
 
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/pkg/client/informers/externalversions/vick/v1alpha1"
+	networkv1informers "k8s.io/client-go/informers/networking/v1"
+
 	listers "github.com/wso2/product-vick/pkg/client/listers/vick/v1alpha1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	networkv1listers "k8s.io/client-go/listers/networking/v1"
 )
 
 type cellHandler struct {
-	cellLister    listers.CellLister
-	deploymentLister appsv1listers.DeploymentLister
-	k8sServiceLister corev1listers.ServiceLister
-	kubeclientset    kubernetes.Interface
+	cellLister          listers.CellLister
+	deploymentLister    appsv1listers.DeploymentLister
+	networkPilicyLister networkv1listers.NetworkPolicyLister
+	k8sServiceLister    corev1listers.ServiceLister
+	kubeClient          kubernetes.Interface
 }
 
-func NewController(kubeClient kubernetes.Interface, cellInformer vickinformers.CellInformer) *controller.Controller {
+func NewController(kubeClient kubernetes.Interface, cellInformer vickinformers.CellInformer, networkPolicyInformer networkv1informers.NetworkPolicyInformer) *controller.Controller {
 	h := &cellHandler{
-		kubeclientset:    kubeClient,
-		cellLister:    cellInformer.Lister(),
+		kubeClient:          kubeClient,
+		cellLister:          cellInformer.Lister(),
+		networkPilicyLister: networkPolicyInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
 
@@ -73,11 +79,22 @@ func (h *cellHandler) Handle(key string) error {
 	cell, err := h.cellLister.Cells(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			runtime.HandleError(fmt.Errorf("service '%s' in work queue no longer exists", key))
+			runtime.HandleError(fmt.Errorf("cell '%s' in work queue no longer exists", key))
 			return nil
 		}
 		return err
 	}
-	glog.Infof("Found service %+v", cell)
+	glog.Infof("Found cell %+v", cell)
+
+	networkPoliy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
+	if errors.IsNotFound(err) {
+		networkPoliy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
+	}
+
+	if err != nil {
+		return err
+	}
+
+	glog.Infof("NetworkPolicy created %+v", networkPoliy)
 	return nil
 }

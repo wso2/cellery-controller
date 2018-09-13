@@ -16,12 +16,9 @@
  * under the License.
  */
 
-package vick
+package resources
 
 const (
-	GroupName = "vick.wso2.com"
 
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
+	cellServiceTypeGateway = "cell-gateway"
 )
