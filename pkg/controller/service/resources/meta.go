@@ -25,9 +25,11 @@ import (
 )
 
 func createLabels(service *v1alpha1.Service) map[string]string {
-	labels := make(map[string]string, len(service.ObjectMeta.Labels)+1)
+	labels := make(map[string]string, len(service.ObjectMeta.Labels)+3)
 
 	labels[vick.ServiceNameLabelKey] = service.Name
+	labels[vick.CellNameLabelKey] = service.Spec.Cell
+	labels[vick.CellServiceTypeLabelKey] = CellServiceTypeService
 	// order matters
 	// todo: update the code if override is not possible
 	for k, v := range service.ObjectMeta.Labels {

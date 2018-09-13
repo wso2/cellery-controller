@@ -16,12 +16,24 @@
  * under the License.
  */
 
-package vick
+package resources
 
-const (
-	GroupName = "vick.wso2.com"
-
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
+import (
+	"github.com/wso2/product-vick/pkg/apis/vick"
+	"github.com/wso2/product-vick/pkg/apis/vick/v1alpha1"
 )
+
+func createLabels(cell *v1alpha1.Cell) map[string]string {
+	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+1)
+
+	labels[vick.CellNameLabelKey] = cell.Name
+
+	for k, v := range cell.ObjectMeta.Labels {
+		labels[k] = v
+	}
+	return labels
+}
+
+func NetworkPolicyName(cell *v1alpha1.Cell) string {
+	return cell.Name + "-network"
+}
