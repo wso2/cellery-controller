@@ -1,0 +1,43 @@
+#vick start vick-init.yaml name
+#vick start command deploys the VICK controlplance in the vick namespace
+---
+#Create VICK namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vick-system
+  labels:
+    creator: vick-init
+---
+#Create service account for the pub-store deployment
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vicksvc-account
+  namespace: vick-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pub-store-volume-claim
+  namespace: vick-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ""
+  selector:
+    matchLabels:
+      purpose: apim-shared-deployment
+---
+#Create credential for docker registry docker.wso2.com.
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJkb2NrZXIud3NvMi5jb20iOnsidXNlcm5hbWUiOiJ2aWNrLXNldHVwQHdzbzIuY29tIiwicGFzc3dvcmQiOiJGU3k0QFdZeTZEeldidnoiLCJlbWFpbCI6InZpY2stc2V0dXBAd3NvMi5jb20iLCJhdXRoIjoiZG1samF5MXpaWFIxY0VCM2MyOHlMbU52YlRwR1UzazBRRmRaZVRaRWVsZGlkbm89In19fQ==
+kind: Secret
+metadata:
+  name: wso2creds
+  namespace: vick-system
+type: kubernetes.io/dockerconfigjson
