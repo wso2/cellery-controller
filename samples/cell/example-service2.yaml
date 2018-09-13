@@ -1,0 +1,10 @@
+apiVersion: vick.wso2.com/v1alpha1
+kind: Service
+metadata:
+  name: server-debug
+spec:
+  cell: my-cell
+  replicas: 1
+  image: docker.io/mirage20/k8s-debug-tools
+  containerPort: 8080
+  servicePort: 80
