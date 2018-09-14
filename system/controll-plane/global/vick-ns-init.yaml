@@ -32,12 +32,3 @@ spec:
     matchLabels:
       purpose: apim-shared-deployment
 ---
-#Create credential for docker registry docker.wso2.com.
-apiVersion: v1
-data:
-  .dockerconfigjson: xxxx==
-kind: Secret
-metadata:
-  name: wso2creds
-  namespace: vick-system
-type: kubernetes.io/dockerconfigjson
