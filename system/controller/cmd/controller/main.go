@@ -74,7 +74,7 @@ func main() {
 	cellInformer := vickInformerFactory.Vick().V1alpha1().Cells()
 
 	// Create crd controllers
-	cellController := cell.NewController(kubeClient, cellInformer, networkPolicyInformer)
+	cellController := cell.NewController(kubeClient, vickClient, cellInformer, serviceInformer, networkPolicyInformer)
 	serviceController := service.NewController(kubeClient, vickClient, k8sServiceInformer, cellInformer, serviceInformer, deploymentInformer)
 
 	// Start informers

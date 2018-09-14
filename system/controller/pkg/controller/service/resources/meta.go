@@ -43,11 +43,11 @@ func createSelector(service *v1alpha1.Service) *metav1.LabelSelector {
 }
 
 
-func deploymentName(service *v1alpha1.Service) string {
+func DeploymentName(service *v1alpha1.Service) string {
 	return service.Name + "-deployment"
 }
 
 
-func k8sServiceName(service *v1alpha1.Service) string {
+func K8sServiceName(service *v1alpha1.Service) string {
 	return service.Name + "-service"
 }

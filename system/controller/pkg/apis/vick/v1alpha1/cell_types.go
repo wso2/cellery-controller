@@ -41,7 +41,7 @@ type CellSpec struct {
 }
 
 type CellStatus struct {
-	AvailableReplicas int32 `json:"availableReplicas"`
+	ServiceCount int32 `json:"serviceCount"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -30,7 +30,7 @@ import (
 func CreateCoreService(service *v1alpha1.Service) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      k8sServiceName(service),
+			Name:      K8sServiceName(service),
 			Namespace: service.Namespace,
 			Labels:    createLabels(service),
 			OwnerReferences: []metav1.OwnerReference{

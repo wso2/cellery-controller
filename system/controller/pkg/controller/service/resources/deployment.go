@@ -32,7 +32,7 @@ func CreateAppDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName(service),
+			Name:      DeploymentName(service),
 			Namespace: service.Namespace,
 			Labels:    createLabels(service),
 			OwnerReferences: []metav1.OwnerReference{

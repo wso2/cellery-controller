@@ -20,17 +20,19 @@ package cell
 
 import (
 	"fmt"
-	"github.com/wso2/product-vick/system/controller/pkg/controller/cell/resources"
-
 	"github.com/golang/glog"
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/cell/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
 	networkv1informers "k8s.io/client-go/informers/networking/v1"
@@ -47,12 +49,16 @@ type cellHandler struct {
 	networkPilicyLister networkv1listers.NetworkPolicyLister
 	k8sServiceLister    corev1listers.ServiceLister
 	kubeClient          kubernetes.Interface
+	vickClient          vickclientset.Interface
+	serviceLister       listers.ServiceLister
 }
 
-func NewController(kubeClient kubernetes.Interface, cellInformer vickinformers.CellInformer, networkPolicyInformer networkv1informers.NetworkPolicyInformer) *controller.Controller {
+func NewController(kubeClient kubernetes.Interface, vickClient vickclientset.Interface, cellInformer vickinformers.CellInformer, serviceInformer vickinformers.ServiceInformer, networkPolicyInformer networkv1informers.NetworkPolicyInformer) *controller.Controller {
 	h := &cellHandler{
 		kubeClient:          kubeClient,
+		vickClient:          vickClient,
 		cellLister:          cellInformer.Lister(),
+		serviceLister:       serviceInformer.Lister(),
 		networkPilicyLister: networkPolicyInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
@@ -76,7 +82,7 @@ func (h *cellHandler) Handle(key string) error {
 		glog.Errorf("invalid resource key: %s", key)
 		return nil
 	}
-	cell, err := h.cellLister.Cells(namespace).Get(name)
+	cellOriginal, err := h.cellLister.Cells(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			runtime.HandleError(fmt.Errorf("cell '%s' in work queue no longer exists", key))
@@ -84,17 +90,37 @@ func (h *cellHandler) Handle(key string) error {
 		}
 		return err
 	}
-	glog.Infof("Found cell %+v", cell)
+	glog.Infof("Found cell %+v", cellOriginal)
+	cell := cellOriginal.DeepCopy()
 
-	networkPoliy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
+	networkPolicy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
 	if errors.IsNotFound(err) {
-		networkPoliy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
+		networkPolicy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
 	}
 
 	if err != nil {
 		return err
 	}
+	glog.Infof("NetworkPolicy created %+v", networkPolicy)
 
-	glog.Infof("NetworkPolicy created %+v", networkPoliy)
+	_, err = h.updateStatus(cell)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (h *cellHandler) updateStatus(cell *v1alpha1.Cell) (*v1alpha1.Cell, error) {
+	cell.Status.ServiceCount = 0
+	services, err := h.serviceLister.Services(cell.Namespace).List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+	for _, service := range services {
+		if metav1.IsControlledBy(service, cell) {
+			cell.Status.ServiceCount = cell.Status.ServiceCount + 1
+		}
+	}
+	return h.vickClient.VickV1alpha1().Cells(cell.Namespace).Update(cell)
 }

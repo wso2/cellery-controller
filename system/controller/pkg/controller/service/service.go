@@ -20,7 +20,6 @@ package service
 
 import (
 	"fmt"
-
 	"github.com/golang/glog"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
@@ -119,13 +118,13 @@ func (h *serviceHandler) Handle(key string) error {
 		return err
 	}
 	// Get the deployment with the name
-	deployment, err := h.deploymentLister.Deployments(service.Namespace).Get(service.Name)
+	deployment, err := h.deploymentLister.Deployments(service.Namespace).Get(resources.DeploymentName(service))
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(service.Namespace).Create(resources.CreateAppDeployment(service))
 	}
 
-	k8sService, err := h.k8sServiceLister.Services(service.Namespace).Get(service.Name)
+	k8sService, err := h.k8sServiceLister.Services(service.Namespace).Get(resources.K8sServiceName(service))
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(service.Namespace).Create(resources.CreateCoreService(service))
@@ -141,5 +140,17 @@ func (h *serviceHandler) Handle(key string) error {
 	glog.Infof("Deployment created %+v", deployment)
 	glog.Infof("Service created %+v", k8sService)
 
+	service.Status.OwnerCell = service.Spec.Cell
+	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+
+	_, err = h.updateStatus(service)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (h *serviceHandler) updateStatus(service *v1alpha1.Service) (*v1alpha1.Service, error) {
+	return h.vickClient.VickV1alpha1().Services(service.Namespace).Update(service)
 }
