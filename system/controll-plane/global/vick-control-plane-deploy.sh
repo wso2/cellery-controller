@@ -15,3 +15,9 @@ kubectl apply -f vick-apim-pub-store.yaml
 
 #Create pub-store ingress
 kubectl apply -f vick-apim-pub-store-ingress.yaml -n vick-system
+
+#Create gateway deployment and the service
+kubectl apply -f vick-apim-gw.yaml
+
+#Create gateway ingress
+kubectl apply -f vick-apim-gw-ingress.yaml -n vick-system

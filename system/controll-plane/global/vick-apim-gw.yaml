@@ -1,54 +1,15 @@
-#vick start vick-init.yaml name
-#vick start command deploys the VICK controlplance in the vick namespace
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: vick-system
-  labels:
-    creator: vick-init
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: vicksvc-account
-  namespace: vick-system
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pub-store-volume-claim
-  namespace: vick-system
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: ""
-  selector:
-    matchLabels:
-      purpose: apim-shared-deployment
----
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJkb2NrZXIud3NvMi5jb20iOnsidXNlcm5hbWUiOiJ2aWNrLXNldHVwQHdzbzIuY29tIiwicGFzc3dvcmQiOiJGU3k0QFdZeTZEeldidnoiLCJlbWFpbCI6InZpY2stc2V0dXBAd3NvMi5jb20iLCJhdXRoIjoiZG1samF5MXpaWFIxY0VCM2MyOHlMbU52YlRwR1UzazBRRmRaZVRaRWVsZGlkbm89In19fQ==
-kind: Secret
-metadata:
-  name: wso2creds
-  namespace: vick-system
-type: kubernetes.io/dockerconfigjson
----
+#Create APIM gateway deployment and the service
 #https://github.com/wso2/kubernetes-apim/blob/master/pattern-1/apim/wso2apim-deployment.yaml
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pub-store
+  name: gateway
   namespace: vick-system
 spec:
   selector:
     matchLabels:
-      deployment: pub-store
+      deployment: gateway
   replicas: 1
   minReadySeconds: 30
   strategy:
@@ -59,10 +20,10 @@ spec:
   template:
     metadata:
       labels:
-        deployment: pub-store
+        deployment: gateway
     spec:
       containers:
-      - name: pub-store
+      - name: gateway
         image: docker.wso2.com/wso2am:2.5.0
         livenessProbe:
           exec:
@@ -112,36 +73,35 @@ spec:
         volumeMounts:
  #       - name: apim-storage-volume
  #         mountPath: /home/wso2carbon/wso2am-2.5.0/repository/deployment/server
- #       - name: apim-conf
- #         mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
- #       - name: apim-conf-datasources
- #         mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/datasources
+        - name: apim-conf
+          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
+        - name: apim-conf-datasources
+          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/datasources
       serviceAccountName: "vicksvc-account"
       imagePullSecrets:
       - name: wso2creds
       volumes:
  #     - name: apim-storage-volume
  #       persistentVolumeClaim:
- #         claimName: pub-store-volume-claim
- #     - name: apim-conf
- #       configMap:
- #         name: apim-conf
- #     - name: apim-conf-datasources
- #       configMap:
- #         name: apim-conf-datasources
+ #         claimName: gateway-volume-claim
+      - name: apim-conf
+        configMap:
+          name: apim-conf
+      - name: apim-conf-datasources
+        configMap:
+          name: apim-conf-datasources
 ---
-#https://github.com/wso2/kubernetes-apim/blob/master/pattern-1/apim/wso2apim-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: pub-store
+  name: gateway
   labels:
-    app: pub-store
+    app: gateway
   namespace: vick-system
 spec:
   # label keys and values that must match in order to receive traffic for this service
   selector:
-    deployment: pub-store
+    deployment: gateway
   ports:
     # ports that this service should serve on
     -
