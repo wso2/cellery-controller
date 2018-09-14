@@ -13,3 +13,14 @@ spec:
     shortNames:
     - vservice
     - vsvc
+  additionalPrinterColumns:
+  - name: Cell
+    type: string
+    description: Owner cell of this service
+    JSONPath: .status.ownerCell
+  - name: Available-Replicas
+    type: integer
+    JSONPath: .status.availableReplicas
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp

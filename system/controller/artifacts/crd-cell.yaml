@@ -10,3 +10,11 @@ spec:
     kind: Cell
     plural: cells
     singular: cell
+  additionalPrinterColumns:
+  - name: Services
+    type: integer
+    description: Number of services in this cell
+    JSONPath: .status.serviceCount
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
