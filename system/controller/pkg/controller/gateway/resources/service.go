@@ -19,33 +19,31 @@
 package resources
 
 import (
-	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func createLabels(service *v1alpha1.Service) map[string]string {
-	labels := make(map[string]string, len(service.ObjectMeta.Labels)+1)
-
-	labels[vick.CellServiceLabelKey] = service.Name
-	// order matters
-	// todo: update the code if override is not possible
-	for k, v := range service.ObjectMeta.Labels {
-		labels[k] = v
+func CreateGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GatewayK8sServiceName(gateway),
+			Namespace: gateway.Namespace,
+			Labels:    createGatewayLabels(gateway),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateGatewayOwnerRef(gateway),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Name:       controller.HTTPServiceName,
+				Protocol:   corev1.ProtocolTCP,
+				Port:       gatewayServicePort,
+				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+			}},
+			Selector: createGatewayLabels(gateway),
+		},
 	}
-	return labels
-}
-
-func createSelector(service *v1alpha1.Service) *metav1.LabelSelector {
-	return &metav1.LabelSelector{MatchLabels: createLabels(service)}
-}
-
-
-func ServiceDeploymentName(service *v1alpha1.Service) string {
-	return service.Name + "-deployment"
-}
-
-
-func ServiceK8sServiceName(service *v1alpha1.Service) string {
-	return service.Name + "-service"
 }

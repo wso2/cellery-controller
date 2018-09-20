@@ -27,6 +27,7 @@ import (
 	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/cell"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/service"
 	"github.com/wso2/product-vick/system/controller/pkg/signals"
 	kubeinformers "k8s.io/client-go/informers"
@@ -63,19 +64,43 @@ func main() {
 		glog.Fatalf("Error building vick clientset: %s", err.Error())
 	}
 
-	// Create informers
+	// Create informer factories
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	vickInformerFactory := vickinformers.NewSharedInformerFactory(vickClient, time.Second*30)
 
+	// Create K8s informers
+	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
-	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
-	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
+
+	// Create VICK informers
 	cellInformer := vickInformerFactory.Vick().V1alpha1().Cells()
+	gatewayInformer := vickInformerFactory.Vick().V1alpha1().Gateways()
+	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
 
 	// Create crd controllers
-	cellController := cell.NewController(kubeClient, vickClient, cellInformer, serviceInformer, networkPolicyInformer)
-	serviceController := service.NewController(kubeClient, vickClient, k8sServiceInformer, cellInformer, serviceInformer, deploymentInformer)
+	cellController := cell.NewController(
+		kubeClient,
+		vickClient,
+		cellInformer,
+		gatewayInformer,
+		serviceInformer,
+		networkPolicyInformer,
+	)
+	gatewayController := gateway.NewController(
+		kubeClient,
+		vickClient,
+		deploymentInformer,
+		k8sServiceInformer,
+		gatewayInformer,
+	)
+	serviceController := service.NewController(
+		kubeClient,
+		vickClient,
+		deploymentInformer,
+		k8sServiceInformer,
+		serviceInformer,
+	)
 
 	// Start informers
 	go kubeInformerFactory.Start(stopCh)
@@ -84,16 +109,21 @@ func main() {
 	// Wait for cache sync
 	glog.Info("Waiting for informer caches to sync")
 	if ok := cache.WaitForCacheSync(stopCh,
-		deploymentInformer.Informer().HasSynced,
+		// Sync K8s informers
 		k8sServiceInformer.Informer().HasSynced,
-		cellInformer.Informer().HasSynced,
+		deploymentInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
-		serviceInformer.Informer().HasSynced); !ok {
+		// Sync K8s informers
+		cellInformer.Informer().HasSynced,
+		gatewayInformer.Informer().HasSynced,
+		serviceInformer.Informer().HasSynced,
+	); !ok {
 		glog.Fatal("failed to wait for caches to sync")
 	}
 
 	//Start controllers
 	go cellController.Run(threadsPerController, stopCh)
+	go gatewayController.Run(threadsPerController, stopCh)
 	go serviceController.Run(threadsPerController, stopCh)
 
 	// Prevent exiting the main process

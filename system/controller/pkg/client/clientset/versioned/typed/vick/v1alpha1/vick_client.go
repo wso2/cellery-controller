@@ -30,6 +30,7 @@ import (
 type VickV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	CellsGetter
+	GatewaysGetter
 	ServicesGetter
 }
 
@@ -40,6 +41,10 @@ type VickV1alpha1Client struct {
 
 func (c *VickV1alpha1Client) Cells(namespace string) CellInterface {
 	return newCells(c, namespace)
+}
+
+func (c *VickV1alpha1Client) Gateways(namespace string) GatewayInterface {
+	return newGateways(c, namespace)
 }
 
 func (c *VickV1alpha1Client) Services(namespace string) ServiceInterface {

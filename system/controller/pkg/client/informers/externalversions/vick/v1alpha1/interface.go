@@ -28,6 +28,8 @@ import (
 type Interface interface {
 	// Cells returns a CellInformer.
 	Cells() CellInformer
+	// Gateways returns a GatewayInformer.
+	Gateways() GatewayInformer
 	// Services returns a ServiceInformer.
 	Services() ServiceInformer
 }
@@ -46,6 +48,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Cells returns a CellInformer.
 func (v *version) Cells() CellInformer {
 	return &cellInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Gateways returns a GatewayInformer.
+func (v *version) Gateways() GatewayInformer {
+	return &gatewayInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Services returns a ServiceInformer.

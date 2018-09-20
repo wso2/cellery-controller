@@ -24,4 +24,9 @@ const (
 	ServiceNameLabelKey = GroupName + "/service-name"
 	CellNameLabelKey = GroupName + "/cell-name"
 	CellServiceTypeLabelKey = GroupName + "/service-type"
+
+	CellLabelKey = GroupName + "/cell"
+	CellGatewayLabelKey = GroupName + "/gateway"
+	CellServiceLabelKey = GroupName + "/service"
+
 )

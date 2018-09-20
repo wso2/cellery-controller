@@ -26,35 +26,67 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
+func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
-	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
+	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
+	one := int32(1)
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ServiceDeploymentName(service),
-			Namespace: service.Namespace,
-			Labels:    createLabels(service),
+			Name:      GatewayDeploymentName(gateway),
+			Namespace: gateway.Namespace,
+			Labels:    createGatewayLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateServiceOwnerRef(service),
+				*controller.CreateGatewayOwnerRef(gateway),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: service.Spec.Replicas,
-			Selector: createSelector(service),
+			Replicas: &one,
+			Selector: createGatewaySelector(gateway),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      createLabels(service),
+					Labels:      createGatewayLabels(gateway),
 					Annotations: podTemplateAnnotations,
 				},
 				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name:  "init-cell-gateway",
+							Image: "nipunaprashan/microgateway_init",
+							Args: []string{
+								"cell", "cell", "admin", "admin", "https://10.100.1.217:9443/",
+								"lib/platform/bre/security/ballerinaTruststore.p12", "ballerina",
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "targetdir",
+									MountPath: "/target",
+								},
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
-							Name:  service.Name,
-							Image: service.Spec.Image,
+							Name:  "cell-gateway",
+							Image: "nipunaprashan/microgateway",
 							Ports: []corev1.ContainerPort{{
-								ContainerPort: service.Spec.ContainerPort,
+								ContainerPort: gatewayContainerPort,
 							}},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "targetdir",
+									MountPath: "/target",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "targetdir",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{
+								},
+							},
 						},
 					},
 				},

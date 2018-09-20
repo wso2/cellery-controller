@@ -57,6 +57,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=vick, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("cells"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Vick().V1alpha1().Cells().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("gateways"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Vick().V1alpha1().Gateways().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("services"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Vick().V1alpha1().Services().Informer()}, nil
 

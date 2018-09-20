@@ -25,32 +25,29 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Service struct {
+type Gateway struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ServiceSpec   `json:"spec"`
-	Status ServiceStatus `json:"status"`
+	Spec   GatewaySpec   `json:"spec"`
+	Status GatewayStatus `json:"status"`
 }
 
-type ServiceSpec struct {
-	Cell          string `json:"cell"`
-	Name          string `json:"name"`
+type GatewaySpec struct {
 	Replicas      *int32 `json:"replicas"`
 	Image         string `json:"image"`
 	ContainerPort int32  `json:"containerPort"`
-	ServicePort   int32  `json:"servicePort"`
+	CellPort      int32  `json:"CellPort"`
 }
 
-type ServiceStatus struct {
-	OwnerCell         string `json:"ownerCell"`
-	AvailableReplicas int32  `json:"availableReplicas"`
+type GatewayStatus struct {
+	ServiceCount int32 `json:"serviceCount"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ServiceList struct {
+type GatewayList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Service `json:"items"`
+	Items           []Cell `json:"items"`
 }

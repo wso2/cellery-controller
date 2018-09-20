@@ -18,7 +18,24 @@
 
 package resources
 
-const (
-	istioSidecarInjectAnnotation = "sidecar.istio.io/inject"
-	CellServiceTypeService = "user-service"
+import (
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
+	return &v1alpha1.Gateway{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GatewayName(cell),
+			Namespace: cell.Namespace,
+			Labels:    createLabels(cell),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateCellOwnerRef(cell),
+			},
+		},
+		Spec: v1alpha1.GatewaySpec{
+
+		},
+	}
+}

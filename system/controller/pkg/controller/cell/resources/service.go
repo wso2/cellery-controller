@@ -18,7 +18,22 @@
 
 package resources
 
-const (
-
-	cellServiceTypeGateway = "cell-gateway"
+import (
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func CreateService(cell *v1alpha1.Cell, serviceSpec v1alpha1.ServiceSpec) *v1alpha1.Service {
+	return &v1alpha1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceSpec.Name,
+			Namespace: cell.Namespace,
+			Labels:    createLabels(cell),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateCellOwnerRef(cell),
+			},
+		},
+		Spec: serviceSpec,
+	}
+}

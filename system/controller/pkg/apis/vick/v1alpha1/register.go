@@ -48,6 +48,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Cell{},
 		&CellList{},
+		&Gateway{},
+		&GatewayList{},
 		&Service{},
 		&ServiceList{},
 	)

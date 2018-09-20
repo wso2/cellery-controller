@@ -22,4 +22,6 @@ package v1alpha1
 
 type CellExpansion interface{}
 
+type GatewayExpansion interface{}
+
 type ServiceExpansion interface{}

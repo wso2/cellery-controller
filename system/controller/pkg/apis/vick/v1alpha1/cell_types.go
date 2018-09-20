@@ -34,10 +34,8 @@ type Cell struct {
 }
 
 type CellSpec struct {
-	Replicas      *int32 `json:"replicas"`
-	Image         string `json:"image"`
-	ContainerPort int32 `json:"containerPort"`
-	CellPort   int32 `json:"CellPort"`
+	Gateway  GatewaySpec   `json:"gateway"`
+	Services []ServiceSpec `json:"services"`
 }
 
 type CellStatus struct {
@@ -49,5 +47,5 @@ type CellStatus struct {
 type CellList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items []Cell `json:"items"`
+	Items           []Cell `json:"items"`
 }

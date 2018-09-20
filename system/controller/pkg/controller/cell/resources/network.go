@@ -21,31 +21,42 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
-	"github.com/wso2/product-vick/system/controller/pkg/controller/service/resources"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
+
+	cellName := cell.Name
+	gatewayName := GatewayName(cell);
+	var serviceNames []string
+
+	servicesSpecs := cell.Spec.Services
+	for _, serviceSpec := range servicesSpecs {
+		serviceNames = append(serviceNames, serviceSpec.Name)
+	}
+
 	return &networkv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      NetworkPolicyName(cell),
 			Namespace: cell.Namespace,
 			Labels:    createLabels(cell),
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(cell, schema.GroupVersionKind{
-					Group:   v1alpha1.SchemeGroupVersion.Group,
-					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    "Cell",
-				}),
+				*controller.CreateCellOwnerRef(cell),
 			},
 		},
 		Spec: networkv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					vick.CellNameLabelKey:        cell.Name,
-					vick.CellServiceTypeLabelKey: resources.CellServiceTypeService,
+					vick.CellLabelKey: cellName,
+				},
+				MatchExpressions: []metav1.LabelSelectorRequirement{
+					{
+						Key:      vick.CellServiceLabelKey,
+						Operator: metav1.LabelSelectorOpIn,
+						Values:   serviceNames,
+					},
 				},
 			},
 			PolicyTypes: []networkv1.PolicyType{
@@ -57,16 +68,22 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									vick.CellNameLabelKey:        cell.Name,
-									vick.CellServiceTypeLabelKey: cellServiceTypeGateway,
+									vick.CellLabelKey:        cellName,
+									vick.CellGatewayLabelKey: gatewayName,
 								},
 							},
 						},
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									vick.CellNameLabelKey:        cell.Name,
-									vick.CellServiceTypeLabelKey: resources.CellServiceTypeService,
+									vick.CellLabelKey: cellName,
+								},
+								MatchExpressions: []metav1.LabelSelectorRequirement{
+									{
+										Key:      vick.CellServiceLabelKey,
+										Operator: metav1.LabelSelectorOpIn,
+										Values:   serviceNames,
+									},
 								},
 							},
 						},

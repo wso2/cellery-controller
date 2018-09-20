@@ -21,22 +21,27 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createLabels(cell *v1alpha1.Cell) map[string]string {
-	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+1)
-	labels[vick.CellLabelKey] = cell.Name
+func createGatewayLabels(gateway *v1alpha1.Gateway) map[string]string {
+	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+1)
+	labels[vick.CellGatewayLabelKey] = gateway.Name
 
-	for k, v := range cell.ObjectMeta.Labels {
+	for k, v := range gateway.ObjectMeta.Labels {
 		labels[k] = v
 	}
 	return labels
 }
 
-func NetworkPolicyName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-network"
+func createGatewaySelector(gateway *v1alpha1.Gateway) *metav1.LabelSelector {
+	return &metav1.LabelSelector{MatchLabels: createGatewayLabels(gateway)}
 }
 
-func GatewayName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-gateway"
+func GatewayDeploymentName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-deployment"
+}
+
+func GatewayK8sServiceName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-service"
 }

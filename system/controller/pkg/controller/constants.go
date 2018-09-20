@@ -16,27 +16,13 @@
  * under the License.
  */
 
-package resources
+package controller
 
-import (
-	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
-	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+const (
+	// Istio
+	IstioSidecarInjectAnnotation = "sidecar.istio.io/inject"
+
+	// Names
+	HTTPServiceName = "http"
+
 )
-
-func createLabels(cell *v1alpha1.Cell) map[string]string {
-	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+1)
-	labels[vick.CellLabelKey] = cell.Name
-
-	for k, v := range cell.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
-}
-
-func NetworkPolicyName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-network"
-}
-
-func GatewayName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-gateway"
-}

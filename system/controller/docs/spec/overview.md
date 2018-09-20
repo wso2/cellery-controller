@@ -9,3 +9,7 @@ a cell gateway, cell control pane.
 services are deployed into a specific cell and can access only via the cell gateway. 
 
 ![Cell](images/cell-communication.png)
+
+### CRD deployment inside the cluster
+
+![Deployment](images/crd-deployment.png)

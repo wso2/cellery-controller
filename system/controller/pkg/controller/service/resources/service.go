@@ -19,38 +19,31 @@
 package resources
 
 import (
-	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func CreateCoreService(service *v1alpha1.Service) *corev1.Service {
+func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      K8sServiceName(service),
+			Name:      ServiceK8sServiceName(service),
 			Namespace: service.Namespace,
 			Labels:    createLabels(service),
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(service, schema.GroupVersionKind{
-					Group:   v1alpha1.SchemeGroupVersion.Group,
-					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    "Service",
-				}),
+				*controller.CreateServiceOwnerRef(service),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
-				Name:       "http",
+				Name:       controller.HTTPServiceName,
 				Protocol:   corev1.ProtocolTCP,
 				Port:       service.Spec.ServicePort,
 				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: service.Spec.ContainerPort},
 			}},
-			Selector: map[string]string{
-				vick.ServiceNameLabelKey: service.Name,
-			},
+			Selector: createLabels(service),
 		},
 	}
 }

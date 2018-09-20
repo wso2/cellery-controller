@@ -35,30 +35,34 @@ import (
 	"k8s.io/client-go/tools/cache"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
-	networkv1informers "k8s.io/client-go/informers/networking/v1"
-
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
-	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	corev1listers "k8s.io/client-go/listers/core/v1"
+	networkv1informers "k8s.io/client-go/informers/networking/v1"
 	networkv1listers "k8s.io/client-go/listers/networking/v1"
 )
 
 type cellHandler struct {
-	cellLister          listers.CellLister
-	deploymentLister    appsv1listers.DeploymentLister
-	networkPilicyLister networkv1listers.NetworkPolicyLister
-	k8sServiceLister    corev1listers.ServiceLister
 	kubeClient          kubernetes.Interface
 	vickClient          vickclientset.Interface
+	networkPilicyLister networkv1listers.NetworkPolicyLister
+	cellLister          listers.CellLister
+	gatewayLister       listers.GatewayLister
 	serviceLister       listers.ServiceLister
 }
 
-func NewController(kubeClient kubernetes.Interface, vickClient vickclientset.Interface, cellInformer vickinformers.CellInformer, serviceInformer vickinformers.ServiceInformer, networkPolicyInformer networkv1informers.NetworkPolicyInformer) *controller.Controller {
+func NewController(
+	kubeClient kubernetes.Interface,
+	vickClient vickclientset.Interface,
+	cellInformer vickinformers.CellInformer,
+	gatewayInformer vickinformers.GatewayInformer,
+	serviceInformer vickinformers.ServiceInformer,
+	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
+) *controller.Controller {
 	h := &cellHandler{
 		kubeClient:          kubeClient,
 		vickClient:          vickClient,
 		cellLister:          cellInformer.Lister(),
 		serviceLister:       serviceInformer.Lister(),
+		gatewayLister:       gatewayInformer.Lister(),
 		networkPilicyLister: networkPolicyInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
@@ -93,19 +97,55 @@ func (h *cellHandler) Handle(key string) error {
 	glog.Infof("Found cell %+v", cellOriginal)
 	cell := cellOriginal.DeepCopy()
 
+	if err = h.handle(cell); err != nil {
+		return err
+	}
+
+	if _, err = h.updateStatus(cell); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	networkPolicy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
 	if errors.IsNotFound(err) {
 		networkPolicy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
-	}
-
-	if err != nil {
+		if err != nil {
+			glog.Errorf("Failed to create NetworkPolicy %v", err)
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 	glog.Infof("NetworkPolicy created %+v", networkPolicy)
 
-	_, err = h.updateStatus(cell)
-	if err != nil {
+	gateway, err := h.gatewayLister.Gateways(cell.Namespace).Get(resources.GatewayName(cell))
+	if errors.IsNotFound(err) {
+		gateway, err = h.vickClient.VickV1alpha1().Gateways(cell.Namespace).Create(resources.CreateGateway(cell))
+		if err != nil {
+			glog.Errorf("Failed to create Gateway %v", err)
+			return err
+		}
+	} else if err != nil {
 		return err
+	}
+	glog.Infof("Gateway created %+v", gateway)
+
+	servicesSpecs := cell.Spec.Services
+
+	for _, serviceSpec := range servicesSpecs {
+		service, err := h.serviceLister.Services(cell.Namespace).Get(serviceSpec.Name)
+		if errors.IsNotFound(err) {
+			service, err = h.vickClient.VickV1alpha1().Services(cell.Namespace).Create(resources.CreateService(cell, serviceSpec))
+			if err != nil {
+				glog.Errorf("Failed to create Service: %s : %v", serviceSpec.Name, err)
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+		glog.Infof("Service '%s' created %+v", serviceSpec.Name, service)
 	}
 
 	return nil

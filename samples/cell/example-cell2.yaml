@@ -1,0 +1,18 @@
+apiVersion: vick.wso2.com/v1alpha1
+kind: Cell
+metadata:
+  name: my-cell
+spec:
+  services:
+  - name: server-time-us
+    cell: my-cell
+    replicas: 2
+    image: docker.io/mirage20/time-us
+    containerPort: 8080
+    servicePort: 80
+  - name: server-debug
+    cell: my-cell
+    replicas: 1
+    image: docker.io/mirage20/k8s-debug-tools
+    containerPort: 8080
+    servicePort: 80
