@@ -3,6 +3,24 @@ kind: Cell
 metadata:
   name: my-cell
 spec:
+  gateway:
+    apis:
+    - context: context1
+      definitions:
+      - path: /foo1
+        method: POST
+      - path: /bar1
+        method: GET
+      backend: http://example1.com
+      global: true
+    - context: context2
+      definitions:
+      - path: /foo2
+        method: GET
+      - path: /bar2
+        method: PUT
+      backend: http://example2.com
+      global: true
   services:
   - name: server-time-us
     cell: my-cell

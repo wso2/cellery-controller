@@ -38,6 +38,10 @@ func createGatewaySelector(gateway *v1alpha1.Gateway) *metav1.LabelSelector {
 	return &metav1.LabelSelector{MatchLabels: createGatewayLabels(gateway)}
 }
 
+func GatewayConfigMapName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-config"
+}
+
 func GatewayDeploymentName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-deployment"
 }

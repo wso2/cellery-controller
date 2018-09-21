@@ -26,6 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	configVolumeName = "config-volume"
+	configMountPath  = "/etc/config"
+	apiConfigFile    = "api.json"
+)
+
 func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
@@ -59,6 +65,10 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
+									Name:      configVolumeName,
+									MountPath: configMountPath,
+								},
+								{
 									Name:      "targetdir",
 									MountPath: "/target",
 								},
@@ -81,6 +91,22 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 						},
 					},
 					Volumes: []corev1.Volume{
+						{
+							Name: configVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: GatewayConfigMapName(gateway),
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  apiConfigName,
+											Path: apiConfigFile,
+										},
+									},
+								},
+							},
+						},
 						{
 							Name: "targetdir",
 							VolumeSource: corev1.VolumeSource{

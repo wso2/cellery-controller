@@ -34,8 +34,6 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
-		Spec: v1alpha1.GatewaySpec{
-
-		},
+		Spec: cell.Spec.Gateway,
 	}
 }

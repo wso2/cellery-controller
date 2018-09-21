@@ -70,6 +70,7 @@ func main() {
 
 	// Create K8s informers
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
+	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
 
@@ -92,6 +93,7 @@ func main() {
 		vickClient,
 		deploymentInformer,
 		k8sServiceInformer,
+		configMapInformer,
 		gatewayInformer,
 	)
 	serviceController := service.NewController(
@@ -112,6 +114,7 @@ func main() {
 		// Sync K8s informers
 		k8sServiceInformer.Informer().HasSynced,
 		deploymentInformer.Informer().HasSynced,
+		configMapInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
 		// Sync K8s informers
 		cellInformer.Informer().HasSynced,

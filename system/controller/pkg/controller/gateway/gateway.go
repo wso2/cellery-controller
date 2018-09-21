@@ -45,6 +45,7 @@ type gatewayHandler struct {
 	vickClient       vickclientset.Interface
 	deploymentLister appsv1listers.DeploymentLister
 	k8sServiceLister corev1listers.ServiceLister
+	configMapLister  corev1listers.ConfigMapLister
 	gatewayLister    listers.GatewayLister
 }
 
@@ -53,6 +54,7 @@ func NewController(
 	vickClient vickclientset.Interface,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
+	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer vickinformers.GatewayInformer,
 ) *controller.Controller {
 
@@ -61,6 +63,7 @@ func NewController(
 		vickClient:       vickClient,
 		deploymentLister: deploymentInformer.Lister(),
 		k8sServiceLister: k8sServiceInformer.Lister(),
+		configMapLister:  configMapInformer.Lister(),
 		gatewayLister:    gatewayInformer.Lister(),
 	}
 	c := controller.New(h, "Gateway")
@@ -103,7 +106,22 @@ func (h *gatewayHandler) Handle(key string) error {
 
 func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
-	// Get the gateway deployment
+	configMap, err := h.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.GatewayConfigMapName(gateway))
+	if errors.IsNotFound(err) {
+		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway)
+		if err != nil {
+			return err
+		}
+		configMap, err = h.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Create(gatewayConfigMap)
+		if err != nil {
+			glog.Errorf("Failed to create Gateway ConfigMap %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Gateway config map created %+v", configMap)
+
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway))
