@@ -1,4 +1,19 @@
-# todo: check possibility of auto generation
+#  Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+#
+#  WSO2 Inc. licenses this file to you under the Apache License,
+#  Version 2.0 (the "License"); you may not use this file except
+#  in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http:www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -123,6 +138,30 @@ spec:
     kind: Cell
     plural: cells
     singular: cell
+  additionalPrinterColumns:
+  - name: Services
+    type: integer
+    description: Number of services in this cell
+    JSONPath: .status.serviceCount
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gateways.vick.wso2.com
+spec:
+  group: vick.wso2.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Gateway
+    plural: gateways
+    singular: gateway
+    shortNames:
+    - vgateways
+    - vgw
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -139,6 +178,17 @@ spec:
     shortNames:
     - vservice
     - vsvc
+  additionalPrinterColumns:
+  - name: Cell
+    type: string
+    description: Owner cell of this service
+    JSONPath: .status.ownerCell
+  - name: Available-Replicas
+    type: integer
+    JSONPath: .status.availableReplicas
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -161,3 +211,4 @@ spec:
       - name: vick-controller
         image: "mirage20/vick-controller:latest"
       serviceAccountName: vick-controller
+---
