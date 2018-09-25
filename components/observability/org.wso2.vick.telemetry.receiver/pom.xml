@@ -71,6 +71,11 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.grpc.wso2</groupId>
+            <artifactId>grpc-wso2</artifactId>
+            <version>1.15.0.wso2v1</version>
+        </dependency>
     </dependencies>
 
 
@@ -85,7 +90,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
-                            org.wso2.vick.telemetry.receiver.*
+                            org.wso2.vick.telemetry.receiver.*,
+                            !org.wso2.vick.telemetry.receiver.internal
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional
