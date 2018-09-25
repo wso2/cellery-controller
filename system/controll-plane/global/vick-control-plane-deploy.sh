@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-#Setup VICK name space, create service account and the docker registry credentials
+#Setup VICK namespace, create service account and the docker registry credentials
 kubectl apply -f vick-ns-init.yaml
 
 #Create the pub-store config maps
