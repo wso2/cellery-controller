@@ -4,8 +4,8 @@
 kubectl apply -f vick-ns-init.yaml
 
 #Create the pub-store config maps
-kubectl create configmap apim-conf --from-file=apim-configs/ -n vick-system
-kubectl create configmap apim-conf-datasources --from-file=apim-configs/datasources/ -n vick-system
+kubectl create configmap apim-conf --from-file=apim-configs/pub-store -n vick-system
+kubectl create configmap apim-conf-datasources --from-file=apim-configs/pub-store/datasources/ -n vick-system
 
 #Create credentials for docker.wso2.com
 kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
