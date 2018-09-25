@@ -86,6 +86,11 @@
                 <artifactId>grpc-protobuf</artifactId>
                 <version>${grpc.protobuf.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.grpc.wso2</groupId>
+                <artifactId>grpc-wso2</artifactId>
+                <version>${grpc.wso2.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -115,5 +120,6 @@
         <grpc.stub.version>1.15.0</grpc.stub.version>
         <proto.google.common.proto>1.12.0</proto.google.common.proto>
         <grpc.protobuf.version>1.15.0</grpc.protobuf.version>
+        <grpc.wso2.version>1.15.0-wso2v1</grpc.wso2.version>
     </properties>
 </project>
