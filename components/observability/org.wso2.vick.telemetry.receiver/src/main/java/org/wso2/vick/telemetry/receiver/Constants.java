@@ -24,5 +24,6 @@ package org.wso2.vick.telemetry.receiver;
 public class Constants {
 
     public static final int DEFAULT_RECEIVER_PORT = 9091;
+    public static final String ATTRIBUTES_FILE = "attributes.txt";
 
 }
