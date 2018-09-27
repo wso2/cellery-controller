@@ -27,9 +27,12 @@ import (
 )
 
 const (
-	configVolumeName = "config-volume"
-	configMountPath  = "/etc/config"
-	apiConfigFile    = "api.json"
+	apiConfigVolumeName     = "api-config-volume"
+	gatewayConfigVolumeName = "gateway-config-volume"
+	gatewayConfigKey        = "cell-gateway-init-config"
+	gatewayConfigFile       = "gw.json"
+	configMountPath         = "/etc/config"
+	apiConfigFile           = "api.json"
 )
 
 func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
@@ -65,8 +68,16 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      configVolumeName,
-									MountPath: configMountPath,
+									Name:      apiConfigVolumeName,
+									MountPath: configMountPath + "/" + apiConfigFile,
+									SubPath:   apiConfigFile,
+									ReadOnly:  true,
+								},
+								{
+									Name:      gatewayConfigVolumeName,
+									MountPath: configMountPath + "/" + gatewayConfigFile,
+									SubPath:   gatewayConfigFile,
+									ReadOnly:  true,
 								},
 								{
 									Name:      "targetdir",
@@ -92,7 +103,7 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 					},
 					Volumes: []corev1.Volume{
 						{
-							Name: configVolumeName,
+							Name: apiConfigVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -100,8 +111,24 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 									},
 									Items: []corev1.KeyToPath{
 										{
-											Key:  apiConfigName,
+											Key:  apiConfigKey,
 											Path: apiConfigFile,
+										},
+									},
+								},
+							},
+						},
+						{
+							Name: gatewayConfigVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: controller.VICKConfigMapName,
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  gatewayConfigKey,
+											Path: gatewayConfigFile,
 										},
 									},
 								},

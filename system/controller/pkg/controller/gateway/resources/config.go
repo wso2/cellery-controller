@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	apiConfigName = "api-config"
+	apiConfigKey = "api-config"
 )
 
 type apiConfig struct {
@@ -67,7 +67,7 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway) (*corev1.ConfigMap, error
 			},
 		},
 		Data: map[string]string{
-			apiConfigName: apiConfigJson,
+			apiConfigKey: apiConfigJson,
 		},
 	}, nil
 }

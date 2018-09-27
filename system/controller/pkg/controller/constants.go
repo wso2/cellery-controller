@@ -19,10 +19,12 @@
 package controller
 
 const (
+	// VICK ConfigMap
+	VICKConfigMapName = "vick-config"
+
 	// Istio
 	IstioSidecarInjectAnnotation = "sidecar.istio.io/inject"
 
 	// Names
 	HTTPServiceName = "http"
-
 )
