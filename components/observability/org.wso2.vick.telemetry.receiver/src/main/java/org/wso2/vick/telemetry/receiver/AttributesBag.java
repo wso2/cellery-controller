@@ -18,7 +18,6 @@
  */
 package org.wso2.vick.telemetry.receiver;
 
-import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
@@ -34,15 +33,13 @@ public class AttributesBag {
 
     private static final Logger logger = Logger.getLogger(AttributesBag.class.getName());
     private Map<String, Object> attribute = new HashMap<>();
-    private Gson gson;
 
     public void put(String key, String value) {
-        gson = new Gson();
         putAttribute(key, value);
     }
 
     public void put(String key, Map<String, String> value) {
-        putAttribute(key, value);
+        putAttribute(key, Utils.toString(value));
     }
 
     public void put(String key, Long value) {
@@ -58,15 +55,17 @@ public class AttributesBag {
     }
 
     public void put(String key, ByteString value) {
-        putAttribute(key, value);
+        putAttribute(key, Utils.toString(value));
     }
 
     public void put(String key, Timestamp value) {
-        putAttribute(key, value);
+        putAttribute(key + Constants.SECONDS_KEY, value.getSeconds());
+        putAttribute(key + Constants.NANO_SECONDS_KEY, value.getNanos());
     }
 
     public void put(String key, Duration value) {
-        putAttribute(key, value);
+        putAttribute(key + Constants.SECONDS_KEY, value.getSeconds());
+        putAttribute(key + Constants.NANO_SECONDS_KEY, value.getNanos());
     }
 
     private void putAttribute(String key, Object value) {
@@ -77,8 +76,8 @@ public class AttributesBag {
         }
     }
 
-    public String toString() {
-        return gson.toJson(attribute);
+    public Map<String, Object> getAttributes() {
+        return this.attribute;
     }
 
 }

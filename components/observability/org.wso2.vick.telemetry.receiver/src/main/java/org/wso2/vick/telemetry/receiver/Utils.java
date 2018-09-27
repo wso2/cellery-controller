@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) ${year} WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -16,16 +16,28 @@
  *  under the License.
  *
  */
+
 package org.wso2.vick.telemetry.receiver;
 
+import com.google.gson.Gson;
+import com.google.protobuf.ByteString;
+
+import java.util.Map;
+
 /**
- * This class hold the Constants for the Telemetry Receiver component.
+ * This is a Utils class.
  */
-public class Constants {
+public class Utils {
+    private static final Gson gson = new Gson();
 
-    static final String DEFAULT_RECEIVER_PORT = "9091";
-    static final String PORT_EVENT_SOURCE_OPTION_KEY = "port";
-    static final String SECONDS_KEY = "_sec";
-    static final String NANO_SECONDS_KEY = "_nanosec";
+    private Utils() {
+    }
 
+    static String toString(Map<String, String> attributes) {
+        return gson.toJson(attributes);
+    }
+
+    static String toString(ByteString byteString) {
+        return gson.toJson(byteString);
+    }
 }
