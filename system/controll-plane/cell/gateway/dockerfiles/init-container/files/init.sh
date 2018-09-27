@@ -16,6 +16,9 @@
 # ------------------------------------------------------------------------
 set -e
 
+# Create APIs in global API manager
+java -jar /vick-global-api-uploader.jar
+
 #Navigate to the wso2am-micro-gw-2.6.0/bin directory
 cd /wso2am-micro-gw-2.6.0/bin
 

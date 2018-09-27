@@ -23,10 +23,11 @@ FROM ubuntu:18.04
 COPY ./files/jdk1.8.0_121 /java
 COPY ./files/wso2am-micro-gw-2.6.0 /wso2am-micro-gw-2.6.0
 COPY ./files/init.sh /
+COPY ./files/vick-global-api-uploader.jar /
 
 # set environment variables
-ENV JAVA_HOME=/java \
-    PATH=$JAVA_HOME/bin:$PATH 
+ENV JAVA_HOME=/java
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 # install required packages
 RUN apt-get update && apt-get install -y zip
