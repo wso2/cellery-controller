@@ -20,12 +20,12 @@
 package org.wso2.vick.telemetry.receiver.internal;
 
 import io.grpc.stub.StreamObserver;
+import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.vick.telemetry.receiver.AttributesBag;
 import org.wso2.vick.telemetry.receiver.generated.AttributesOuterClass;
 import org.wso2.vick.telemetry.receiver.generated.MixerGrpc;
 import org.wso2.vick.telemetry.receiver.generated.Report;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +35,17 @@ import java.util.logging.Logger;
  * Telemetry Service implementation which receives the information.
  */
 public class TelemetryServiceImpl extends MixerGrpc.MixerImplBase {
-    private static final Logger logger = Logger.getLogger(TelemetryServiceImpl.class.getName());
+    private static final Logger log = Logger.getLogger(TelemetryServiceImpl.class.getName());
+
+    private SourceEventListener sourceEventListener;
+
+    public TelemetryServiceImpl(SourceEventListener sourceEventListener) {
+        this.sourceEventListener = sourceEventListener;
+    }
 
     @Override
     public void report(Report.ReportRequest request,
                        StreamObserver<Report.ReportResponse> responseObserver) {
-        List<AttributesBag> attributesBags = new ArrayList<>();
         AttributedDecoder attributedDecoder = new AttributedDecoder(request);
         List<AttributesOuterClass.CompressedAttributes> attributesList = request.getAttributesList();
 
@@ -85,9 +90,9 @@ public class TelemetryServiceImpl extends MixerGrpc.MixerImplBase {
                 attributesBag.put(attributedDecoder.getValue(key), value);
             });
 
-            attributesBags.add(attributesBag);
+            sourceEventListener.onEvent(attributesBag.getAttributes(), new String[0]);
         }
-        logger.info(attributesBags.toString());
+
         Report.ReportResponse reply = Report.ReportResponse.newBuilder().build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
