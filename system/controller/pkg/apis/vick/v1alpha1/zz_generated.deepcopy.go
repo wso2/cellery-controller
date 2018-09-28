@@ -333,6 +333,7 @@ func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	in.Container.DeepCopyInto(&out.Container)
 	return
 }
 

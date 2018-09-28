@@ -30,6 +30,10 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
+
+	serviceContainer := service.Spec.Container.DeepCopy()
+	serviceContainer.Name = service.Name
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceDeploymentName(service),
@@ -49,13 +53,7 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{
-							Name:  service.Name,
-							Image: service.Spec.Image,
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: service.Spec.ContainerPort,
-							}},
-						},
+						*serviceContainer,
 					},
 				},
 			},

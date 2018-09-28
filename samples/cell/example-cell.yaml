@@ -3,12 +3,47 @@ kind: Cell
 metadata:
   name: my-cell
 spec:
-  # Currently not applied
   gateway:
-    http:
-      port: 80
-      routes:
-      - match:
-        - uri: /foo
-        - uri: /bar
-        service: server-time-us
+    apis:
+    - context: context1
+      definitions:
+      - path: /foo1
+        method: POST
+      - path: /bar1
+        method: GET
+      backend: http://example1.com
+      global: true
+    - context: context2
+      definitions:
+      - path: /foo2
+        method: GET
+      - path: /bar2
+        method: POST
+      backend: http://example2.com
+      global: true
+  services:
+  - name: server-time-us
+    cell: my-cell
+    replicas: 1
+    container:
+      image: docker.io/mirage20/time-us
+    servicePort: 80
+  - name: server-time-uk
+    cell: my-cell
+    replicas: 1
+    container:
+      image: docker.io/mirage20/time-uk
+    servicePort: 80
+  - name: server-time
+    cell: my-cell
+    replicas: 1
+    container:
+      image: docker.io/mirage20/time
+    servicePort: 80
+  - name: server-debug
+    cell: my-cell
+    replicas: 1
+    container:
+      image: docker.io/mirage20/k8s-debug-tools
+    containerPort: 8080
+    servicePort: 80
