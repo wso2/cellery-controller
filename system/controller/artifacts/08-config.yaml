@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  cell-gateway-init-config: |
+    {
+      "username": "admin",
+      "password": "admin",
+      "registerObj": {
+        "clientName": "rest_api_publisher",
+        "owner": "admin",
+        "grantType": "password refresh_token",
+        "saasApp": true
+      },
+      "apimBaseUrl": "https://10.100.1.217:9443",
+      "registerPath": "/client-registration/v0.14/register",
+      "apiCreatePath": "/api/am/publisher/v0.14/apis",
+      "addLabelPath": "/api/am/admin/v0.14/labels",
+        "apiPublishPath": "/api/am/publisher/v0.14/apis/change-lifecycle?",
+      "tokenEndpoint": "https://10.100.1.217:8243/token"
+    }
+kind: ConfigMap
+metadata:
+  name: vick-config
+#  namespace: vick-system

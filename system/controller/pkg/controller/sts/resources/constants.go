@@ -16,18 +16,9 @@
  * under the License.
  */
 
-package vick
+package resources
 
 const (
-	GroupName = "vick.wso2.com"
-
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
-
-	CellLabelKey = GroupName + "/cell"
-	CellGatewayLabelKey = GroupName + "/gateway"
-	CellTokenServiceLabelKey = GroupName + "/sts"
-	CellServiceLabelKey = GroupName + "/service"
-
+	tokenServiceServicePort   = 80
+	tokenServiceContainerPort = 9763
 )

@@ -16,18 +16,23 @@
  * under the License.
  */
 
-package vick
+package resources
 
-const (
-	GroupName = "vick.wso2.com"
-
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
-
-	CellLabelKey = GroupName + "/cell"
-	CellGatewayLabelKey = GroupName + "/gateway"
-	CellTokenServiceLabelKey = GroupName + "/sts"
-	CellServiceLabelKey = GroupName + "/service"
-
+import (
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {
+	return &v1alpha1.TokenService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      TokenServiceName(cell),
+			Namespace: cell.Namespace,
+			Labels:    createLabels(cell),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateCellOwnerRef(cell),
+			},
+		},
+	}
+}

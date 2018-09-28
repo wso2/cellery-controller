@@ -18,14 +18,26 @@ spec:
       - path: /foo2
         method: GET
       - path: /bar2
-        method: PUT
+        method: POST
       backend: http://example2.com
       global: true
   services:
   - name: server-time-us
     cell: my-cell
-    replicas: 2
+    replicas: 1
     image: docker.io/mirage20/time-us
+    containerPort: 8080
+    servicePort: 80
+  - name: server-time-uk
+    cell: my-cell
+    replicas: 1
+    image: docker.io/mirage20/time-uk
+    containerPort: 8080
+    servicePort: 80
+  - name: server-time
+    cell: my-cell
+    replicas: 1
+    image: docker.io/mirage20/time
     containerPort: 8080
     servicePort: 80
   - name: server-debug

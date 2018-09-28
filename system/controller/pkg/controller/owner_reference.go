@@ -40,6 +40,14 @@ func CreateGatewayOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	})
 }
 
+func CreateTokenServiceOwnerRef(obj metav1.Object) *metav1.OwnerReference {
+	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
+		Group:   v1alpha1.SchemeGroupVersion.Group,
+		Version: v1alpha1.SchemeGroupVersion.Version,
+		Kind:    "TokenService",
+	})
+}
+
 func CreateServiceOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
 		Group:   v1alpha1.SchemeGroupVersion.Group,

@@ -21,26 +21,27 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createLabels(cell *v1alpha1.Cell) map[string]string {
-	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+1)
-	labels[vick.CellLabelKey] = cell.Name
+func createTokenServiceLabels(tokenService *v1alpha1.TokenService) map[string]string {
+	labels := make(map[string]string, len(tokenService.ObjectMeta.Labels)+1)
+	labels[vick.CellTokenServiceLabelKey] = tokenService.Name
 
-	for k, v := range cell.ObjectMeta.Labels {
+	for k, v := range tokenService.ObjectMeta.Labels {
 		labels[k] = v
 	}
 	return labels
 }
 
-func NetworkPolicyName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-network"
+func createTokenServiceSelector(tokenService *v1alpha1.TokenService) *metav1.LabelSelector {
+	return &metav1.LabelSelector{MatchLabels: createTokenServiceLabels(tokenService)}
 }
 
-func GatewayName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-gateway"
+func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
+	return tokenService.Name + "-deployment"
 }
 
-func TokenServiceName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-sts"
+func TokenServiceK8sServiceName(tokenService *v1alpha1.TokenService) string {
+	return tokenService.Name + "-service"
 }

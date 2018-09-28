@@ -29,6 +29,7 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/controller/cell"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/service"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/sts"
 	"github.com/wso2/product-vick/system/controller/pkg/signals"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -77,6 +78,7 @@ func main() {
 	// Create VICK informers
 	cellInformer := vickInformerFactory.Vick().V1alpha1().Cells()
 	gatewayInformer := vickInformerFactory.Vick().V1alpha1().Gateways()
+	tokenServiceInformer := vickInformerFactory.Vick().V1alpha1().TokenServices()
 	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
 
 	// Create crd controllers
@@ -85,6 +87,7 @@ func main() {
 		vickClient,
 		cellInformer,
 		gatewayInformer,
+		tokenServiceInformer,
 		serviceInformer,
 		networkPolicyInformer,
 	)
@@ -95,6 +98,14 @@ func main() {
 		k8sServiceInformer,
 		configMapInformer,
 		gatewayInformer,
+	)
+	tokenServiceController := sts.NewController(
+		kubeClient,
+		vickClient,
+		deploymentInformer,
+		k8sServiceInformer,
+		configMapInformer,
+		tokenServiceInformer,
 	)
 	serviceController := service.NewController(
 		kubeClient,
@@ -119,6 +130,7 @@ func main() {
 		// Sync K8s informers
 		cellInformer.Informer().HasSynced,
 		gatewayInformer.Informer().HasSynced,
+		tokenServiceInformer.Informer().HasSynced,
 		serviceInformer.Informer().HasSynced,
 	); !ok {
 		glog.Fatal("failed to wait for caches to sync")
@@ -127,6 +139,7 @@ func main() {
 	//Start controllers
 	go cellController.Run(threadsPerController, stopCh)
 	go gatewayController.Run(threadsPerController, stopCh)
+	go tokenServiceController.Run(threadsPerController, stopCh)
 	go serviceController.Run(threadsPerController, stopCh)
 
 	// Prevent exiting the main process

@@ -16,18 +16,33 @@
  * under the License.
  */
 
-package vick
+package v1alpha1
 
-const (
-	GroupName = "vick.wso2.com"
-
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
-
-	CellLabelKey = GroupName + "/cell"
-	CellGatewayLabelKey = GroupName + "/gateway"
-	CellTokenServiceLabelKey = GroupName + "/sts"
-	CellServiceLabelKey = GroupName + "/service"
-
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type TokenService struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   TokenServiceSpec   `json:"spec"`
+	Status TokenServiceStatus `json:"status"`
+}
+
+type TokenServiceSpec struct {
+}
+
+type TokenServiceStatus struct {
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type TokenServiceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []TokenService `json:"items"`
+}
