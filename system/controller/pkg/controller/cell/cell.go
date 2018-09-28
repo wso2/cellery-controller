@@ -150,7 +150,7 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	servicesSpecs := cell.Spec.Services
 
 	for _, serviceSpec := range servicesSpecs {
-		service, err := h.serviceLister.Services(cell.Namespace).Get(serviceSpec.Name)
+		service, err := h.serviceLister.Services(cell.Namespace).Get(resources.ServiceName(cell, serviceSpec))
 		if errors.IsNotFound(err) {
 			service, err = h.vickClient.VickV1alpha1().Services(cell.Namespace).Create(resources.CreateService(cell, serviceSpec))
 			if err != nil {
