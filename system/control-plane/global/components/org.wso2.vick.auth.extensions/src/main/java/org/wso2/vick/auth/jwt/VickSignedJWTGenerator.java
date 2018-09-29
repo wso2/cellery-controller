@@ -13,6 +13,7 @@ import org.wso2.carbon.identity.application.common.model.IdentityProvider;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.oauth.common.exception.InvalidOAuthClientException;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.carbon.idp.mgt.IdentityProviderManagementException;
@@ -21,6 +22,7 @@ import org.wso2.vick.auth.util.Utils;
 
 import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
@@ -34,6 +36,10 @@ import java.util.UUID;
 public class VickSignedJWTGenerator extends JWTGenerator {
 
     private static final Log log = LogFactory.getLog(VickSignedJWTGenerator.class);
+    private static final String CONSUMER_KEY_CLAIM = "consumerKey";
+    private static final String SCOPE_CLAIM = "scope";
+    private static final long JWT_TOKEN_VALIDITY_IN_SECONDS = 300;
+    private static final String TRUSTED_IDP_CLAIMS = "trusted_idp_claims";
 
     @Override
     public String generateToken(TokenValidationContext validationContext) throws APIManagementException {
@@ -86,12 +92,9 @@ public class VickSignedJWTGenerator extends JWTGenerator {
     @Override
     public String buildBody(TokenValidationContext validationContext) throws APIManagementException {
 
-        // TODO use claims from upstream IDP
         String endUserName = validationContext.getValidationInfoDTO().getEndUserName();
-        //generating expiring timestamp
         Date issuedTime = new Date(System.currentTimeMillis());
-        // jwtTokenInfoDTO.getExpirationTime() gives the token validity time given when the token is generated.
-        Date expiryTime = new Date(issuedTime.getTime() + 300 * 60 * 1000);
+        Date expiryTime = new Date(issuedTime.getTime() + JWT_TOKEN_VALIDITY_IN_SECONDS);
 
         JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder();
         builder.subject(endUserName)
@@ -100,9 +103,9 @@ public class VickSignedJWTGenerator extends JWTGenerator {
                 .audience(getAudienceValue(validationContext))
                 .issueTime(issuedTime)
                 .expirationTime(expiryTime)
-                .claim("scope", getScopes(validationContext))
-                .claim("consumerKey", getConsumerKey(validationContext))
-                .claim("trusted_idp_claims", getClaimsFromSignedJWT(validationContext));
+                .claim(SCOPE_CLAIM, getScopes(validationContext))
+                .claim(CONSUMER_KEY_CLAIM, getConsumerKey(validationContext))
+                .claim(TRUSTED_IDP_CLAIMS, getClaimsFromSignedJWT(validationContext));
 
         return builder.build().toJSONObject().toJSONString();
     }
@@ -175,6 +178,16 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
     private List<String> getAudienceValue(TokenValidationContext validationContext) {
 
-        return Collections.singletonList("cell-gateway");
+        String consumerKey = validationContext.getTokenInfo().getConsumerKey();
+        try {
+            OAuthAppDO app = OAuth2Util.getAppInformationByClientId(consumerKey);
+            if (app.getAudiences() != null) {
+                return Arrays.asList(app.getAudiences());
+            }
+        } catch (IdentityOAuth2Exception | InvalidOAuthClientException e) {
+            log.error("Error while retrieving audience information for app with consumerKey: " + consumerKey);
+        }
+        return Collections.emptyList();
     }
+
 }

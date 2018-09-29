@@ -13,6 +13,7 @@ import org.wso2.carbon.identity.application.common.model.FederatedAuthenticatorC
 import org.wso2.carbon.identity.application.common.model.IdentityProvider;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
+import org.wso2.carbon.identity.oauth.common.exception.InvalidOAuthClientException;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
@@ -97,7 +98,8 @@ public class VickSignedJWTValidator extends OAuth2JWTTokenValidator {
             if (claimsSet == null) {
                 throw new IdentityOAuth2Exception("Claim values are empty in the validated JWT.");
             } else {
-                validateMandatoryClaims(claimsSet);
+                validateMandatoryJWTClaims(claimsSet);
+                validateConsumerKey(claimsSet);
                 validateExpiryTime(claimsSet);
                 validateNotBeforeTime(claimsSet);
                 validateAudience(claimsSet);
@@ -110,11 +112,26 @@ public class VickSignedJWTValidator extends OAuth2JWTTokenValidator {
         }
     }
 
+    private void validateConsumerKey(JWTClaimsSet claimsSet) throws IdentityOAuth2Exception {
+
+        String consumerKey = (String) claimsSet.getClaim(CONSUMER_KEY);
+        if (StringUtils.isNotBlank(consumerKey)) {
+            try {
+                OAuth2Util.getAppInformationByClientId(consumerKey);
+            } catch (IdentityOAuth2Exception | InvalidOAuthClientException e) {
+                throw new IdentityOAuth2Exception("Invalid consumerKey. Cannot find a registered app for consumerKey: "
+                        + consumerKey);
+            }
+        } else {
+            throw new IdentityOAuth2Exception("Mandatory claim 'consumerKey' is missing in the signedJWT.");
+        }
+    }
+
     private void validateAudience(JWTClaimsSet claimsSet) throws IdentityOAuth2Exception {
         // We do not validate audience at the moment....
     }
 
-    private void validateMandatoryClaims(JWTClaimsSet claimsSet) throws IdentityOAuth2Exception {
+    private void validateMandatoryJWTClaims(JWTClaimsSet claimsSet) throws IdentityOAuth2Exception {
 
         String subject = claimsSet.getSubject();
         List<String> audience = claimsSet.getAudience();
