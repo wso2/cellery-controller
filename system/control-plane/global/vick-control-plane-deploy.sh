@@ -1,4 +1,8 @@
-#!/usr/local/bin/bash
+#!/bin/bash
+
+#DOCKER_REG_USER_EMAIL=vick-docker@gmail.com
+#DOCKER_REG_USER=vick-docker@gmail.com
+#DOCKER_REG_PASSWD=<vickdockerpassword>
 
 #Setup VICK namespace, create service account and the docker registry credentials
 #kubectl apply -f vick-ns-init.yaml
