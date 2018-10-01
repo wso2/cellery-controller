@@ -94,7 +94,7 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
         String endUserName = validationContext.getValidationInfoDTO().getEndUserName();
         Date issuedTime = new Date(System.currentTimeMillis());
-        Date expiryTime = new Date(issuedTime.getTime() + JWT_TOKEN_VALIDITY_IN_SECONDS);
+        Date expiryTime = new Date(issuedTime.getTime() + JWT_TOKEN_VALIDITY_IN_SECONDS * 1000);
 
         JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder();
         builder.subject(endUserName)
