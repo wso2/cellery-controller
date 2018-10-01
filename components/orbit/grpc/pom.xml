@@ -24,7 +24,7 @@
     <groupId>io.grpc.wso2</groupId>
     <artifactId>grpc-wso2</artifactId>
     <packaging>bundle</packaging>
-    <name>GRPC WSO2</name>
+    <name>WSO2 VICK - GRPC Orbit</name>
     <version>1.15.0.wso2v1</version>
     <description>
         This bundle represents io.grpc

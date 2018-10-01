@@ -74,7 +74,6 @@
         <dependency>
             <groupId>io.grpc.wso2</groupId>
             <artifactId>grpc-wso2</artifactId>
-            <version>1.15.0.wso2v1</version>
         </dependency>
     </dependencies>
 

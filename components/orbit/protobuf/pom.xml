@@ -24,7 +24,7 @@
     <groupId>com.google.protobuf.wso2</groupId>
     <artifactId>protobuf-wso2</artifactId>
     <packaging>bundle</packaging>
-    <name>GRPC WSO2</name>
+    <name>WSO2 VICK - Protobuf  Orbit</name>
     <version>3.6.1.wso2v1</version>
     <description>
         This bundle represents com.google.protobuf with gogo.proto.

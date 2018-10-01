@@ -89,7 +89,6 @@ public class TelemetryServiceImpl extends MixerGrpc.MixerImplBase {
             attributes.getDurationsMap().forEach((key, value) -> {
                 attributesBag.put(attributedDecoder.getValue(key), value);
             });
-
             sourceEventListener.onEvent(attributesBag.getAttributes(), new String[0]);
         }
 

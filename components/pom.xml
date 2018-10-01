@@ -31,6 +31,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>orbit</module>
         <module>observability</module>
     </modules>
 
@@ -121,6 +122,6 @@
         <grpc.stub.version>1.15.0</grpc.stub.version>
         <proto.google.common.proto>1.12.0</proto.google.common.proto>
         <grpc.protobuf.version>1.15.0</grpc.protobuf.version>
-        <grpc.wso2.version>1.15.0-wso2v1</grpc.wso2.version>
+        <grpc.wso2.version>1.15.0.wso2v1</grpc.wso2.version>
     </properties>
 </project>
