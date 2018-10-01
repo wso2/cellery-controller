@@ -15,6 +15,10 @@ kubectl create configmap apim-conf-datasources --from-file=apim-configs/pub-stor
 kubectl create configmap gw-conf --from-file=apim-configs/gw -n vick-system
 kubectl create configmap gw-conf-datasources --from-file=apim-configs/gw/datasources/ -n vick-system
 
+#Create KM config maps
+kubectl create configmap conf-identity --from-file=apim-configs/gw/identity -n vick-system
+kubectl create configmap apim-template --from-file=apim-configs/gw/resources/api_templates -n vick-system
+
 #Create credentials for docker.wso2.com
 kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
 

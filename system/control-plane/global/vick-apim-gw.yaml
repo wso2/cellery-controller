@@ -77,6 +77,10 @@ spec:
           mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
         - name: apim-conf-datasources
           mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/datasources
+        - name: conf-identity
+          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/identity
+        - name: apim-template
+          mountPath: /home/wso2carbon/wso2-server-volume/repository/resources/api_templates
       serviceAccountName: "vicksvc-account"
       imagePullSecrets:
       - name: wso2creds
@@ -90,6 +94,12 @@ spec:
       - name: apim-conf-datasources
         configMap:
           name: gw-conf-datasources
+      - name: conf-identity
+        configMap:
+          name: conf-identity
+      - name: apim-template
+        configMap:
+          name: apim-template
 ---
 apiVersion: v1
 kind: Service
