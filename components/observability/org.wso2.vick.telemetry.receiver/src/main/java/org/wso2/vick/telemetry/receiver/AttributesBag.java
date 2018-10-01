@@ -18,6 +18,7 @@
  */
 package org.wso2.vick.telemetry.receiver;
 
+import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
@@ -78,6 +79,11 @@ public class AttributesBag {
 
     public Map<String, Object> getAttributes() {
         return this.attribute;
+    }
+
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this.attribute);
     }
 
 }
