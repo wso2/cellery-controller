@@ -14,7 +14,9 @@ kubectl create configmap gw-conf-datasources --from-file=apim-configs/gw/datasou
 #Create credentials for docker.wso2.com
 kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
 
-#Create volumes
+#Create volumes and volume claims
+kubectl apply -f vick-apim-persistent-volumes.yaml -n vick-system
+kubectl apply -f vick-apim-persistent-volume-claim.yaml -n vick-system
 
 #Create pub-store deployment and the service
 kubectl apply -f vick-apim-pub-store.yaml
