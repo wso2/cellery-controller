@@ -33,3 +33,13 @@ kubectl apply -f vick-apim-gw.yaml
 
 #Create gateway ingress
 kubectl apply -f vick-apim-gw-ingress.yaml -n vick-system
+
+#Create SP volumes and volume claims
+kubectl apply -f vick-sp-persistent-volumes.yaml -n vick-system
+
+#Create SP status dashboard deployment
+kubectl apply -f vick-sp-dashboard-deployment.yaml -n vick-system
+kubectl apply -f vick-sp-dashboard-service.yaml -n vick-system
+
+
+
