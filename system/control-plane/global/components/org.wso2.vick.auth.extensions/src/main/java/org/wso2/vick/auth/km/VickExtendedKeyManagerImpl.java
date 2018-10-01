@@ -26,6 +26,11 @@ public class VickExtendedKeyManagerImpl extends AMDefaultKeyManagerImpl {
 
     public AccessTokenInfo getTokenMetaData(String accessToken) throws APIManagementException {
 
+        if (!Utils.isSignedJWT(accessToken)) {
+            // If the access token is not a signed JWT we let AMDefaultKeyManagerImpl class handle it.
+            return super.getTokenMetaData(accessToken);
+        }
+
         OAuth2TokenValidationRequestDTO tokenValidationRequest = buildTokenValidationRequest(accessToken);
         OAuth2IntrospectionResponseDTO introspectionResponse = introspectToken(tokenValidationRequest);
 
@@ -95,12 +100,7 @@ public class VickExtendedKeyManagerImpl extends AMDefaultKeyManagerImpl {
 
         OAuth2TokenValidationRequestDTO.OAuth2AccessToken token = requestDTO.new OAuth2AccessToken();
         token.setIdentifier(accessToken);
-
-        if (Utils.isSignedJWT(accessToken)) {
-            token.setTokenType(JWT_TOKEN_TYPE);
-        } else {
-            token.setTokenType(BEARER_TOKEN_TYPE);
-        }
+        token.setTokenType(JWT_TOKEN_TYPE);
 
         requestDTO.setAccessToken(token);
         return requestDTO;
