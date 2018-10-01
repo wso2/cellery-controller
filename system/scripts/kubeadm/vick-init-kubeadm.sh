@@ -11,6 +11,9 @@
 #Install Docker
 #apt-get install -y docker.io
 
+#Install NFS client
+#apt-get install nfs-common
+
 #Enable docker service
 #systemctl enable docker.service
 
@@ -58,6 +61,7 @@ kubectl label namespace default istio-injection=enabled
 
 #Install nginx-ingress for control plane ingress
 kubectl apply -f mandatory.yaml
+kubectl apply -f service-nodeport.yaml
 
 #Init VICK
 #echo "Installing VICK"

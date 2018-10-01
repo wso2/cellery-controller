@@ -71,8 +71,8 @@ spec:
           containerPort: 7611
           protocol: "TCP"
         volumeMounts:
- #       - name: apim-storage-volume
- #         mountPath: /home/wso2carbon/wso2am-2.5.0/repository/deployment/server
+        - name: apim-storage-volume
+          mountPath: /home/wso2carbon/wso2am-2.5.0/repository/deployment/server
         - name: apim-conf
           mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
         - name: apim-conf-datasources
@@ -81,15 +81,15 @@ spec:
       imagePullSecrets:
       - name: wso2creds
       volumes:
- #     - name: apim-storage-volume
- #       persistentVolumeClaim:
- #         claimName: gateway-volume-claim
+      - name: apim-storage-volume
+        persistentVolumeClaim:
+          claimName: pub-store-volume-claim
       - name: apim-conf
         configMap:
-          name: apim-conf
+          name: gw-conf
       - name: apim-conf-datasources
         configMap:
-          name: apim-conf-datasources
+          name: gw-conf-datasources
 ---
 apiVersion: v1
 kind: Service
