@@ -187,7 +187,8 @@ public class RequestProcessor {
                 return true;
             case HttpURLConnection.HTTP_BAD_REQUEST:
                 if (response != null && !Constants.Utils.EMPTY_STRING.equals(response)) {
-                    if (response.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR)) {
+                    if (response.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR) ||
+                        response.contains(Constants.Utils.DUPLICATE_CONTEXT_ERROR)) {
                         // skip the error when trying to add the same api with different context.
                         return true;
                     }

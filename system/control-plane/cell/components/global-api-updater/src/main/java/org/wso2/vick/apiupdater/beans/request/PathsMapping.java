@@ -30,10 +30,25 @@ import java.util.Map;
 public class PathsMapping {
 
     @JsonProperty(Constants.JsonParamNames.PATHS)
-    private Map<String, Object> paths = new HashMap<>();
+    private Map<String, PathDefinition> paths = new HashMap<>();
 
-    public Map<String, Object> getPaths() {
+    @JsonProperty(Constants.JsonParamNames.SWAGGER)
+    private String swagger;
+
+    public PathsMapping() {
+        swagger = Constants.Utils.SWAGGER_VERSION;
+    }
+
+    public Map<String, PathDefinition> getPaths() {
         return paths;
+    }
+
+    public String getSwagger() {
+        return swagger;
+    }
+
+    public void setSwagger(String swagger) {
+        this.swagger = swagger;
     }
 
     public void addPathDefinition(String key, PathDefinition def) {

@@ -31,8 +31,15 @@ public class Label {
     @JsonProperty(Constants.JsonParamNames.NAME)
     private String name;
 
+    @JsonProperty(Constants.JsonParamNames.DESCRIPTION)
+    private String description;
+
     @JsonProperty(Constants.JsonParamNames.ACCESS_URLS)
     private List accessUrls;
+
+    public Label() {
+        description = "cell label";
+    }
 
     public String getName() {
         return name;
@@ -40,6 +47,14 @@ public class Label {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public List getAccessUrls() {

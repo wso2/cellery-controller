@@ -203,7 +203,8 @@ public class UpdateManager {
 
             if (apiCreateResponse != null) {
                 if (!(apiCreateResponse.contains(Constants.Utils.DUPLICATE_API_ERROR) ||
-                      apiCreateResponse.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR))) {
+                      apiCreateResponse.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR) ||
+                      apiCreateResponse.contains(Constants.Utils.DUPLICATE_CONTEXT_ERROR))) {
                     JSONObject jsonObj = new JSONObject(apiCreateResponse);
                     apiIDs.add(jsonObj.getString(Constants.Utils.ID));
                 }
@@ -255,9 +256,9 @@ public class UpdateManager {
 
         for (API api : apis) {
             ApiCreateRequest apiCreateRequest = new ApiCreateRequest();
-            apiCreateRequest.setName(
-                    cellConfig.getCell() + "-" + cellConfig.getVersion() + "-" + api.getContext().replace("/",
-                            Constants.Utils.EMPTY_STRING));
+            apiCreateRequest.setName(cellConfig.getCell() + Constants.Utils.UNDERSCORE + cellConfig.getVersion() +
+                                     Constants.Utils.UNDERSCORE +
+                                     api.getContext().replace("/", Constants.Utils.EMPTY_STRING));
             apiCreateRequest.setContext(api.getContext());
             apiCreateRequest.setVersion(cellConfig.getVersion());
             apiCreateRequest.setApiDefinition(getAPIDefinition(api));
@@ -310,10 +311,20 @@ public class UpdateManager {
         ApiDefinition[] definitions = api.getDefinitions();
 
         for (ApiDefinition definition : definitions) {
-            PathDefinition pathDefinition = new PathDefinition();
-            String methodStr = definition.getMethod();
+            PathDefinition pathDefinition;
             Method method = new Method();
+            String methodStr = definition.getMethod();
 
+            // Append /* to allow query parameters and path parameters
+            String allowQueryPath = definition.getPath().replaceAll("/$", Constants.Utils.EMPTY_STRING) +
+                                    Constants.Utils.ALLOW_QUERY_PATTERN;
+
+            // If already contain a key, update path definition.
+            if (apiDefinition.getPaths().containsKey(allowQueryPath)) {
+                pathDefinition = apiDefinition.getPaths().get(allowQueryPath);
+            } else {
+                pathDefinition = new PathDefinition();
+            }
             switch (methodStr) {
                 case "GET":
                     pathDefinition.setGet(method);
@@ -328,8 +339,7 @@ public class UpdateManager {
                 default:
                     throw new APIException("Method: " + methodStr + "is not implemented");
             }
-
-            apiDefinition.addPathDefinition(definition.getPath() + Constants.Utils.ALLOW_QUERY_PATTERN, pathDefinition);
+            apiDefinition.addPathDefinition(allowQueryPath, pathDefinition);
         }
         ObjectMapper objectMapper = new ObjectMapper();
         String apiDefinitionStr = Constants.Utils.EMPTY_STRING;

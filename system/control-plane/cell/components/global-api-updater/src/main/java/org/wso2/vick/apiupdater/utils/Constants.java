@@ -47,6 +47,7 @@ public class Constants {
         public static final String API_PUBLISH_PATH = "apiPublishPath";
         public static final String ADD_LABEL_PATH = "addLabelPath";
         public static final String NAME = "name";
+        public static final String DESCRIPTION = "description";
         public static final String IS_DEFAULT_VERSION = "isDefaultVersion";
         public static final String TRANSPORT = "transport";
         public static final String TIERS = "tiers";
@@ -68,6 +69,7 @@ public class Constants {
         public static final String DELETE = "delete";
         public static final String PATHS = "paths";
         public static final String URL = "url";
+        public static final String SWAGGER = "swagger";
     }
 
     /**
@@ -79,6 +81,8 @@ public class Constants {
         public static final String CONTENT_TYPE_APPLICATION_URL_ENCODED = "application/x-www-form-urlencoded";
         public static final String PRODUCTION_AND_SANDBOX = "Production and Sandbox";
         public static final String EMPTY_STRING = "";
+        public static final String UNDERSCORE = "_" ;
+        public static final String SWAGGER_VERSION = "2.0";
 
         // Rest API constants
         public static final String HTTP_RESPONSE_TYPE_ACCEPT = "Accept";
@@ -106,5 +110,6 @@ public class Constants {
         public static final String DUPLICATE_LABEL_ERROR = "Error while adding new Label for";
         public static final String DUPLICATE_API_ERROR = "A duplicate API already exists for";
         public static final String DIFFERENT_CONTEXT_ERROR = "already exists with different context";
+        public static final String DUPLICATE_CONTEXT_ERROR = "A duplicate API context already exists";
     }
 }
