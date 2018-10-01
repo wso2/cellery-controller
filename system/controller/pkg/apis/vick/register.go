@@ -21,12 +21,16 @@ package vick
 const (
 	GroupName = "vick.wso2.com"
 
-	ServiceNameLabelKey = GroupName + "/service-name"
-	CellNameLabelKey = GroupName + "/cell-name"
-	CellServiceTypeLabelKey = GroupName + "/service-type"
-
+	// VICK Labels
 	CellLabelKey = GroupName + "/cell"
 	CellGatewayLabelKey = GroupName + "/gateway"
+	CellTokenServiceLabelKey = GroupName + "/sts"
 	CellServiceLabelKey = GroupName + "/service"
 
+	// VICK Annotations
+	CellServicesAnnotationKey = GroupName + "/cell-services"
+
+	// VICK System
+	SystemNamespace = "vick-system"
+	SystemConfigMapName = "vick-config"
 )

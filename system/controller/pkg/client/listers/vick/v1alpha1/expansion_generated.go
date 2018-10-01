@@ -43,3 +43,11 @@ type ServiceListerExpansion interface{}
 // ServiceNamespaceListerExpansion allows custom methods to be added to
 // ServiceNamespaceLister.
 type ServiceNamespaceListerExpansion interface{}
+
+// TokenServiceListerExpansion allows custom methods to be added to
+// TokenServiceLister.
+type TokenServiceListerExpansion interface{}
+
+// TokenServiceNamespaceListerExpansion allows custom methods to be added to
+// TokenServiceNamespaceLister.
+type TokenServiceNamespaceListerExpansion interface{}

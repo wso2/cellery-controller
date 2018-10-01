@@ -32,6 +32,7 @@ type VickV1alpha1Interface interface {
 	CellsGetter
 	GatewaysGetter
 	ServicesGetter
+	TokenServicesGetter
 }
 
 // VickV1alpha1Client is used to interact with features provided by the vick group.
@@ -49,6 +50,10 @@ func (c *VickV1alpha1Client) Gateways(namespace string) GatewayInterface {
 
 func (c *VickV1alpha1Client) Services(namespace string) ServiceInterface {
 	return newServices(c, namespace)
+}
+
+func (c *VickV1alpha1Client) TokenServices(namespace string) TokenServiceInterface {
+	return newTokenServices(c, namespace)
 }
 
 // NewForConfig creates a new VickV1alpha1Client for the given config.

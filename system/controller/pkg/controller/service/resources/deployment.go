@@ -19,17 +19,43 @@
 package resources
 
 import (
+	"encoding/json"
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
+
+	var serviceEnvVars []corev1.EnvVar
+	if cellName, ok := service.Labels[vick.CellLabelKey]; ok {
+		if serviceList, ok := service.Annotations[vick.CellServicesAnnotationKey]; ok {
+			var serviceNames []string
+			json.Unmarshal([]byte(serviceList), &serviceNames)
+			for _, serviceName := range serviceNames {
+				envKey := strings.Replace(strings.ToUpper(serviceName), "-", "_", -1)
+				envValue := cellName + "-" + serviceName + "-service"
+				serviceEnvVars = append(serviceEnvVars,
+					corev1.EnvVar{
+						Name:  envKey,
+						Value: envValue,
+					},
+				)
+			}
+		}
+	}
+
+	serviceContainer := service.Spec.Container.DeepCopy()
+	serviceContainer.Name = service.Name
+	serviceContainer.Env = append(serviceEnvVars, serviceContainer.Env...)
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceDeploymentName(service),
@@ -49,13 +75,7 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{
-							Name:  service.Name,
-							Image: service.Spec.Image,
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: service.Spec.ContainerPort,
-							}},
-						},
+						*serviceContainer,
 					},
 				},
 			},

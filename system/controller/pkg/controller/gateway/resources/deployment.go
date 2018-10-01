@@ -26,6 +26,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	apiConfigVolumeName     = "api-config-volume"
+	configMountPath         = "/etc/config"
+	gatewayConfigFile       = "gw.json"
+	apiConfigFile           = "api.json"
+)
+
 func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
@@ -54,10 +61,15 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 							Name:  "init-cell-gateway",
 							Image: "nipunaprashan/microgateway_init",
 							Args: []string{
-								"cell", "cell", "admin", "admin", "https://10.100.1.217:9443/",
+								"mycell", "mycell", "admin", "admin", "https://10.100.1.217:9443/",
 								"lib/platform/bre/security/ballerinaTruststore.p12", "ballerina",
 							},
 							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      apiConfigVolumeName,
+									MountPath: configMountPath,
+									ReadOnly:  true,
+								},
 								{
 									Name:      "targetdir",
 									MountPath: "/target",
@@ -81,6 +93,26 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 						},
 					},
 					Volumes: []corev1.Volume{
+						{
+							Name: apiConfigVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: GatewayConfigMapName(gateway),
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  apiConfigKey,
+											Path: apiConfigFile,
+										},
+										{
+											Key:  gatewayConfigKey,
+											Path: gatewayConfigFile,
+										},
+									},
+								},
+							},
+						},
 						{
 							Name: "targetdir",
 							VolumeSource: corev1.VolumeSource{

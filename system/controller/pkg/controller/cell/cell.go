@@ -46,6 +46,7 @@ type cellHandler struct {
 	networkPilicyLister networkv1listers.NetworkPolicyLister
 	cellLister          listers.CellLister
 	gatewayLister       listers.GatewayLister
+	tokenServiceLister  listers.TokenServiceLister
 	serviceLister       listers.ServiceLister
 }
 
@@ -54,6 +55,7 @@ func NewController(
 	vickClient vickclientset.Interface,
 	cellInformer vickinformers.CellInformer,
 	gatewayInformer vickinformers.GatewayInformer,
+	tokenServiceInformer vickinformers.TokenServiceInformer,
 	serviceInformer vickinformers.ServiceInformer,
 	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
 ) *controller.Controller {
@@ -63,6 +65,7 @@ func NewController(
 		cellLister:          cellInformer.Lister(),
 		serviceLister:       serviceInformer.Lister(),
 		gatewayLister:       gatewayInformer.Lister(),
+		tokenServiceLister:  tokenServiceInformer.Lister(),
 		networkPilicyLister: networkPolicyInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
@@ -132,10 +135,22 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	}
 	glog.Infof("Gateway created %+v", gateway)
 
+	tokenService, err := h.tokenServiceLister.TokenServices(cell.Namespace).Get(resources.TokenServiceName(cell))
+	if errors.IsNotFound(err) {
+		tokenService, err = h.vickClient.VickV1alpha1().TokenServices(cell.Namespace).Create(resources.CreateTokenService(cell))
+		if err != nil {
+			glog.Errorf("Failed to create TokenService %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("TokenService created %+v", tokenService)
+
 	servicesSpecs := cell.Spec.Services
 
 	for _, serviceSpec := range servicesSpecs {
-		service, err := h.serviceLister.Services(cell.Namespace).Get(serviceSpec.Name)
+		service, err := h.serviceLister.Services(cell.Namespace).Get(resources.ServiceName(cell, serviceSpec))
 		if errors.IsNotFound(err) {
 			service, err = h.vickClient.VickV1alpha1().Services(cell.Namespace).Create(resources.CreateService(cell, serviceSpec))
 			if err != nil {

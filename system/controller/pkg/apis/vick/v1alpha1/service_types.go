@@ -19,6 +19,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,12 +35,12 @@ type Service struct {
 }
 
 type ServiceSpec struct {
-	Cell          string `json:"cell"`
-	Name          string `json:"name"`
-	Replicas      *int32 `json:"replicas"`
-	Image         string `json:"image"`
-	ContainerPort int32  `json:"containerPort"`
-	ServicePort   int32  `json:"servicePort"`
+	Cell               string           `json:"cell"`
+	Name               string           `json:"name"`
+	Replicas           *int32           `json:"replicas"`
+	ServicePort        int32            `json:"servicePort"`
+	ServiceAccountName string           `json:"serviceAccountName"`
+	Container          corev1.Container `json:"container"`
 }
 
 type ServiceStatus struct {

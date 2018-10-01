@@ -21,6 +21,7 @@ package gateway
 import (
 	"fmt"
 	"github.com/golang/glog"
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
@@ -34,6 +35,7 @@ import (
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
@@ -41,18 +43,22 @@ import (
 )
 
 type gatewayHandler struct {
-	kubeClient       kubernetes.Interface
-	vickClient       vickclientset.Interface
-	deploymentLister appsv1listers.DeploymentLister
-	k8sServiceLister corev1listers.ServiceLister
-	gatewayLister    listers.GatewayLister
+	kubeClient        kubernetes.Interface
+	vickClient        vickclientset.Interface
+	deploymentLister  appsv1listers.DeploymentLister
+	k8sServiceLister  corev1listers.ServiceLister
+	configMapLister   corev1listers.ConfigMapLister
+	gatewayLister     listers.GatewayLister
+	gatewayInitConfig string
 }
 
 func NewController(
 	kubeClient kubernetes.Interface,
 	vickClient vickclientset.Interface,
+	systemConfigMapInformer corev1informers.ConfigMapInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
+	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer vickinformers.GatewayInformer,
 ) *controller.Controller {
 
@@ -61,6 +67,7 @@ func NewController(
 		vickClient:       vickClient,
 		deploymentLister: deploymentInformer.Lister(),
 		k8sServiceLister: k8sServiceInformer.Lister(),
+		configMapLister:  configMapInformer.Lister(),
 		gatewayLister:    gatewayInformer.Lister(),
 	}
 	c := controller.New(h, "Gateway")
@@ -73,6 +80,13 @@ func NewController(
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
+	})
+
+	systemConfigMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateConfig,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateConfig(new)
+		},
 	})
 	return c
 }
@@ -103,7 +117,22 @@ func (h *gatewayHandler) Handle(key string) error {
 
 func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
-	// Get the gateway deployment
+	configMap, err := h.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.GatewayConfigMapName(gateway))
+	if errors.IsNotFound(err) {
+		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway, h.gatewayInitConfig)
+		if err != nil {
+			return err
+		}
+		configMap, err = h.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Create(gatewayConfigMap)
+		if err != nil {
+			glog.Errorf("Failed to create Gateway ConfigMap %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Gateway config map created %+v", configMap)
+
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway))
@@ -129,4 +158,24 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	glog.Infof("Gateway service created %+v", k8sService)
 
 	return nil
+}
+
+func (h *gatewayHandler) updateConfig(obj interface{}) {
+	configMap, ok := obj.(*corev1.ConfigMap)
+	if !ok {
+		return
+	}
+
+	if configMap.Name != vick.SystemConfigMapName {
+		return
+	}
+
+	if gatewayInitConfig, ok := configMap.Data[resources.GatewayInitConfigKey]; !ok {
+		glog.Errorf("Gateway vick config %q not found", resources.GatewayInitConfigKey)
+		return
+	} else {
+		glog.Infof("Gateway vick config received %+v", gatewayInitConfig)
+		h.gatewayInitConfig = gatewayInitConfig
+	}
+
 }

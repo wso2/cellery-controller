@@ -75,6 +75,8 @@ rules:
   resources:
   - cells
   - services
+  - gateways
+  - tokenservices
   verbs:
   - get
   - list

@@ -34,10 +34,19 @@ type Gateway struct {
 }
 
 type GatewaySpec struct {
-	Replicas      *int32 `json:"replicas"`
-	Image         string `json:"image"`
-	ContainerPort int32  `json:"containerPort"`
-	CellPort      int32  `json:"CellPort"`
+	APIRoutes []APIRoute `json:"apis"`
+}
+
+type APIRoute struct {
+	Context     string          `json:"context"`
+	Definitions []APIDefinition `json:"definitions"`
+	Backend     string          `json:"backend"`
+	Global      bool            `json:"global"`
+}
+
+type APIDefinition struct {
+	Path   string `json:"path"`
+	Method string `json:"method"`
 }
 
 type GatewayStatus struct {
@@ -49,5 +58,5 @@ type GatewayStatus struct {
 type GatewayList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Cell `json:"items"`
+	Items           []Gateway `json:"items"`
 }

@@ -50,6 +50,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&CellList{},
 		&Gateway{},
 		&GatewayList{},
+		&TokenService{},
+		&TokenServiceList{},
 		&Service{},
 		&ServiceList{},
 	)

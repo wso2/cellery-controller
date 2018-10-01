@@ -34,7 +34,7 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 
 	servicesSpecs := cell.Spec.Services
 	for _, serviceSpec := range servicesSpecs {
-		serviceNames = append(serviceNames, serviceSpec.Name)
+		serviceNames = append(serviceNames, ServiceName(cell, serviceSpec))
 	}
 
 	return &networkv1.NetworkPolicy{

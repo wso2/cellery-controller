@@ -27,6 +27,12 @@ import (
 )
 
 func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
+	containerPort := defaultServiceContainerPort
+
+	if len(service.Spec.Container.Ports) > 0 {
+		containerPort = service.Spec.Container.Ports[0].ContainerPort
+	}
+
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceK8sServiceName(service),
@@ -41,7 +47,7 @@ func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 				Name:       controller.HTTPServiceName,
 				Protocol:   corev1.ProtocolTCP,
 				Port:       service.Spec.ServicePort,
-				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: service.Spec.ContainerPort},
+				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: containerPort},
 			}},
 			Selector: createLabels(service),
 		},

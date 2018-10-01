@@ -27,9 +27,10 @@ import (
 func CreateService(cell *v1alpha1.Cell, serviceSpec v1alpha1.ServiceSpec) *v1alpha1.Service {
 	return &v1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceSpec.Name,
-			Namespace: cell.Namespace,
-			Labels:    createLabels(cell),
+			Name:        ServiceName(cell, serviceSpec),
+			Namespace:   cell.Namespace,
+			Labels:      createLabels(cell),
+			Annotations: createServiceAnnotations(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},

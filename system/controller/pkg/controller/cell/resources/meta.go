@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 )
@@ -33,10 +34,34 @@ func createLabels(cell *v1alpha1.Cell) map[string]string {
 	return labels
 }
 
+func createServiceAnnotations(cell *v1alpha1.Cell) map[string]string {
+	var serviceNames []string
+	for _, serviceSpec := range cell.Spec.Services {
+		serviceNames = append(serviceNames, serviceSpec.Name)
+	}
+	serviceNamesJsonBytes, _ := json.Marshal(serviceNames)
+
+	annotations := make(map[string]string, len(cell.ObjectMeta.Annotations)+1)
+	annotations[vick.CellServicesAnnotationKey] = string(serviceNamesJsonBytes)
+
+	for k, v := range cell.ObjectMeta.Annotations {
+		annotations[k] = v
+	}
+	return annotations
+}
+
 func NetworkPolicyName(cell *v1alpha1.Cell) string {
 	return cell.Name + "-network"
 }
 
 func GatewayName(cell *v1alpha1.Cell) string {
 	return cell.Name + "-gateway"
+}
+
+func TokenServiceName(cell *v1alpha1.Cell) string {
+	return cell.Name + "-sts"
+}
+
+func ServiceName(cell *v1alpha1.Cell, serviceSpec v1alpha1.ServiceSpec) string {
+	return cell.Name + "-" + serviceSpec.Name
 }

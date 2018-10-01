@@ -32,6 +32,8 @@ type Interface interface {
 	Gateways() GatewayInformer
 	// Services returns a ServiceInformer.
 	Services() ServiceInformer
+	// TokenServices returns a TokenServiceInformer.
+	TokenServices() TokenServiceInformer
 }
 
 type version struct {
@@ -58,4 +60,9 @@ func (v *version) Gateways() GatewayInformer {
 // Services returns a ServiceInformer.
 func (v *version) Services() ServiceInformer {
 	return &serviceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// TokenServices returns a TokenServiceInformer.
+func (v *version) TokenServices() TokenServiceInformer {
+	return &tokenServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

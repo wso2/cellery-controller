@@ -25,3 +25,5 @@ type CellExpansion interface{}
 type GatewayExpansion interface{}
 
 type ServiceExpansion interface{}
+
+type TokenServiceExpansion interface{}
