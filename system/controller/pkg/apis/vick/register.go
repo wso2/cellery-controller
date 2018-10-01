@@ -30,4 +30,7 @@ const (
 	// VICK Annotations
 	CellServicesAnnotationKey = GroupName + "/cell-services"
 
+	// VICK System
+	SystemNamespace = "vick-system"
+	SystemConfigMapName = "vick-config"
 )

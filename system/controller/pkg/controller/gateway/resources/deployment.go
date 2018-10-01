@@ -28,10 +28,8 @@ import (
 
 const (
 	apiConfigVolumeName     = "api-config-volume"
-	gatewayConfigVolumeName = "gateway-config-volume"
-	gatewayConfigKey        = "cell-gateway-init-config"
-	gatewayConfigFile       = "gw.json"
 	configMountPath         = "/etc/config"
+	gatewayConfigFile       = "gw.json"
 	apiConfigFile           = "api.json"
 )
 
@@ -63,20 +61,13 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 							Name:  "init-cell-gateway",
 							Image: "nipunaprashan/microgateway_init",
 							Args: []string{
-								"cell", "cell", "admin", "admin", "https://10.100.1.217:9443/",
+								"mycell", "mycell", "admin", "admin", "https://10.100.1.217:9443/",
 								"lib/platform/bre/security/ballerinaTruststore.p12", "ballerina",
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      apiConfigVolumeName,
-									MountPath: configMountPath + "/" + apiConfigFile,
-									SubPath:   apiConfigFile,
-									ReadOnly:  true,
-								},
-								{
-									Name:      gatewayConfigVolumeName,
-									MountPath: configMountPath + "/" + gatewayConfigFile,
-									SubPath:   gatewayConfigFile,
+									MountPath: configMountPath,
 									ReadOnly:  true,
 								},
 								{
@@ -114,18 +105,6 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 											Key:  apiConfigKey,
 											Path: apiConfigFile,
 										},
-									},
-								},
-							},
-						},
-						{
-							Name: gatewayConfigVolumeName,
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: controller.VICKConfigMapName,
-									},
-									Items: []corev1.KeyToPath{
 										{
 											Key:  gatewayConfigKey,
 											Path: gatewayConfigFile,

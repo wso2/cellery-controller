@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	apiConfigKey = "api-config"
+	apiConfigKey     = "api-config"
+	gatewayConfigKey = "gateway-init-config"
 )
 
 type apiConfig struct {
@@ -38,7 +39,7 @@ type apiConfig struct {
 	APIRoutes []v1alpha1.APIRoute `json:"apis"`
 }
 
-func CreateGatewayConfigMap(gateway *v1alpha1.Gateway) (*corev1.ConfigMap, error) {
+func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayInitConfig string) (*corev1.ConfigMap, error) {
 	var cellName string
 	cellName, ok := gateway.Labels[vick.CellLabelKey]
 	if !ok {
@@ -47,7 +48,7 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway) (*corev1.ConfigMap, error
 
 	api := &apiConfig{
 		Cell:      cellName,
-		Version:   "1.0.0",
+		Version:   "v1",
 		APIRoutes: gateway.Spec.APIRoutes,
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
@@ -67,7 +68,8 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway) (*corev1.ConfigMap, error
 			},
 		},
 		Data: map[string]string{
-			apiConfigKey: apiConfigJson,
+			apiConfigKey:     apiConfigJson,
+			gatewayConfigKey: gatewayInitConfig,
 		},
 	}, nil
 }

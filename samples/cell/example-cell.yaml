@@ -1,10 +1,22 @@
 apiVersion: vick.wso2.com/v1alpha1
 kind: Cell
 metadata:
-  name: my-cell
+  name: mycell
 spec:
   gateway:
     apis:
+    - context: time
+      definitions:
+      - path: /
+        method: GET
+      backend: http://mycell-server-time-service
+      global: true
+    - context: hello
+      definitions:
+      - path: /
+        method: GET
+      backend: http://mycell-node-hello-service
+      global: true
     - context: context1
       definitions:
       - path: /foo1
@@ -22,13 +34,13 @@ spec:
       backend: http://example2.com
       global: true
   services:
-  - name: server-time-us
+  - name: time-us
     cell: my-cell
     replicas: 1
     container:
       image: docker.io/mirage20/time-us
     servicePort: 80
-  - name: server-time-uk
+  - name: time-uk
     cell: my-cell
     replicas: 1
     container:
@@ -40,9 +52,15 @@ spec:
     container:
       image: docker.io/mirage20/time
     servicePort: 80
-  - name: server-debug
+  - name: debug
     cell: my-cell
     replicas: 1
     container:
       image: docker.io/mirage20/k8s-debug-tools
+    servicePort: 80
+  - name: node-hello
+    cell: my-cell
+    replicas: 1
+    container:
+      image: docker.io/nipunaprashan/node-hello
     servicePort: 80

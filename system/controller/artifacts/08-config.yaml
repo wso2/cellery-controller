@@ -20,4 +20,4 @@ data:
 kind: ConfigMap
 metadata:
   name: vick-config
-#  namespace: vick-system
+  namespace: vick-system

@@ -20,6 +20,7 @@ package main
 
 import (
 	"flag"
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"k8s.io/client-go/tools/cache"
 	"time"
 
@@ -68,6 +69,11 @@ func main() {
 	// Create informer factories
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	vickInformerFactory := vickinformers.NewSharedInformerFactory(vickClient, time.Second*30)
+	vickSystemInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(
+		kubeClient,
+		time.Second*30,
+		kubeinformers.WithNamespace(vick.SystemNamespace),
+	)
 
 	// Create K8s informers
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
@@ -80,6 +86,9 @@ func main() {
 	gatewayInformer := vickInformerFactory.Vick().V1alpha1().Gateways()
 	tokenServiceInformer := vickInformerFactory.Vick().V1alpha1().TokenServices()
 	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
+
+	// Create VICK system informers
+	systemConfigMapInformer := vickSystemInformerFactory.Core().V1().ConfigMaps()
 
 	// Create crd controllers
 	cellController := cell.NewController(
@@ -94,6 +103,7 @@ func main() {
 	gatewayController := gateway.NewController(
 		kubeClient,
 		vickClient,
+		systemConfigMapInformer,
 		deploymentInformer,
 		k8sServiceInformer,
 		configMapInformer,
@@ -118,6 +128,7 @@ func main() {
 	// Start informers
 	go kubeInformerFactory.Start(stopCh)
 	go vickInformerFactory.Start(stopCh)
+	go vickSystemInformerFactory.Start(stopCh)
 
 	// Wait for cache sync
 	glog.Info("Waiting for informer caches to sync")
@@ -127,7 +138,8 @@ func main() {
 		deploymentInformer.Informer().HasSynced,
 		configMapInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
-		// Sync K8s informers
+		systemConfigMapInformer.Informer().HasSynced,
+		// Sync VICK informers
 		cellInformer.Informer().HasSynced,
 		gatewayInformer.Informer().HasSynced,
 		tokenServiceInformer.Informer().HasSynced,
