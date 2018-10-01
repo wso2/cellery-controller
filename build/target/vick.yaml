@@ -98,6 +98,8 @@ rules:
   resources:
   - cells
   - services
+  - gateways
+  - tokenservices
   verbs:
   - get
   - list
@@ -166,6 +168,22 @@ spec:
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  name: tokenservices.vick.wso2.com
+spec:
+  group: vick.wso2.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: TokenService
+    plural: tokenservices
+    singular: tokenservice
+    shortNames:
+    - vtokenservice
+    - vts
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
   name: services.vick.wso2.com
 spec:
   group: vick.wso2.com
@@ -189,6 +207,30 @@ spec:
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
+---
+apiVersion: v1
+data:
+  cell-gateway-init-config: |
+    {
+      "username": "admin",
+      "password": "admin",
+      "registerObj": {
+        "clientName": "rest_api_publisher",
+        "owner": "admin",
+        "grantType": "password refresh_token",
+        "saasApp": true
+      },
+      "apimBaseUrl": "https://10.100.1.217:9443",
+      "registerPath": "/client-registration/v0.14/register",
+      "apiCreatePath": "/api/am/publisher/v0.14/apis",
+      "addLabelPath": "/api/am/admin/v0.14/labels",
+        "apiPublishPath": "/api/am/publisher/v0.14/apis/change-lifecycle?",
+      "tokenEndpoint": "https://10.100.1.217:8243/token"
+    }
+kind: ConfigMap
+metadata:
+  name: vick-config
+#  namespace: vick-system
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
