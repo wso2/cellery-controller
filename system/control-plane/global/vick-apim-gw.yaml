@@ -81,6 +81,8 @@ spec:
           mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/identity
         - name: apim-template
           mountPath: /home/wso2carbon/wso2-server-volume/repository/resources/api_templates
+        - name: auth-ext
+          mountPath: /home/wso2carbon/wso2-server-volume/repository/components/lib
       serviceAccountName: "vicksvc-account"
       imagePullSecrets:
       - name: wso2creds
@@ -100,6 +102,9 @@ spec:
       - name: apim-template
         configMap:
           name: apim-template
+      - name: auth-ext
+        configMap:
+          name: auth-ext
 ---
 apiVersion: v1
 kind: Service
