@@ -1,21 +1,22 @@
 apiVersion: v1
 data:
-  cell-gateway-init-config: |
+  cell-gateway-config: |
     {
-      "username": "admin",
-      "password": "admin",
-      "registerObj": {
-        "clientName": "rest_api_publisher",
-        "owner": "admin",
-        "grantType": "password refresh_token",
-        "saasApp": true
-      },
-      "apimBaseUrl": "https://10.100.1.217:9443",
-      "registerPath": "/client-registration/v0.14/register",
-      "apiCreatePath": "/api/am/publisher/v0.14/apis",
-      "addLabelPath": "/api/am/admin/v0.14/labels",
-        "apiPublishPath": "/api/am/publisher/v0.14/apis/change-lifecycle?",
-      "tokenEndpoint": "https://10.100.1.217:8243/token"
+        "username": "admin",
+        "password": "admin",
+        "apiVersion": "v0.14",
+        "registerPayload": {
+            "clientName": "rest_api_publisher",
+            "owner": "admin",
+            "grantType": "password refresh_token",
+            "saasApp": true
+        },
+        "apimBaseUrl": "https://localhost:9443",
+        "tokenEndpoint": "https://localhost:8243/token",
+        "trustStore": {
+            "location": "lib/platform/bre/security/ballerinaTruststore.p12",
+            "password": "ballerina"
+        }
     }
 kind: ConfigMap
 metadata:

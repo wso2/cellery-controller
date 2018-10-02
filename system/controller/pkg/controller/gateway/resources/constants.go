@@ -22,5 +22,5 @@ const (
 	gatewayServicePort   = 80
 	gatewayContainerPort = 8080
 
-	GatewayInitConfigKey = "cell-gateway-init-config"
+	GatewayInitConfigKey = "cell-gateway-config"
 )
