@@ -15,23 +15,23 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: wso2apim-with-analytics-mysql-pv
+  name: sp-manager-siddhi-files-pv
+  annotations:
+      volume.beta.kubernetes.io/storage-class: ""
   labels:
-    purpose: apim-rdbms-data
+    type: local
+    purpose: sp_mgt_deployment_dir
+    pattern: wso2sp-pattern-distributed
 spec:
   capacity:
-    storage: 20Gi
+    storage: 1Gi
   accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /mnt/mysql
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - wso2-thinkpad-t530-worker0
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    # FIXME: use the right IP
+    #Example Path in NFS server: /data/pattern-distributed/siddhi-files
+    #server: <NFS-Server-IP>
+    #path: "<NFS_LOCATION_PATH>"
+    server: 10.97.218.255
+    path: "/exports"

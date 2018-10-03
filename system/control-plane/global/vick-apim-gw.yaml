@@ -72,17 +72,17 @@ spec:
           protocol: "TCP"
         volumeMounts:
         - name: apim-storage-volume
-          mountPath: /home/wso2carbon/wso2am-2.5.0/repository/deployment/server
+          mountPath: /home/wso2carbon/wso2am-2.6.0/repository/deployment/server
         - name: apim-conf
-          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf
         - name: apim-conf-datasources
-          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/datasources
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/datasources
         - name: conf-identity
-          mountPath: /home/wso2carbon/kubernetes-volumes/am/conf/identity
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/identity
         - name: apim-template
-          mountPath: /home/wso2carbon/wso2-server-volume/repository/resources/api_templates
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/resources/api_templates
         - name: auth-ext
-          mountPath: /home/wso2carbon/wso2-server-volume/repository/components/lib
+          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
       serviceAccountName: "vicksvc-account"
       imagePullSecrets:
       - name: wso2creds

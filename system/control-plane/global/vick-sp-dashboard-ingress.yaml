@@ -12,26 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: PersistentVolume
+apiVersion: extensions/v1beta1
+kind: Ingress
 metadata:
-  name: wso2apim-with-analytics-mysql-pv
+  name: wso2sp-dashboard-ingress
   labels:
-    purpose: apim-rdbms-data
+    pattern: wso2apim-pattern-distributed
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
 spec:
-  capacity:
-    storage: 20Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /mnt/mysql
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - wso2-thinkpad-t530-worker0
+  tls:
+  - hosts:
+    - wso2sp-dashboard
+  rules:
+  - host: wso2sp-dashboard
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: wso2sp-dashboard
+          servicePort: 9643

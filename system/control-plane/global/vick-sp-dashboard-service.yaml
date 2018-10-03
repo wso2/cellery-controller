@@ -13,25 +13,22 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: PersistentVolume
+kind: Service
 metadata:
-  name: wso2apim-with-analytics-mysql-pv
+  name: wso2sp-dashboard
   labels:
-    purpose: apim-rdbms-data
+    node: wso2sp-dashboard
+    pattern: wso2sp-pattern-distributed
 spec:
-  capacity:
-    storage: 20Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
-  local:
-    path: /mnt/mysql
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - wso2-thinkpad-t530-worker0
+  ports:
+    # ports that this service should serve on
+    -
+      name: 'https'
+      port: 9643
+      protocol: TCP
+
+  # label keys and values that must match in order to receive traffic for this service
+  selector:
+    node: wso2sp-dashboard
+    pattern: wso2sp-pattern-distributed
+  clusterIP: None
