@@ -1,17 +1,9 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: nfs-server
 spec:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kubernetes.io/hostname
-            operator: In
-            values:
-            - wso2-thinkpad-t530-worker0
+
   replicas: 1
   selector:
     matchLabels:
@@ -21,6 +13,15 @@ spec:
       labels:
         role: nfs-server
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - wso2-thinkpad-t530-worker0
       containers:
       - name: nfs-server
         image: gcr.io/google_containers/volume-nfs:0.8

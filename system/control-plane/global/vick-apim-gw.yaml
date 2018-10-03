@@ -72,7 +72,7 @@ spec:
           protocol: "TCP"
         volumeMounts:
         - name: apim-storage-volume
-          mountPath: /home/wso2carbon/wso2am-2.5.0/repository/deployment/server
+          mountPath: /home/wso2carbon/wso2am-2.6.0/repository/deployment/server
         - name: apim-conf
           mountPath: /home/wso2carbon/kubernetes-volumes/am/conf
         - name: apim-conf-datasources
