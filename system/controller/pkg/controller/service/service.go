@@ -130,7 +130,7 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 	}
 	glog.Infof("Service service created %+v", k8sService)
 	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
-	service.Status.OwnerCell = service.Spec.Cell
+	service.Status.OwnerCell = ""
 	return nil
 }
 
