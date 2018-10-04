@@ -210,27 +210,37 @@ spec:
 ---
 apiVersion: v1
 data:
-  cell-gateway-init-config: |
+  cell-gateway-config: |
     {
-      "username": "admin",
-      "password": "admin",
-      "registerObj": {
-        "clientName": "rest_api_publisher",
-        "owner": "admin",
-        "grantType": "password refresh_token",
-        "saasApp": true
-      },
-      "apimBaseUrl": "https://10.100.1.217:9443",
-      "registerPath": "/client-registration/v0.14/register",
-      "apiCreatePath": "/api/am/publisher/v0.14/apis",
-      "addLabelPath": "/api/am/admin/v0.14/labels",
-        "apiPublishPath": "/api/am/publisher/v0.14/apis/change-lifecycle?",
-      "tokenEndpoint": "https://10.100.1.217:8243/token"
+        "username": "admin",
+        "password": "admin",
+        "apiVersion": "v0.14",
+        "registerPayload": {
+            "clientName": "rest_api_publisher",
+            "owner": "admin",
+            "grantType": "password refresh_token",
+            "saasApp": true
+        },
+        "apimBaseUrl": "https://10.100.1.217:9443",
+        "tokenEndpoint": "https://10.100.1.217:8243/token",
+        "trustStore": {
+            "location": "lib/platform/bre/security/ballerinaTruststore.p12",
+            "password": "ballerina"
+        }
     }
+  cell-gateway-init-image: nipunaprashan/microgateway_init
+  cell-gateway-image: nipunaprashan/microgateway
+  cell-sts-config: |
+    {
+        "sts_endpoint": "https://localhost:9443/api/identity/vick-auth/v1.0/sts/token",
+        "auth_username": "cell-sts-client",
+        "auth_password": "################"
+    }
+  cell-sts-image: mefarazath/lightweight-wso2is
 kind: ConfigMap
 metadata:
   name: vick-config
-#  namespace: vick-system
+  namespace: vick-system
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
