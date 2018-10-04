@@ -92,6 +92,16 @@
                 <artifactId>grpc-wso2</artifactId>
                 <version>${grpc.wso2.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.zipkin.zipkin2</groupId>
+                <artifactId>zipkin</artifactId>
+                <version>${zipkin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${apache.commons-io.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -123,5 +133,7 @@
         <proto.google.common.proto>1.12.0</proto.google.common.proto>
         <grpc.protobuf.version>1.15.0</grpc.protobuf.version>
         <grpc.wso2.version>1.15.0.wso2v1</grpc.wso2.version>
+        <zipkin.version>2.11.6</zipkin.version>
+        <apache.commons-io.version>2.6</apache.commons-io.version>
     </properties>
 </project>
