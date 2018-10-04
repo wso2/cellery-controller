@@ -100,7 +100,12 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>${apache.commons-io.version}</version>
+                <version>${commons.io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${thrift.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -125,6 +130,7 @@
 
         <siddhi.version>4.1.38</siddhi.version>
         <commons.lang.version>3.7</commons.lang.version>
+        <commons.io.version>2.6</commons.io.version>
         <vick.version>${project.version}</vick.version>
 
         <!-- external jars for receiver -->
@@ -134,6 +140,6 @@
         <grpc.protobuf.version>1.15.0</grpc.protobuf.version>
         <grpc.wso2.version>1.15.0.wso2v1</grpc.wso2.version>
         <zipkin.version>2.11.6</zipkin.version>
-        <apache.commons-io.version>2.6</apache.commons-io.version>
+        <thrift.version>0.10.0</thrift.version>
     </properties>
 </project>

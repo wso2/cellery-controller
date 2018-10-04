@@ -31,4 +31,7 @@ public class Constants {
     public static final String TIMESTAMP = "timestamp";
     public static final String DURATION = "duration";
     public static final String TAGS = "tags";
+
+    public static final String HTTP_CONTENT_TYPE_HEADER = "Content-Type";
+    public static final String HTTP_APPLICATION_THRIFT_CONTENT_TYPE = "application/x-thrift";
 }
