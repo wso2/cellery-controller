@@ -32,9 +32,9 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 	gatewayName := GatewayName(cell);
 	var serviceNames []string
 
-	servicesSpecs := cell.Spec.Services
-	for _, serviceSpec := range servicesSpecs {
-		serviceNames = append(serviceNames, ServiceName(cell, serviceSpec))
+	serviceTemplates := cell.Spec.ServiceTemplates
+	for _, serviceTemplate := range serviceTemplates {
+		serviceNames = append(serviceNames, ServiceName(cell, serviceTemplate))
 	}
 
 	return &networkv1.NetworkPolicy{

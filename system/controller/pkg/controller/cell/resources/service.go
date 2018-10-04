@@ -21,13 +21,31 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
-func CreateService(cell *v1alpha1.Cell, serviceSpec v1alpha1.ServiceSpec) *v1alpha1.Service {
+func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) *v1alpha1.Service {
+	serviceSpec := serviceTemplate.Spec.DeepCopy()
+	serviceSpec.Container.Name = serviceTemplate.Name
+
+	var serviceEnvVars []corev1.EnvVar
+	for _, serviceTemplate := range cell.Spec.ServiceTemplates {
+		envKey := strings.Replace(strings.ToUpper(serviceTemplate.Name), "-", "_", -1)
+		envValue := ServiceName(cell, serviceTemplate) + "-service"
+		serviceEnvVars = append(serviceEnvVars,
+			corev1.EnvVar{
+				Name:  envKey,
+				Value: envValue,
+			},
+		)
+	}
+	serviceSpec.Container.Env = append(serviceEnvVars, serviceSpec.Container.Env...)
+
 	return &v1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ServiceName(cell, serviceSpec),
+			Name:        ServiceName(cell, serviceTemplate),
 			Namespace:   cell.Namespace,
 			Labels:      createLabels(cell),
 			Annotations: createServiceAnnotations(cell),
@@ -35,6 +53,6 @@ func CreateService(cell *v1alpha1.Cell, serviceSpec v1alpha1.ServiceSpec) *v1alp
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
-		Spec: serviceSpec,
+		Spec: *serviceSpec,
 	}
 }

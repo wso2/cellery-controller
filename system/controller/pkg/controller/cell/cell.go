@@ -147,7 +147,7 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	}
 	glog.Infof("TokenService created %+v", tokenService)
 
-	servicesSpecs := cell.Spec.Services
+	servicesSpecs := cell.Spec.ServiceTemplates
 
 	for _, serviceSpec := range servicesSpecs {
 		service, err := h.serviceLister.Services(cell.Namespace).Get(resources.ServiceName(cell, serviceSpec))
