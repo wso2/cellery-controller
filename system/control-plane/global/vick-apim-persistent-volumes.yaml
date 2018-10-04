@@ -25,5 +25,5 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: 10.97.218.255
-    path: "/exports"
+    server: NFS_SERVER_IP
+    path: "/exports/apim_deployment_server"
