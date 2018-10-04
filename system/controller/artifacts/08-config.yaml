@@ -20,6 +20,12 @@ data:
     }
   cell-gateway-init-image: nipunaprashan/microgateway_init
   cell-gateway-image: nipunaprashan/microgateway
+  cell-sts-config: |
+    {
+        "sts_endpoint": "https://localhost:9443/api/identity/vick-auth/v1.0/sts/token",
+        "auth_username": "cell-sts-client",
+        "auth_password": "################"
+    }
   cell-sts-image: mefarazath/lightweight-wso2is
 kind: ConfigMap
 metadata:

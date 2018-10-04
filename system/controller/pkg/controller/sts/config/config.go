@@ -16,15 +16,9 @@
  * under the License.
  */
 
-package resources
+package config
 
-const (
-	tokenServiceServicePort   = 80
-	tokenServiceContainerPort = 9763
-
-	tokenServiceConfigKey  = "sts-config"
-	tokenServiceConfigFile = "sts.json"
-
-	configVolumeName = "config-volume"
-	configMountPath  = "/etc/config"
-)
+type TokenService struct {
+	Config string
+	Image  string
+}

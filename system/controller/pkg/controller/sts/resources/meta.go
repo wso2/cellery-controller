@@ -38,6 +38,10 @@ func createTokenServiceSelector(tokenService *v1alpha1.TokenService) *metav1.Lab
 	return &metav1.LabelSelector{MatchLabels: createTokenServiceLabels(tokenService)}
 }
 
+func TokenServiceConfigMapName(tokenService *v1alpha1.TokenService) string {
+	return tokenService.Name + "-config"
+}
+
 func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
 	return tokenService.Name + "-deployment"
 }

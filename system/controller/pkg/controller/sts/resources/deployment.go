@@ -21,21 +21,13 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/sts/config"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//const (
-//	apiConfigVolumeName     = "api-config-volume"
-//	gatewayConfigVolumeName = "gateway-config-volume"
-//	gatewayConfigKey        = "cell-gateway-init-config"
-//	gatewayConfigFile       = "gw.json"
-//	configMountPath         = "/etc/config"
-//	apiConfigFile           = "api.json"
-//)
-
-func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService) *appsv1.Deployment {
+func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
@@ -61,10 +53,35 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService) *appsv1.D
 					Containers: []corev1.Container{
 						{
 							Name:  "cell-sts",
-							Image: "mefarazath/lightweight-wso2is",
+							Image: tokenServiceConfig.Image,
 							Ports: []corev1.ContainerPort{{
 								ContainerPort: tokenServiceContainerPort,
 							}},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      configVolumeName,
+									MountPath: configMountPath,
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: configVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: TokenServiceConfigMapName(tokenService),
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  tokenServiceConfigKey,
+											Path: tokenServiceConfigFile,
+										},
+									},
+								},
+							},
 						},
 					},
 				},

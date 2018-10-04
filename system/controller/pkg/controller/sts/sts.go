@@ -21,9 +21,11 @@ package sts
 import (
 	"fmt"
 	"github.com/golang/glog"
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/sts/config"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/sts/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -34,6 +36,7 @@ import (
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
@@ -47,11 +50,13 @@ type tokenServiceHandler struct {
 	k8sServiceLister   corev1listers.ServiceLister
 	configMapLister    corev1listers.ConfigMapLister
 	tokenServiceLister listers.TokenServiceLister
+	tokenServiceConfig config.TokenService
 }
 
 func NewController(
 	kubeClient kubernetes.Interface,
 	vickClient vickclientset.Interface,
+	systemConfigMapInformer corev1informers.ConfigMapInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
@@ -77,6 +82,14 @@ func NewController(
 		},
 		DeleteFunc: c.Enqueue,
 	})
+
+	systemConfigMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateConfig,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateConfig(new)
+		},
+	})
+
 	return c
 }
 
@@ -106,9 +119,21 @@ func (h *tokenServiceHandler) Handle(key string) error {
 
 func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error {
 
+	configMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.TokenServiceConfigMapName(tokenService))
+	if errors.IsNotFound(err) {
+		configMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceConfigMap(tokenService, h.tokenServiceConfig))
+		if err != nil {
+			glog.Errorf("Failed to create TokenService ConfigMap %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("TokenService config map created %+v", configMap)
+
 	deployment, err := h.deploymentLister.Deployments(tokenService.Namespace).Get(resources.TokenServiceDeploymentName(tokenService))
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.CreateTokenServiceDeployment(tokenService))
+		deployment, err = h.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.CreateTokenServiceDeployment(tokenService, h.tokenServiceConfig))
 		if err != nil {
 			glog.Errorf("Failed to create TokenService Deployment %v", err)
 			return err
@@ -131,4 +156,31 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	glog.Infof("TokenService service created %+v", k8sService)
 
 	return nil
+}
+
+func (h *tokenServiceHandler) updateConfig(obj interface{}) {
+	configMap, ok := obj.(*corev1.ConfigMap)
+	if !ok {
+		return
+	}
+
+	if configMap.Name != vick.SystemConfigMapName {
+		return
+	}
+
+	conf := config.TokenService{}
+
+	if tokenServiceConfig, ok := configMap.Data["cell-sts-config"]; ok {
+		conf.Config = tokenServiceConfig
+	} else {
+		glog.Errorf("Cell sts config is missing.")
+	}
+
+	if tokenServiceImage, ok := configMap.Data["cell-sts-image"]; ok {
+		conf.Image = tokenServiceImage
+	} else {
+		glog.Errorf("Cell sts image missing.")
+	}
+
+	h.tokenServiceConfig = conf
 }
