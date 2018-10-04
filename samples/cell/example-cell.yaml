@@ -1,66 +1,72 @@
 apiVersion: vick.wso2.com/v1alpha1
 kind: Cell
 metadata:
-  name: mycell
+  name: my-cell
 spec:
-  gateway:
-    apis:
-    - context: time
-      definitions:
-      - path: /
-        method: GET
-      backend: http://mycell-server-time-service
-      global: true
-    - context: hello
-      definitions:
-      - path: /
-        method: GET
-      backend: http://mycell-node-hello-service
-      global: true
-    - context: context1
-      definitions:
-      - path: /foo1
-        method: POST
-      - path: /bar1
-        method: GET
-      backend: http://example1.com
-      global: true
-    - context: context2
-      definitions:
-      - path: /foo2
-        method: GET
-      - path: /bar2
-        method: POST
-      backend: http://example2.com
-      global: true
-  services:
-  - name: time-us
-    cell: my-cell
-    replicas: 1
-    container:
-      image: docker.io/mirage20/time-us
-    servicePort: 80
-  - name: time-uk
-    cell: my-cell
-    replicas: 1
-    container:
-      image: docker.io/mirage20/time-uk
-    servicePort: 80
-  - name: server-time
-    cell: my-cell
-    replicas: 1
-    container:
-      image: docker.io/mirage20/time
-    servicePort: 80
-  - name: debug
-    cell: my-cell
-    replicas: 1
-    container:
-      image: docker.io/mirage20/k8s-debug-tools
-    servicePort: 80
-  - name: node-hello
-    cell: my-cell
-    replicas: 1
-    container:
-      image: docker.io/nipunaprashan/node-hello
-    servicePort: 80
+  gatewayTemplate:
+    spec:
+      apis:
+      - context: time
+        definitions:
+        - path: /
+          method: GET
+        backend: server-time
+        global: true
+      - context: hello
+        definitions:
+        - path: /
+          method: GET
+        backend: node-hello
+        global: true
+      - context: context1
+        definitions:
+        - path: /foo1
+          method: POST
+        - path: /bar1
+          method: GET
+        backend: example1
+        global: true
+      - context: context2
+        definitions:
+        - path: /foo2
+          method: GET
+        - path: /bar2
+          method: POST
+        backend: example2
+        global: true
+  servicesTemplates:
+  - metadata:
+      name: time-us
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/time-us
+      servicePort: 80
+  - metadata:
+      name: time-uk
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/time-uk
+      servicePort: 80
+  - metadata:
+      name: server-time
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/time
+      servicePort: 80
+  - metadata:
+      name: debug
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/k8s-debug-tools
+      servicePort: 80
+  - metadata:
+      name: node-hello
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/nipunaprashan/node-hello
+      servicePort: 80
