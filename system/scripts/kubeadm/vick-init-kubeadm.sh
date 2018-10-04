@@ -34,6 +34,10 @@
 #Initialize the k8s cluster
 #kubeadm init --pod-network-cidr=10.244.0.0/16
 
+#if you are using a single node which acts as both a master and a worker
+#untaint the node so that pods will get scheduled:
+#kubectl taint nodes --all node-role.kubernetes.io/master-
+
 #if you get an error similar to 
 #'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
 #swapoff -a
