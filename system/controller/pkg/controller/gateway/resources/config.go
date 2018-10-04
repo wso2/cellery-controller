@@ -24,13 +24,9 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/config"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	apiConfigKey     = "api-config"
-	gatewayConfigKey = "gateway-init-config"
 )
 
 type apiConfig struct {
@@ -39,7 +35,7 @@ type apiConfig struct {
 	APIRoutes []v1alpha1.APIRoute `json:"apis"`
 }
 
-func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayInitConfig string) (*corev1.ConfigMap, error) {
+func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) (*corev1.ConfigMap, error) {
 	var cellName string
 	cellName, ok := gateway.Labels[vick.CellLabelKey]
 	if !ok {
@@ -48,7 +44,7 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayInitConfig string)
 
 	api := &apiConfig{
 		Cell:      cellName,
-		Version:   "v1",
+		Version:   "1.0.0",
 		APIRoutes: gateway.Spec.APIRoutes,
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
@@ -57,7 +53,6 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayInitConfig string)
 			GatewayConfigMapName(gateway), err)
 	}
 	apiConfigJson := string(apiConfigJsonBytes)
-	fmt.Println(apiConfigJson)
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayConfigMapName(gateway),
@@ -69,7 +64,7 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayInitConfig string)
 		},
 		Data: map[string]string{
 			apiConfigKey:     apiConfigJson,
-			gatewayConfigKey: gatewayInitConfig,
+			gatewayConfigKey: gatewayConfig.InitConfig,
 		},
 	}, nil
 }

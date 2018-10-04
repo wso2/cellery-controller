@@ -16,21 +16,11 @@
  * under the License.
  */
 
-package resources
+package config
 
-const (
-	gatewayServicePort   = 80
-	gatewayContainerPort = 8080
+type Gateway struct {
+	InitConfig string
+	InitImage  string
+	Image      string
+}
 
-	apiConfigKey  = "api-config"
-	apiConfigFile = "api.json"
-
-	gatewayConfigKey  = "gateway-config"
-	gatewayConfigFile = "gw.json"
-
-	configVolumeName = "config-volume"
-	configMountPath  = "/etc/config"
-
-	gatewayBuildVolumeName = "build-volume"
-	gatewayBuildMountPath  = "/target"
-)

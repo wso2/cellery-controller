@@ -21,19 +21,13 @@ package resources
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/config"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	apiConfigVolumeName     = "api-config-volume"
-	configMountPath         = "/etc/config"
-	gatewayConfigFile       = "gw.json"
-	apiConfigFile           = "api.json"
-)
-
-func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
+func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
@@ -58,21 +52,17 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 				Spec: corev1.PodSpec{
 					InitContainers: []corev1.Container{
 						{
-							Name:  "init-cell-gateway",
-							Image: "nipunaprashan/microgateway_init",
-							Args: []string{
-								"mycell", "mycell", "admin", "admin", "https://10.100.1.217:9443/",
-								"lib/platform/bre/security/ballerinaTruststore.p12", "ballerina",
-							},
+							Name:  "cell-gateway-init",
+							Image: gatewayConfig.InitImage,
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      apiConfigVolumeName,
+									Name:      configVolumeName,
 									MountPath: configMountPath,
 									ReadOnly:  true,
 								},
 								{
-									Name:      "targetdir",
-									MountPath: "/target",
+									Name:      gatewayBuildVolumeName,
+									MountPath: gatewayBuildMountPath,
 								},
 							},
 						},
@@ -80,21 +70,21 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 					Containers: []corev1.Container{
 						{
 							Name:  "cell-gateway",
-							Image: "nipunaprashan/microgateway",
+							Image: gatewayConfig.Image,
 							Ports: []corev1.ContainerPort{{
 								ContainerPort: gatewayContainerPort,
 							}},
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      "targetdir",
-									MountPath: "/target",
+									Name:      gatewayBuildVolumeName,
+									MountPath: gatewayBuildMountPath,
 								},
 							},
 						},
 					},
 					Volumes: []corev1.Volume{
 						{
-							Name: apiConfigVolumeName,
+							Name: configVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -114,7 +104,7 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 							},
 						},
 						{
-							Name: "targetdir",
+							Name: gatewayBuildVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								EmptyDir: &corev1.EmptyDirVolumeSource{
 								},

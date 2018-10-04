@@ -25,6 +25,7 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	vickclientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/config"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -43,13 +44,13 @@ import (
 )
 
 type gatewayHandler struct {
-	kubeClient        kubernetes.Interface
-	vickClient        vickclientset.Interface
-	deploymentLister  appsv1listers.DeploymentLister
-	k8sServiceLister  corev1listers.ServiceLister
-	configMapLister   corev1listers.ConfigMapLister
-	gatewayLister     listers.GatewayLister
-	gatewayInitConfig string
+	kubeClient       kubernetes.Interface
+	vickClient       vickclientset.Interface
+	deploymentLister appsv1listers.DeploymentLister
+	k8sServiceLister corev1listers.ServiceLister
+	configMapLister  corev1listers.ConfigMapLister
+	gatewayLister    listers.GatewayLister
+	gatewayConfig    config.Gateway
 }
 
 func NewController(
@@ -119,7 +120,7 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
 	configMap, err := h.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.GatewayConfigMapName(gateway))
 	if errors.IsNotFound(err) {
-		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway, h.gatewayInitConfig)
+		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway, h.gatewayConfig)
 		if err != nil {
 			return err
 		}
@@ -135,7 +136,7 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway))
+		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
@@ -170,12 +171,25 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 		return
 	}
 
-	if gatewayInitConfig, ok := configMap.Data[resources.GatewayInitConfigKey]; !ok {
-		glog.Errorf("Gateway vick config %q not found", resources.GatewayInitConfigKey)
-		return
+	conf := config.Gateway{}
+
+	if gatewayInitConfig, ok := configMap.Data["cell-gateway-config"]; ok {
+		conf.InitConfig = gatewayInitConfig
 	} else {
-		glog.Infof("Gateway vick config received %+v", gatewayInitConfig)
-		h.gatewayInitConfig = gatewayInitConfig
+		glog.Errorf("Cell gateway config is missing.")
 	}
 
+	if gatewayInitImage, ok := configMap.Data["cell-gateway-init-image"]; ok {
+		conf.InitImage = gatewayInitImage
+	} else {
+		glog.Errorf("Cell gateway init image missing.")
+	}
+
+	if gatewayImage, ok := configMap.Data["cell-gateway-image"]; ok {
+		conf.Image = gatewayImage
+	} else {
+		glog.Errorf("Cell gateway image missing.")
+	}
+
+	h.gatewayConfig = conf
 }
