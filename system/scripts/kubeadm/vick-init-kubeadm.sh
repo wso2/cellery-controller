@@ -34,6 +34,10 @@
 #Initialize the k8s cluster
 #kubeadm init --pod-network-cidr=10.244.0.0/16
 
+#if you get an error similar to 
+#'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
+#swapoff -a
+
 #Install Flannel network
 #kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
 
