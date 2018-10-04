@@ -39,13 +39,11 @@ public class Constants {
         public static final String APIS = "apis";
         public static final String USERNAME = "username";
         public static final String PASSWORD = "password";
-        public static final String REGISTER_OBJECT = "registerObj";
+        public static final String API_VERSION = "apiVersion";
+        public static final String REGISTER_PAYLOAD = "registerPayload";
+        public static final String TRUST_STORE = "trustStore";
         public static final String APIM_BASE_URL = "apimBaseUrl";
-        public static final String REGISTER_PATH = "registerPath";
         public static final String TOKEN_ENDPOINT = "tokenEndpoint";
-        public static final String API_CREATE_PATH = "apiCreatePath";
-        public static final String API_PUBLISH_PATH = "apiPublishPath";
-        public static final String ADD_LABEL_PATH = "addLabelPath";
         public static final String NAME = "name";
         public static final String DESCRIPTION = "description";
         public static final String IS_DEFAULT_VERSION = "isDefaultVersion";
@@ -82,7 +80,12 @@ public class Constants {
         public static final String PRODUCTION_AND_SANDBOX = "Production and Sandbox";
         public static final String EMPTY_STRING = "";
         public static final String UNDERSCORE = "_" ;
+        public static final String HYPHEN = "-" ;
+        public static final String GLOBAL = "global" ;
         public static final String SWAGGER_VERSION = "2.0";
+        public static final String GATEWAY_SERVICE = "gateway-service";
+        public static final String HTTP = "http://";
+        public static final int ERROR_EXIT_CODE = 1;
 
         // Rest API constants
         public static final String HTTP_RESPONSE_TYPE_ACCEPT = "Accept";
@@ -99,6 +102,10 @@ public class Constants {
         // Config map file paths
         public static final String CELL_CONFIGURATION_FILE_PATH = "/etc/config/api.json";
         public static final String REST_CONFIGURATION_FILE_PATH = "/etc/config/gw.json";
+        public static final String MICROGATEWAY_PATH = "/wso2am-micro-gw-2.6.0/bin/micro-gw";
+        public static final String HOME_PATH = "/";
+        public static final String UNZIP_FILE_PATH = "/unzip";
+        public static final String MOUNT_FILE_PATH = "/target";
 
         // Token constants
         public static final String CLIENT_ID = "clientId";
@@ -111,5 +118,14 @@ public class Constants {
         public static final String DUPLICATE_API_ERROR = "A duplicate API already exists for";
         public static final String DIFFERENT_CONTEXT_ERROR = "already exists with different context";
         public static final String DUPLICATE_CONTEXT_ERROR = "A duplicate API context already exists";
+
+        // REST API Paths
+        public static final String PATH_CLIENT_REGISTRATION = "/client-registration/";
+        public static final String PATH_PUBLISHER = "/api/am/publisher/";
+        public static final String PATH_ADMIN = "/api/am/admin/";
+        public static final String PATH_REGISTER = "/register";
+        public static final String PATH_APIS = "/apis";
+        public static final String PATH_LABELS = "/labels";
+        public static final String PATH_LIFECYCLE = "/apis/change-lifecycle?";
     }
 }

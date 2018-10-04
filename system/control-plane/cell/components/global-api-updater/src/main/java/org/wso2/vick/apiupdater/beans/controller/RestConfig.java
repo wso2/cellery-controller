@@ -33,26 +33,20 @@ public class RestConfig {
     @JsonProperty(Constants.JsonParamNames.PASSWORD)
     private String password;
 
-    @JsonProperty(Constants.JsonParamNames.REGISTER_OBJECT)
-    private JSONObject registerObj;
+    @JsonProperty(Constants.JsonParamNames.API_VERSION)
+    private String apiVersion;
+
+    @JsonProperty(Constants.JsonParamNames.REGISTER_PAYLOAD)
+    private JSONObject registerPayload;
 
     @JsonProperty(Constants.JsonParamNames.APIM_BASE_URL)
     private String apimBaseUrl;
 
-    @JsonProperty(Constants.JsonParamNames.REGISTER_PATH)
-    private String registerPath;
-
     @JsonProperty(Constants.JsonParamNames.TOKEN_ENDPOINT)
     private String tokenEndpoint;
 
-    @JsonProperty(Constants.JsonParamNames.API_CREATE_PATH)
-    private String apiCreatePath;
-
-    @JsonProperty(Constants.JsonParamNames.API_PUBLISH_PATH)
-    private String apiPublishPath;
-
-    @JsonProperty(Constants.JsonParamNames.ADD_LABEL_PATH)
-    private String addLabelPath;
+    @JsonProperty(Constants.JsonParamNames.TRUST_STORE)
+    private JSONObject trustStore;
 
     public String getUsername() {
         return username;
@@ -70,12 +64,20 @@ public class RestConfig {
         this.password = password;
     }
 
-    public JSONObject getRegisterObj() {
-        return registerObj;
+    public String getApiVersion() {
+        return apiVersion;
     }
 
-    public void setRegisterObj(JSONObject registerObj) {
-        this.registerObj = registerObj;
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public JSONObject getRegisterPayload() {
+        return registerPayload;
+    }
+
+    public void setRegisterPayload(JSONObject registerPayload) {
+        this.registerPayload = registerPayload;
     }
 
     public String getApimBaseUrl() {
@@ -86,14 +88,6 @@ public class RestConfig {
         this.apimBaseUrl = apimBaseUrl;
     }
 
-    public String getRegisterPath() {
-        return registerPath;
-    }
-
-    public void setRegisterPath(String registerPath) {
-        this.registerPath = registerPath;
-    }
-
     public String getTokenEndpoint() {
         return tokenEndpoint;
     }
@@ -102,27 +96,11 @@ public class RestConfig {
         this.tokenEndpoint = tokenEndpoint;
     }
 
-    public String getApiCreatePath() {
-        return apiCreatePath;
+    public JSONObject getTrustStore() {
+        return trustStore;
     }
 
-    public void setApiCreatePath(String apiCreatePath) {
-        this.apiCreatePath = apiCreatePath;
-    }
-
-    public String getApiPublishPath() {
-        return apiPublishPath;
-    }
-
-    public void setApiPublishPath(String apiPublishPath) {
-        this.apiPublishPath = apiPublishPath;
-    }
-
-    public String getAddLabelPath() {
-        return addLabelPath;
-    }
-
-    public void setAddLabelPath(String addLabelPath) {
-        this.addLabelPath = addLabelPath;
+    public void setTrustStore(JSONObject trustStore) {
+        this.trustStore = trustStore;
     }
 }
