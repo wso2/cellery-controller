@@ -25,6 +25,12 @@ import (
 )
 
 func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
+	gatewaySpec := cell.Spec.GatewayTemplate.Spec
+
+	for i, _ := range gatewaySpec.APIRoutes {
+		gatewaySpec.APIRoutes[i].Backend = "http://" + cell.Name + "-" + gatewaySpec.APIRoutes[i].Backend + "-service"
+	}
+
 	return &v1alpha1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayName(cell),
@@ -34,6 +40,6 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
-		Spec: cell.Spec.Gateway,
+		Spec: gatewaySpec,
 	}
 }
