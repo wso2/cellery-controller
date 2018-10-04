@@ -34,9 +34,14 @@ type Service struct {
 	Status ServiceStatus `json:"status"`
 }
 
+// ServiceTemplateSpec describes the data a service should have when created from a template
+type ServiceTemplateSpec struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec ServiceSpec `json:"spec,omitempty"`
+}
+
 type ServiceSpec struct {
-	Cell               string           `json:"cell"`
-	Name               string           `json:"name"`
 	Replicas           *int32           `json:"replicas"`
 	ServicePort        int32            `json:"servicePort"`
 	ServiceAccountName string           `json:"serviceAccountName"`

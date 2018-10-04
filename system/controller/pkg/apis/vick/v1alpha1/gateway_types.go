@@ -33,6 +33,12 @@ type Gateway struct {
 	Status GatewayStatus `json:"status"`
 }
 
+type GatewayTemplateSpec struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec GatewaySpec `json:"spec,omitempty"`
+}
+
 type GatewaySpec struct {
 	APIRoutes []APIRoute `json:"apis"`
 }
