@@ -49,3 +49,7 @@ func GatewayDeploymentName(gateway *v1alpha1.Gateway) string {
 func GatewayK8sServiceName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-service"
 }
+
+func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
+	return GatewayK8sServiceName(gateway) + "." + gateway.Namespace
+}

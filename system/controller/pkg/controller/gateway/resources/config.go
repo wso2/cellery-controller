@@ -32,6 +32,7 @@ import (
 type apiConfig struct {
 	Cell      string              `json:"cell"`
 	Version   string              `json:"version"`
+	Hostname  string              `json:"hostname"`
 	APIRoutes []v1alpha1.APIRoute `json:"apis"`
 }
 
@@ -45,6 +46,7 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayConfig config.Gate
 	api := &apiConfig{
 		Cell:      cellName,
 		Version:   "1.0.0",
+		Hostname:  GatewayFullK8sServiceName(gateway),
 		APIRoutes: gateway.Spec.APIRoutes,
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
