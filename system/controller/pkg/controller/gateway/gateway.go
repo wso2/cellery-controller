@@ -28,7 +28,10 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/config"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"reflect"
+
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -113,11 +116,34 @@ func (h *gatewayHandler) Handle(key string) error {
 	if err = h.handle(gateway); err != nil {
 		return err
 	}
+
+	if _, err = h.updateStatus(gateway); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
+	if err := h.handleConfigMap(gateway); err != nil {
+		return err
+	}
+
+	if err := h.handleDeployment(gateway); err != nil {
+		return err
+	}
+
+	if err := h.handleK8sService(gateway); err != nil {
+		return err
+	}
+
+	h.updateOwnerCell(gateway)
+
+	return nil
+}
+
+func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 	configMap, err := h.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.GatewayConfigMapName(gateway))
 	if errors.IsNotFound(err) {
 		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway, h.gatewayConfig)
@@ -134,6 +160,10 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	}
 	glog.Infof("Gateway config map created %+v", configMap)
 
+	return nil
+}
+
+func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
@@ -146,6 +176,16 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	}
 	glog.Infof("Gateway deployment created %+v", deployment)
 
+	if deployment.Status.AvailableReplicas > 0 {
+		gateway.Status.Status = "Ready"
+	} else {
+		gateway.Status.Status = "NotReady"
+	}
+
+	return nil
+}
+
+func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	k8sService, err := h.k8sServiceLister.Services(gateway.Namespace).Get(resources.GatewayK8sServiceName(gateway))
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sService(gateway))
@@ -158,7 +198,34 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	}
 	glog.Infof("Gateway service created %+v", k8sService)
 
+	gateway.Status.HostName = k8sService.Name
+
 	return nil
+}
+
+func (h *gatewayHandler) updateStatus(gateway *v1alpha1.Gateway) (*v1alpha1.Gateway, error) {
+	latestGateway, err := h.gatewayLister.Gateways(gateway.Namespace).Get(gateway.Name)
+	if err != nil {
+		return nil, err
+	}
+	if !reflect.DeepEqual(latestGateway.Status, gateway.Status) {
+		latestGateway.Status = gateway.Status
+		// https://github.com/kubernetes/kubernetes/issues/54672
+		// return h.vickClient.VickV1alpha1().Services(service.Namespace).UpdateStatus(latestService)
+		return h.vickClient.VickV1alpha1().Gateways(gateway.Namespace).Update(latestGateway)
+	}
+	return nil, nil
+}
+
+func (h *gatewayHandler) updateOwnerCell(gateway *v1alpha1.Gateway) {
+	if gateway.Status.OwnerCell == "" {
+		ownerRef := metav1.GetControllerOf(gateway)
+		if ownerRef != nil {
+			gateway.Status.OwnerCell = ownerRef.Name
+		} else {
+			gateway.Status.OwnerCell = "<none>"
+		}
+	}
 }
 
 func (h *gatewayHandler) updateConfig(obj interface{}) {
