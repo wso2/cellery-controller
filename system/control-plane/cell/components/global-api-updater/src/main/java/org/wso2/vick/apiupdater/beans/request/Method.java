@@ -36,8 +36,12 @@ public class Method {
     @JsonProperty(Constants.JsonParamNames.X_AUTH_TYPE)
     private String xAuthType;
 
+    @JsonProperty(Constants.JsonParamNames.X_THROTTLING_TIER)
+    private String xThrottlingTier;
+
     public Method() {
-        this.xAuthType = "None";
+        this.xAuthType = "Application & Application User";
+        this.xThrottlingTier = "Unlimited";
     }
 
     public List<Parameter> getParameters() {
@@ -54,5 +58,13 @@ public class Method {
 
     public void setxAuthType(String xAuthType) {
         this.xAuthType = xAuthType;
+    }
+
+    public String getxThrottlingTier() {
+        return xThrottlingTier;
+    }
+
+    public void setxThrottlingTier(String xThrottlingTier) {
+        this.xThrottlingTier = xThrottlingTier;
     }
 }

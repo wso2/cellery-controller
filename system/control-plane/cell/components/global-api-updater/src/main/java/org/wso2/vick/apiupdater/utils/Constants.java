@@ -60,6 +60,7 @@ public class Constants {
         public static final String ACCESS_URLS = "accessUrls";
         public static final String PARAMETERS = "parameters";
         public static final String X_AUTH_TYPE = "x-auth-type";
+        public static final String X_THROTTLING_TIER = "x-throttling-tier";
         public static final String REQUIRED = "required";
         public static final String IN = "in";
         public static final String GET = "get";
