@@ -22,6 +22,16 @@ package org.wso2.vick.tracing.receiver;
  * Tracing Receiver Constants.
  */
 public class Constants {
+    public static final String HTTP_CONTENT_TYPE_HEADER = "Content-Type";
+    public static final String HTTP_APPLICATION_THRIFT_CONTENT_TYPE = "application/x-thrift";
+
+    public static final String TRACING_RECEIVER_IP_KEY = "ip";
+    public static final String TRACING_RECEIVER_PORT_KEY = "port";
+
+    public static final String DEFAULT_TRACING_RECEIVER_IP = "0.0.0.0";
+    public static final String DEFAULT_TRACING_RECEIVER_PORT = "9411";
+
+    // Zipkin fields
     public static final String TRACE_ID = "traceId";
     public static final String SPAN_ID = "id";
     public static final String PARENT_ID = "parentId";
@@ -32,6 +42,19 @@ public class Constants {
     public static final String DURATION = "duration";
     public static final String TAGS = "tags";
 
-    public static final String HTTP_CONTENT_TYPE_HEADER = "Content-Type";
-    public static final String HTTP_APPLICATION_THRIFT_CONTENT_TYPE = "application/x-thrift";
+    public static final String SPAN_KIND_TAG_KEY = "span.kind";
+
+    // Span kinds
+    public static final String CLIENT_SPAN_KIND = "CLIENT";
+    public static final String SERVER_SPAN_KIND = "SERVER";
+    public static final String PRODUCER_SPAN_KIND = "PRODUCER";
+    public static final String CONSUMER_SPAN_KIND = "CONSUMER";
+
+    // Thrift span annotation values
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_CLIENT_SEND = "cs";
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_CLIENT_RECEIVE = "cr";
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_SERVER_SEND = "ss";
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_SERVER_RECEIVE = "sr";
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_PRODUCER_SEND = "ms";
+    public static final String THRIFT_SPAN_ANNOTATION_VALUE_CONSUMER_RECEIVER = "mr";
 }

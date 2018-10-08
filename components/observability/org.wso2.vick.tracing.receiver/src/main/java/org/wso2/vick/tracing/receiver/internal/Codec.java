@@ -20,11 +20,13 @@ package org.wso2.vick.tracing.receiver.internal;
 
 import com.twitter.zipkin.thriftjava.Annotation;
 import com.twitter.zipkin.thriftjava.BinaryAnnotation;
+import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
 import org.apache.thrift.transport.TTransport;
+import org.wso2.vick.tracing.receiver.Constants;
 import zipkin2.SpanBytesDecoderDetector;
 import zipkin2.codec.BytesDecoder;
 
@@ -39,6 +41,8 @@ import java.util.Map;
  */
 public class Codec {
 
+    private static final Logger logger = Logger.getLogger(Codec.class.getName());
+
     /**
      * Decode a default byte array.
      *
@@ -47,6 +51,9 @@ public class Codec {
      */
     public static List<ZipkinSpan> decodeData(byte[] byteArray) {
         BytesDecoder<zipkin2.Span> spanBytesDecoder = SpanBytesDecoderDetector.decoderForListMessage(byteArray);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Using " + spanBytesDecoder.getClass().getName() + " decoder for received tracing data");
+        }
         List<zipkin2.Span> zipkin2Spans = spanBytesDecoder.decodeList(byteArray);
 
         List<ZipkinSpan> spans = new ArrayList<>();
@@ -84,33 +91,37 @@ public class Codec {
             com.twitter.zipkin.thriftjava.Span tSpan = new com.twitter.zipkin.thriftjava.Span();
             tSpan.read(tProtocol);
 
+            // Using Zipkin Builder to do the required additional processing
             zipkin2.Span zipkin2Span = zipkin2.Span.newBuilder()
                     .traceId(tSpan.getTrace_id_high(), tSpan.getTrace_id())
                     .id(tSpan.getId())
                     .parentId(tSpan.getParent_id())
                     .build();
 
-            Annotation localAnnotation = tSpan.getAnnotations().get(0);
+            // Getting the span kind from the local annotation
+            Annotation localAnnotation = tSpan.getAnnotations().get(0); // The first annotation is the local annotations
             String localAnnotationValue = localAnnotation.getValue();
             String kind;
             switch (localAnnotationValue) {
-                case "cs":
-                case "cr":
-                    kind = "CLIENT";
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_CLIENT_SEND:
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_CLIENT_RECEIVE:
+                    kind = Constants.CLIENT_SPAN_KIND;
                     break;
-                case "ss":
-                case "sr":
-                    kind = "SERVER";
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_SERVER_SEND:
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_SERVER_RECEIVE:
+                    kind = Constants.SERVER_SPAN_KIND;
                     break;
-                case "ms":
-                    kind = "PRODUCER";
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_PRODUCER_SEND:
+                    kind = Constants.PRODUCER_SPAN_KIND;
                     break;
-                case "mr":
-                    kind = "CONSUMER";
+                case Constants.THRIFT_SPAN_ANNOTATION_VALUE_CONSUMER_RECEIVER:
+                    kind = Constants.CONSUMER_SPAN_KIND;
                     break;
                 default:
                     kind = "";
             }
+
+            // Converting the binary annotations list to a tags map
             Map<String, String> tags = new HashMap<>();
             for (BinaryAnnotation binaryAnnotation : tSpan.getBinary_annotations()) {
                 tags.put(
@@ -131,7 +142,6 @@ public class Codec {
             span.setTags(tags);
             spans.add(span);
         }
-
         return spans;
     }
 }
