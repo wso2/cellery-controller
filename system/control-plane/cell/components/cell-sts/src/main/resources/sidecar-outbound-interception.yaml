@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: ext-authz-grpc-outbound
+  namespace: istio-system
+spec:
+  workloadLabels:
+    # this is the target POD whose communication will be intercepted by the gRPC server
+    app: frontend
+  filters:
+  - insertPosition:
+      index: FIRST
+    listenerMatch:
+      # We are intercepting the outbound calls
+      listenerType: SIDECAR_OUTBOUND
+      listenerProtocol: HTTP
+    filterType: HTTP
+    filterName: "envoy.ext_authz"
+    filterConfig:
+      grpc_service:
+        google_grpc:
+          # This is where our cell STS listens
+          target_uri: 192.168.99.1:8080
+          stat_prefix: "ext_authz"
+        timeout: 5s
