@@ -22,8 +22,7 @@ FROM ubuntu:18.04
 COPY ./files/jdk1.8.0_121 /java
 
 # set environment variables
-ENV JAVA_HOME=/java \
-    PATH=$JAVA_HOME/bin:$PATH
+ENV JAVA_HOME=/java
+ENV PATH=$JAVA_HOME/bin:$PATH
 
-EXPOSE 9096 9095 9090
-ENTRYPOINT ["/target/bin/gateway"]
+ENTRYPOINT ["/target/bin/gateway", "-e", "b7a.log.level=DEBUG"]
