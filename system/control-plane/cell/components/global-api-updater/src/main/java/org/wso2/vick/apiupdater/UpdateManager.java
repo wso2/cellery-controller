@@ -346,8 +346,7 @@ public class UpdateManager {
     private static String getGlobalEndpoint() {
         String response = Constants.Utils.EMPTY_STRING;
         ProductionEndpoint productionEndpoint = new ProductionEndpoint();
-        productionEndpoint.setUrl(Constants.Utils.HTTP + cellConfig.getCell() + Constants.Utils.HYPHEN +
-                                  Constants.Utils.GATEWAY_SERVICE);
+        productionEndpoint.setUrl(Constants.Utils.HTTP + cellConfig.getHostname());
 
         Endpoint endpoint = new Endpoint();
         endpoint.setProductionEndPoint(productionEndpoint);
