@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: pub-store
-        image: wso2vick/wso2am:latest
+        image: wso2vick/wso2am:2.6.0-rc3-build1
         livenessProbe:
           exec:
             command:
