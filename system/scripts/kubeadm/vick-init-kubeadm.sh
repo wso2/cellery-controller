@@ -1,52 +1,5 @@
 #!/bin/bash
 
-#This script provides steps to install K8s using kubeadmin tool on Ubuntu.
-
-#Install Ubuntu 18.04
-
-#Update all installed packages.
-#apt-get update
-#apt-get upgrade
-
-#Install Docker
-#apt-get install -y docker.io
-
-#Install NFS client
-#apt-get install nfs-common
-
-#Enable docker service
-#systemctl enable docker.service
-
-#Install curl
-#apt-get update && apt-get install -y apt-transport-https curl
-
-#Update the apt source list
-#curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-#cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
-# deb http://apt.kubernetes.io/ kubernetes-xenial main
-#EOF
-
-#Install K8s components
-#apt-get update
-#apt-get install -y kubelet kubeadm kubectl
-#apt-mark hold kubelet kubeadm kubectl
-
-#Initialize the k8s cluster
-#kubeadm init --pod-network-cidr=10.244.0.0/16
-
-#if you are using a single node which acts as both a master and a worker
-#untaint the node so that pods will get scheduled:
-#kubectl taint nodes --all node-role.kubernetes.io/master-
-
-#if you get an error similar to 
-#'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
-#swapoff -a
-
-#Install Flannel network
-#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
-
-#Add more worker nodes.
-#kubeadm join <Master Node IP>:6443 --token <token> --discovery-token-ca-cert-hash <discovery-token-ca-cert-hash>
 
 #Install Istio
 echo "Installing Istio"
