@@ -82,10 +82,8 @@ public class Constants {
         public static final String PRODUCTION_AND_SANDBOX = "Production and Sandbox";
         public static final String EMPTY_STRING = "";
         public static final String UNDERSCORE = "_" ;
-        public static final String HYPHEN = "-" ;
         public static final String GLOBAL = "global" ;
         public static final String SWAGGER_VERSION = "2.0";
-        public static final String GATEWAY_SERVICE = "gateway-service";
         public static final String HTTP = "http://";
         public static final int ERROR_EXIT_CODE = 1;
 

@@ -30,8 +30,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -48,7 +48,7 @@ import org.wso2.vick.apiupdater.exceptions.APIException;
  */
 public class RequestProcessor {
 
-    private static final Log log = LogFactory.getLog(RequestProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
     private CloseableHttpClient httpClient;
 
     public RequestProcessor() throws APIException {
@@ -132,6 +132,10 @@ public class RequestProcessor {
             throws APIException {
         String returnObj = null;
         try {
+            if (log.isDebugEnabled()) {
+                log.debug("Post payload: " + payload);
+                log.debug("Post auth header: " + authHeader);
+            }
             StringEntity payloadEntity = new StringEntity(payload);
             HttpPost httpPost = new HttpPost(url);
             httpPost.setHeader(Constants.Utils.HTTP_CONTENT_TYPE, contentType);
@@ -144,6 +148,10 @@ public class RequestProcessor {
             String responseStr = EntityUtils.toString(entity);
             int statusCode = response.getStatusLine().getStatusCode();
 
+            if (log.isDebugEnabled()) {
+                log.debug("Response status code: " + statusCode);
+                log.debug("Response string : " + responseStr);
+            }
             if (responseValidate(statusCode, responseStr)) {
                 returnObj = responseStr;
             }
