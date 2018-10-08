@@ -22,11 +22,11 @@ data:
   cell-gateway-image: nipunaprashan/microgateway
   cell-sts-config: |
     {
-        "endpoint": "https://localhost:9443/api/identity/vick-auth/v1.0/sts/token",
-        "username": "cell-sts-client",
-        "password": "################"
+        "endpoint": "https://10.100.1.217:9443/api/identity/vick-auth/v1.0/sts/token",
+        "username": "admin",
+        "password": "admin"
     }
-  cell-sts-image: mefarazath/lightweight-wso2is
+  cell-sts-image: wso2vick/cell-sts:latest
 kind: ConfigMap
 metadata:
   name: vick-config
