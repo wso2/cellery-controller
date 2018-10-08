@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/sts/config"
@@ -32,6 +33,7 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 	one := int32(1)
+	cellName := tokenService.Labels[vick.CellLabelKey]
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceDeploymentName(tokenService),
@@ -57,6 +59,12 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							Ports: []corev1.ContainerPort{{
 								ContainerPort: tokenServiceContainerPort,
 							}},
+							Env: []corev1.EnvVar{
+								{
+									Name:  envCellNameKey,
+									Value: cellName,
+								},
+							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      configVolumeName,

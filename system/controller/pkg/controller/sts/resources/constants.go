@@ -27,4 +27,6 @@ const (
 
 	configVolumeName = "config-volume"
 	configMountPath  = "/etc/config"
+
+	envCellNameKey = "CELL_NAME"
 )
