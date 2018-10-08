@@ -22,6 +22,7 @@ package org.wso2.vick.telemetry.receiver.internal;
 import io.grpc.stub.StreamObserver;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.vick.telemetry.receiver.AttributesBag;
+import org.wso2.vick.telemetry.receiver.Constants;
 import org.wso2.vick.telemetry.receiver.generated.AttributesOuterClass;
 import org.wso2.vick.telemetry.receiver.generated.MixerGrpc;
 import org.wso2.vick.telemetry.receiver.generated.Report;
@@ -89,11 +90,64 @@ public class TelemetryServiceImpl extends MixerGrpc.MixerImplBase {
             attributes.getDurationsMap().forEach((key, value) -> {
                 attributesBag.put(attributedDecoder.getValue(key), value);
             });
+            validateAttributes(attributesBag);
             sourceEventListener.onEvent(attributesBag.getAttributes(), new String[0]);
         }
 
         Report.ReportResponse reply = Report.ReportResponse.newBuilder().build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
+    }
+
+    private void validateAttributes(AttributesBag attributesBag) {
+        String attributeName = "request.method";
+        String headerKey = ":method";
+        String attributeValue = validateAttribute(attributesBag, attributeName, true, headerKey,
+                Constants.UNKNOWN_ATTRIBUTE);
+        if (attributeValue != null) {
+            attributesBag.put(attributeName, attributeValue);
+        }
+
+        attributeName = "response.code";
+        headerKey = ":status";
+        attributeValue = validateAttribute(attributesBag, attributeName, false, headerKey,
+                "200");
+        if (attributeValue != null) {
+            attributesBag.put(attributeName, Long.parseLong(attributeValue));
+        }
+
+        attributeName = "request.useragent";
+        headerKey = "user-agent";
+        attributeValue = validateAttribute(attributesBag, attributeName, true, headerKey,
+                Constants.UNKNOWN_ATTRIBUTE);
+        if (attributeValue != null) {
+            attributesBag.put(attributeName, attributeValue);
+        }
+
+        attributeName = "source.uid";
+        headerKey = "user-agent";
+        attributeValue = validateAttribute(attributesBag, attributeName, true, headerKey,
+                Constants.UNKNOWN_ATTRIBUTE);
+        if (attributeValue != null) {
+            attributesBag.put(attributeName, attributeValue);
+        }
+    }
+
+    private String validateAttribute(AttributesBag attributesBag, String attributeName, boolean isRequestHaeder,
+                                     String headerKey, String defaultValue) {
+        Object attribute = attributesBag.getAttributes().get(attributeName);
+        if (attribute == null) {
+            String headerValue;
+            if (isRequestHaeder) {
+                headerValue = attributesBag.getRequestHeaders().get(headerKey);
+            } else {
+                headerValue = attributesBag.getResponseHeaders().get(headerKey);
+            }
+            if (headerValue == null) {
+                return defaultValue;
+            }
+            return headerValue;
+        }
+        return null;
     }
 }
