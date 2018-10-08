@@ -7,12 +7,10 @@ echo "Installing K8s cluster using Kubeadm"
 read -p "Enter the node type [master/worker]:" node_type
 
 if [ $node_type == "master" ]; then
-    echo $node_type
-    exit 0
 
     #Update all installed packages.
-    apt-get update
-    apt-get upgrade
+    #apt-get update
+    #apt-get upgrade
 
     #Install Docker
     apt-get install -y docker.io
@@ -53,7 +51,6 @@ elif [ $node_type == "worker" ]; then
     read -p "Enter the Master node IP and the Token [master_node_ip token discovery_token_ca_cert_hash]:" master_node_ip token discovery_token_ca_cert_hash
     if [ -n "$master_node_ip" ] && [ -n "$token" ] && [ -n "$discovery_token_ca_cert_hash" ]; then
         echo $master_node_ip $token $discovery_token_ca_cert_hash
-        exit 0
         #Add more worker nodes.
         kubeadm join $master_node_ip:6443 --token $token --discovery-token-ca-cert-hash $discovery_token_ca_cert_hash
     else
