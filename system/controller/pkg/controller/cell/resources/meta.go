@@ -43,17 +43,17 @@ func createServiceAnnotations(cell *v1alpha1.Cell) map[string]string {
 }
 
 func NetworkPolicyName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-network"
+	return cell.Name + "--network"
 }
 
 func GatewayName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-gateway"
+	return cell.Name + "--gateway"
 }
 
 func TokenServiceName(cell *v1alpha1.Cell) string {
-	return cell.Name + "-sts"
+	return cell.Name + "--sts"
 }
 
 func ServiceName(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
-	return cell.Name + "-" + serviceTemplate.Name
+	return cell.Name + "--" + serviceTemplate.Name
 }

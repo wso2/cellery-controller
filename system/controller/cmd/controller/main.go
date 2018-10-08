@@ -112,6 +112,7 @@ func main() {
 	tokenServiceController := sts.NewController(
 		kubeClient,
 		vickClient,
+		systemConfigMapInformer,
 		deploymentInformer,
 		k8sServiceInformer,
 		configMapInformer,

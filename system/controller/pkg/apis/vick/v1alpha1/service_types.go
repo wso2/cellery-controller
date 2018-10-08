@@ -51,6 +51,7 @@ type ServiceSpec struct {
 type ServiceStatus struct {
 	OwnerCell         string `json:"ownerCell"`
 	AvailableReplicas int32  `json:"availableReplicas"`
+	HostName          string `json:"hostname"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

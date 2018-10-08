@@ -35,6 +35,9 @@ public class Cell {
     @JsonProperty(Constants.JsonParamNames.APIS)
     private API[] apis;
 
+    @JsonProperty(Constants.JsonParamNames.HOSTNAME)
+    private String hostname;
+
     public String getCell() {
         return cell;
     }
@@ -57,5 +60,13 @@ public class Cell {
 
     public void setApis(API[] apis) {
         this.apis = apis;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
     }
 }

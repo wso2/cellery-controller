@@ -11,6 +11,13 @@ spec:
     plural: cells
     singular: cell
   additionalPrinterColumns:
+  - name: Status
+    type: string
+    JSONPath: .status.status
+  - name: Gateway
+    type: string
+    description: Host name of the gateway
+    JSONPath: .status.gatewayHostname
   - name: Services
     type: integer
     description: Number of services in this cell

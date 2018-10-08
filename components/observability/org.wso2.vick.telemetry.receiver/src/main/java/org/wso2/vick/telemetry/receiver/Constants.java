@@ -27,5 +27,8 @@ public class Constants {
     static final String PORT_EVENT_SOURCE_OPTION_KEY = "port";
     static final String SECONDS_KEY = "_sec";
     static final String NANO_SECONDS_KEY = "_nanosec";
+    static final String REQUEST_HEADER_FIELDS_ATTRIBUTE = "request.headers";
+    static final String RESPONSE_HEADER_FIELDS_ATTRIBUTE = "response.headers";
+    public static final String UNKNOWN_ATTRIBUTE = "Unknown";
 
 }

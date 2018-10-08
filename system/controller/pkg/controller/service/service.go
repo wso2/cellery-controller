@@ -26,11 +26,13 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/service/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"reflect"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
@@ -95,7 +97,6 @@ func (h *serviceHandler) Handle(key string) error {
 	if err = h.handle(service); err != nil {
 		return err
 	}
-	return nil
 
 	if _, err = h.updateStatus(service); err != nil {
 		return err
@@ -105,7 +106,20 @@ func (h *serviceHandler) Handle(key string) error {
 }
 
 func (h *serviceHandler) handle(service *v1alpha1.Service) error {
-	// Get the gateway deployment
+
+	if err := h.handleDeployment(service); err != nil {
+		return err
+	}
+
+	if err := h.handleK8sService(service); err != nil {
+		return err
+	}
+
+	h.updateOwnerCell(service)
+	return nil
+}
+
+func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 	deployment, err := h.deploymentLister.Deployments(service.Namespace).Get(resources.ServiceDeploymentName(service))
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(service.Namespace).Create(resources.CreateServiceDeployment(service))
@@ -118,6 +132,12 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 	}
 	glog.Infof("Service deployment created %+v", deployment)
 
+	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+
+	return nil
+}
+
+func (h *serviceHandler) handleK8sService(service *v1alpha1.Service) error {
 	k8sService, err := h.k8sServiceLister.Services(service.Namespace).Get(resources.ServiceK8sServiceName(service))
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(service.Namespace).Create(resources.CreateServiceK8sService(service))
@@ -129,11 +149,33 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 		return err
 	}
 	glog.Infof("Service service created %+v", k8sService)
-	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
-	service.Status.OwnerCell = ""
+
+	service.Status.HostName = k8sService.Name
+
 	return nil
 }
 
 func (h *serviceHandler) updateStatus(service *v1alpha1.Service) (*v1alpha1.Service, error) {
-	return h.vickClient.VickV1alpha1().Services(service.Namespace).Update(service)
+	latestService, err := h.serviceLister.Services(service.Namespace).Get(service.Name)
+	if err != nil {
+		return nil, err
+	}
+	if !reflect.DeepEqual(latestService.Status, service.Status) {
+		latestService.Status = service.Status
+		// https://github.com/kubernetes/kubernetes/issues/54672
+		// return h.vickClient.VickV1alpha1().Services(service.Namespace).UpdateStatus(latestService)
+		return h.vickClient.VickV1alpha1().Services(service.Namespace).Update(latestService)
+	}
+	return nil, nil
+}
+
+func (h *serviceHandler) updateOwnerCell(service *v1alpha1.Service) {
+	if service.Status.OwnerCell == "" {
+		ownerRef := metav1.GetControllerOf(service)
+		if ownerRef != nil {
+			service.Status.OwnerCell = ownerRef.Name
+		} else {
+			service.Status.OwnerCell = "<none>"
+		}
+	}
 }

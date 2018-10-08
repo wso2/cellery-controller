@@ -42,6 +42,7 @@ public class Constants {
         public static final String API_VERSION = "apiVersion";
         public static final String REGISTER_PAYLOAD = "registerPayload";
         public static final String TRUST_STORE = "trustStore";
+        public static final String HOSTNAME = "hostname";
         public static final String APIM_BASE_URL = "apimBaseUrl";
         public static final String TOKEN_ENDPOINT = "tokenEndpoint";
         public static final String NAME = "name";
@@ -59,6 +60,7 @@ public class Constants {
         public static final String ACCESS_URLS = "accessUrls";
         public static final String PARAMETERS = "parameters";
         public static final String X_AUTH_TYPE = "x-auth-type";
+        public static final String X_THROTTLING_TIER = "x-throttling-tier";
         public static final String REQUIRED = "required";
         public static final String IN = "in";
         public static final String GET = "get";
