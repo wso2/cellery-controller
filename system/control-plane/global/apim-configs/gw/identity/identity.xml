@@ -361,7 +361,7 @@
                 Default value for IDTokenIssuerID, is OAuth2TokenEPUrl.
                 If that doesn't satisfy uncomment the following config and explicitly configure the value
             -->
-            <IDTokenIssuerID>https://sts.vick.wso2.com</IDTokenIssuerID>
+            <IDTokenIssuerID>https://idp.vick.wso2.com</IDTokenIssuerID>
             <IDTokenCustomClaimsCallBackHandler>org.wso2.carbon.identity.openidconnect.SAMLAssertionClaimsCallback</IDTokenCustomClaimsCallBackHandler>
             <IDTokenExpiration>3600</IDTokenExpiration>
             <UserInfoJWTSignatureAlgorithm>SHA256withRSA</UserInfoJWTSignatureAlgorithm>
@@ -881,6 +881,7 @@
         <Resource context="(.*)/api/identity/oauth2/uma/permission/v1.0/(.*)"
                   http-method="all" secured="true"/>
         <Resource context="(.*)/api/identity/auth/(.*)" http-method="all" secured="true"/>
+        <Resource context="(.*)/api/identity/vick-auth/(.*)" http-method="all" secured="true"/>
     </ResourceAccessControl>
     <ClientAppAuthentication>
         <Application
@@ -942,4 +943,10 @@
         <!--Timeout in milliseconds for the waiting external calls-->
         <LongWaitTimeout>10000</LongWaitTimeout>
     </AdaptiveAuth>
+
+    <Vick>
+        <STS>
+            <Issuer>https://sts.vick.wso2.com</Issuer>
+        </STS>
+    </Vick>
 </Server>

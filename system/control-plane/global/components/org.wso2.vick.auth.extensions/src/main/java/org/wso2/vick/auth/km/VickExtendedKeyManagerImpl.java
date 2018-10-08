@@ -73,7 +73,7 @@ public class VickExtendedKeyManagerImpl extends AMDefaultKeyManagerImpl {
 
     private long getExpiryPeriodInMillis(OAuth2IntrospectionResponseDTO introspectionResponse) {
 
-        return System.currentTimeMillis() - (introspectionResponse.getExp() * 1000L);
+        return (introspectionResponse.getExp() * 1000L) - System.currentTimeMillis();
     }
 
     @Override
