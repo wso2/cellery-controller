@@ -34,12 +34,19 @@ public class AttributesBag {
 
     private static final Logger logger = Logger.getLogger(AttributesBag.class.getName());
     private Map<String, Object> attribute = new HashMap<>();
+    private Map<String, String> requestHeaders = new HashMap<>();
+    private Map<String, String> responseHeaders = new HashMap<>();
 
     public void put(String key, String value) {
         putAttribute(key, value);
     }
 
     public void put(String key, Map<String, String> value) {
+        if (key.equalsIgnoreCase(Constants.REQUEST_HEADER_FIELDS_ATTRIBUTE)) {
+            requestHeaders = value;
+        } else if (key.equalsIgnoreCase(Constants.RESPONSE_HEADER_FIELDS_ATTRIBUTE)) {
+            responseHeaders = value;
+        }
         putAttribute(key, Utils.toString(value));
     }
 
@@ -79,6 +86,14 @@ public class AttributesBag {
 
     public Map<String, Object> getAttributes() {
         return this.attribute;
+    }
+
+    public Map<String, String> getRequestHeaders() {
+        return requestHeaders;
+    }
+
+    public Map<String, String> getResponseHeaders() {
+        return responseHeaders;
     }
 
     public String toString() {
