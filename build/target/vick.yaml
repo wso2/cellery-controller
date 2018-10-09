@@ -233,7 +233,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  cell-gateway-init-config: |
+  cell-gateway-config: |
     {
         "username": "admin",
         "password": "admin",
@@ -263,7 +263,7 @@ data:
 kind: ConfigMap
 metadata:
   name: vick-config
-#  namespace: vick-system
+  namespace: vick-system
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
