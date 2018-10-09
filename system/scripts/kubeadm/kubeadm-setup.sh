@@ -1,10 +1,17 @@
 #!/bin/bash
 #This script provides steps to install K8s using kubeadmin tool on Ubuntu 18.04 LTS.
 
-#Install Ubuntu 18.04
+UBUNTU_VERSION=18.04
 K8S_VERSION=1.11.3-00
 
-echo "Installing K8s cluster using Kubeadm $K8S_VERSION"
+if grep -Fq $UBUNTU_VERSION /etc/os-release
+then
+	echo "Installing K8s version $K8S_VERSION on Ubuntu $UBUNTU_VERSION"
+else
+	echo "You need Ubuntu version $UBUNTU_VERSION to run this script"
+	exit 0
+fi
+
 read -p "Enter the node type [master/worker]:" node_type
 
     #Update all installed packages.
@@ -29,7 +36,7 @@ read -p "Enter the node type [master/worker]:" node_type
     sudo apt-get update && apt-get install -y apt-transport-https curl
 
     #Update the apt source list
-    sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] http://apt.kubernetes.io/ kubernetes-xenial main"
 
     #Install K8s components
@@ -44,7 +51,7 @@ if [ $node_type == "master" ]; then
 
     sleep 60
 
-    sudo mkdir -p $HOME/.kube
+    mkdir -p $HOME/.kube
     sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
@@ -52,8 +59,14 @@ if [ $node_type == "master" ]; then
     #untaint the node so that pods will get scheduled:
     kubectl taint nodes --all node-role.kubernetes.io/master-
 
-        #Install Flannel network
+    #Install Flannel network
     kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+
+    #Install admission plugins
+    echo "Installing K8s admission plugins"
+    sudo sed -i 's/--enable-admission-plugins=NodeRestriction/--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+    
+     echo "K8s Master node installation is finished"
 
 elif [ $node_type == "worker" ]; then
     read -p "Enter the Master node IP and the Token [master_node_ip token discovery_token_ca_cert_hash]:" master_node_ip token discovery_token_ca_cert_hash
