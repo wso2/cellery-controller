@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
       - name: cell-gateway
-        image: nipunaprashan/microgateway
+        image: wso2vick/cell-gateway
         volumeMounts:
         - name: targetdir
           mountPath: /target
       initContainers:
       - name: initialize-cell-gateway
-        image: nipunaprashan/microgateway_init
+        image: wso2vick/cell-gateway-init
         args: ["cell", "cell", "admin", "admin", "https://apim-service/", "lib/platform/bre/security/ballerinaTruststore.p12", "ballerina"]
         volumeMounts:
         - name: targetdir
