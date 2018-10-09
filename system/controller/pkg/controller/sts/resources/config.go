@@ -20,48 +20,24 @@ package resources
 
 import (
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
+	"github.com/wso2/product-vick/system/controller/pkg/controller"
+	"github.com/wso2/product-vick/system/controller/pkg/controller/sts/config"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	apiConfigKey = "api-config"
-)
-
-type apiConfig struct {
-	Cell      string              `json:"cell"`
-	Version   string              `json:"version"`
-	APIRoutes []v1alpha1.APIRoute `json:"apis"`
+func CreateTokenServiceConfigMap(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      TokenServiceConfigMapName(tokenService),
+			Namespace: tokenService.Namespace,
+			Labels:    createTokenServiceLabels(tokenService),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateTokenServiceOwnerRef(tokenService),
+			},
+		},
+		Data: map[string]string{
+			tokenServiceConfigKey: tokenServiceConfig.Config,
+		},
+	}
 }
-
-//func CreateGatewayConfigMap(gateway *v1alpha1.Gateway) (*corev1.ConfigMap, error) {
-//	var cellName string
-//	cellName, ok := gateway.Labels[vick.CellLabelKey]
-//	if !ok {
-//		cellName = gateway.Name
-//	}
-//
-//	api := &apiConfig{
-//		Cell:      cellName,
-//		Version:   "1.0.0",
-//		APIRoutes: gateway.Spec.APIRoutes,
-//	}
-//	apiConfigJsonBytes, err := json.Marshal(api)
-//	if err != nil {
-//		return nil, fmt.Errorf("cannot create apiConfig json for the ConfigMap %q: %v",
-//			GatewayConfigMapName(gateway), err)
-//	}
-//	apiConfigJson := string(apiConfigJsonBytes)
-//	fmt.Println(apiConfigJson)
-//	return &corev1.ConfigMap{
-//		ObjectMeta: metav1.ObjectMeta{
-//			Name:      GatewayConfigMapName(gateway),
-//			Namespace: gateway.Namespace,
-//			Labels:    createGatewayLabels(gateway),
-//			OwnerReferences: []metav1.OwnerReference{
-//				*controller.CreateGatewayOwnerRef(gateway),
-//			},
-//		},
-//		Data: map[string]string{
-//			apiConfigKey: apiConfigJson,
-//		},
-//	}, nil
-//}

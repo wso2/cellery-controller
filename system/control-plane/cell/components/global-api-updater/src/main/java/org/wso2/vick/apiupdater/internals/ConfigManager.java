@@ -18,8 +18,8 @@
 package org.wso2.vick.apiupdater.internals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.vick.apiupdater.beans.controller.Cell;
 import org.wso2.vick.apiupdater.beans.controller.RestConfig;
 import org.wso2.vick.apiupdater.exceptions.APIException;
@@ -32,7 +32,7 @@ import java.io.IOException;
  * Methods to read the configuration files
  */
 public class ConfigManager {
-    private static final Log log = LogFactory.getLog(ConfigManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigManager.class);
     private static volatile Cell cell = null;
     private static volatile RestConfig restConfig = null;
 
@@ -43,7 +43,7 @@ public class ConfigManager {
         synchronized (ConfigManager.class) {
             if (cell == null) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Loading Configuration..");
+                    log.debug("Loading cell configuration..");
                 }
                 cell = loadCellConfig();
             }
@@ -57,7 +57,7 @@ public class ConfigManager {
         synchronized (ConfigManager.class) {
             if (restConfig == null) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Loading Configuration..");
+                    log.debug("Loading global configuration..");
                 }
                 restConfig = loadRESTConfig();
             }
@@ -106,6 +106,9 @@ public class ConfigManager {
      * @return Cell Config
      */
     private static Cell loadCellConfig() throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Reading cell configuration file: " + Constants.Utils.CELL_CONFIGURATION_FILE_PATH);
+        }
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(new File(Constants.Utils.CELL_CONFIGURATION_FILE_PATH), Cell.class);
     }
@@ -116,6 +119,9 @@ public class ConfigManager {
      * @return REST Config
      */
     private static RestConfig loadRESTConfig() throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Reading global configuration file: " + Constants.Utils.REST_CONFIGURATION_FILE_PATH);
+        }
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(new File(Constants.Utils.REST_CONFIGURATION_FILE_PATH), RestConfig.class);
     }

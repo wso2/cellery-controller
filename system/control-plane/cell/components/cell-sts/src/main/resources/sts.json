@@ -1,0 +1,5 @@
+{
+  "endpoint": "https://localhost:9443/api/identity/vick-auth/v1.0/sts/token",
+  "username": "####",
+  "password": "####"
+}

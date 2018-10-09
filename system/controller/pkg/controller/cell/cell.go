@@ -26,9 +26,9 @@ import (
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/cell/resources"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"reflect"
+
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -111,6 +111,28 @@ func (h *cellHandler) Handle(key string) error {
 }
 
 func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
+
+	if err := h.handleNetworkPolicy(cell); err != nil {
+		return err
+	}
+
+	if err := h.handleGateway(cell); err != nil {
+		return err
+	}
+
+	if err := h.handleTokenService(cell); err != nil {
+		return err
+	}
+
+	if err := h.handleServices(cell); err != nil {
+		return err
+	}
+
+	h.updateCellStatus(cell)
+	return nil
+}
+
+func (h *cellHandler) handleNetworkPolicy(cell *v1alpha1.Cell) error {
 	networkPolicy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
 	if errors.IsNotFound(err) {
 		networkPolicy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
@@ -122,7 +144,10 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 		return err
 	}
 	glog.Infof("NetworkPolicy created %+v", networkPolicy)
+	return nil
+}
 
+func (h *cellHandler) handleGateway(cell *v1alpha1.Cell) error {
 	gateway, err := h.gatewayLister.Gateways(cell.Namespace).Get(resources.GatewayName(cell))
 	if errors.IsNotFound(err) {
 		gateway, err = h.vickClient.VickV1alpha1().Gateways(cell.Namespace).Create(resources.CreateGateway(cell))
@@ -135,6 +160,12 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	}
 	glog.Infof("Gateway created %+v", gateway)
 
+	cell.Status.GatewayHostname = gateway.Status.HostName
+	cell.Status.GatewayStatus = gateway.Status.Status
+	return nil
+}
+
+func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {
 	tokenService, err := h.tokenServiceLister.TokenServices(cell.Namespace).Get(resources.TokenServiceName(cell))
 	if errors.IsNotFound(err) {
 		tokenService, err = h.vickClient.VickV1alpha1().TokenServices(cell.Namespace).Create(resources.CreateTokenService(cell))
@@ -146,9 +177,12 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 		return err
 	}
 	glog.Infof("TokenService created %+v", tokenService)
+	return nil
+}
 
+func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 	servicesSpecs := cell.Spec.ServiceTemplates
-
+	cell.Status.ServiceCount = 0
 	for _, serviceSpec := range servicesSpecs {
 		service, err := h.serviceLister.Services(cell.Namespace).Get(resources.ServiceName(cell, serviceSpec))
 		if errors.IsNotFound(err) {
@@ -161,21 +195,30 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 			return err
 		}
 		glog.Infof("Service '%s' created %+v", serviceSpec.Name, service)
+		if service.Status.AvailableReplicas > 0 {
+			cell.Status.ServiceCount ++
+		}
 	}
-
 	return nil
 }
 
 func (h *cellHandler) updateStatus(cell *v1alpha1.Cell) (*v1alpha1.Cell, error) {
-	cell.Status.ServiceCount = 0
-	services, err := h.serviceLister.Services(cell.Namespace).List(labels.Everything())
+	latestCell, err := h.cellLister.Cells(cell.Namespace).Get(cell.Name)
 	if err != nil {
 		return nil, err
 	}
-	for _, service := range services {
-		if metav1.IsControlledBy(service, cell) {
-			cell.Status.ServiceCount = cell.Status.ServiceCount + 1
-		}
+	if !reflect.DeepEqual(latestCell.Status, cell.Status) {
+		latestCell.Status = cell.Status
+
+		return h.vickClient.VickV1alpha1().Cells(cell.Namespace).Update(latestCell)
 	}
-	return h.vickClient.VickV1alpha1().Cells(cell.Namespace).Update(cell)
+	return cell, nil
+}
+
+func (h *cellHandler) updateCellStatus(cell *v1alpha1.Cell) {
+	if cell.Status.GatewayStatus == "Ready" && int(cell.Status.ServiceCount) == len(cell.Spec.ServiceTemplates) {
+		cell.Status.Status = "Ready"
+	} else {
+		cell.Status.Status = "NotReady"
+	}
 }

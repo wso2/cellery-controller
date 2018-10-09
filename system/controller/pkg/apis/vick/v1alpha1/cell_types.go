@@ -39,7 +39,10 @@ type CellSpec struct {
 }
 
 type CellStatus struct {
-	ServiceCount int32 `json:"serviceCount"`
+	ServiceCount    int32  `json:"serviceCount"`
+	GatewayHostname string `json:"gatewayHostname"`
+	GatewayStatus   string `json:"gatewayStatus"`
+	Status          string `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

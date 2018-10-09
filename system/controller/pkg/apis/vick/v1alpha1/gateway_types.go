@@ -56,7 +56,9 @@ type APIDefinition struct {
 }
 
 type GatewayStatus struct {
-	ServiceCount int32 `json:"serviceCount"`
+	OwnerCell string `json:"ownerCell"`
+	HostName  string `json:"hostname"`
+	Status    string `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

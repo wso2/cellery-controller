@@ -21,4 +21,12 @@ package resources
 const (
 	tokenServiceServicePort   = 80
 	tokenServiceContainerPort = 9763
+
+	tokenServiceConfigKey  = "sts-config"
+	tokenServiceConfigFile = "sts.json"
+
+	configVolumeName = "config-volume"
+	configMountPath  = "/etc/config"
+
+	envCellNameKey = "CELL_NAME"
 )

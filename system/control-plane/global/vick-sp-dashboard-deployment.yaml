@@ -31,7 +31,7 @@ spec:
         pattern: wso2sp-pattern-distributed
     spec:
       containers:
-      - image: docker.wso2.com/wso2sp-dashboard:4.2.0
+      - image: wso2vick/wso2sp-dashboard
         name: wso2sp-status-dashboard
         imagePullPolicy: IfNotPresent
         env:
@@ -53,8 +53,8 @@ spec:
           protocol: "TCP"
 
         volumeMounts:
-#        - name: sp-dashboard-conf
-#          mountPath: "/home/wso2carbon/kubernetes-volumes/dashboard/conf/"
+        - name: sp-dashboard-conf
+          mountPath: "/home/wso2carbon/kubernetes-volumes/dashboard/conf/"
         livenessProbe:
           tcpSocket:
             port: 9643
@@ -63,7 +63,7 @@ spec:
       imagePullSecrets:
             - name: wso2creds
       volumes:
-#      - name: sp-dashboard-conf
-#        configMap:
-#          name: sp-dashboard-conf
+      - name: sp-dashboard-conf
+        configMap:
+          name: sp-dashboard-conf
       serviceAccountName: "vicksvc-account"

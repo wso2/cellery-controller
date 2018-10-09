@@ -13,3 +13,18 @@ spec:
     shortNames:
     - vgateways
     - vgw
+  additionalPrinterColumns:
+  - name: Status
+    type: string
+    JSONPath: .status.status
+  - name: Hostname
+    type: string
+    description: Host name of the gateway
+    JSONPath: .status.hostname
+  - name: Cell
+    type: string
+    description: Owner cell of this gateway
+    JSONPath: .status.ownerCell
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp

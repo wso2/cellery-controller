@@ -14,13 +14,14 @@ spec:
     - vservice
     - vsvc
   additionalPrinterColumns:
+  - name: Available-Replicas
+    type: integer
+    description: Number of replicas available for this service
+    JSONPath: .status.availableReplicas
   - name: Cell
     type: string
     description: Owner cell of this service
     JSONPath: .status.ownerCell
-  - name: Available-Replicas
-    type: integer
-    JSONPath: .status.availableReplicas
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

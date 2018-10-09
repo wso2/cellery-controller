@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: wso2vick/wso2am:2.6.0-rc3
+        image: wso2vick/wso2am:2.6.0-rc3-build1
         livenessProbe:
           exec:
             command:
@@ -81,8 +81,8 @@ spec:
           mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/identity
         - name: apim-template
           mountPath: /home/wso2carbon/wso2-config-volume/repository/resources/api_templates
-        - name: auth-ext
-          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
+#        - name: auth-ext
+#          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
       serviceAccountName: "vicksvc-account"
       imagePullSecrets:
       - name: wso2creds
@@ -102,9 +102,9 @@ spec:
       - name: apim-template
         configMap:
           name: apim-template
-      - name: auth-ext
-        configMap:
-          name: auth-ext
+#      - name: auth-ext
+#        configMap:
+#          name: auth-ext
 ---
 apiVersion: v1
 kind: Service

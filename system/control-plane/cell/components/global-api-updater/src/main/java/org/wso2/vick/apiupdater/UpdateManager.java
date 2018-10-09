@@ -20,8 +20,8 @@ package org.wso2.vick.apiupdater;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.wso2.vick.apiupdater.beans.controller.API;
@@ -68,7 +68,7 @@ public class UpdateManager {
     private static Cell cellConfig;
     private static String apiToken;
     private static String apiVersion;
-    private static final Log log = LogFactory.getLog(UpdateManager.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateManager.class);
 
     public static void main(String[] args) {
         try {
@@ -95,6 +95,7 @@ public class UpdateManager {
             unzipTargetFile();
             moveUnzippedFolderToMountLocation();
 
+            log.info("Init container configuration is completed successfully..");
         } catch (APIException e) {
             log.error("Error occurred while creating APIs in Global API manager. " + e.getMessage(), e);
             System.exit(Constants.Utils.ERROR_EXIT_CODE);
@@ -346,8 +347,7 @@ public class UpdateManager {
     private static String getGlobalEndpoint() {
         String response = Constants.Utils.EMPTY_STRING;
         ProductionEndpoint productionEndpoint = new ProductionEndpoint();
-        productionEndpoint.setUrl(Constants.Utils.HTTP + cellConfig.getCell() + Constants.Utils.HYPHEN +
-                                  Constants.Utils.GATEWAY_SERVICE);
+        productionEndpoint.setUrl(Constants.Utils.HTTP + cellConfig.getHostname());
 
         Endpoint endpoint = new Endpoint();
         endpoint.setProductionEndPoint(productionEndpoint);
