@@ -251,7 +251,7 @@ data:
             "password": "ballerina"
         }
     }
-  cell-gateway-init-image: nipunaprashan/microgateway_init
+  cell-gateway-init-image: sinthuja/microgateway_init
   cell-gateway-image: nipunaprashan/microgateway
   cell-sts-config: |
     {
