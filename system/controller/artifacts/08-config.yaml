@@ -11,14 +11,14 @@ data:
             "grantType": "password refresh_token",
             "saasApp": true
         },
-        "apimBaseUrl": "https://10.100.1.217:9443",
-        "tokenEndpoint": "https://10.100.1.217:8243/token",
+        "apimBaseUrl": "https://10.100.1.247:9443",
+        "tokenEndpoint": "https://10.100.1.247:8243/token",
         "trustStore": {
             "location": "lib/platform/bre/security/ballerinaTruststore.p12",
             "password": "ballerina"
         }
     }
-  cell-gateway-init-image: nipunaprashan/microgateway_init
+  cell-gateway-init-image: sinthuja/microgateway_init
   cell-gateway-image: nipunaprashan/microgateway
   cell-sts-image: mefarazath/lightweight-wso2is
 kind: ConfigMap
