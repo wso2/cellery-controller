@@ -20,4 +20,7 @@ package resources
 
 const (
 	defaultServiceContainerPort int32 = 8080
+
+	// used for tracing
+	appLabelKey = "app"
 )
