@@ -11,7 +11,7 @@ data:
             "grantType": "password refresh_token",
             "saasApp": true
         },
-        "apimBaseUrl": "https://gateway.vick-system:9443",
+        "apimBaseUrl": "https://pub-store.vick-system:9443",
         "tokenEndpoint": "https://gateway.vick-system:8243/token",
         "trustStore": {
             "location": "lib/platform/bre/security/ballerinaTruststore.p12",
