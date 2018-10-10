@@ -11,8 +11,8 @@ data:
             "grantType": "password refresh_token",
             "saasApp": true
         },
-        "apimBaseUrl": "https://10.100.1.247:9443",
-        "tokenEndpoint": "https://10.100.1.247:8243/token",
+        "apimBaseUrl": "https://gateway.vick-system:9443",
+        "tokenEndpoint": "https://gateway.vick-system:8243/token",
         "trustStore": {
             "location": "lib/platform/bre/security/ballerinaTruststore.p12",
             "password": "ballerina"
@@ -22,7 +22,7 @@ data:
   cell-gateway-image: wso2vick/cell-gateway
   cell-sts-config: |
     {
-        "endpoint": "https://10.100.1.217:9443/api/identity/vick-auth/v1.0/sts/token",
+        "endpoint": "https://gateway.vick-system:9443/api/identity/vick-auth/v1.0/sts/token",
         "username": "admin",
         "password": "admin"
     }
