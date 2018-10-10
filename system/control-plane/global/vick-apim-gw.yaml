@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: wso2vick/wso2am:2.6.0-rc3-build1
+        image: wso2vick/wso2am:2.6.0-rc3-build2
         livenessProbe:
           exec:
             command:
