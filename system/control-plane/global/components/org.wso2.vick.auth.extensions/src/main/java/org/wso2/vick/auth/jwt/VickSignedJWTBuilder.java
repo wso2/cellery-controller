@@ -39,7 +39,8 @@ public class VickSignedJWTBuilder {
     private JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
     private JWTClaimsSet.Builder claimSetBuilder = new JWTClaimsSet.Builder();
 
-    private long expiryInSeconds = 500L;
+    // By default we set the expiry to be 20mins (So that it will be greater than GatewayCache timeout)
+    private long expiryInSeconds = 1200L;
     private List<String> audience;
 
     public VickSignedJWTBuilder subject(String subject) {

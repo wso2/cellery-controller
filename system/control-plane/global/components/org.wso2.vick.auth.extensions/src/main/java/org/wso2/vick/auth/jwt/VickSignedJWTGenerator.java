@@ -22,7 +22,6 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
     private static final Log log = LogFactory.getLog(VickSignedJWTGenerator.class);
     private static final String CONSUMER_KEY_CLAIM = "consumerKey";
-    private static final long JWT_TOKEN_VALIDITY_IN_SECONDS = 300L;
     private static final String TRUSTED_IDP_CLAIMS = "trusted_idp_claims";
 
     @Override
@@ -31,7 +30,6 @@ public class VickSignedJWTGenerator extends JWTGenerator {
         VickSignedJWTBuilder jwtBuilder = new VickSignedJWTBuilder();
         try {
             return jwtBuilder.subject(getEndUserName(validationContext))
-                    .expiryInSeconds(JWT_TOKEN_VALIDITY_IN_SECONDS)
                     .scopes(getScopes(validationContext))
                     .claim(CONSUMER_KEY_CLAIM, getConsumerKey(validationContext))
                     .claim(TRUSTED_IDP_CLAIMS, getClaimsFromSignedJWT(validationContext))
