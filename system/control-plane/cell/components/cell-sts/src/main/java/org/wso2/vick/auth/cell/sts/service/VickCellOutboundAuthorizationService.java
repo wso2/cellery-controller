@@ -44,6 +44,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     private static final String CONFIG_STS_ENDPOINT = "endpoint";
     private static final String CONFIG_AUTH_USERNAME = "username";
     private static final String CONFIG_AUTH_PASSWORD = "password";
+    private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
 
     private String stsEndpointUrl;
     private String userName;
@@ -118,7 +119,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
 
         ExternalAuth.OkHttpResponse.Builder builder = ExternalAuth.OkHttpResponse.newBuilder();
         if (StringUtils.isNotEmpty(stsToken)) {
-            builder.addHeaders(buildHeader(AUTHORIZATION_HEADER_NAME, stsToken));
+            builder.addHeaders(buildHeader(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken));
         }
         return builder.build();
     }
