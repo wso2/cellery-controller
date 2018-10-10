@@ -56,6 +56,7 @@ public class Constants {
         public static final String API_DEFINITION = "apiDefinition";
         public static final String ENDPOINT_CONFIG = "endpointConfig";
         public static final String PRODUCTION_ENDPOINTS = "production_endpoints";
+        public static final String SANDBOX_ENDPOINTS = "sandbox_endpoints";
         public static final String ENDPOINT_TYPE = "endpoint_type";
         public static final String ACCESS_URLS = "accessUrls";
         public static final String PARAMETERS = "parameters";

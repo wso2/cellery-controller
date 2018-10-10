@@ -36,6 +36,7 @@ import org.wso2.vick.apiupdater.beans.request.PathDefinition;
 import org.wso2.vick.apiupdater.beans.request.PathsMapping;
 import org.wso2.vick.apiupdater.beans.request.ProductionEndpoint;
 import org.wso2.vick.apiupdater.beans.controller.RestConfig;
+import org.wso2.vick.apiupdater.beans.request.SandboxEndpoint;
 import org.wso2.vick.apiupdater.exceptions.APIException;
 import org.wso2.vick.apiupdater.internals.ConfigManager;
 import org.wso2.vick.apiupdater.utils.RequestProcessor;
@@ -326,8 +327,12 @@ public class UpdateManager {
         ProductionEndpoint productionEndpoint = new ProductionEndpoint();
         productionEndpoint.setUrl(api.getBackend());
 
+        SandboxEndpoint sandboxEndpoint = new SandboxEndpoint();
+        sandboxEndpoint.setUrl(api.getBackend());
+
         Endpoint endpoint = new Endpoint();
         endpoint.setProductionEndPoint(productionEndpoint);
+        endpoint.setSandboxEndPoint(sandboxEndpoint);
 
         ObjectMapper objectMapper = new ObjectMapper();
 

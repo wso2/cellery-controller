@@ -18,16 +18,21 @@
 
 package org.wso2.vick.apiupdater.beans.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.wso2.vick.apiupdater.utils.Constants;
 
 /**
  * Represents endpoint information.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Endpoint {
 
     @JsonProperty(Constants.JsonParamNames.PRODUCTION_ENDPOINTS)
     private ProductionEndpoint productionEndPoint;
+
+    @JsonProperty(Constants.JsonParamNames.SANDBOX_ENDPOINTS)
+    private SandboxEndpoint sandboxEndPoint;
 
     @JsonProperty(Constants.JsonParamNames.ENDPOINT_TYPE)
     private String endpointType;
@@ -46,5 +51,13 @@ public class Endpoint {
 
     public void setEndpointType(String endpointType) {
         this.endpointType = endpointType;
+    }
+
+    public SandboxEndpoint getSandboxEndPoint() {
+        return sandboxEndPoint;
+    }
+
+    public void setSandboxEndPoint(SandboxEndpoint sandboxEndPoint) {
+        this.sandboxEndPoint = sandboxEndPoint;
     }
 }
