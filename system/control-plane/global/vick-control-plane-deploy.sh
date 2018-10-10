@@ -24,17 +24,19 @@ kubectl create configmap apim-template --from-file=apim-configs/gw/resources/api
 kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
 
 #Create volumes and volume claims
-kubectl apply -f vick-apim-persistent-volumes.yaml -n vick-system
-kubectl apply -f vick-apim-persistent-volume-claim.yaml -n vick-system
+#kubectl apply -f vick-apim-persistent-volumes.yaml -n vick-system
+#kubectl apply -f vick-apim-persistent-volume-claim.yaml -n vick-system
+kubectl apply -f vick-apim-persistent-volumes-local.yaml -n vick-system
+kubectl apply -f vick-apim-persistent-volume-claim-local.yaml -n vick-system
 
 #Create pub-store deployment and the service
-kubectl apply -f vick-apim-pub-store.yaml
+kubectl apply -f vick-apim-pub-store.yaml -n vick-system
 
 #Create pub-store ingress
 kubectl apply -f vick-apim-pub-store-ingress.yaml -n vick-system
 
 #Create gateway deployment and the service
-kubectl apply -f vick-apim-gw.yaml
+kubectl apply -f vick-apim-gw.yaml -n vick-system
 
 #Create gateway ingress
 kubectl apply -f vick-apim-gw-ingress.yaml -n vick-system
