@@ -65,8 +65,37 @@ if [ $node_type == "master" ]; then
     #Install admission plugins
     echo "Installing K8s admission plugins"
     sudo sed -i 's/--enable-admission-plugins=NodeRestriction/--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+	
+    #Wait to retart the K8s with new admission plugins
+    sleep 60
+  
+   # Install Istio and ingress-enginx
+   #./vick-init-kubeadm.sh 
+
+   #Start to deploy VICK control plane 
+    cd ../../control-plane/global/
+
+    kubectl apply -f vick-ns-init.yaml
+    HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
+
+    kubectl label nodes $HOST_NAME disk=local
+
+    #Setup MySQL Server
+    ./mysql-server-deploy.sh
+
+    #Setup NFS Server
+    #./nfs-server-deploy.sh
     
-     echo "K8s Master node installation is finished"
+    sleep 60
+
+    #Create folders required by the APIM PVC
+    sudo mkdir -p /mnt/apim_repository_deployment_server
+    sudo chown 802:802 /mnt/apim_repository_deployment_server
+
+    #Install VICK control plane
+    ./vick-control-plane-deploy.sh
+
+    echo "K8s Master node installation is finished"
 
 elif [ $node_type == "worker" ]; then
     read -p "Enter the Master node IP and the Token [master_node_ip token discovery_token_ca_cert_hash]:" master_node_ip token discovery_token_ca_cert_hash
