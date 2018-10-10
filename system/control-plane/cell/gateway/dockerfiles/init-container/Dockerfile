@@ -23,6 +23,7 @@ FROM ubuntu:18.04
 COPY ./files/jdk1.8.0_181 /java
 COPY ./files/wso2am-micro-gw-2.6.0 /wso2am-micro-gw-2.6.0
 COPY ./files/extension_filter.bal /wso2am-micro-gw-2.6.0/resources/filters/
+COPY ./files/micro-gw.conf /wso2am-micro-gw-2.6.0/resources/conf/
 COPY ./files/vick-global-api-uploader.jar /
 
 # set environment variables
