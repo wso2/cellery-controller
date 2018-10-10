@@ -17,16 +17,7 @@
 # ------------------------------------------------------------------------
 
 # set to latest Ubuntu LTS
-FROM ubuntu:18.04
-
-# copy JDK and Cell-STS jar
-COPY ./files/jdk* /java
+FROM openjdk:8-alpine
 COPY ./target/org.wso2.vick.auth.cell.sts.server-*.jar /
-#COPY ./target/classes/sts.json /
-
-# set environment variables
-ENV JAVA_HOME=/java
-ENV PATH=$JAVA_HOME/bin:$PATH
-#ENV CONF_PATH=/sts.json
-
 CMD java -jar /org.wso2.vick.auth.cell.sts.server-*.jar
+

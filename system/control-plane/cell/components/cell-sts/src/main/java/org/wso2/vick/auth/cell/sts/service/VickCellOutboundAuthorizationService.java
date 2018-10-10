@@ -48,6 +48,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     private String stsEndpointUrl;
     private String userName;
     private String password;
+    private String cellName;
 
     public VickCellOutboundAuthorizationService() throws VickCellSTSException {
 
@@ -64,8 +65,10 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
             stsEndpointUrl = (String) config.get(CONFIG_STS_ENDPOINT);
             userName = (String) config.get(CONFIG_AUTH_USERNAME);
             password = (String) config.get(CONFIG_AUTH_PASSWORD);
+            cellName = getCellName();
 
-            log.info("Global STS Endpint is set to " + stsEndpointUrl);
+            log.info("Global STS Endpoint is set to " + stsEndpointUrl);
+            log.info("Cell Name: " + cellName);
         } catch (ParseException | IOException e) {
             throw new VickCellSTSException("Error while setting up STS configurations", e);
         }
@@ -80,11 +83,11 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     @Override
     public void check(ExternalAuth.CheckRequest request, StreamObserver<ExternalAuth.CheckResponse> responseObserver) {
 
-        String authzHeaderInRequest = getAuthorizationHeaderValue(request);
         String requestId = getRequestId(request);
-
-        ExternalAuth.CheckResponse response;
         log.info(appendRequestId("Intercepted Request info: " + request, requestId));
+
+        String authzHeaderInRequest = getAuthorizationHeaderValue(request);
+        ExternalAuth.CheckResponse response;
 
         if (StringUtils.isEmpty(authzHeaderInRequest)) {
             log.info(appendRequestId("Authorization Header is missing in the outbound call. Injecting a JWT from STS.",
@@ -126,7 +129,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
             HttpResponse<JsonNode> apiResponse =
                     Unirest.post(stsEndpointUrl)
                             .basicAuth(userName, password)
-                            .field(VickSTSConstants.VickSTSRequest.SUBJECT, getCellName(request))
+                            .field(VickSTSConstants.VickSTSRequest.SUBJECT, cellName)
                             .asJson();
 
             if (apiResponse.getStatus() == 200) {
@@ -143,14 +146,13 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
         return null;
     }
 
-    private String getCellName(ExternalAuth.CheckRequest request) {
+    private String getCellName() throws VickCellSTSException {
 
         // For now we pick the cell name from the environment variable. In future we need to figure out a way to derive
         // values from the authz request.
         String cellName = System.getenv(CELL_NAME_ENV_VARIABLE);
         if (StringUtils.isBlank(cellName)) {
-            // TODO : remove this once we have CELL NAME ENV variable available...
-            cellName = request.getAttributes().getSource().getAddress().getSocketAddress().getAddress();
+            throw new VickCellSTSException("Environment variable '" + CELL_NAME_ENV_VARIABLE + "' is empty.");
         }
         log.info("Cell Name resolved to " + cellName);
         return cellName;
