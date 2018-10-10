@@ -70,7 +70,7 @@ if [ $node_type == "master" ]; then
     sleep 60
   
    # Install Istio and ingress-enginx
-   #./vick-init-kubeadm.sh 
+   ./vick-init-kubeadm.sh 
 
    #Start to deploy VICK control plane 
     cd ../../control-plane/global/
