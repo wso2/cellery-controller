@@ -20,7 +20,7 @@ package resources
 
 const (
 	tokenServiceServicePort   = 80
-	tokenServiceContainerPort = 9763
+	tokenServiceContainerPort = 8080
 
 	tokenServiceConfigKey  = "sts-config"
 	tokenServiceConfigFile = "sts.json"
