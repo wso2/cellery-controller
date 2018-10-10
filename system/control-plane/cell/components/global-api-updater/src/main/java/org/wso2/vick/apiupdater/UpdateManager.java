@@ -284,9 +284,10 @@ public class UpdateManager {
 
             // Create api payload with actual backend
             ApiCreateRequest apiCreateRequest = new ApiCreateRequest();
-            apiCreateRequest.setName(cellConfig.getCell() + Constants.Utils.UNDERSCORE + cellConfig.getVersion() +
-                                     Constants.Utils.UNDERSCORE +
-                                     api.getContext().replace("/", Constants.Utils.EMPTY_STRING));
+            String apiName = cellConfig.getCell() + Constants.Utils.UNDERSCORE + cellConfig.getVersion() +
+                    Constants.Utils.UNDERSCORE +
+                    api.getContext().replace("/", Constants.Utils.EMPTY_STRING);
+            apiCreateRequest.setName(apiName.replaceAll("[^a-zA-Z0-9]", "_"));
             apiCreateRequest.setContext(api.getContext());
             apiCreateRequest.setVersion(cellConfig.getVersion());
             apiCreateRequest.setApiDefinition(getAPIDefinition(api));
