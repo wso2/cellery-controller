@@ -54,6 +54,10 @@ func TokenServiceName(cell *v1alpha1.Cell) string {
 	return cell.Name + "--sts"
 }
 
+func EnvoyFilterName(cell *v1alpha1.Cell) string {
+	return cell.Name + "--envoyfilter"
+}
+
 func ServiceName(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
 	return cell.Name + "--" + serviceTemplate.Name
 }

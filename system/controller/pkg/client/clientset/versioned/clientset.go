@@ -21,6 +21,7 @@
 package versioned
 
 import (
+	networkingv1alpha3 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	vickv1alpha1 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/vick/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -29,6 +30,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Networking() networkingv1alpha3.NetworkingV1alpha3Interface
 	VickV1alpha1() vickv1alpha1.VickV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Vick() vickv1alpha1.VickV1alpha1Interface
@@ -38,7 +42,19 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	vickV1alpha1 *vickv1alpha1.VickV1alpha1Client
+	networkingV1alpha3 *networkingv1alpha3.NetworkingV1alpha3Client
+	vickV1alpha1       *vickv1alpha1.VickV1alpha1Client
+}
+
+// NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
+func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return c.networkingV1alpha3
+}
+
+// Deprecated: Networking retrieves the default version of NetworkingClient.
+// Please explicitly pick a version.
+func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return c.networkingV1alpha3
 }
 
 // VickV1alpha1 retrieves the VickV1alpha1Client
@@ -68,6 +84,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.networkingV1alpha3, err = networkingv1alpha3.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.vickV1alpha1, err = vickv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -84,6 +104,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
 	cs.vickV1alpha1 = vickv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
@@ -93,6 +114,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
 	cs.vickV1alpha1 = vickv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

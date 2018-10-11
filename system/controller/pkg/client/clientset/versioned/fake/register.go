@@ -21,6 +21,7 @@
 package fake
 
 import (
+	networkingv1alpha3 "github.com/wso2/product-vick/system/controller/pkg/apis/istio/networking/v1alpha3"
 	vickv1alpha1 "github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -52,5 +53,6 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
+	networkingv1alpha3.AddToScheme(scheme)
 	vickv1alpha1.AddToScheme(scheme)
 }

@@ -86,6 +86,7 @@ func main() {
 	gatewayInformer := vickInformerFactory.Vick().V1alpha1().Gateways()
 	tokenServiceInformer := vickInformerFactory.Vick().V1alpha1().TokenServices()
 	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
+	envoyFilterInformer := vickInformerFactory.Networking().V1alpha3().EnvoyFilters()
 
 	// Create VICK system informers
 	systemConfigMapInformer := vickSystemInformerFactory.Core().V1().ConfigMaps()
@@ -99,6 +100,7 @@ func main() {
 		tokenServiceInformer,
 		serviceInformer,
 		networkPolicyInformer,
+		envoyFilterInformer,
 	)
 	gatewayController := gateway.NewController(
 		kubeClient,
@@ -145,6 +147,7 @@ func main() {
 		gatewayInformer.Informer().HasSynced,
 		tokenServiceInformer.Informer().HasSynced,
 		serviceInformer.Informer().HasSynced,
+		envoyFilterInformer.Informer().HasSynced,
 	); !ok {
 		glog.Fatal("failed to wait for caches to sync")
 	}

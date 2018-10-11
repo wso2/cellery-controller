@@ -16,6 +16,8 @@
  * under the License.
  */
 
-// +k8s:deepcopy-gen=package
+package networking
 
-package v1alpha1
+const (
+	GroupName = "networking.istio.io"
+)
