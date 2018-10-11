@@ -15,7 +15,7 @@ function vickHelp() {
     echo "[OPTIONAL] Kubernetes node type (master or worker). If not specified, the default node type will be master."
 
     echo
-    echo "Run $'\e[1m'./kubeadm-setup.sh -t worker $'\e[0m' to Install VICK with Kubernetes worker node"
+    echo "Run: "$'\e[1m'"./kubeadm-setup.sh -t worker "$'\e[0m'" to Install VICK with Kubernetes worker node"
     echo
     exit 1
 }
@@ -30,6 +30,12 @@ while getopts :t FLAG; do
       ;;
   esac
 done
+
+if [ $# -eq 0 ]; then
+    continue
+elif [[ $1 != "-t" ]]; then
+    vickHelp
+fi
 
 if grep -Fq $UBUNTU_VERSION /etc/os-release
 then
@@ -108,7 +114,7 @@ if [ $node_type == "master" ]; then
     echo "Installing K8s admission plugins"
     sudo sed -i 's/--enable-admission-plugins=NodeRestriction/--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
 	
-    #Wait to retart the K8s with new admission plugins
+    #Wait to restart the K8s with new admission plugins
     sleep 60
   
    # Install Istio and ingress-enginx
