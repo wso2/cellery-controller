@@ -24,16 +24,44 @@ spec:
   ports:
     # ports that this service should serve on
     -
-      name: 'http-port-1'
+      port: 9091
+      name: http2
+      protocol: TCP
+    -
+      port: 9092
+      name: http
+      protocol: TCP
+    -
+      port: 9411
+      name: zipkin
+      protocol: TCP
+    -
+      port: 9443
+      name: https-mcgw-upload
+      protocol: TCP
+    -
       port: 9090
+      name: http-mcgw-upload
       protocol: TCP
     -
-      name: 'https-port-1'
-      port: 9543
+      port: 7611
+      name: tcp-thrift
       protocol: TCP
     -
-      name: 'https-port-2'
-      port: 9544
+      port: 7711
+      name: tcp-ssl-thrift
+      protocol: TCP
+    -
+      port: 9611
+      name: tcp-binary
+      protocol: TCP
+    -
+      port: 9711
+      name: tcp-ssl-binary
+      protocol: TCP
+    -
+      port: 7443
+      name: http-global-gw
       protocol: TCP
 
   # label keys and values that must match in order to receive traffic for this service

@@ -33,7 +33,7 @@ spec:
       containers:
       - image: wso2vick/wso2sp-dashboard
         name: wso2sp-status-dashboard
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         -
           name: WSO2_SERVER_PROFILE
