@@ -137,6 +137,9 @@ if [ $node_type == "master" ]; then
     #Install VICK control plane
     ./vick-control-plane-deploy.sh
 
+    #Install VICK crds
+    kubectl apply -f ../../../build/target/vick.yaml
+
     echo "K8s Master node installation is finished"
 
 elif [ $node_type == "worker" ]; then
