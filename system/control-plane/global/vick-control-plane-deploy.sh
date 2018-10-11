@@ -18,6 +18,9 @@ kubectl create configmap gw-conf-datasources --from-file=apim-configs/gw/datasou
 #Create KM config maps
 kubectl create configmap conf-identity --from-file=apim-configs/gw/identity -n vick-system
 kubectl create configmap apim-template --from-file=apim-configs/gw/resources/api_templates -n vick-system
+kubectl create configmap apim-tomcat --from-file=apim-configs/gw/tomcat -n vick-system
+kubectl create configmap apim-security --from-file=apim-configs/gw/security -n vick-system
+
 #kubectl create configmap auth-ext --from-file=components/org.wso2.vick.auth.extensions/target/org.wso2.vick.auth.extensions-1.0.0-SNAPSHOT.jar -n vick-system
 
 #Create credentials for docker.wso2.com
