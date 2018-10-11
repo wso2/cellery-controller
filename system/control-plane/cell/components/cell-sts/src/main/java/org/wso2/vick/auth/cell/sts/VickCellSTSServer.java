@@ -2,8 +2,8 @@ package org.wso2.vick.auth.cell.sts;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.vick.auth.cell.sts.service.VickCellOutboundAuthorizationService;
 import org.wso2.vick.auth.cell.sts.service.VickCellSTSException;
 
@@ -14,7 +14,7 @@ import java.io.IOException;
  */
 public class VickCellSTSServer {
 
-    private static final Log log = LogFactory.getLog(VickCellSTSServer.class);
+    private static final Logger log = LoggerFactory.getLogger(VickCellSTSServer.class);
     private final int port;
     private final Server server;
 
@@ -33,9 +33,9 @@ public class VickCellSTSServer {
         log.info("Vick Cell STS GRPC Server started, listening on " + port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may has been reset by its JVM shutdown hook.
-            System.err.println("*** Shutting down gRPC server since JVM is shutting down");
+            System.err.println("Shutting down Vick Cell STS since JVM is shutting down.");
             VickCellSTSServer.this.stop();
-            System.err.println("*** Server shut down");
+            System.err.println("Vick Cell STS shut down.");
         }));
     }
 
