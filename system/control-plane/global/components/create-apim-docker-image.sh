@@ -11,5 +11,5 @@ cp ./org.wso2.vick.auth.extensions/target/org.wso2.vick.auth.extensions-*.jar ./
 cp ./org.wso2.vick.auth.sts.core/target/org.wso2.vick.auth.sts.core-*.jar ./files/
 cp ./org.wso2.vick.auth.sts.endpoint/target/api#identity#vick-auth#*.war ./files/
 
-docker build -t vick-apim:latest .
-
+docker build -t wso2vick/wso2am .
+docker push wso2vick/wso2am
