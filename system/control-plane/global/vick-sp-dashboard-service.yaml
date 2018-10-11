@@ -16,6 +16,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wso2sp-dashboard
+  namespace: vick-system
   labels:
     node: wso2sp-dashboard
     pattern: wso2sp-pattern-distributed
@@ -31,4 +32,3 @@ spec:
   selector:
     node: wso2sp-dashboard
     pattern: wso2sp-pattern-distributed
-  clusterIP: None
