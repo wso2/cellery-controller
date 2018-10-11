@@ -122,7 +122,7 @@ public class UpdateManager {
         String apimBaseURL = restConfig.getApimBaseUrl();
         String applicationResponse = requestProcessor
                 .doPost(apimBaseURL + Constants.Utils.PATH_CLIENT_REGISTRATION + apiVersion +
-                        Constants.Utils.PATH_REGISTER, Constants.Utils.CONTENT_TYPE_APPLICATION_JSON,
+                                Constants.Utils.PATH_REGISTER, Constants.Utils.CONTENT_TYPE_APPLICATION_JSON,
                         Constants.Utils.CONTENT_TYPE_APPLICATION_JSON, Constants.Utils.BASIC + authHeader,
                         restConfig.getRegisterPayload().toJSONString());
 
@@ -144,7 +144,7 @@ public class UpdateManager {
         }
 
         String tokenPayload = Constants.Utils.TOKEN_PAYLOAD.replace("$USER", restConfig.getUsername())
-                                                                    .replace("$PASS", restConfig.getPassword());
+                .replace("$PASS", restConfig.getPassword());
         apiToken = getToken(tokenPayload);
     }
 
@@ -221,7 +221,7 @@ public class UpdateManager {
             String createAPIPath;
             try {
                 createAPIPath = restConfig.getApimBaseUrl() + Constants.Utils.PATH_PUBLISHER + apiVersion +
-                                Constants.Utils.PATH_APIS;
+                        Constants.Utils.PATH_APIS;
                 apiCreateResponse = requestProcessor
                         .doPost(createAPIPath, Constants.Utils.CONTENT_TYPE_APPLICATION_JSON,
                                 Constants.Utils.CONTENT_TYPE_APPLICATION_JSON, Constants.Utils.BEARER + apiToken,
@@ -232,8 +232,8 @@ public class UpdateManager {
 
             if (apiCreateResponse != null) {
                 if (!(apiCreateResponse.contains(Constants.Utils.DUPLICATE_API_ERROR) ||
-                      apiCreateResponse.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR) ||
-                      apiCreateResponse.contains(Constants.Utils.DUPLICATE_CONTEXT_ERROR))) {
+                        apiCreateResponse.contains(Constants.Utils.DIFFERENT_CONTEXT_ERROR) ||
+                        apiCreateResponse.contains(Constants.Utils.DUPLICATE_CONTEXT_ERROR))) {
                     JSONObject jsonObj = new JSONObject(apiCreateResponse);
                     apiIDs.add(jsonObj.getString(Constants.Utils.ID));
                 }
@@ -259,7 +259,7 @@ public class UpdateManager {
             RequestProcessor requestProcessor = new RequestProcessor();
             String apiPublishResponse;
             String apiPublishPath = restConfig.getApimBaseUrl() + Constants.Utils.PATH_PUBLISHER + apiVersion +
-                                    Constants.Utils.PATH_LIFECYCLE + "apiId=" + id + "&action=Publish";
+                    Constants.Utils.PATH_LIFECYCLE + "apiId=" + id + "&action=Publish";
             apiPublishResponse = requestProcessor.doPost(apiPublishPath, Constants.Utils.CONTENT_TYPE_APPLICATION_JSON,
                     Constants.Utils.CONTENT_TYPE_APPLICATION_JSON, Constants.Utils.BEARER + apiToken,
                     Constants.Utils.EMPTY_STRING);
@@ -284,10 +284,7 @@ public class UpdateManager {
 
             // Create api payload with actual backend
             ApiCreateRequest apiCreateRequest = new ApiCreateRequest();
-            String apiName = cellConfig.getCell() + Constants.Utils.UNDERSCORE + cellConfig.getVersion() +
-                    Constants.Utils.UNDERSCORE +
-                    api.getContext().replace("/", Constants.Utils.EMPTY_STRING);
-            apiCreateRequest.setName(apiName.replaceAll("[^a-zA-Z0-9]", "_"));
+            apiCreateRequest.setName(generateAPIName(api, false));
             apiCreateRequest.setContext(api.getContext());
             apiCreateRequest.setVersion(cellConfig.getVersion());
             apiCreateRequest.setApiDefinition(getAPIDefinition(api));
@@ -300,10 +297,7 @@ public class UpdateManager {
             if (api.isGlobal()) {
                 // Create api payload with gateway backend
                 ApiCreateRequest globalApiCreateRequest = new ApiCreateRequest();
-                globalApiCreateRequest.setName(
-                        cellConfig.getCell() + Constants.Utils.UNDERSCORE + Constants.Utils.GLOBAL +
-                        Constants.Utils.UNDERSCORE + cellConfig.getVersion() + Constants.Utils.UNDERSCORE +
-                        api.getContext().replace("/", Constants.Utils.EMPTY_STRING));
+                        globalApiCreateRequest.setName(generateAPIName(api, true));
                 globalApiCreateRequest
                         .setContext((cellConfig.getCell() + "/" + api.getContext()).replaceAll("//", "/"));
                 globalApiCreateRequest.setVersion(cellConfig.getVersion());
@@ -314,6 +308,20 @@ public class UpdateManager {
             }
         }
         return apiPayloadsArray;
+    }
+
+    private static String generateAPIName(API api, boolean isGlobal) {
+        String apiName;
+        if (isGlobal) {
+            apiName = cellConfig.getCell() + Constants.Utils.UNDERSCORE + Constants.Utils.GLOBAL +
+                    Constants.Utils.UNDERSCORE + cellConfig.getVersion() + Constants.Utils.UNDERSCORE +
+                    api.getContext().replace("/", Constants.Utils.EMPTY_STRING);
+        } else {
+            apiName = cellConfig.getCell() + Constants.Utils.UNDERSCORE + cellConfig.getVersion() +
+                    Constants.Utils.UNDERSCORE +
+                    api.getContext().replace("/", Constants.Utils.EMPTY_STRING);
+        }
+        return apiName.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     /**
@@ -379,7 +387,7 @@ public class UpdateManager {
 
             // Append /* to allow query parameters and path parameters
             String allowQueryPath = definition.getPath().replaceAll("/$", Constants.Utils.EMPTY_STRING) +
-                                    Constants.Utils.ALLOW_QUERY_PATTERN;
+                    Constants.Utils.ALLOW_QUERY_PATTERN;
 
             // If already contain a key, update path definition.
             if (apiDefinition.getPaths().containsKey(allowQueryPath)) {
@@ -469,8 +477,8 @@ public class UpdateManager {
 
         //create output directory is not exists
         File targetFolder = new File(Constants.Utils.UNZIP_FILE_PATH);
-        if(!targetFolder.exists()){
-            if(!targetFolder.mkdir()){
+        if (!targetFolder.exists()) {
+            if (!targetFolder.mkdir()) {
                 log.warn("Failed to create folder: " + targetFolder);
             }
         }
@@ -478,11 +486,11 @@ public class UpdateManager {
         byte[] buffer = new byte[1024];
         ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(targetZipFilePath));
         ZipEntry zipEntry = zipInputStream.getNextEntry();
-        while(zipEntry != null){
+        while (zipEntry != null) {
             String fileName = zipEntry.getName();
             File newFile = new File(targetFolder + "/" + fileName);
 
-            if(!newFile.getParentFile().exists()) {
+            if (!newFile.getParentFile().exists()) {
                 if (!newFile.getParentFile().mkdirs()) {
                     log.warn("Failed to create parent folders to create file: " + newFile);
                 }
