@@ -33,11 +33,14 @@ public class VickSignedJWTBuilder {
     private static final String VICK_STS_ISSUER_CONFIG = "Vick.STS.Issuer";
     private static final String DEFAULT_ISSUER_VALUE = "https://sts.vick.wso2.com";
     private static final String SCOPE_CLAIM = "scope";
+    private static final String KEY_TYPE_CLAIM = "keytype";
+    private static final String PRODUCTION_KEY_TYPE = "PRODUCTION";
 
     private JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
     private JWTClaimsSet.Builder claimSetBuilder = new JWTClaimsSet.Builder();
 
-    private long expiryInSeconds = 500L;
+    // By default we set the expiry to be 20mins (So that it will be greater than GatewayCache timeout)
+    private long expiryInSeconds = 1200L;
     private List<String> audience;
 
     public VickSignedJWTBuilder subject(String subject) {
@@ -113,7 +116,8 @@ public class VickSignedJWTBuilder {
                 .issuer(getIssuer())
                 .issueTime(issuedAt)
                 .expirationTime(expiryTime)
-                .audience(audience);
+                .audience(audience)
+                .claim(KEY_TYPE_CLAIM, PRODUCTION_KEY_TYPE);
     }
 
     private String getIssuer() {

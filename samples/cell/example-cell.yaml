@@ -41,6 +41,8 @@ spec:
       replicas: 1
       container:
         image: docker.io/mirage20/time-us
+        ports:
+        - containerPort: 8080
       servicePort: 80
   - metadata:
       name: time-uk
@@ -48,6 +50,8 @@ spec:
       replicas: 1
       container:
         image: docker.io/mirage20/time-uk
+        ports:
+        - containerPort: 8080
       servicePort: 80
   - metadata:
       name: server-time
@@ -55,6 +59,8 @@ spec:
       replicas: 1
       container:
         image: docker.io/mirage20/time
+        ports:
+        - containerPort: 8080
       servicePort: 80
   - metadata:
       name: debug
@@ -69,4 +75,6 @@ spec:
       replicas: 1
       container:
         image: docker.io/nipunaprashan/node-hello
+        ports:
+        - containerPort: 8080
       servicePort: 80

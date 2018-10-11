@@ -17,5 +17,5 @@ spec:
     spec:
       containers:
       - name: vick-controller
-        image: "mirage20/vick-controller:latest"
+        image: wso2vick/vick-controller:latest
       serviceAccountName: vick-controller

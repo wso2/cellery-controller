@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: pub-store
-        image: wso2vick/wso2am:2.6.0-rc3-build1
+        image: wso2vick/wso2am:latest
         livenessProbe:
           exec:
             command:
@@ -89,7 +89,7 @@ spec:
       volumes:
       - name: apim-storage-volume
         persistentVolumeClaim:
-          claimName: pub-store-volume-claim
+          claimName: wso2apim-local-pvc
       - name: apim-conf
         configMap:
           name: apim-conf

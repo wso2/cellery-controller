@@ -59,11 +59,18 @@ public class VickCellSTSServer {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
-        VickCellSTSServer server = new VickCellSTSServer(8080);
-        server.start();
-        server.blockUntilShutdown();
+        VickCellSTSServer server = null;
+        try {
+            server = new VickCellSTSServer(8080);
+            server.start();
+            server.blockUntilShutdown();
+        } catch (Exception e) {
+            log.error("Error while starting up the Cell STS.", e);
+            // To make the pod go to CrashLoopBackOff state if we encounter any error while starting up
+            System.exit(1);
+        }
     }
 
 }
