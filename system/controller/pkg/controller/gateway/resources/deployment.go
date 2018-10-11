@@ -61,6 +61,11 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 									ReadOnly:  true,
 								},
 								{
+									Name:      setupConfigVolumeName,
+									MountPath: setupConfigMountPath,
+									ReadOnly:  true,
+								},
+								{
 									Name:      gatewayBuildVolumeName,
 									MountPath: gatewayBuildMountPath,
 								},
@@ -98,6 +103,22 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 										{
 											Key:  gatewayConfigKey,
 											Path: gatewayConfigFile,
+										},
+									},
+								},
+							},
+						},
+						{
+							Name: setupConfigVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: GatewayConfigMapName(gateway),
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  gatewaySetupConfigKey,
+											Path: gatewaySetupConfigFile,
 										},
 									},
 								},

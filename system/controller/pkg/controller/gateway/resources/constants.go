@@ -28,9 +28,15 @@ const (
 	gatewayConfigKey  = "gateway-config"
 	gatewayConfigFile = "gw.json"
 
+	gatewaySetupConfigKey  = "gateway-setup-config"
+	gatewaySetupConfigFile = "micro-gw.conf"
+
 	configVolumeName = "config-volume"
 	configMountPath  = "/etc/config"
 
 	gatewayBuildVolumeName = "build-volume"
 	gatewayBuildMountPath  = "/target"
+
+	setupConfigVolumeName = "setup-config-volume"
+	setupConfigMountPath  = "/wso2am-micro-gw-2.6.0/resources/conf"
 )
