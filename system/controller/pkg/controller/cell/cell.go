@@ -29,12 +29,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"reflect"
 
+	istioinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
+	istiov1alpha1listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/networking/v1alpha3"
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
 	networkv1informers "k8s.io/client-go/informers/networking/v1"
 	networkv1listers "k8s.io/client-go/listers/networking/v1"
@@ -48,6 +50,7 @@ type cellHandler struct {
 	gatewayLister       listers.GatewayLister
 	tokenServiceLister  listers.TokenServiceLister
 	serviceLister       listers.ServiceLister
+	envoyFilterLister   istiov1alpha1listers.EnvoyFilterLister
 }
 
 func NewController(
@@ -58,6 +61,7 @@ func NewController(
 	tokenServiceInformer vickinformers.TokenServiceInformer,
 	serviceInformer vickinformers.ServiceInformer,
 	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
+	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 ) *controller.Controller {
 	h := &cellHandler{
 		kubeClient:          kubeClient,
@@ -67,6 +71,7 @@ func NewController(
 		gatewayLister:       gatewayInformer.Lister(),
 		tokenServiceLister:  tokenServiceInformer.Lister(),
 		networkPilicyLister: networkPolicyInformer.Lister(),
+		envoyFilterLister:   envoyFilterInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
 
@@ -124,6 +129,10 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 		return err
 	}
 
+	if err := h.handleEnvoyFilter(cell); err != nil {
+		return err
+	}
+
 	if err := h.handleServices(cell); err != nil {
 		return err
 	}
@@ -177,6 +186,21 @@ func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {
 		return err
 	}
 	glog.Infof("TokenService created %+v", tokenService)
+	return nil
+}
+
+func (h *cellHandler) handleEnvoyFilter(cell *v1alpha1.Cell) error {
+	envoyFilter, err := h.envoyFilterLister.EnvoyFilters(cell.Namespace).Get(resources.EnvoyFilterName(cell))
+	if errors.IsNotFound(err) {
+		envoyFilter, err = h.vickClient.NetworkingV1alpha3().EnvoyFilters(cell.Namespace).Create(resources.CreateEnvoyFilter(cell))
+		if err != nil {
+			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 
