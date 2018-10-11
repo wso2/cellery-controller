@@ -23,17 +23,18 @@ read -p "Enter the node type [master/worker]:" node_type
     sudo swapoff -a
 
     #Install Docker
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-    sudo apt-get install docker-ce
+    sudo apt-get update && apt-get install -y docker-ce
 
     #Install NFS client
-    sudo apt-get install nfs-common
+    sudo apt-get install -y nfs-common
 
     #Enable docker service
     sudo systemctl enable docker.service
 
     #Install curl
-    sudo apt-get update && apt-get install -y apt-transport-https curl
+    sudo apt-get install -y apt-transport-https curl
 
     #Update the apt source list
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
