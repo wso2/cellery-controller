@@ -22,6 +22,9 @@ read -p "Enter the node type [master/worker]:" node_type
     #'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
     sudo swapoff -a
 
+    # install some utils
+    sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
     #Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
@@ -32,9 +35,6 @@ read -p "Enter the node type [master/worker]:" node_type
 
     #Enable docker service
     sudo systemctl enable docker.service
-
-    #Install curl
-    sudo apt-get install -y apt-transport-https curl
 
     #Update the apt source list
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
