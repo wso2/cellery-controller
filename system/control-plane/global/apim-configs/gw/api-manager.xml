@@ -139,7 +139,7 @@
     -->
     <Analytics>
         <!-- Enable Analytics for API Manager -->
-        <Enabled>false</Enabled>
+        <Enabled>true</Enabled>
 
         <!-- Server URL of the remote StreamProcessor server used to collect statistics. Must
              be specified in protocol://hostname:port/ format.
@@ -151,7 +151,7 @@
 
              Ex - Multiple Receiver Groups with two receivers each
              {tcp://localhost:7612/,tcp://localhost:7613},{tcp://localhost:7712/,tcp://localhost:7713/} -->
-        <StreamProcessorServerURL>{tcp://localhost:7612}</StreamProcessorServerURL>
+        <StreamProcessorServerURL>{tcp://wso2sp-worker:7611}</StreamProcessorServerURL>
         <!--StreamProcessorAuthServerURL>{ssl://localhost:7712}</StreamProcessorAuthServerURL-->
         <!-- Administrator username to login to the remote StreamProcessor server. -->
         <StreamProcessorUsername>${admin.username}</StreamProcessorUsername>
@@ -162,7 +162,7 @@
         <StatsProviderImpl>org.wso2.carbon.apimgt.usage.client.impl.APIUsageStatisticsRestClientImpl</StatsProviderImpl>
 
         <!-- StreamProcessor REST API configuration -->
-        <StreamProcessorRestApiURL>https://localhost:7444</StreamProcessorRestApiURL>
+        <StreamProcessorRestApiURL>https://wso2sp-worker:7443</StreamProcessorRestApiURL>
         <StreamProcessorRestApiUsername>${admin.username}</StreamProcessorRestApiUsername>
         <StreamProcessorRestApiPassword>${admin.password}</StreamProcessorRestApiPassword>
 

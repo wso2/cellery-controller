@@ -23,9 +23,11 @@ kubectl create configmap apim-template --from-file=apim-configs/gw/resources/api
 #Create credentials for docker.wso2.com
 kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
 
-#Create volumes and volume claims
+#Create apim volumes and volume claims
 #kubectl apply -f vick-apim-persistent-volumes.yaml -n vick-system
 #kubectl apply -f vick-apim-persistent-volume-claim.yaml -n vick-system
+
+#Create apim local volumes and volume claims
 kubectl apply -f vick-apim-persistent-volumes-local.yaml -n vick-system
 kubectl apply -f vick-apim-persistent-volume-claim-local.yaml -n vick-system
 
@@ -42,9 +44,10 @@ kubectl apply -f vick-apim-gw.yaml -n vick-system
 kubectl apply -f vick-apim-gw-ingress.yaml -n vick-system
 
 #Create SP volumes and volume claims
-kubectl apply -f vick-sp-persistent-volumes.yaml -n vick-system
+#kubectl apply -f vick-sp-persistent-volumes.yaml -n vick-system
 
-#Create SP worker
+#Create SP worker configmaps
+kubectl create configmap sp-worker-siddhi --from-file=sp-worker/siddhi -n vick-system
 kubectl create configmap sp-worker-conf --from-file=sp-worker/conf -n vick-system
 kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
 
@@ -52,7 +55,7 @@ kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
 kubectl apply -f vick-sp-worker-deployment.yaml -n vick-system
 kubectl apply -f vick-sp-worker-service.yaml -n vick-system
 
-#Create SP worker
+#Create SP Dashboard configmaps
 kubectl create configmap sp-dashboard-conf --from-file=status-dashboard/conf -n vick-system
 #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
 
