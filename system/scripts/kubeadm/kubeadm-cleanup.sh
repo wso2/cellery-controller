@@ -1,4 +1,4 @@
 #!/bin/bash
-echo "Removeing docker kubeadm kubelet kubectl"
+echo "Removing docker kubeadm kubelet kubectl"
 sudo kubeadm reset
-sudo apt-get purge kubelet kubeadm kubectl docker.io docker-ce
+sudo apt-get purge -y kubelet kubeadm kubectl docker.io docker-ce

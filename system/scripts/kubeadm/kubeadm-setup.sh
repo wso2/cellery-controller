@@ -1,8 +1,35 @@
 #!/bin/bash
 #This script provides steps to install K8s using kubeadmin tool on Ubuntu 18.04 LTS.
 
-UBUNTU_VERSION=18.04
+UBUNTU_VERSION=16.04
 K8S_VERSION=1.11.3-00
+node_type=master
+
+function vickHelp() {
+    echo "Welcome to the Virtual Integration Computer for Kubernetes (VICK) setup."
+    echo
+    echo "Usage: "
+    echo "  ./kubeadm-setup.sh -t [node-type] "
+    echo
+    echo -en "  -t\t"
+    echo "[OPTIONAL] Kubernetes node type (master or worker). If not specified, the default node type will be master."
+
+    echo
+    echo "Run $'\e[1m'./kubeadm-setup.sh -t worker $'\e[0m' to Install VICK with Kubernetes worker node"
+    echo
+    exit 1
+}
+
+while getopts :t FLAG; do
+  case $FLAG in
+    t)
+      node_type=$OPTARG
+      ;;
+    \?)
+      vickHelp
+      ;;
+  esac
+done
 
 if grep -Fq $UBUNTU_VERSION /etc/os-release
 then
@@ -11,8 +38,6 @@ else
 	echo "You need Ubuntu version $UBUNTU_VERSION to run this script"
 	exit 0
 fi
-
-read -p "Enter the node type [master/worker]:" node_type
 
     #Update all installed packages.
     #apt-get update
@@ -27,8 +52,17 @@ read -p "Enter the node type [master/worker]:" node_type
 
     #Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-    sudo apt-get update && apt-get install -y docker-ce
+
+    if [ $UBUNTU_VERSION == "16.04" ]; then
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+    elif [ $UBUNTU_VERSION == "18.04" ]; then
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+    else
+        #default tested version
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+    fi
+    sudo apt-get update
+    sudo apt-get install -y docker.io
 
     #Install NFS client
     sudo apt-get install -y nfs-common
