@@ -128,6 +128,10 @@ if [ $node_type == "master" ]; then
 
     kubectl label nodes $HOST_NAME disk=local
 
+    #Create folders required by the mysql PVC
+    sudo mkdir -p /mnt/mysql
+    sudo chown 999:999 /mnt/mysql
+
     #Setup MySQL Server
     ./mysql-server-deploy.sh
 
