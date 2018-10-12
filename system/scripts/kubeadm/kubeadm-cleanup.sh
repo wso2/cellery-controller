@@ -13,5 +13,11 @@ else
 fi
 
 sudo apt-get $DEL_LEVEL kubelet kubeadm kubectl docker.io docker-ce
+
+echo "Removing /mnt/mysql and /mnt/apim_repository_deployment_server"
+echo
+
 sudo rm -fr /mnt/mysql
 sudo rm -fr /mnt/apim_repository_deployment_server
+
+echo "VICK cleanup is finished"
