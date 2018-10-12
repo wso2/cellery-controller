@@ -100,7 +100,7 @@ if [ $node_type == "master" ]; then
         mv $HOME/.kube/config $HOME/.kube/config.back
     fi
 
-    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
     #if you are using a single node which acts as both a master and a worker
