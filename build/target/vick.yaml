@@ -256,7 +256,7 @@ data:
             "grantType": "password refresh_token",
             "saasApp": true
         },
-        "apimBaseUrl": "https://pub-store.vick-system:9443",
+        "apimBaseUrl": "https://gateway.vick-system:9443",
         "tokenEndpoint": "https://gateway.vick-system:8243/token",
         "trustStore": {
             "location": "lib/platform/bre/security/ballerinaTruststore.p12",
@@ -274,7 +274,7 @@ data:
 
     [authConfig]
     authorizationHeader="Authorization"
-    removeAuthHeaderFromOutMessage=true
+    removeAuthHeaderFromOutMessage=false
 
     [keyManager]
     serverUrl="https://localhost:9443"
