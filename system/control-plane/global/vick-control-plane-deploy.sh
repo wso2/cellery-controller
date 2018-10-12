@@ -38,7 +38,7 @@ kubectl apply -f vick-apim-persistent-volume-claim-local.yaml -n vick-system
 #kubectl apply -f vick-apim-pub-store.yaml -n vick-system
 
 #Create pub-store ingress
-#kubectl apply -f vick-apim-pub-store-ingress.yaml -n vick-system
+kubectl apply -f vick-apim-pub-store-ingress.yaml -n vick-system
 
 #Create gateway deployment and the service
 kubectl apply -f vick-apim-gw.yaml -n vick-system
