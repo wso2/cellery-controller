@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 spec:
   type: NodePort
+  externalIPs:
+  - 172.17.17.100
   ports:
     - name: http
       port: 80
