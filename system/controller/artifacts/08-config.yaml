@@ -29,7 +29,7 @@ data:
 
     [authConfig]
     authorizationHeader="Authorization"
-    removeAuthHeaderFromOutMessage=true
+    removeAuthHeaderFromOutMessage=false
 
     [keyManager]
     serverUrl="https://localhost:9443"
