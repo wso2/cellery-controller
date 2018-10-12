@@ -25,20 +25,12 @@ metadata:
 spec:
   tls:
   - hosts:
-    - wso2apim
-    - wso2apim-gateway
+    - wso2-apim
   rules:
-  - host: wso2apim
+  - host: wso2-apim
     http:
       paths:
       - path: /
         backend:
-          serviceName: pub-store
+          serviceName: gateway
           servicePort: 9443
-  - host: wso2apim-gateway
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: pub-store
-          servicePort: 8243

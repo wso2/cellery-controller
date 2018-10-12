@@ -18,22 +18,6 @@ spec:
           method: GET
         backend: node-hello
         global: true
-      - context: context1
-        definitions:
-        - path: /foo1
-          method: POST
-        - path: /bar1
-          method: GET
-        backend: example1
-        global: true
-      - context: context2
-        definitions:
-        - path: /foo2
-          method: GET
-        - path: /bar2
-          method: POST
-        backend: example2
-        global: true
   servicesTemplates:
   - metadata:
       name: time-us
