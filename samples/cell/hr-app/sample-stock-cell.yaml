@@ -1,0 +1,24 @@
+apiVersion: vick.wso2.com/v1alpha1
+kind: Cell
+metadata:
+  name: stock-options
+spec:
+  gatewayTemplate:
+    spec:
+      apis:
+      - context: stock
+        definitions:
+        - path: /
+          method: GET
+        backend: stock
+        global: false
+  servicesTemplates:
+  - metadata:
+      name: stock
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/wso2vick/sampleapp-stock:v1.0
+        ports:
+        - containerPort: 8080
+      servicePort: 80

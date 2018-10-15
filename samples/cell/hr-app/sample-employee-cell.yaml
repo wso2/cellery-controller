@@ -1,0 +1,33 @@
+apiVersion: vick.wso2.com/v1alpha1
+kind: Cell
+metadata:
+  name: employee
+spec:
+  gatewayTemplate:
+    spec:
+      apis:
+      - context: employee
+        definitions:
+        - path: /
+          method: GET
+        backend: employee
+        global: false
+  servicesTemplates:
+  - metadata:
+      name: employee
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/wso2vick/sampleapp-employee:v1.0
+        ports:
+        - containerPort: 8080
+      servicePort: 80
+  - metadata:
+      name: salary
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/wso2vick/sampleapp-salary:v1.0
+        ports:
+        - containerPort: 8080
+      servicePort: 80
