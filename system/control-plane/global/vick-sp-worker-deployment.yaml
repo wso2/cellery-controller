@@ -63,28 +63,34 @@ spec:
 
         ports:
         -
-          containerPort: 9090
+          containerPort: 9091
+          protocol: "TCP"
+        -
+          containerPort: 9092
+          protocol: "TCP"
+        -
+          containerPort: 9411
           protocol: "TCP"
         -
           containerPort: 9443
           protocol: "TCP"
         -
-          containerPort: 9543
+          containerPort: 9090
           protocol: "TCP"
         -
-          containerPort: 9544
-          protocol: "TCP"
-        -
-          containerPort: 9711
-          protocol: "TCP"
-        -
-          containerPort: 9611
+          containerPort: 7611
           protocol: "TCP"
         -
           containerPort: 7711
           protocol: "TCP"
         -
-          containerPort: 7611
+          containerPort: 9611
+          protocol: "TCP"
+        -
+          containerPort: 9711
+          protocol: "TCP"
+        -
+          containerPort: 7443
           protocol: "TCP"
 
         volumeMounts:
@@ -92,6 +98,9 @@ spec:
           mountPath: "/home/wso2carbon/kubernetes-volumes/worker/conf/"
         - name: sp-worker-bin
           mountPath: "/home/wso2carbon/kubernetes-volumes/worker/bin/"
+        - name: sp-worker-siddhi
+          mountPath: "/home/wso2carbon/wso2-server-volume/wso2/worker/deployment/siddhi-files/"
+
         livenessProbe:
           tcpSocket:
             port: 9443
@@ -107,3 +116,6 @@ spec:
       - name: sp-worker-bin
         configMap:
           name: sp-worker-bin
+      - name: sp-worker-siddhi
+        configMap:
+          name: sp-worker-siddhi

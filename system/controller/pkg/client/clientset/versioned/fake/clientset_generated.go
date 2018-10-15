@@ -22,6 +22,8 @@ package fake
 
 import (
 	clientset "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
+	networkingv1alpha3 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
+	fakenetworkingv1alpha3 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/networking/v1alpha3/fake"
 	vickv1alpha1 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/vick/v1alpha1"
 	fakevickv1alpha1 "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned/typed/vick/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -72,6 +74,16 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
+func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
+}
+
+// Networking retrieves the NetworkingV1alpha3Client
+func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
+}
 
 // VickV1alpha1 retrieves the VickV1alpha1Client
 func (c *Clientset) VickV1alpha1() vickv1alpha1.VickV1alpha1Interface {

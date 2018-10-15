@@ -8,14 +8,15 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.wso2.vick.auth.cell.sts.generated.envoy.core.Base;
 import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.AuthorizationGrpc;
 import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.ExternalAuth;
@@ -27,14 +28,16 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 
 /**
- * Intercept outbound HTTP calls from the cell and injects STS token required for authorization.
+ * Intercept outbound HTTP calls from the cell and injects STS token required for authorization. Interception is engaged
+ * using an EnvoyFilter
+ * <p>
+ * refer {@}
  */
 public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.AuthorizationImplBase {
 
-    private static final Log log = LogFactory.getLog(VickCellOutboundAuthorizationService.class);
+    private static final Logger log = LoggerFactory.getLogger(VickCellOutboundAuthorizationService.class);
     private static final String AUTHORIZATION_HEADER_NAME = "authorization";
     private static final String STS_RESPONSE_TOKEN_PARAM = "token";
     private static final String CELL_NAME_ENV_VARIABLE = "CELL_NAME";
@@ -45,6 +48,10 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     private static final String CONFIG_AUTH_USERNAME = "username";
     private static final String CONFIG_AUTH_PASSWORD = "password";
     private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
+
+    private static final String REQUEST_ID = "request.id";
+    private static final String REQUEST_ID_HEADER = "x-request-id";
+    private static final String DESTINATION_HEADER = ":authority";
 
     private String stsEndpointUrl;
     private String userName;
@@ -68,7 +75,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
             password = (String) config.get(CONFIG_AUTH_PASSWORD);
             cellName = getCellName();
 
-            log.info("Global STS Endpoint is set to " + stsEndpointUrl);
+            log.info("Global STS Endpoint: " + stsEndpointUrl);
             log.info("Cell Name: " + cellName);
         } catch (ParseException | IOException e) {
             throw new VickCellSTSException("Error while setting up STS configurations", e);
@@ -84,35 +91,44 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     @Override
     public void check(ExternalAuth.CheckRequest request, StreamObserver<ExternalAuth.CheckResponse> responseObserver) {
 
-        String requestId = getRequestId(request);
-        log.info(appendRequestId("Intercepted Request info: " + request, requestId));
+        try {
+            // Add request ID for log correlation.
+            MDC.put(REQUEST_ID, getRequestId(request));
 
-        String authzHeaderInRequest = getAuthorizationHeaderValue(request);
-        ExternalAuth.CheckResponse response;
+            String destination = getDestination(request);
+            log.debug("Intercepting Sidecar call to '{}'", destination);
+            log.debug("Request from Istio-Proxy:\n{}", request);
 
-        if (StringUtils.isEmpty(authzHeaderInRequest)) {
-            log.info(appendRequestId("Authorization Header is missing in the outbound call. Injecting a JWT from STS.",
-                    requestId));
-            String stsToken = getTokenToInject(request);
-            if (StringUtils.isEmpty(stsToken)) {
-                log.info("No JWT token received from the STS endpoint");
+            String authzHeaderInRequest = getAuthorizationHeaderValue(request);
+            ExternalAuth.CheckResponse response;
+
+            if (StringUtils.isEmpty(authzHeaderInRequest)) {
+                log.info("Authorization Header is missing in the outbound call. Injecting a JWT from STS.");
+
+                String stsToken = getTokenToInject(request);
+                if (StringUtils.isEmpty(stsToken)) {
+                    log.error("No JWT token received from the STS endpoint: " + stsEndpointUrl);
+                }
+                response = ExternalAuth.CheckResponse.newBuilder()
+                        .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                        .setOkResponse(buildOkHttpResponse(stsToken))
+                        .build();
+            } else {
+                log.info("Authorization Header is present in the request. Continuing without injecting a new JWT.");
+                response = ExternalAuth.CheckResponse.newBuilder()
+                        .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                        .build();
             }
-            response = ExternalAuth.CheckResponse.newBuilder()
-                    .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
-                    .setOkResponse(buildOkHttpResponse(stsToken))
-                    .build();
-        } else {
-            log.info(appendRequestId("Authorization Header is present in the request.Continuing without injecting " +
-                    "a new JWT.", requestId));
-            response = ExternalAuth.CheckResponse.newBuilder()
-                    .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
-                    .build();
+
+            log.debug("Response to istio-proxy:\n{}", response);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (VickCellSTSException e) {
+            log.error("Error while handling request from istio-proxy to '{}'", getDestination(request), e);
+        } finally {
+            MDC.clear();
         }
-
-        log.info(appendRequestId("Response to istio-proxy: " + response, requestId));
-
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
     }
 
     private ExternalAuth.OkHttpResponse buildOkHttpResponse(String stsToken) {
@@ -132,6 +148,9 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
                             .basicAuth(userName, password)
                             .field(VickSTSConstants.VickSTSRequest.SUBJECT, cellName)
                             .asJson();
+
+            log.debug("Response from the STS:\nstatus:{}\nbody:{}",
+                    apiResponse.getStatus(), apiResponse.getBody().toString());
 
             if (apiResponse.getStatus() == 200) {
                 Object stsTokenValue = apiResponse.getBody().getObject().get(STS_RESPONSE_TOKEN_PARAM);
@@ -155,7 +174,6 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
         if (StringUtils.isBlank(cellName)) {
             throw new VickCellSTSException("Environment variable '" + CELL_NAME_ENV_VARIABLE + "' is empty.");
         }
-        log.info("Cell Name resolved to " + cellName);
         return cellName;
     }
 
@@ -189,15 +207,28 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
         }
     }
 
-    private String appendRequestId(String logMessage, String requestId) {
+    private String getRequestId(ExternalAuth.CheckRequest request) throws VickCellSTSException {
 
-        return "[" + requestId + "] " + logMessage;
+        String id = request.getAttributes().getRequest().getHttp().getHeaders().get(REQUEST_ID_HEADER);
+        if (StringUtils.isBlank(id)) {
+            throw new VickCellSTSException("Request Id cannot be found in the header: " + REQUEST_ID_HEADER);
+        }
+        return id;
     }
 
-    private String getRequestId(ExternalAuth.CheckRequest request) {
+    private String getDestination(ExternalAuth.CheckRequest request) {
 
-        String id = request.getAttributes().getRequest().getHttp().getId();
-        return id != null ? id : UUID.randomUUID().toString();
+        String destination = request.getAttributes().getRequest().getHttp().getHeaders().get(DESTINATION_HEADER);
+        if (StringUtils.isBlank(destination)) {
+            destination = getHost(request);
+            log.debug("Destination is picked from host value in the request.");
+        }
+        return destination;
+    }
+
+    private String getHost(ExternalAuth.CheckRequest request) {
+
+        return request.getAttributes().getRequest().getHttp().getHost();
     }
 
 }

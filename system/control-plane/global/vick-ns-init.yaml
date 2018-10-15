@@ -15,20 +15,20 @@ kind: ServiceAccount
 metadata:
   name: vicksvc-account
   namespace: vick-system
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pub-store-volume-claim
-  namespace: vick-system
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: ""
-  selector:
-    matchLabels:
-      purpose: apim-shared-deployment
----
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: pub-store-volume-claim
+#  namespace: vick-system
+#spec:
+#  accessModes:
+#    - ReadWriteMany
+#  resources:
+#    requests:
+#      storage: 1Gi
+#  storageClassName: ""
+#  selector:
+#    matchLabels:
+#      purpose: apim-shared-deployment
+#---

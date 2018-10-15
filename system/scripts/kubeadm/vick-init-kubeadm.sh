@@ -10,7 +10,9 @@ tar -xzvf istio-1.0.2-linux.tar.gz
 ISTIO_HOME=istio-1.0.2
 export PATH=$ISTIO_HOME/bin:$PATH
 #kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo-auth.yaml
-kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
+kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
+
+kubectl apply -f istio-demo-vick.yaml
 
 #Wait for 30 seconds
 sleep 30s

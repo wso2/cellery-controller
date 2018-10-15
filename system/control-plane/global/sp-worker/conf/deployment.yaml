@@ -21,7 +21,7 @@ wso2.carbon:
     # server name
   name: WSO2 Stream Processor
     # server type
-#  type: wso2-sp
+  type: wso2-sp
     # ports used by this server
   ports:
       # port offset
@@ -483,10 +483,10 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:h2:${sys:carbon.home}/wso2/worker/database/WSO2AM_STATS_DB;AUTO_SERVER=TRUE'
+          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_STATS_DB'
           username: wso2carbon
           password: wso2carbon
-          driverClassName: org.h2.Driver
+          driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 50
           idleTimeout: 60000
           connectionTestQuery: SELECT 1
@@ -500,10 +500,10 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:h2:${sys:carbon.home}/wso2/worker/database/WSO2AM_MGW_ANALYTICS_DB;AUTO_SERVER=TRUE'
+          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_MGW_ANALYTICS_DB'
           username: wso2carbon
           password: wso2carbon
-          driverClassName: org.h2.Driver
+          driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 50
           idleTimeout: 60000
           connectionTestQuery: SELECT 1
@@ -581,7 +581,7 @@ cluster.config:
 #      password: admin
 
   # Configuration for enabling analytics solutions when server type in Carbon Configuration is set as 'wso2-sp'.
-#analytics.solutions:
+analytics.solutions:
 #  IS-analytics.enabled: true
-#  APIM-analytics.enabled: true
+  APIM-analytics.enabled: true
 #  EI-analytics.enabled: true

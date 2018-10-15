@@ -65,8 +65,9 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayConfig config.Gate
 			},
 		},
 		Data: map[string]string{
-			apiConfigKey:     apiConfigJson,
-			gatewayConfigKey: gatewayConfig.InitConfig,
+			apiConfigKey:          apiConfigJson,
+			gatewayConfigKey:      gatewayConfig.InitConfig,
+			gatewaySetupConfigKey: gatewayConfig.SetupConfig,
 		},
 	}, nil
 }

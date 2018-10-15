@@ -31,7 +31,7 @@ spec:
     required:
       nodeSelectorTerms:
       - matchExpressions:
-        - key: kubernetes.io/hostname
+        - key: disk
           operator: In
           values:
-          - wso2-thinkpad-t530-worker0
+          - local

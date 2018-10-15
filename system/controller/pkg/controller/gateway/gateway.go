@@ -246,6 +246,12 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 		glog.Errorf("Cell gateway config is missing.")
 	}
 
+	if gatewaySetupConfig, ok := configMap.Data["cell-gateway-setup-config"]; ok {
+		conf.SetupConfig = gatewaySetupConfig
+	} else {
+		glog.Errorf("Cell gateway setup config is missing.")
+	}
+
 	if gatewayInitImage, ok := configMap.Data["cell-gateway-init-image"]; ok {
 		conf.InitImage = gatewayInitImage
 	} else {

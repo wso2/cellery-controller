@@ -1,8 +1,41 @@
 #!/bin/bash
 #This script provides steps to install K8s using kubeadmin tool on Ubuntu 18.04 LTS.
 
-UBUNTU_VERSION=18.04
+UBUNTU_VERSION=16.04
 K8S_VERSION=1.11.3-00
+node_type=master
+
+function vickHelp() {
+    echo "Welcome to the Virtual Integration Computer for Kubernetes (VICK) setup."
+    echo
+    echo "Usage: "
+    echo "  ./kubeadm-setup.sh -t [node-type] "
+    echo
+    echo -en "  -t\t"
+    echo "[OPTIONAL] Kubernetes node type (master or worker). If not specified, the default node type will be master."
+
+    echo
+    echo "Run: "$'\e[1m'"./kubeadm-setup.sh -t worker "$'\e[0m'" to Install VICK with Kubernetes worker node"
+    echo
+    exit 1
+}
+
+while getopts :t FLAG; do
+  case $FLAG in
+    t)
+      node_type=$OPTARG
+      ;;
+    \?)
+      vickHelp
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+    continue
+elif [[ $1 != "-t" ]]; then
+    vickHelp
+fi
 
 if grep -Fq $UBUNTU_VERSION /etc/os-release
 then
@@ -11,8 +44,6 @@ else
 	echo "You need Ubuntu version $UBUNTU_VERSION to run this script"
 	exit 0
 fi
-
-read -p "Enter the node type [master/worker]:" node_type
 
     #Update all installed packages.
     #apt-get update
@@ -27,8 +58,17 @@ read -p "Enter the node type [master/worker]:" node_type
 
     #Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-    sudo apt-get update && apt-get install -y docker-ce
+
+    if [ $UBUNTU_VERSION == "16.04" ]; then
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+    elif [ $UBUNTU_VERSION == "18.04" ]; then
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+    else
+        #default tested version
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+    fi
+    sudo apt-get update
+    sudo apt-get install -y docker.io
 
     #Install NFS client
     sudo apt-get install -y nfs-common
@@ -52,8 +92,15 @@ if [ $node_type == "master" ]; then
 
     sleep 60
 
+    #Create .kube file if it does not exists
     mkdir -p $HOME/.kube
-    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+    #Move Kubernetes config file if it exists
+    if [ -f $HOME/.kube/config ]; then
+        mv $HOME/.kube/config $HOME/.kube/config.back
+    fi
+
+    sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
     #if you are using a single node which acts as both a master and a worker
@@ -67,7 +114,7 @@ if [ $node_type == "master" ]; then
     echo "Installing K8s admission plugins"
     sudo sed -i 's/--enable-admission-plugins=NodeRestriction/--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
 	
-    #Wait to retart the K8s with new admission plugins
+    #Wait to restart the K8s with new admission plugins
     sleep 60
   
    # Install Istio and ingress-enginx
@@ -80,6 +127,10 @@ if [ $node_type == "master" ]; then
     HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
 
     kubectl label nodes $HOST_NAME disk=local
+
+    #Create folders required by the mysql PVC
+    sudo mkdir -p /mnt/mysql
+    sudo chown 999:999 /mnt/mysql
 
     #Setup MySQL Server
     ./mysql-server-deploy.sh
@@ -95,6 +146,9 @@ if [ $node_type == "master" ]; then
 
     #Install VICK control plane
     ./vick-control-plane-deploy.sh
+
+    #Install VICK crds
+    kubectl apply -f ../../../build/target/vick.yaml
 
     echo "K8s Master node installation is finished"
 

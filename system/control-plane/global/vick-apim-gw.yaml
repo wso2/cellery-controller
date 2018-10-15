@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: wso2vick/wso2am:2.6.0-rc3-build3
+        image: wso2vick/wso2am
         livenessProbe:
           exec:
             command:
@@ -81,6 +81,10 @@ spec:
           mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/identity
         - name: apim-template
           mountPath: /home/wso2carbon/wso2-config-volume/repository/resources/api_templates
+        - name: apim-tomcat
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/tomcat
+        - name: apim-security
+          mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/security
 #        - name: auth-ext
 #          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
       serviceAccountName: "vicksvc-account"
@@ -89,7 +93,7 @@ spec:
       volumes:
       - name: apim-storage-volume
         persistentVolumeClaim:
-          claimName: pub-store-volume-claim
+          claimName: wso2apim-local-pvc
       - name: apim-conf
         configMap:
           name: gw-conf
@@ -102,6 +106,12 @@ spec:
       - name: apim-template
         configMap:
           name: apim-template
+      - name: apim-tomcat
+        configMap:
+          name: apim-tomcat
+      - name: apim-security
+        configMap:
+          name: apim-security
 #      - name: auth-ext
 #        configMap:
 #          name: auth-ext
