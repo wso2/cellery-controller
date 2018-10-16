@@ -4,7 +4,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.vick.auth.cell.sts.service.VickCellOutboundAuthorizationService;
+import org.wso2.vick.auth.cell.sts.service.VickCellAuthorizationService;
 import org.wso2.vick.auth.cell.sts.service.VickCellSTSException;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class VickCellSTSServer {
     private VickCellSTSServer(int port) throws VickCellSTSException {
 
         this.port = port;
-        server = ServerBuilder.forPort(port).addService(new VickCellOutboundAuthorizationService()).build();
+        server = ServerBuilder.forPort(port).addService(new VickCellAuthorizationService()).build();
     }
 
     /**
