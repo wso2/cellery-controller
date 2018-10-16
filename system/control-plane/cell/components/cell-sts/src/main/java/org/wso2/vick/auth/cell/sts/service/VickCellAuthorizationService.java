@@ -7,6 +7,7 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang.StringUtils;
@@ -60,6 +61,8 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
     private static final String DESTINATION_HEADER = ":authority";
 
     private static final String VICK_AUTH_USER_HEADER = "x-vick-auth-user";
+    private static final String VICK_AUTH_USER_CLAIMS_HEADER = "x-vick-auth-user-claims";
+
     private static final String ISTIO_ATTRIBUTES_HEADER = "x-istio-attributes";
 
     private String stsEndpointUrl;
@@ -67,6 +70,7 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
     private String password;
     private String cellName;
 
+    // TODO: Replace ConcurrentHashMap with an expiring map to remove stale data automatically..
     private Map<String, String> userContextStore = new ConcurrentHashMap<>();
 
     public VickCellAuthorizationService() throws VickCellSTSException {
@@ -84,7 +88,7 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
             stsEndpointUrl = (String) config.get(CONFIG_STS_ENDPOINT);
             userName = (String) config.get(CONFIG_AUTH_USERNAME);
             password = (String) config.get(CONFIG_AUTH_PASSWORD);
-            cellName = getCellName();
+            cellName = getMyCellName();
 
             log.info("Global STS Endpoint: " + stsEndpointUrl);
             log.info("Cell Name: " + cellName);
@@ -154,6 +158,7 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
 
         Map<String, String> headersToSet = new HashMap<>();
         headersToSet.put(VICK_AUTH_USER_HEADER, jwtClaims.getSubject());
+        headersToSet.put(VICK_AUTH_USER_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
 
         return ExternalAuth.CheckResponse.newBuilder()
                 .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
@@ -161,8 +166,7 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
                 .build();
     }
 
-
-    private ExternalAuth.CheckResponse handleOutboundCall(ExternalAuth.CheckRequest request) {
+    private ExternalAuth.CheckResponse handleOutboundCall(ExternalAuth.CheckRequest request) throws VickCellSTSException {
 
         String authzHeaderInRequest = getAuthorizationHeaderValue(request);
         ExternalAuth.CheckResponse response;
@@ -229,9 +233,23 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
         return builder.build();
     }
 
-    private String getTokenToInject(ExternalAuth.CheckRequest request) {
+    private String getTokenToInject(ExternalAuth.CheckRequest request) throws VickCellSTSException {
 
         try {
+
+            // Check for a stored user context
+            String requestId = getRequestId(request);
+            // This is the original JWT sent to the cell gateway.
+            String jwt = userContextStore.get(requestId);
+
+            if (StringUtils.isNotBlank(jwt)) {
+                log.debug("JWT token to inject into outbound call was retrieved from the user context store.");
+                return jwt;
+            }
+
+            // TODO: Ideally we should take the original JWT and use the information there to create a new JWT. For now
+            // we simply return the same JWT. If not get a new one from the STS.
+
             HttpResponse<JsonNode> apiResponse =
                     Unirest.post(stsEndpointUrl)
                             .basicAuth(userName, password)
@@ -255,7 +273,7 @@ public class VickCellAuthorizationService extends AuthorizationGrpc.Authorizatio
         return null;
     }
 
-    private String getCellName() throws VickCellSTSException {
+    private String getMyCellName() throws VickCellSTSException {
 
         // For now we pick the cell name from the environment variable. In future we need to figure out a way to derive
         // values from the authz request.
