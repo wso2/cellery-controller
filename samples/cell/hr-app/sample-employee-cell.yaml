@@ -18,7 +18,7 @@ spec:
     spec:
       replicas: 1
       container:
-        image: docker.io/wso2vick/sampleapp-employee:v1.0
+        image: docker.io/wso2vick/sampleapp-employee
         ports:
         - containerPort: 8080
       servicePort: 80
@@ -27,7 +27,14 @@ spec:
     spec:
       replicas: 1
       container:
-        image: docker.io/wso2vick/sampleapp-salary:v1.0
+        image: docker.io/wso2vick/sampleapp-salary
         ports:
         - containerPort: 8080
+      servicePort: 80
+  - metadata:
+      name: debug
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/k8s-debug-tools
       servicePort: 80

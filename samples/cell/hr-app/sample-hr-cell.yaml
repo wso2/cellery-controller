@@ -10,7 +10,7 @@ spec:
         definitions:
         - path: /
           method: GET
-        backend: hr-service
+        backend: hr
         global: true
   servicesTemplates:
   - metadata:
@@ -18,7 +18,7 @@ spec:
     spec:
       replicas: 1
       container:
-        image: docker.io/wso2vick/sampleapp-hr:v1.0
+        image: docker.io/wso2vick/sampleapp-hr
         ports:
         - containerPort: 8080
         env:
@@ -26,5 +26,11 @@ spec:
           value: employee--gateway-service
         - name: stockgw_url
           value: stock-options--gateway-service
-          stock-options--stock-service
+      servicePort: 80
+  - metadata:
+      name: debug
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/k8s-debug-tools
       servicePort: 80
