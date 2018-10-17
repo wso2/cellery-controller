@@ -6,6 +6,9 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
+import com.nimbusds.jwt.SignedJWT;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -28,16 +31,20 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Intercept outbound HTTP calls from the cell and injects STS token required for authorization. Interception is engaged
- * using an EnvoyFilter
+ * Intercepts inbound/outbound calls among sidecars within and out of the cells.
  * <p>
- * refer {@}
+ * Inbound calls are intercepted to inject user attributes are headers to be consumed by services within the cell.
+ * Outbound calls are intercepted to inject authorization token required for authentication.
  */
-public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.AuthorizationImplBase {
+public class VickCellAuthorizationService extends AuthorizationGrpc.AuthorizationImplBase {
 
-    private static final Logger log = LoggerFactory.getLogger(VickCellOutboundAuthorizationService.class);
+    private static final Logger log = LoggerFactory.getLogger(VickCellAuthorizationService.class);
     private static final String AUTHORIZATION_HEADER_NAME = "authorization";
     private static final String STS_RESPONSE_TOKEN_PARAM = "token";
     private static final String CELL_NAME_ENV_VARIABLE = "CELL_NAME";
@@ -53,12 +60,20 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
     private static final String REQUEST_ID_HEADER = "x-request-id";
     private static final String DESTINATION_HEADER = ":authority";
 
+    private static final String VICK_AUTH_USER_HEADER = "x-vick-auth-user";
+    private static final String VICK_AUTH_USER_CLAIMS_HEADER = "x-vick-auth-user-claims";
+
+    private static final String ISTIO_ATTRIBUTES_HEADER = "x-istio-attributes";
+
     private String stsEndpointUrl;
     private String userName;
     private String password;
     private String cellName;
 
-    public VickCellOutboundAuthorizationService() throws VickCellSTSException {
+    // TODO: Replace ConcurrentHashMap with an expiring map to remove stale data automatically..
+    private Map<String, String> userContextStore = new ConcurrentHashMap<>();
+
+    public VickCellAuthorizationService() throws VickCellSTSException {
 
         setUpConfigurationParams();
         setHttpClientProperties();
@@ -73,7 +88,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
             stsEndpointUrl = (String) config.get(CONFIG_STS_ENDPOINT);
             userName = (String) config.get(CONFIG_AUTH_USERNAME);
             password = (String) config.get(CONFIG_AUTH_PASSWORD);
-            cellName = getCellName();
+            cellName = getMyCellName();
 
             log.info("Global STS Endpoint: " + stsEndpointUrl);
             log.info("Cell Name: " + cellName);
@@ -95,33 +110,19 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
             // Add request ID for log correlation.
             MDC.put(REQUEST_ID, getRequestId(request));
 
-            String destination = getDestination(request);
-            log.debug("Intercepting Sidecar call to '{}'", destination);
-            log.debug("Request from Istio-Proxy:\n{}", request);
-
-            String authzHeaderInRequest = getAuthorizationHeaderValue(request);
             ExternalAuth.CheckResponse response;
-
-            if (StringUtils.isEmpty(authzHeaderInRequest)) {
-                log.info("Authorization Header is missing in the outbound call. Injecting a JWT from STS.");
-
-                String stsToken = getTokenToInject(request);
-                if (StringUtils.isEmpty(stsToken)) {
-                    log.error("No JWT token received from the STS endpoint: " + stsEndpointUrl);
-                }
-                response = ExternalAuth.CheckResponse.newBuilder()
-                        .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
-                        .setOkResponse(buildOkHttpResponse(stsToken))
-                        .build();
+            String destination = getDestination(request);
+            if (isSidecarInboundCall(request)) {
+                log.debug("Intercepting Sidecar Inbound call to '{}'", destination);
+                log.debug("Request from Istio-Proxy:\n{}", request);
+                response = handleInboundCall(request);
             } else {
-                log.info("Authorization Header is present in the request. Continuing without injecting a new JWT.");
-                response = ExternalAuth.CheckResponse.newBuilder()
-                        .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
-                        .build();
+                log.debug("Intercepting Sidecar Outbound call to '{}'", destination);
+                log.debug("Request from Istio-Proxy:\n{}", request);
+                response = handleOutboundCall(request);
             }
 
             log.debug("Response to istio-proxy:\n{}", response);
-
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (VickCellSTSException e) {
@@ -131,18 +132,124 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
         }
     }
 
+    private ExternalAuth.CheckResponse handleInboundCall(ExternalAuth.CheckRequest request) throws VickCellSTSException {
+
+        // Extract the requestId
+        String requestId = getRequestId(request);
+
+        JWTClaimsSet jwtClaims;
+        if (userContextStore.containsKey(requestId)) {
+            // We have intercepted intra cell communication here. So we load the user attributes from the cell local
+            // context store.
+            log.debug("User context JWT found in context store. Loading user claims using context.");
+            String jwt = userContextStore.get(requestId);
+            jwtClaims = getJWTClaims(jwt);
+        } else {
+            // We have intercepted a service call from the Cell Gateway into a service. We need to extract the user
+            // claims from the JWT sent in authorization header and store it in our user context store.
+            String authzHeader = getAuthorizationHeaderValue(request);
+            String jwt = extractJWT(authzHeader);
+            jwtClaims = getJWTClaims(jwt);
+
+            // Add the JWT to the user context store
+            userContextStore.put(requestId, jwt);
+            log.debug("User context JWT added to context store.");
+        }
+
+        Map<String, String> headersToSet = new HashMap<>();
+        headersToSet.put(VICK_AUTH_USER_HEADER, jwtClaims.getSubject());
+        headersToSet.put(VICK_AUTH_USER_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
+
+        return ExternalAuth.CheckResponse.newBuilder()
+                .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                .setOkResponse(buildOkHttpResponse(headersToSet))
+                .build();
+    }
+
+    private ExternalAuth.CheckResponse handleOutboundCall(ExternalAuth.CheckRequest request) throws VickCellSTSException {
+
+        String authzHeaderInRequest = getAuthorizationHeaderValue(request);
+        ExternalAuth.CheckResponse response;
+
+        if (StringUtils.isEmpty(authzHeaderInRequest)) {
+            log.info("Authorization Header is missing in the outbound call. Injecting a JWT from STS.");
+
+            String stsToken = getTokenToInject(request);
+            if (StringUtils.isEmpty(stsToken)) {
+                log.error("No JWT token received from the STS endpoint: " + stsEndpointUrl);
+            }
+            response = ExternalAuth.CheckResponse.newBuilder()
+                    .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                    .setOkResponse(buildOkHttpResponse(stsToken))
+                    .build();
+        } else {
+            log.info("Authorization Header is present in the request. Continuing without injecting a new JWT.");
+            response = ExternalAuth.CheckResponse.newBuilder()
+                    .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                    .build();
+        }
+
+        return response;
+    }
+
+    private String extractJWT(String authzHeader) {
+        String[] split = authzHeader.split("\\s+");
+        return split[1];
+    }
+
+    private JWTClaimsSet getJWTClaims(String jwt) throws VickCellSTSException {
+        try {
+            return SignedJWT.parse(jwt).getJWTClaimsSet();
+        } catch (java.text.ParseException e) {
+            throw new VickCellSTSException("Error while parsing the Signed JWT in authorization header.", e);
+        }
+    }
+
+    /**
+     * Determines the direction of interception (SIDECAR_INBOUND vs SIDECAR_OUTBOUND).
+     *
+     * @param request
+     * @return true if intercepted call is SIDECAR_INBOUND, false otherwise.
+     */
+    private boolean isSidecarInboundCall(ExternalAuth.CheckRequest request) {
+        /*
+            This is an ugly hack to identify the direction of interception. Noticed that 'x-istio-attributes' header is
+            only available in SIDECAR_INBOUND calls. Using it to identify inbound vs outbound for the moment.
+            // TODO : find a cleaner way to identify inbound vs outbound calls.
+         */
+        return request.getAttributes().getRequest().getHttp().containsHeaders(ISTIO_ATTRIBUTES_HEADER);
+    }
+
     private ExternalAuth.OkHttpResponse buildOkHttpResponse(String stsToken) {
 
+        return buildOkHttpResponse(
+                Collections.singletonMap(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken));
+    }
+
+    private ExternalAuth.OkHttpResponse buildOkHttpResponse(Map<String, String> headers) {
+
         ExternalAuth.OkHttpResponse.Builder builder = ExternalAuth.OkHttpResponse.newBuilder();
-        if (StringUtils.isNotEmpty(stsToken)) {
-            builder.addHeaders(buildHeader(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken));
-        }
+        headers.forEach((key, value) -> builder.addHeaders(buildHeader(key, value)));
         return builder.build();
     }
 
-    private String getTokenToInject(ExternalAuth.CheckRequest request) {
+    private String getTokenToInject(ExternalAuth.CheckRequest request) throws VickCellSTSException {
 
         try {
+
+            // Check for a stored user context
+            String requestId = getRequestId(request);
+            // This is the original JWT sent to the cell gateway.
+            String jwt = userContextStore.get(requestId);
+
+            if (StringUtils.isNotBlank(jwt)) {
+                log.debug("JWT token to inject into outbound call was retrieved from the user context store.");
+                return jwt;
+            }
+
+            // TODO: Ideally we should take the original JWT and use the information there to create a new JWT. For now
+            // we simply return the same JWT. If not get a new one from the STS.
+
             HttpResponse<JsonNode> apiResponse =
                     Unirest.post(stsEndpointUrl)
                             .basicAuth(userName, password)
@@ -166,7 +273,7 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
         return null;
     }
 
-    private String getCellName() throws VickCellSTSException {
+    private String getMyCellName() throws VickCellSTSException {
 
         // For now we pick the cell name from the environment variable. In future we need to figure out a way to derive
         // values from the authz request.
@@ -186,17 +293,13 @@ public class VickCellOutboundAuthorizationService extends AuthorizationGrpc.Auth
 
     private String getAuthorizationHeaderValue(ExternalAuth.CheckRequest request) {
 
-        return getHeader(request, AUTHORIZATION_HEADER_NAME);
-    }
-
-    private String getHeader(ExternalAuth.CheckRequest request, String headerKey) {
-
-        return request.getAttributes().getRequest().getHttp().getHeaders().get(headerKey);
+        return request.getAttributes().getRequest().getHttp().getHeaders().get(AUTHORIZATION_HEADER_NAME);
     }
 
     private static void setHttpClientProperties() throws VickCellSTSException {
 
         try {
+            // TODO add the correct certs for hostname verification..
             Unirest.setHttpClient(HttpClients.custom()
                     .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, (x509Certificates, s) -> true).build())
                     .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)

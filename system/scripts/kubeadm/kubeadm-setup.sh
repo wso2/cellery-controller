@@ -164,3 +164,4 @@ elif [ $node_type == "worker" ]; then
 else
     echo "Enter correct arguments"
 fi
+

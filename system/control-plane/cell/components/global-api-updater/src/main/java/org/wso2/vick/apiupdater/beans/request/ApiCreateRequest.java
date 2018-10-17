@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.wso2.vick.apiupdater.utils.Constants;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class ApiCreateRequest {
 
     public ApiCreateRequest() {
         this.isDefaultVersion = true;
-        this.transport = Collections.singletonList("http");
+        this.transport = Arrays.asList("http", "https");
         this.tiers = Collections.singletonList("Unlimited");
         this.gatewayEnvironments = "";
         this.visibility = "PUBLIC";
