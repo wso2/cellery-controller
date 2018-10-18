@@ -99,73 +99,11 @@
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <id>make-directories</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>mkdir</executable>
-                            <workingDirectory>./</workingDirectory>
-                            <arguments>
-                                <argument>--parents</argument>
-                                <argument>${thrift-gen-directory}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>thrift</executable>         <!-- Requires Thrift Compiler v0.10.0 -->
-                            <workingDirectory>./</workingDirectory>
-                            <arguments>
-                                <argument>--gen</argument>
-                                <argument>java</argument>
-                                <argument>-out</argument>
-                                <argument>${thrift-gen-directory}</argument>
-                                <argument>${thrift-file}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${thrift-gen-directory}</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <properties>
-        <thrift-gen-directory>${project.build.directory}/generated-sources/thrift</thrift-gen-directory>
-        <thrift-file>${project.basedir}/src/main/thrift/zipkincore.thrift</thrift-file>
-
-        <maven.checkstyleplugin.excludes>**/generated-sources/thrift/**</maven.checkstyleplugin.excludes>
+        <maven.checkstyleplugin.excludes>**/org/wso2/vick/tracing/receiver/generated/**</maven.checkstyleplugin.excludes>
         <mavan.findbugsplugin.exclude.file>spotbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
     </properties>
 </project>

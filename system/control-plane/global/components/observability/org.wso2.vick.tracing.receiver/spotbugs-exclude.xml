@@ -17,6 +17,6 @@
   -->
 <FindBugsFilter>
     <Match>
-        <Package name="com.twitter.zipkin.thriftjava.*"/>
+        <Package name="org.wso2.vick.tracing.receiver.generated.thrift.*"/>
     </Match>
 </FindBugsFilter>
