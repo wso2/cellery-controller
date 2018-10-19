@@ -18,10 +18,12 @@
 
 from docker.wso2.com/wso2sp-worker:4.3.0
 
-ARG VICK_PROFILE_FILES=./target/files
+ARG VICK_PROFILE_FILES=./files
 
-# copy the osgified jars
-COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/lib/*.jar ${WSO2_SERVER_HOME}/lib/
+# copy entrypoint bash script to user home
+COPY --chown=wso2carbon:wso2  ${VICK_PROFILE_FILES}/widgets ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets
+COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/dashboard/* ${WSO2_SERVER_HOME}/wso2/dashboard/resources/dashboards/
+COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/patches/widgets/OpenTracingList/widgetConf.json ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets/OpenTracingList/
 
 # expose ports
-EXPOSE 9090 9443 9712 9612 7711 7611 9091 9411 9092
+EXPOSE 9714 9643 9614 7713 7613
