@@ -36,13 +36,17 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-core</artifactId>
             <version>1.15.0</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
             <version>1.15.0</version>
-            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -50,20 +54,16 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.1</version>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.1</version>
                 <executions>
                     <execution>
-                        <id>src-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <!-- use copy-dependencies instead if you don't want to explode the sources -->
-                            <goal>unpack-dependencies</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <classifier>sources</classifier>
-                            <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
-                            <outputDirectory>${project.build.directory}/extract</outputDirectory>
+                            <minimizeJar>true</minimizeJar>
                         </configuration>
                     </execution>
                 </executions>
@@ -85,7 +85,6 @@
                             *;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
-                        <Embed-Directory>services/*</Embed-Directory>
                     </instructions>
                 </configuration>
             </plugin>
