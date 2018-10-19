@@ -26,11 +26,161 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.vick.sp.dashboard.docker</artifactId>
     <description>WSO2 VICK - Docker Files - SP Dashboard</description>
+    <name>WSO2 VICK - Docker Files - SP Dashboard</name>
     <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.opentracing</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.latency.comparison</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.latency.time</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.request.count.comparison</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.request.count.filter</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.request.count.time</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.request.statistics</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.widgets.response.code.filter</artifactId>
+            <type>zip</type>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
-             <!--Build Docker image-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.opentracing
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>OpenTracingVisTimeline/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.latency.comparison
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsLatencyComparison/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.latency.time
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsLatencyOverTime/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.request.count.comparison
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsRequestCountComparison/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.request.count.filter
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsRequestCountFilter/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.request.count.time
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsRequestCountOverTime/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.request.statistics
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsRequestStatistics/**</includes>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.vick</groupId>
+                                    <artifactId>
+                                        org.wso2.vick.widgets.response.code.filter
+                                    </artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/files/widgets/</outputDirectory>
+                                    <includes>VICKAnalyticsResponseCodeFilter/**</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--Build Docker image-->
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
@@ -42,7 +192,7 @@
                             <goal>build</goal>
                         </goals>
                         <configuration>
-                            <repository>wso2vick/wso2sp-worker</repository>
+                            <repository>wso2vick/wso2sp-dashboard</repository>
                         </configuration>
                     </execution>
                 </executions>

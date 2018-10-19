@@ -16,12 +16,13 @@
 #
 # ------------------------------------------------------------------------
 
-from docker.wso2.com/wso2sp-worker:4.3.0
+from docker.wso2.com/wso2sp-dashboard:4.3.0
 
 ARG VICK_PROFILE_FILES=./files
+ARG VICK_TARGET_FILES=./target/files
 
 # copy entrypoint bash script to user home
-COPY --chown=wso2carbon:wso2  ${VICK_PROFILE_FILES}/widgets ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets
+COPY --chown=wso2carbon:wso2  ${VICK_TARGET_FILES}/widgets ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets
 COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/dashboard/* ${WSO2_SERVER_HOME}/wso2/dashboard/resources/dashboards/
 COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/patches/widgets/OpenTracingList/widgetConf.json ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets/OpenTracingList/
 

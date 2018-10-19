@@ -26,6 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.vick.sp.worker.docker</artifactId>
     <description>WSO2 VICK - Docker Files - SP Worker</description>
+    <name>WSO2 VICK - Docker Files - SP Worker</name>
     <packaging>pom</packaging>
 
     <dependencies>

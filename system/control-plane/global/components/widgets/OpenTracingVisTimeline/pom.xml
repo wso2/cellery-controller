@@ -25,7 +25,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>org.wso2.vick.http.analytics.widgets.opentracing.widget</artifactId>
+    <artifactId>org.wso2.vick.widgets.opentracing</artifactId>
     <packaging>pom</packaging>
     <name>WSO2 VICK - Widgets - Message Tracing Widget</name>
     <url>http://wso2.org</url>

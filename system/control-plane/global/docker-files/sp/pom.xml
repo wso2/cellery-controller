@@ -31,5 +31,6 @@
 
     <modules>
         <module>worker</module>
+        <module>dashboard</module>
     </modules>
 </project>

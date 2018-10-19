@@ -25,7 +25,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.wso2.vick.http.analytics.widgets.server.request.count</artifactId>
+    <artifactId>org.wso2.vick.widgets.request.count.time</artifactId>
     <packaging>pom</packaging>
     <name>WSO2 VICK - Widgets - Request Count Over Time Widget</name>
     <url>http://wso2.org</url>
