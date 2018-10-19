@@ -288,5 +288,8 @@
         <synapse.core.version>2.1.7-wso2v80</synapse.core.version>
         <open.tracing.version>0.31.0</open.tracing.version>
         <brave.open.tracing.version>0.29.0</brave.open.tracing.version>
+
+         <!--Docker repo name - By default wso2vick-->
+        <docker.repo.name>wso2vick</docker.repo.name>
     </properties>
 </project>

@@ -178,7 +178,7 @@
                             <goal>build</goal>
                         </goals>
                         <configuration>
-                            <repository>wso2vick/wso2sp-worker</repository>
+                            <repository>${docker.repo.name}/wso2sp-worker</repository>
                         </configuration>
                     </execution>
                 </executions>
