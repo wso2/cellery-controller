@@ -19,22 +19,17 @@
 
     <parent>
         <groupId>org.wso2.vick</groupId>
-        <artifactId>org.wso2.vick.global.plane.components</artifactId>
+        <artifactId>org.wso2.vick.global.plane.dockerfiles</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>org.wso2.vick.global.plane.observability</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <name>WSO2 VICK - Observability Components</name>
+    <artifactId>org.wso2.vick.global.plane.dockerfiles.sp</artifactId>
+    <name>WSO2 VICK - Docker Files - SP</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>org.wso2.vick.go.proto.java</module>
-        <module>org.wso2.vick.telemetry.receiver</module>
-        <module>org.wso2.vick.tracing.receiver</module>
-        <module>org.wso2.vick.tracing.synapse.handler</module>
+        <module>worker</module>
     </modules>
-
 </project>
