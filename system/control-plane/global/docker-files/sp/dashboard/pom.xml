@@ -192,7 +192,7 @@
                             <goal>build</goal>
                         </goals>
                         <configuration>
-                            <repository>${docker.repo.name}/wso2sp-worker</repository>
+                            <repository>${docker.repo.name}/wso2sp-dashboard</repository>
                         </configuration>
                     </execution>
                 </executions>
