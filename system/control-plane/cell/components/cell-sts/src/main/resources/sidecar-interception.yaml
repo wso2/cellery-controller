@@ -10,7 +10,7 @@ spec:
   - insertPosition:
       index: FIRST
     listenerMatch:
-      # Intercepting all HTTP traffic going out of the Pods
+      # Intercepting all HTTP traffic within the cell.
       listenerType: SIDECAR_INBOUND
       listenerProtocol: HTTP
     filterType: HTTP
@@ -25,7 +25,7 @@ spec:
   - insertPosition:
       index: LAST
     listenerMatch:
-      # Intercepting all HTTP traffic going out of the Pods
+      # Intercepting all HTTP traffic going out of the cell.
       listenerType: SIDECAR_OUTBOUND
       listenerProtocol: HTTP
     filterType: HTTP
