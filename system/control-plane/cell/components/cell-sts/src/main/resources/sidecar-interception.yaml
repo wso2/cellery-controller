@@ -1,14 +1,29 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: wso2-cell-outbound-interceptor
+  name: employee--envoyfilter
 spec:
   workloadLabels:
     # We filter the pods to apply this filter based on cell name. We expect the Pods within a cell to have this label.
-    vick.wso2.com/cell: wso2-cell
+    vick.wso2.com/cell: employee
   filters:
   - insertPosition:
       index: FIRST
+    listenerMatch:
+      # Intercepting all HTTP traffic going out of the Pods
+      listenerType: SIDECAR_INBOUND
+      listenerProtocol: HTTP
+    filterType: HTTP
+    filterName: "envoy.ext_authz"
+    filterConfig:
+      grpc_service:
+        google_grpc:
+          # Cell STS service which will intercept the outbound call and manipulate headers etc.
+          target_uri: 192.168.99.1:8080
+          stat_prefix: "ext_authz"
+        timeout: 10s
+  - insertPosition:
+      index: LAST
     listenerMatch:
       # Intercepting all HTTP traffic going out of the Pods
       listenerType: SIDECAR_OUTBOUND
@@ -19,6 +34,6 @@ spec:
       grpc_service:
         google_grpc:
           # Cell STS service which will intercept the outbound call and manipulate headers etc.
-          target_uri: wso2-cell--sts-service:80
+          target_uri: 192.168.99.1:8081
           stat_prefix: "ext_authz"
         timeout: 10s
