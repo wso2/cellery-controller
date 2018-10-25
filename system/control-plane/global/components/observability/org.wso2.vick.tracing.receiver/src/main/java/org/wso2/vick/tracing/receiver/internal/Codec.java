@@ -65,9 +65,9 @@ public class Codec {
             span.setParentId(zipkin2Span.parentId());
             span.setName(zipkin2Span.name());
             span.setServiceName(zipkin2Span.localServiceName());
-            span.setKind(zipkin2Span.kind().toString());
+            span.setKind(zipkin2Span.kind() != null ? zipkin2Span.kind().toString() : "");
             span.setTimestamp(zipkin2Span.timestampAsLong());
-            span.setDuration(zipkin2Span.duration());
+            span.setDuration(zipkin2Span.durationAsLong());
             span.setTags(zipkin2Span.tags());
             spans.add(span);
         }
