@@ -20,7 +20,7 @@
 
     <parent>
         <groupId>org.wso2.vick</groupId>
-        <artifactId>org.wso2.vick.global.plane.observability</artifactId>
+        <artifactId>org.wso2.vick.global.plane.orbit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
