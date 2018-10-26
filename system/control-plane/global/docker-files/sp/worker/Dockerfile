@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------
 
-from docker.wso2.com/wso2sp-worker:4.3.0
+FROM docker.wso2.com/wso2sp-worker:4.3.0
 
 ARG VICK_PROFILE_FILES=./target/files
 

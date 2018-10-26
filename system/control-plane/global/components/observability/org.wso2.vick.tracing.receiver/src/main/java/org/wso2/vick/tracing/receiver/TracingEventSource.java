@@ -21,7 +21,11 @@ package org.wso2.vick.tracing.receiver;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.netty.buffer.ByteBuf;
+import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.wso2.siddhi.annotation.Example;
@@ -34,17 +38,12 @@ import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
-import org.wso2.transport.http.netty.config.ListenerConfiguration;
-import org.wso2.transport.http.netty.contract.HttpConnectorListener;
-import org.wso2.transport.http.netty.contract.HttpWsConnectorFactory;
-import org.wso2.transport.http.netty.contract.ServerConnector;
-import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
-import org.wso2.transport.http.netty.contractimpl.DefaultHttpWsConnectorFactory;
-import org.wso2.transport.http.netty.listener.ServerBootstrapConfiguration;
-import org.wso2.transport.http.netty.message.HTTPCarbonMessage;
 import org.wso2.vick.tracing.receiver.internal.Codec;
 import org.wso2.vick.tracing.receiver.internal.ZipkinSpan;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,72 +90,58 @@ public class TracingEventSource extends Source {
 
     private static final Logger logger = Logger.getLogger(TracingEventSource.class.getName());
     private static final Gson gson = new Gson();
-    private static final String HTTP_SERVER_ID = "TRACING_HTTP_SERVER";
 
-    private HttpWsConnectorFactory httpWsConnectorFactory;
-    private ServerConnector serverConnector;
+    private HttpServer httpServer;
     private HttpServerListener httpServerListener;
 
-    private String ip;
+    private String host;
+    private String apiContext;
     private int port;
 
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
                      String[] requestedTransportPropertyNames, ConfigReader configReader,
                      SiddhiAppContext siddhiAppContext) {
-        ip = optionHolder.validateAndGetStaticValue(Constants.TRACING_RECEIVER_IP_KEY,
+        host = optionHolder.validateAndGetStaticValue(Constants.TRACING_RECEIVER_HOST_KEY,
                 Constants.DEFAULT_TRACING_RECEIVER_IP);
         port = Integer.parseInt(optionHolder.validateAndGetStaticValue(Constants.TRACING_RECEIVER_PORT_KEY,
                 Constants.DEFAULT_TRACING_RECEIVER_PORT));
+        apiContext = optionHolder.validateAndGetStaticValue(Constants.TRACING_RECEIVER_API_CONTEXT_KEY,
+                Constants.DEFAULT_TRACING_RECEIVER_API_CONTEXT);
 
         httpServerListener = new HttpServerListener(sourceEventListener);
-        httpWsConnectorFactory = new DefaultHttpWsConnectorFactory();
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        ServerBootstrapConfiguration serverBootstrapConfiguration
-                = new ServerBootstrapConfiguration(new HashMap<>());
-        ListenerConfiguration listenerConfiguration
-                = new ListenerConfiguration(HTTP_SERVER_ID, ip, port);
-
-        serverConnector = httpWsConnectorFactory
-                .createServerConnector(serverBootstrapConfiguration, listenerConfiguration);
-
-        ServerConnectorFuture serverConnectorFuture = serverConnector.start();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Successfully started HTTP Server Connector " + serverConnector.getConnectorID());
+        try {
+            httpServer = HttpServer.create(new InetSocketAddress(host, port), 0);
+        } catch (IOException e) {
+            throw new ConnectionUnavailableException("Failed to instantiate HTTP Server");
         }
-        serverConnectorFuture.setHttpConnectorListener(httpServerListener);
+        HttpContext context = httpServer.createContext(apiContext);
+        context.setHandler(httpServerListener);
+        httpServer.start();
         if (logger.isDebugEnabled()) {
-            logger.debug("Registered event listener");
+            logger.debug("Started HTTP Server started and receiving requests on http://" + host + ":" + port
+                    + apiContext);
         }
     }
 
     @Override
     public void disconnect() {
-        if (serverConnector != null) {
-            serverConnector.stop();
+        if (httpServer != null) {
+            httpServer.stop(0);
             if (logger.isDebugEnabled()) {
-                logger.debug("Successfully stopped HTTP Server Connector " + serverConnector.getConnectorID());
+                logger.debug("HTTP Server Shutdown");
             }
-            serverConnector = null;
+            httpServer = null;
         }
     }
 
     @Override
     public void destroy() {
-        if (httpWsConnectorFactory != null) {
-            try {
-                httpWsConnectorFactory.shutdown();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Successfully shutdown HTTP Connector Factory");
-                }
-                httpWsConnectorFactory = null;
-            } catch (InterruptedException e) {
-                logger.error("Failed to shutdown HTTP Connector Factory", e);
-            }
-        }
+        // Do nothing
     }
 
     @Override
@@ -188,7 +173,7 @@ public class TracingEventSource extends Source {
      * HTTP Server Listener used for listening to HTTP Request.
      * This notifies the source event listener.
      */
-    public static class HttpServerListener implements HttpConnectorListener {
+    public static class HttpServerListener implements HttpHandler {
 
         private SourceEventListener sourceEventListener;
 
@@ -197,11 +182,21 @@ public class TracingEventSource extends Source {
         }
 
         @Override
-        public void onMessage(HTTPCarbonMessage httpMessage) {
-            ByteBuf inputByteBuf = httpMessage.getBlockingEntityCollector().getMessageBody();
-            byte[] byteArray = inputByteBuf.array();
-            String contentType = httpMessage.getHeader(Constants.HTTP_CONTENT_TYPE_HEADER);
+        public void handle(HttpExchange httpExchange) throws IOException {
+            InputStream inputStream = httpExchange.getRequestBody();
+            byte[] byteArray = IOUtils.toByteArray(inputStream);
+            String contentType = httpExchange.getRequestHeaders().getFirst(Constants.HTTP_CONTENT_TYPE_HEADER);
 
+            handleEventReceive(byteArray, contentType);
+        }
+
+        /**
+         * Handle tracing data receive.
+         *
+         * @param byteArray   The byte array received
+         * @param contentType The content type of the message received
+         */
+        private void handleEventReceive(byte[] byteArray, String contentType) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Received message of type " + contentType);
             }
@@ -258,11 +253,6 @@ public class TracingEventSource extends Source {
                     }
                 }
             }
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            logger.error("Failed to handler incoming Zipkin Spans", throwable);
         }
     }
 }

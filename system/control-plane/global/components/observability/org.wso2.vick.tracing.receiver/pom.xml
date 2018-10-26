@@ -66,10 +66,6 @@
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.wso2.transport.http</groupId>
-            <artifactId>org.wso2.transport.http.netty</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -83,7 +79,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            com.twitter.zipkin.thriftjava.*
+                            org.wso2.vick.tracing.receiver.generated.thrift.*,
+                            org.wso2.vick.tracing.receiver.internal.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.vick.tracing.receiver.*,

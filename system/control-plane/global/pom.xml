@@ -137,16 +137,6 @@
                 <artifactId>zipkin-sender-urlconnection</artifactId>
                 <version>${zipkin.reporter.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.zipkin.reporter2</groupId>
-                <artifactId>zipkin-sender-okhttp3</artifactId>
-                <version>${zipkin.reporter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.transport.http</groupId>
-                <artifactId>org.wso2.transport.http.netty</artifactId>
-                <version>${org.wso2.transport.http.version}</version>
-            </dependency>
 
             <!--Auth components-->
             <dependency>
@@ -265,7 +255,6 @@
     <properties>
         <maven.checkstyleplugin.version>2.17</maven.checkstyleplugin.version>
         <maven.checkstyle.version>7.8.2</maven.checkstyle.version>
-        <org.wso2.transport.http.version>6.0.163</org.wso2.transport.http.version>
 
         <siddhi.version>4.1.38</siddhi.version>
         <commons.lang.version>3.7</commons.lang.version>

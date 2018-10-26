@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------
 
-from docker.wso2.com/wso2sp-dashboard:4.3.0
+FROM docker.wso2.com/wso2sp-dashboard:4.3.0
 
 ARG VICK_PROFILE_FILES=./files
 ARG VICK_TARGET_FILES=./target/files

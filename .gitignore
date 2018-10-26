@@ -26,5 +26,9 @@ hs_err_pid*
 .idea/
 *.iml
 
-#Maven
+# Maven
 **/target/*
+
+# NPM
+**/node_modules/*
+**/dist/*

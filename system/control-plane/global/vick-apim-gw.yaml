@@ -42,6 +42,13 @@ spec:
           initialDelaySeconds: 150
           periodSeconds: 10
         imagePullPolicy: Always
+        env:
+        - name: ZIPKIN_HOST
+          value: "wso2sp-worker.vick-system"
+        - name: ZIPKIN_PORT
+          value: "9411"
+        - name: ZIPKIN_API_CONTEXT
+          value: "/api/v1/spans"
         ports:
         -
           containerPort: 8280

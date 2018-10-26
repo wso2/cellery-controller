@@ -54,7 +54,6 @@ kubectl apply -f vick-apim-gw-ingress.yaml -n vick-system
 #Create SP worker configmaps
 kubectl create configmap sp-worker-siddhi --from-file=sp-worker/siddhi -n vick-system
 kubectl create configmap sp-worker-conf --from-file=sp-worker/conf -n vick-system
-kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
 
 #Create SP worker deployment
 kubectl apply -f vick-sp-worker-deployment.yaml -n vick-system
@@ -62,7 +61,6 @@ kubectl apply -f vick-sp-worker-service.yaml -n vick-system
 
 #Create SP dashboard configmaps
 kubectl create configmap sp-dashboard-conf --from-file=status-dashboard/conf -n vick-system
-#kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
 
 #Create SP status dashboard deployment
 kubectl apply -f vick-sp-dashboard-deployment.yaml -n vick-system

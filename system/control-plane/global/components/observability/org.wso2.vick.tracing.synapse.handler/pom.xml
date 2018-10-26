@@ -54,10 +54,6 @@
             <groupId>io.zipkin.reporter2</groupId>
             <artifactId>zipkin-sender-urlconnection</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-sender-okhttp3</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -71,7 +67,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
-                            org.wso2.vick.tracing.synapse.handler*
+                            org.wso2.vick.tracing.synapse.handler.*
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional
