@@ -95,11 +95,9 @@ spec:
 
         volumeMounts:
         - name: sp-worker-conf
-          mountPath: "/home/wso2carbon/kubernetes-volumes/worker/conf/"
-        - name: sp-worker-bin
-          mountPath: "/home/wso2carbon/kubernetes-volumes/worker/bin/"
+          mountPath: "/home/wso2carbon/wso2-config-volume/conf/worker/"
         - name: sp-worker-siddhi
-          mountPath: "/home/wso2carbon/wso2-server-volume/wso2/worker/deployment/siddhi-files/"
+          mountPath: "/home/wso2carbon/wso2-artifact-volume/wso2/worker/deployment/siddhi-files/"
 
         livenessProbe:
           tcpSocket:
