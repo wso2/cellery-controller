@@ -18,6 +18,11 @@ registry:"wso2vick",
 name:"sampleapp-stock",
 tag:"v1.0"
 }
+
+@http:ServiceConfig {
+    basePath:"/"
+}
+
 service<http:Service> stock bind { port: 8080 } {
     @http:ResourceConfig {
         methods: ["GET"]
