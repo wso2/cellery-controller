@@ -132,11 +132,11 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
 
     protected ExternalAuth.OkHttpResponse buildOkHttpResponse(String stsToken) {
 
-        return buildOkHttpResponse(
+        return buildOkHttpResponseWithHeaders(
                 Collections.singletonMap(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken));
     }
 
-    protected ExternalAuth.OkHttpResponse buildOkHttpResponse(Map<String, String> headers) {
+    protected ExternalAuth.OkHttpResponse buildOkHttpResponseWithHeaders(Map<String, String> headers) {
 
         ExternalAuth.OkHttpResponse.Builder builder = ExternalAuth.OkHttpResponse.newBuilder();
         headers.forEach((key, value) -> builder.addHeaders(buildHeader(key, value)));

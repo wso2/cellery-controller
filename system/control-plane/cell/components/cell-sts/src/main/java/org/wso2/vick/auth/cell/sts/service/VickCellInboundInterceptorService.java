@@ -81,7 +81,7 @@ public class VickCellInboundInterceptorService extends VickCellInterceptorServic
 
         return ExternalAuth.CheckResponse.newBuilder()
                 .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
-                .setOkResponse(buildOkHttpResponse(headersToSet))
+                .setOkResponse(buildOkHttpResponseWithHeaders(headersToSet))
                 .build();
     }
 
