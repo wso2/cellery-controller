@@ -37,8 +37,8 @@ import java.util.Map;
  */
 public class VickCellInboundInterceptorService extends VickCellInterceptorService {
 
-    private static final String VICK_AUTH_USER_HEADER = "x-vick-auth-user";
-    private static final String VICK_AUTH_USER_CLAIMS_HEADER = "x-vick-auth-user-claims";
+    private static final String VICK_AUTH_SUBJECT_HEADER = "x-vick-auth-subject";
+    private static final String VICK_AUTH_SUBJECT_CLAIMS_HEADER = "x-vick-auth-subject-claims";
 
     private Logger log = LoggerFactory.getLogger(VickCellInboundInterceptorService.class);
 
@@ -76,8 +76,8 @@ public class VickCellInboundInterceptorService extends VickCellInterceptorServic
         }
 
         Map<String, String> headersToSet = new HashMap<>();
-        headersToSet.put(VICK_AUTH_USER_HEADER, jwtClaims.getSubject());
-        headersToSet.put(VICK_AUTH_USER_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
+        headersToSet.put(VICK_AUTH_SUBJECT_HEADER, jwtClaims.getSubject());
+        headersToSet.put(VICK_AUTH_SUBJECT_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
 
         return ExternalAuth.CheckResponse.newBuilder()
                 .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
