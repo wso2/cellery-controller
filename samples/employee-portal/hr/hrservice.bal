@@ -39,6 +39,12 @@ service<http:Service> hr bind { port: 8080 } {
     }
     getHrDetails (endpoint caller, http:Request req) {
         http:Response res = new;
+
+        string[] headers = req.getHeaderNames();
+        foreach header in headers {
+            io:println(header + ": " + req.getHeader(untaint header));
+        }
+
         // get JWT header
         if (req.hasHeader(AUTH_HEADER)) {
             match extractJwtTokenFromHeader(req.getHeader(AUTH_HEADER)) {
