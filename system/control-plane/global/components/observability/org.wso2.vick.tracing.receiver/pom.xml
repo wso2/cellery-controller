@@ -23,7 +23,7 @@
 
     <parent>
         <groupId>org.wso2.vick</groupId>
-        <artifactId>org.wso2.vick.observability</artifactId>
+        <artifactId>org.wso2.vick.global.plane.observability</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
@@ -79,7 +79,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            com.twitter.zipkin.thriftjava.*
+                            org.wso2.vick.tracing.receiver.generated.thrift.*,
+                            org.wso2.vick.tracing.receiver.internal.*
                         </Private-Package>
                         <Export-Package>
                             org.wso2.vick.tracing.receiver.*,

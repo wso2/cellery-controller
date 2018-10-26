@@ -58,11 +58,6 @@
             <version>1.12.0</version>
         </dependency>
         <dependency>
-            <groupId>org.wso2.vick</groupId>
-            <artifactId>gogoproto-java</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>
@@ -77,7 +72,11 @@
             <artifactId>unirest-java</artifactId>
             <version>1.4.9</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>27.0-jre</version>
+        </dependency>
 
         <dependency>
             <groupId>io.grpc</groupId>
@@ -107,13 +106,18 @@
         <dependency>
             <groupId>org.wso2.vick</groupId>
             <artifactId>org.wso2.vick.auth.sts.core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${vick.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.wso2.vick</groupId>
                     <artifactId>org.wso2.vick.auth.extensions</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>gogoproto-java</artifactId>
+            <version>${vick.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -128,5 +132,6 @@
         <exp.package.version>1.0.0</exp.package.version>
         <protobuf.version>3.6.1</protobuf.version>
         <grpc.version>1.15.0</grpc.version>
+        <vick.version>${project.version}</vick.version>
     </properties>
 </project>
