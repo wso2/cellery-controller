@@ -15,7 +15,7 @@
 # limitations under the License
 #
 # ------------------------------------------------------------------------
-FROM wso2vick/wso2am:2.6.0-rc3
+FROM docker.wso2.com/wso2am:2.6.0
 
 # Copy the jar files
 RUN rm -rf /home/wso2carbon/wso2am-2.6.0/repository/components/lib/org.wso2.vick.auth.*.jar
