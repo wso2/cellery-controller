@@ -55,7 +55,7 @@ func CreateEnvoyFilter(cell *v1alpha1.Cell) *v1alpha3.EnvoyFilter {
 						GRPCService: v1alpha3.GRPCService{
 							GoogleGRPC: v1alpha3.GoogleGRPC{
 								TargetUri:  TokenServiceName(cell) + "-service:8080",
-								StatPrefix: startPrefix,
+								StatPrefix: statPrefix,
 							},
 							Timeout: filterTimeout,
 						},
@@ -75,7 +75,7 @@ func CreateEnvoyFilter(cell *v1alpha1.Cell) *v1alpha3.EnvoyFilter {
 						GRPCService: v1alpha3.GRPCService{
 							GoogleGRPC: v1alpha3.GoogleGRPC{
 								TargetUri:  TokenServiceName(cell) + "-service:8081",
-								StatPrefix: startPrefix,
+								StatPrefix: statPrefix,
 							},
 							Timeout: filterTimeout,
 						},

@@ -28,6 +28,6 @@ const (
 
 	HTTPProtocol = "HTTP"
 	baseFilterName = "envoy.ext_authz"
-	startPrefix = "ext_authz"
+	statPrefix = "ext_authz"
 	filterTimeout = "10s"
 )
