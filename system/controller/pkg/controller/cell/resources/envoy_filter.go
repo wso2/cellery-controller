@@ -43,21 +43,41 @@ func CreateEnvoyFilter(cell *v1alpha1.Cell) *v1alpha3.EnvoyFilter {
 			Filters: []v1alpha3.Filter{
 				{
 					InsertPosition: v1alpha3.InsertPosition{
-						Index: "FIRST",
+						Index: filterInsertPositionFirst,
 					},
 					ListenerMatch: v1alpha3.ListenerMatch{
-						ListenerType:     "SIDECAR_OUTBOUND",
-						ListenerProtocol: "HTTP",
+						ListenerType:     filterListenerTypeInbound,
+						ListenerProtocol: HTTPProtocol,
 					},
-					FilterName: "envoy.ext_authz",
-					FilterType: "HTTP",
+					FilterName: baseFilterName,
+					FilterType: HTTPProtocol,
 					FilterConfig: v1alpha3.FilterConfig{
 						GRPCService: v1alpha3.GRPCService{
 							GoogleGRPC: v1alpha3.GoogleGRPC{
-								TargetUri:  TokenServiceName(cell) + "-service:80",
-								StatPrefix: "ext_authz",
+								TargetUri:  TokenServiceName(cell) + "-service:8080",
+								StatPrefix: startPrefix,
 							},
-							Timeout: "10s",
+							Timeout: filterTimeout,
+						},
+					},
+				},
+				{
+					InsertPosition: v1alpha3.InsertPosition{
+						Index: filterInsertPositionLast,
+					},
+					ListenerMatch: v1alpha3.ListenerMatch{
+						ListenerType:     filterListenerTypeOutbound,
+						ListenerProtocol: HTTPProtocol,
+					},
+					FilterName: baseFilterName,
+					FilterType: HTTPProtocol,
+					FilterConfig: v1alpha3.FilterConfig{
+						GRPCService: v1alpha3.GRPCService{
+							GoogleGRPC: v1alpha3.GoogleGRPC{
+								TargetUri:  TokenServiceName(cell) + "-service:8081",
+								StatPrefix: startPrefix,
+							},
+							Timeout: filterTimeout,
 						},
 					},
 				},

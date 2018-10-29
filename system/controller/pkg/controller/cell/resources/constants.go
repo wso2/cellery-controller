@@ -19,20 +19,15 @@
 package resources
 
 const (
-	tokenServiceServiceInboundPort  = 8080
-	tokenServiceServiceOutboundPort = 8081
+	// Envoy filter
+	filterInsertPositionFirst = "FIRST"
+	filterInsertPositionLast  = "LAST"
 
-	tokenServiceServicePortInboundName  = "grpc-inbound"
-	tokenServiceServicePortOutboundName = "grpc-outbound"
+	filterListenerTypeInbound  = "SIDECAR_INBOUND"
+	filterListenerTypeOutbound  = "SIDECAR_OUTBOUND"
 
-	tokenServiceContainerInboundPort  = 8080
-	tokenServiceContainerOutboundPort = 8081
-
-	tokenServiceConfigKey  = "sts-config"
-	tokenServiceConfigFile = "sts.json"
-
-	configVolumeName = "config-volume"
-	configMountPath  = "/etc/config"
-
-	envCellNameKey = "CELL_NAME"
+	HTTPProtocol = "HTTP"
+	baseFilterName = "envoy.ext_authz"
+	startPrefix = "ext_authz"
+	filterTimeout = "10s"
 )

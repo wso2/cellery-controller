@@ -56,9 +56,14 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 						{
 							Name:  "cell-sts",
 							Image: tokenServiceConfig.Image,
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: tokenServiceContainerPort,
-							}},
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: tokenServiceContainerInboundPort,
+								},
+								{
+									ContainerPort: tokenServiceContainerOutboundPort,
+								},
+							},
 							Env: []corev1.EnvVar{
 								{
 									Name:  envCellNameKey,
