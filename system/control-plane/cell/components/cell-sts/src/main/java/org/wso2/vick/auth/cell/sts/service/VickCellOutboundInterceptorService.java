@@ -59,7 +59,7 @@ public class VickCellOutboundInterceptorService extends VickCellInterceptorServi
         ExternalAuth.CheckResponse response;
 
         if (StringUtils.isEmpty(authzHeaderInRequest)) {
-            log.debug("Authorization Header is missing in the outbound call. Injecting a JWT from STS.");
+            log.debug("Authorization Header is missing in the outbound call. Injecting a JWT from at cell STS.");
 
             String stsToken = getStsToken(request);
             if (StringUtils.isEmpty(stsToken)) {
@@ -70,7 +70,8 @@ public class VickCellOutboundInterceptorService extends VickCellInterceptorServi
                     .setOkResponse(buildOkHttpResponse(stsToken))
                     .build();
         } else {
-            log.info("Authorization Header is present in the request. Continuing without injecting a new JWT.");
+            log.info("Authorization Header is present in the request. Continuing without injecting a new JWT at " +
+                    "cell STS.");
             response = ExternalAuth.CheckResponse.newBuilder()
                     .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
                     .build();

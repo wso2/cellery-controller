@@ -59,6 +59,7 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
     private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
 
     private static final String REQUEST_ID = "request.id";
+    private static final String CELL_NAME = "cell.name";
     private static final String REQUEST_ID_HEADER = "x-request-id";
     private static final String DESTINATION_HEADER = ":authority";
 
@@ -106,8 +107,10 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
         try {
             // Add request ID for log correlation.
             MDC.put(REQUEST_ID, getRequestId(request));
-            String destination = getDestination(request);
+            // Add cell name to log entries
+            MDC.put(CELL_NAME, cellName);
 
+            String destination = getDestination(request);
             log.debug("Request from Istio-Proxy (destination:{}):\n{}", destination, request);
             response = handleRequest(request);
             log.debug("Response to istio-proxy (destination:{}):\n{}", destination, response);
