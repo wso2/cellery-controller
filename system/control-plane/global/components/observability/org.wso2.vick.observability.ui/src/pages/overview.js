@@ -17,16 +17,15 @@
  */
 
 import React, {Component} from 'react';
-import AppLayout from './AppLayout';
 
-class App extends Component {
+class Overview extends Component {
     render() {
         return (
             <div>
-                <AppLayout/>
+                Hello World Overview!
             </div>
         );
     }
 }
 
-export default App;
+export default Overview;

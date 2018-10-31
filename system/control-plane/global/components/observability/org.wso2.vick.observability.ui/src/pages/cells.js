@@ -17,16 +17,15 @@
  */
 
 import React, {Component} from 'react';
-import AppLayout from './AppLayout';
 
-class App extends Component {
+class Cell extends Component {
     render() {
         return (
             <div>
-                <AppLayout/>
+                Hello World Cells!
             </div>
         );
     }
 }
 
-export default App;
+export default Cell;
