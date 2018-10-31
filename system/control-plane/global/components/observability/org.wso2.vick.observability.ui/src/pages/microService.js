@@ -17,16 +17,15 @@
  */
 
 import React, {Component} from 'react';
-import AppLayout from './AppLayout';
 
-class App extends Component {
+class MicroService extends Component {
     render() {
         return (
             <div>
-                <AppLayout/>
+                Hello World Micro Service!
             </div>
         );
     }
 }
 
-export default App;
+export default MicroService;
