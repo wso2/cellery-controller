@@ -38,9 +38,9 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-import Overview from "./pages/overview";
-import Cell from "./pages/cells";
-import MicroService from "./pages/microService";
+import Overview from "./pages/Overview";
+import Cell from "./pages/Cell";
+import MicroService from "./pages/MicroService";
 
 const drawerWidth = 240;
 
@@ -109,7 +109,6 @@ const styles = theme => ({
 
 class AppLayout extends React.Component {
     state = {
-        auth: true,
         open: false,
         userInfo: null,
         currentPage: <Overview/>
@@ -136,8 +135,8 @@ class AppLayout extends React.Component {
     };
 
     render() {
-        const {classes, theme} = this.props;
-        const {auth, open, userInfo} = this.state;
+        const {classes, theme, username} = this.props;
+        const {open, userInfo} = this.state;
         const userInfoOpen = Boolean(userInfo);
         return (
             <div className={classes.root}>
@@ -145,16 +144,16 @@ class AppLayout extends React.Component {
                 <AppBar
                     position="fixed"
                     className={classNames(classes.appBar, {
-                        [classes.appBarShift]: this.state.open,
+                        [classes.appBarShift]: open,
                     })}
                 >
-                    <Toolbar disableGutters={!this.state.open}>
+                    <Toolbar disableGutters={!open}>
                         <IconButton
                             color="inherit"
                             aria-label="Open drawer"
                             onClick={this.handleDrawerOpen}
                             className={classNames(classes.menuButton, {
-                                [classes.hide]: this.state.open,
+                                [classes.hide]: open,
                             })}
                         >
                             <MenuIcon/>
@@ -162,7 +161,7 @@ class AppLayout extends React.Component {
                         <Typography variant="h6" color="inherit" className={classes.grow}>
                             WSO2 VICK Observability
                         </Typography>
-                        {auth && (
+                        {username && (
                             <div>
                                 <IconButton
                                     aria-owns={userInfoOpen ? 'user-info-appbar' : undefined}
@@ -187,7 +186,7 @@ class AppLayout extends React.Component {
                                     onClose={this.handleUserInfoClose}
                                 >
                                     {/*TODO: Implement user login */}
-                                    <MenuItem onClick={this.handleUserInfoClose}>Profile</MenuItem>
+                                    <MenuItem onClick={this.handleUserInfoClose}>Profile - {username}</MenuItem>
                                     <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
                                 </Menu>
                             </div>
@@ -197,7 +196,7 @@ class AppLayout extends React.Component {
                 <Drawer
                     variant="permanent"
                     classes={{
-                        paper: classNames(classes.drawerPaper, !this.state.open && classes.drawerPaperClose),
+                        paper: classNames(classes.drawerPaper, !open && classes.drawerPaperClose),
                     }}
                     open={this.state.open}
                 >
@@ -209,15 +208,16 @@ class AppLayout extends React.Component {
                     <Divider/>
                     <List>
                         {/*TODO : Change the icons accordingly to the page menu */}
-                        <ListItem button key="Overview" onClick={this.handlePageMenuClick.bind(this, <Overview />)}>
+                        <ListItem button key="Overview" onClick={this.handlePageMenuClick.bind(this, <Overview/>)}>
                             <ListItemIcon> <InboxIcon/></ListItemIcon>
                             <ListItemText primary="Overview"/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={this.handlePageMenuClick.bind(this, <Cell />)}>
+                        <ListItem button key="Cells" onClick={this.handlePageMenuClick.bind(this, <Cell/>)}>
                             <ListItemIcon> <InboxIcon/></ListItemIcon>
                             <ListItemText primary="Cells"/>
                         </ListItem>
-                        <ListItem button key="Micro Services" onClick={this.handlePageMenuClick.bind(this, <MicroService />)}>
+                        <ListItem button key="Micro Services"
+                                  onClick={this.handlePageMenuClick.bind(this, <MicroService/>)}>
                             <ListItemIcon> <InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>

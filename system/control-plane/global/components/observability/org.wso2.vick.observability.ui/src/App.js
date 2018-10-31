@@ -18,14 +18,19 @@
 
 import React, {Component} from 'react';
 import AppLayout from './AppLayout';
+import SignIn from './pages/SignIn';
+import {BrowserRouter, Route} from 'react-router-dom';
 
 class App extends Component {
     render() {
+        const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
-            <div>
-                <AppLayout/>
-            </div>
-        );
+            <BrowserRouter>
+                <Route path='/' render={user ? props => <AppLayout {...props} username={user}/> : props =>
+                    <SignIn {...props} />}>
+                </Route>
+            </BrowserRouter>
+        )
     }
 }
 
