@@ -22,21 +22,15 @@ import com.google.rpc.Code;
 import com.google.rpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.wso2.vick.auth.cell.sts.context.store.UserContextStore;
 import org.wso2.vick.auth.cell.sts.generated.envoy.core.Base;
 import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.AuthorizationGrpc;
 import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.ExternalAuth;
+import org.wso2.vick.auth.cell.sts.model.CellStsRequest;
+import org.wso2.vick.auth.cell.sts.model.CellStsResponse;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -48,114 +42,75 @@ import java.util.Map;
 public abstract class VickCellInterceptorService extends AuthorizationGrpc.AuthorizationImplBase {
 
     private static final Logger log = LoggerFactory.getLogger(VickCellInterceptorService.class);
-    private static final String AUTHORIZATION_HEADER_NAME = "authorization";
-    private static final String CELL_NAME_ENV_VARIABLE = "CELL_NAME";
-    private static final String STS_CONFIG_PATH_ENV_VARIABLE = "CONF_PATH";
-    private static final String CONFIG_FILE_PATH = "/etc/config/sts.json";
-
-    private static final String CONFIG_STS_ENDPOINT = "endpoint";
-    private static final String CONFIG_AUTH_USERNAME = "username";
-    private static final String CONFIG_AUTH_PASSWORD = "password";
-    private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
 
     private static final String REQUEST_ID = "request.id";
     private static final String CELL_NAME = "cell.name";
     private static final String REQUEST_ID_HEADER = "x-request-id";
     private static final String DESTINATION_HEADER = ":authority";
+    private static final String CELL_NAME_ENV_VARIABLE = "CELL_NAME";
 
-    protected String stsEndpointUrl;
-    protected String userName;
-    protected String password;
-    protected String cellName;
+    protected VickCellStsService cellStsService;
 
-    protected UserContextStore userContextStore;
+    public VickCellInterceptorService(VickCellStsService cellStsService) throws VickCellSTSException {
 
-    public VickCellInterceptorService(UserContextStore userContextStore) throws VickCellSTSException {
-
-        setUpConfigurationParams();
-        this.userContextStore = userContextStore;
-    }
-
-    private void setUpConfigurationParams() throws VickCellSTSException {
-
-        try {
-            String configFilePath = getConfigFilePath();
-            String content = new String(Files.readAllBytes(Paths.get(configFilePath)));
-            JSONObject config = (JSONObject) new JSONParser().parse(content);
-            stsEndpointUrl = (String) config.get(CONFIG_STS_ENDPOINT);
-            userName = (String) config.get(CONFIG_AUTH_USERNAME);
-            password = (String) config.get(CONFIG_AUTH_PASSWORD);
-            cellName = getMyCellName();
-
-            log.info("Global STS Endpoint: " + stsEndpointUrl);
-            log.info("Cell Name: " + cellName);
-        } catch (ParseException | IOException e) {
-            throw new VickCellSTSException("Error while setting up STS configurations", e);
-        }
-    }
-
-    private String getConfigFilePath() {
-
-        String configPath = System.getenv(STS_CONFIG_PATH_ENV_VARIABLE);
-        return StringUtils.isNotBlank(configPath) ? configPath : CONFIG_FILE_PATH;
+        this.cellStsService = cellStsService;
     }
 
     @Override
-    public void check(ExternalAuth.CheckRequest request, StreamObserver<ExternalAuth.CheckResponse> responseObserver) {
+    public final void check(ExternalAuth.CheckRequest requestFromProxy,
+                            StreamObserver<ExternalAuth.CheckResponse> responseObserver) {
 
-        ExternalAuth.CheckResponse response;
+        ExternalAuth.CheckResponse responseToProxy;
         try {
             // Add request ID for log correlation.
-            MDC.put(REQUEST_ID, getRequestId(request));
+            MDC.put(REQUEST_ID, getRequestId(requestFromProxy));
             // Add cell name to log entries
-            MDC.put(CELL_NAME, cellName);
+            MDC.put(CELL_NAME, getMyCellName());
 
-            String destination = getDestination(request);
-            log.debug("Request from Istio-Proxy (destination:{}):\n{}", destination, request);
-            response = handleRequest(request);
-            log.debug("Response to istio-proxy (destination:{}):\n{}", destination, response);
+            String destination = getDestination(requestFromProxy);
+            log.debug("Request from Istio-Proxy (destination:{}):\n{}", destination, requestFromProxy);
+
+            // Build Cell STS request from the Envoy Proxy Check Request
+            CellStsRequest cellStsRequest = new CellStsRequest(requestFromProxy);
+            CellStsResponse cellStsResponse = new CellStsResponse();
+
+            // Let the request be handled by inbound/outbound interceptors
+            handleRequest(cellStsRequest, cellStsResponse);
+
+            // Build the response to envoy proxy response from Cell STS Response
+            responseToProxy = ExternalAuth.CheckResponse.newBuilder()
+                    .setStatus(Status.newBuilder().setCode(Code.OK_VALUE).build())
+                    .setOkResponse(buildOkHttpResponseWithHeaders(cellStsResponse.getResponseHeaders()))
+                    .build();
+
+            log.debug("Response to istio-proxy (destination:{}):\n{}", destination, responseToProxy);
         } catch (VickCellSTSException e) {
-            log.error("Error while handling request from istio-proxy to (destination:{})", getDestination(request), e);
-            response = buildErrorResponse();
+            log.error("Error while handling request from istio-proxy to (destination:{})",
+                    getDestination(requestFromProxy), e);
+            responseToProxy = buildErrorResponse();
         } finally {
             MDC.clear();
         }
 
-        responseObserver.onNext(response);
+        responseObserver.onNext(responseToProxy);
         responseObserver.onCompleted();
     }
 
-    protected abstract ExternalAuth.CheckResponse handleRequest(ExternalAuth.CheckRequest request) throws VickCellSTSException;
+    protected abstract void handleRequest(CellStsRequest cellStsRequest,
+                                          CellStsResponse cellStsResponse) throws VickCellSTSException;
 
-    protected ExternalAuth.CheckResponse buildErrorResponse() {
+
+    private ExternalAuth.CheckResponse buildErrorResponse() {
         return ExternalAuth.CheckResponse.newBuilder()
                 .setStatus(Status.newBuilder().setCode(Code.PERMISSION_DENIED_VALUE).build())
                 .build();
     }
 
-    protected ExternalAuth.OkHttpResponse buildOkHttpResponse(String stsToken) {
-
-        return buildOkHttpResponseWithHeaders(
-                Collections.singletonMap(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken));
-    }
-
-    protected ExternalAuth.OkHttpResponse buildOkHttpResponseWithHeaders(Map<String, String> headers) {
+    private ExternalAuth.OkHttpResponse buildOkHttpResponseWithHeaders(Map<String, String> headers) {
 
         ExternalAuth.OkHttpResponse.Builder builder = ExternalAuth.OkHttpResponse.newBuilder();
         headers.forEach((key, value) -> builder.addHeaders(buildHeader(key, value)));
         return builder.build();
-    }
-
-
-    private String getMyCellName() throws VickCellSTSException {
-
-        // For now we pick the cell name from the environment variable. In future we need to figure out a way to derive
-        // values from the authz request.
-        String cellName = System.getenv(CELL_NAME_ENV_VARIABLE);
-        if (StringUtils.isBlank(cellName)) {
-            throw new VickCellSTSException("Environment variable '" + CELL_NAME_ENV_VARIABLE + "' is empty.");
-        }
-        return cellName;
     }
 
     private Base.HeaderValueOption buildHeader(String headerName, String headerValue) {
@@ -165,33 +120,44 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
                 .build();
     }
 
-    protected String getAuthorizationHeaderValue(ExternalAuth.CheckRequest request) {
+    protected String getDestination(CellStsRequest request) {
 
-        return request.getAttributes().getRequest().getHttp().getHeaders().get(AUTHORIZATION_HEADER_NAME);
+        String destination = request.getRequestHeaders().get(DESTINATION_HEADER);
+        if (StringUtils.isBlank(destination)) {
+            destination = request.getRequestContext().getHost();
+            log.debug("Destination is picked from host value in the request.");
+        }
+        return destination;
     }
 
-    protected String getRequestId(ExternalAuth.CheckRequest request) throws VickCellSTSException {
+    private String getRequestId(ExternalAuth.CheckRequest request) throws VickCellSTSException {
 
-        String id = request.getAttributes().getRequest().getHttp().getHeaders().get(REQUEST_ID_HEADER);
+        String id = request.getAttributes().getRequest().getHttp().getHeadersMap().get(REQUEST_ID_HEADER);
         if (StringUtils.isBlank(id)) {
             throw new VickCellSTSException("Request Id cannot be found in the header: " + REQUEST_ID_HEADER);
         }
         return id;
     }
 
-    protected String getDestination(ExternalAuth.CheckRequest request) {
 
-        String destination = request.getAttributes().getRequest().getHttp().getHeaders().get(DESTINATION_HEADER);
+    private String getDestination(ExternalAuth.CheckRequest request) {
+
+        String destination = request.getAttributes().getRequest().getHttp().getHeadersMap().get(DESTINATION_HEADER);
         if (StringUtils.isBlank(destination)) {
-            destination = getHost(request);
+            destination = request.getAttributes().getRequest().getHttp().getHost();
             log.debug("Destination is picked from host value in the request.");
         }
         return destination;
     }
 
-    private String getHost(ExternalAuth.CheckRequest request) {
-
-        return request.getAttributes().getRequest().getHttp().getHost();
+    private String getMyCellName() throws VickCellSTSException {
+        // For now we pick the cell name from the environment variable. In future we need to figure out a way to derive
+        // values from the authz request.
+        String cellName = System.getenv(CELL_NAME_ENV_VARIABLE);
+        if (StringUtils.isBlank(cellName)) {
+            throw new VickCellSTSException("Environment variable '" + CELL_NAME_ENV_VARIABLE + "' is empty.");
+        }
+        return cellName;
     }
 
 }
