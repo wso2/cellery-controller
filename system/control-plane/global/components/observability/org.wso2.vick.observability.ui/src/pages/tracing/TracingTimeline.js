@@ -16,17 +16,15 @@
  * under the License.
  */
 
-import "./index.css";
-import App from "./App";
+import PropTypes from "prop-types";
 import React from "react";
-import ReactDOM from "react-dom";
-import * as serviceWorker from "./serviceWorker";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+const TracingTimeline = ({match}) => (
+    <div>Hello World Tracing Timeline for {match.params.traceId}!</div>
+);
 
-/*
- * If you want your app to work offline and load faster, you can change
- * unregister() to register() below. Note this comes with some pitfalls.
- * Learn more about service workers: http://bit.ly/CRA-PWA
- */
-serviceWorker.unregister();
+TracingTimeline.propTypes = {
+    match: PropTypes.object.isRequired
+};
+
+export default TracingTimeline;

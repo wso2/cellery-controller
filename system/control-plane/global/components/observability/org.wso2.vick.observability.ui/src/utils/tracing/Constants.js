@@ -16,17 +16,27 @@
  * under the License.
  */
 
-import "./index.css";
-import App from "./App";
-import React from "react";
-import ReactDOM from "react-dom";
-import * as serviceWorker from "./serviceWorker";
-
-ReactDOM.render(<App />, document.getElementById("root"));
-
-/*
- * If you want your app to work offline and load faster, you can change
- * unregister() to register() below. Note this comes with some pitfalls.
- * Learn more about service workers: http://bit.ly/CRA-PWA
+/**
+ * Constants to be used by Constants UI
  */
-serviceWorker.unregister();
+const Constants = {
+    Span: {
+        Kind: {
+            CLIENT: "CLIENT",
+            SERVER: "SERVER",
+            PRODUCER: "PRODUCER",
+            CONSUMER: "CONSUMER"
+        }
+    },
+    VICK: {
+        Cell: {
+            GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.*)_(\d+_\d+_\d+)_.*$/
+        },
+        System: {
+            ISTIO_MIXER_NAME: "istio-mixer",
+            GLOBAL_GATEWAY_NAME: "global-gateway"
+        }
+    }
+};
+
+export default Constants;

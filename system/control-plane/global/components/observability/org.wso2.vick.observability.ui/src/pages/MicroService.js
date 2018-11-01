@@ -16,9 +16,10 @@
  * under the License.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 
 class MicroService extends Component {
+
     render() {
         return (
             <div>
@@ -26,6 +27,7 @@ class MicroService extends Component {
             </div>
         );
     }
+
 }
 
 export default MicroService;

@@ -16,22 +16,45 @@
  * under the License.
  */
 
-import React, {Component} from 'react';
-import AppLayout from './AppLayout';
-import SignIn from './pages/SignIn';
-import {BrowserRouter, Route} from 'react-router-dom';
+import AppLayout from "./AppLayout";
+import Cell from "./pages/Cell";
+import MicroService from "./pages/MicroService";
+import Overview from "./pages/Overview";
+import PropTypes from "prop-types";
+import React from "react";
+import SignIn from "./pages/SignIn";
+import Tracing from "./pages/tracing/Tracing";
+import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 
-class App extends Component {
+class App extends React.Component {
+
     render() {
         const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
             <BrowserRouter>
-                <Route path='/' render={user ? props => <AppLayout {...props} username={user}/> : props =>
-                    <SignIn {...props} />}>
-                </Route>
+                {
+                    user
+                        ? (
+                            <AppLayout username={user}>
+                                <Switch>
+                                    <Route exact path="/" component={Overview}/>
+                                    <Route exact path="/cells" component={Cell}/>
+                                    <Route exact path="/micro-services" component={MicroService}/>
+                                    <Route path="/tracing" component={Tracing}/>
+                                    <Redirect from="/*" to="/"/>
+                                </Switch>
+                            </AppLayout>
+                        )
+                        : <SignIn/>
+                }
             </BrowserRouter>
-        )
+        );
     }
+
 }
+
+App.propTypes = {
+    username: PropTypes.string
+};
 
 export default App;

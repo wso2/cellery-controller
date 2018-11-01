@@ -16,17 +16,22 @@
  * under the License.
  */
 
-import "./index.css";
-import App from "./App";
+import PropTypes from "prop-types";
 import React from "react";
-import ReactDOM from "react-dom";
-import * as serviceWorker from "./serviceWorker";
+import TracingSearch from "./TracingSearch";
+import TracingTimeline from "./TracingTimeline";
+import {Redirect, Route, Switch, withRouter} from "react-router-dom";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+const Tracing = ({match}) => (
+    <Switch>
+        <Route exact path={`${match.url}/search`} component={TracingSearch}/>
+        <Route exact path={`${match.url}/id/:traceId`} component={TracingTimeline}/>
+        <Redirect from={`${match.url}/`} to={`${match.url}/search`}/>
+    </Switch>
+);
 
-/*
- * If you want your app to work offline and load faster, you can change
- * unregister() to register() below. Note this comes with some pitfalls.
- * Learn more about service workers: http://bit.ly/CRA-PWA
- */
-serviceWorker.unregister();
+Tracing.propTypes = {
+    match: PropTypes.object.isRequired
+};
+
+export default withRouter(Tracing);
