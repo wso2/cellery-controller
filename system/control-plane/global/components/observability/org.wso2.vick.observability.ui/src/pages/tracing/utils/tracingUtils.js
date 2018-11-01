@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Tracing from "./Constants";
+import Constants from "./constants";
 
 /**
  * Utilities used for processing Constants related data.
@@ -105,7 +105,7 @@ class TracingUtils {
     static getCell(cellGatewaySpan) {
         let cell = null;
         if (cellGatewaySpan) {
-            const matches = cellGatewaySpan.serviceName.match(Tracing.VICK.Cell.GATEWAY_NAME_PATTERN);
+            const matches = cellGatewaySpan.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1],
@@ -125,7 +125,7 @@ class TracingUtils {
      * @returns {boolean} True if the component to which the span belongs to is a cell gateway
      */
     static isFromCellGateway(span) {
-        return Boolean(span) && Tracing.VICK.Cell.GATEWAY_NAME_PATTERN.test(span.serviceName);
+        return Boolean(span) && Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(span.serviceName);
     }
 
     /**
@@ -136,8 +136,8 @@ class TracingUtils {
      */
     static isFromSystemComponent(span) {
         return Boolean(span) && (this.isFromCellGateway(span)
-            || span.serviceName === Tracing.VICK.System.ISTIO_MIXER_NAME
-            || span.serviceName === Tracing.VICK.System.GLOBAL_GATEWAY_NAME);
+            || span.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME
+            || span.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
     }
 
 }

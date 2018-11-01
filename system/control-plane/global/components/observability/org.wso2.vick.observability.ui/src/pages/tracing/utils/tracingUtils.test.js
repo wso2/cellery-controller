@@ -16,18 +16,18 @@
  * under the License.
  */
 
-import Tracing from "./Constants";
-import Span from "./Span";
-import TracingUtils from "./TracingUtils";
+import Constants from "./constants";
+import Span from "./span";
+import TracingUtils from "./tracingUtils";
 
 describe("TracingUtils", () => {
     const globalGatewayServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-a-id",
         parentSpanId: "trace-x-id",
-        serviceName: Tracing.VICK.System.GLOBAL_GATEWAY_NAME,
+        serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "get-hr-info",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 100000,
         duration: 10000,
         tags: {}
@@ -36,9 +36,9 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-b-id",
         parentSpanId: "span-a-id",
-        serviceName: Tracing.VICK.System.GLOBAL_GATEWAY_NAME,
+        serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "call-hr-cell",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10010,
         duration: 9980,
         tags: {}
@@ -49,7 +49,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-a-id",
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "call-hr-cell",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10020,
         duration: 9960,
         tags: {}
@@ -60,7 +60,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-b-id",
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "get-employee-data",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10030,
         duration: 9940,
         tags: {}
@@ -71,7 +71,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-b-id",
         serviceName: "employee-service",
         operationName: "get-employee-data",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10060,
         duration: 9940,
         tags: {}
@@ -82,7 +82,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-c-id",
         serviceName: "employee-service",
         operationName: "is-authorized",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10060,
         duration: 9940,
         tags: {}
@@ -91,9 +91,9 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-d-id",
         parentSpanId: "span-c-id",
-        serviceName: Tracing.VICK.System.ISTIO_MIXER_NAME,
+        serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "is-authorized",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10040,
         duration: 9920,
         tags: {}
@@ -102,7 +102,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-e-id",
         parentSpanId: "span-d-id",
-        serviceName: Tracing.VICK.System.ISTIO_MIXER_NAME,
+        serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "authorization",
         startTime: 10050,
         duration: 9900,
@@ -114,7 +114,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-c-id",
         serviceName: "employee-service",
         operationName: "get-reviews",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10060,
         duration: 9940,
         tags: {}
@@ -125,7 +125,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-c-id",
         serviceName: "reviews-service",
         operationName: "get-reviews",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10000,
         duration: 100,
         tags: {}
@@ -136,7 +136,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-c-id",
         serviceName: "employee-service",
         operationName: "get-employee-stock-options",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10060,
         duration: 9940,
         tags: {}
@@ -147,7 +147,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-c-id",
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10000,
         duration: 100,
         tags: {}
@@ -158,7 +158,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-g-id",
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
-        kind: Tracing.Span.Kind.CLIENT,
+        kind: Constants.Span.Kind.CLIENT,
         startTime: 10000,
         duration: 100,
         tags: {}
@@ -169,7 +169,7 @@ describe("TracingUtils", () => {
         parentSpanId: "span-g-id",
         serviceName: "stock-options-service",
         operationName: "get-employee-stock-options",
-        kind: Tracing.Span.Kind.SERVER,
+        kind: Constants.Span.Kind.SERVER,
         startTime: 10000,
         duration: 100,
         tags: {}

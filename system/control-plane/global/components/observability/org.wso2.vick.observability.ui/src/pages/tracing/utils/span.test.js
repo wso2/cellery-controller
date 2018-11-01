@@ -16,8 +16,8 @@
  * under the License.
  */
 
-import Constants from "./Constants";
-import Span from "./Span";
+import Constants from "./constants";
+import Span from "./span";
 
 describe("Span", () => {
     describe("isSiblingOf()", () => {

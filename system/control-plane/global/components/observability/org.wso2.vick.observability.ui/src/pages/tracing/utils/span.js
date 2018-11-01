@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Constants from "./Constants";
+import Constants from "./constants";
 
 /**
  * Single span in a Trace.
