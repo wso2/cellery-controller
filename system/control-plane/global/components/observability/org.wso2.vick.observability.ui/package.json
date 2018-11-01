@@ -5,9 +5,13 @@
   "dependencies": {
     "@material-ui/core": "^3.3.2",
     "@material-ui/icons": "^3.0.1",
+    "@types/react": "^16.4.18",
     "classnames": "^2.2.6",
+    "cytoscape": "^3.2.19",
+    "cytoscape-dagre": "^2.2.2",
     "prop-types": "^15.6.2",
     "react": "^16.6.0",
+    "react-digraph": "^4.1.8",
     "react-dom": "^16.6.0",
     "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",

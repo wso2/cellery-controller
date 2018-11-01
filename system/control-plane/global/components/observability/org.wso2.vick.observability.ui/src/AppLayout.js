@@ -39,6 +39,8 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
+import ReactDOM from "react-dom";
+import App from "./App";
 
 const drawerWidth = 240;
 
@@ -128,6 +130,11 @@ class AppLayout extends React.Component {
         this.setState({userInfo: null});
     };
 
+    handleLogout = () => {
+        localStorage.removeItem("username");
+        ReactDOM.render(<App />, document.getElementById("root"));
+    };
+
     handleDrawerOpen = () => {
         this.setState({open: true});
     };
@@ -190,6 +197,7 @@ class AppLayout extends React.Component {
                                     {/* TODO: Implement user login */}
                                     <MenuItem onClick={this.handleUserInfoClose}>Profile - {username}</MenuItem>
                                     <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
+                                    <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
                                 </Menu>
                             </div>
                         )}
@@ -219,12 +227,12 @@ class AppLayout extends React.Component {
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                            onClick={() => history.push("/micro-services")}>
+                                  onClick={() => history.push("/micro-services")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>
                         <ListItem button key="Distributed Tracing"
-                            onClick={() => history.push("/tracing")}>
+                                  onClick={() => history.push("/tracing")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Distributed Tracing"/>
                         </ListItem>
@@ -244,7 +252,7 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    username: PropTypes.object.isRequired,
+    username: PropTypes.string.isRequired,
     history: PropTypes.any.isRequired
 };
 
