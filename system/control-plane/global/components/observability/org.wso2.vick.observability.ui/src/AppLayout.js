@@ -38,9 +38,7 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-import Overview from "./pages/Overview";
-import Cell from "./pages/Cell";
-import MicroService from "./pages/MicroService";
+import {withRouter} from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -110,8 +108,7 @@ const styles = theme => ({
 class AppLayout extends React.Component {
     state = {
         open: false,
-        userInfo: null,
-        currentPage: <Overview/>
+        userInfo: null
     };
 
     handleUserInfoMenu = event => {
@@ -130,12 +127,8 @@ class AppLayout extends React.Component {
         this.setState({open: false});
     };
 
-    handlePageMenuClick = (component) => {
-        this.setState({currentPage: component})
-    };
-
     render() {
-        const {classes, theme, username} = this.props;
+        const {classes, history, children, theme, username} = this.props;
         const {open, userInfo} = this.state;
         const userInfoOpen = Boolean(userInfo);
         return (
@@ -208,24 +201,29 @@ class AppLayout extends React.Component {
                     <Divider/>
                     <List>
                         {/*TODO : Change the icons accordingly to the page menu */}
-                        <ListItem button key="Overview" onClick={this.handlePageMenuClick.bind(this, <Overview/>)}>
-                            <ListItemIcon> <InboxIcon/></ListItemIcon>
+                        <ListItem button key="Overview" onClick={() => history.push("/")}>
+                            <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Overview"/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={this.handlePageMenuClick.bind(this, <Cell/>)}>
-                            <ListItemIcon> <InboxIcon/></ListItemIcon>
+                        <ListItem button key="Cells" onClick={() => history.push("/cells")}>
+                            <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                                  onClick={this.handlePageMenuClick.bind(this, <MicroService/>)}>
-                            <ListItemIcon> <InboxIcon/></ListItemIcon>
+                                  onClick={() => history.push("/micro-services")}>
+                            <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
+                        </ListItem>
+                        <ListItem button key="Distributed Tracing"
+                                  onClick={() => history.push("/tracing")}>
+                            <ListItemIcon><InboxIcon/></ListItemIcon>
+                            <ListItemText primary="Distributed Tracing"/>
                         </ListItem>
                     </List>
                 </Drawer>
                 <main className={classes.content}>
                     <div className={classes.toolbar}/>
-                    {this.state.currentPage}
+                    {children}
                 </main>
             </div>
         );
@@ -234,8 +232,9 @@ class AppLayout extends React.Component {
 
 AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
+    children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
     username: PropTypes.object.isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(AppLayout);
+export default withStyles(styles, {withTheme: true})(withRouter(AppLayout));

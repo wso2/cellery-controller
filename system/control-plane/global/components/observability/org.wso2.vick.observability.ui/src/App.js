@@ -18,17 +18,33 @@
 
 import React, {Component} from 'react';
 import AppLayout from './AppLayout';
+import Cell from "./pages/Cell";
+import MicroService from "./pages/MicroService";
+import Overview from "./pages/Overview";
 import SignIn from './pages/SignIn';
-import {BrowserRouter, Route} from 'react-router-dom';
+import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import Tracing from "./pages/tracing/Tracing";
 
 class App extends Component {
     render() {
         const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
             <BrowserRouter>
-                <Route path='/' render={user ? props => <AppLayout {...props} username={user}/> : props =>
-                    <SignIn {...props} />}>
-                </Route>
+                {
+                    user
+                        ? (
+                            <AppLayout username={user}>
+                                <Switch>
+                                    <Route exact path="/" component={Overview}/>
+                                    <Route exact path="/cells" component={Cell}/>
+                                    <Route exact path="/micro-services" component={MicroService}/>
+                                    <Route path="/tracing" component={Tracing}/>
+                                    <Redirect from="/*" to="/"/>
+                                </Switch>
+                            </AppLayout>
+                        )
+                        : <SignIn/>
+                }
             </BrowserRouter>
         )
     }
