@@ -53,22 +53,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <!-- 'npm run clean' which is run in clean lifecycle needs 'rimraf' node module.
-                     Make sure it is installed  -->
-                    <execution>
-                        <id>npm install rimraf (clean)</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <phase>pre-clean</phase>
-                        <configuration>
-                            <executable>${npm.executable}</executable>
-                            <arguments>
-                                <argument>install</argument>
-                                <argument>rimraf</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>npm run clean (clean)</id>
                         <goals>
@@ -80,6 +64,20 @@
                             <arguments>
                                 <argument>run</argument>
                                 <argument>clean</argument>npm
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm run lint (check-style)</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <executable>${npm.executable}</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>lint</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -109,9 +107,6 @@
                                 <argument>run</argument>
                                 <argument>test</argument>
                             </arguments>
-                            <environmentVariables>
-                                <CI>true</CI>       <!-- To run Jest tests without prompts -->
-                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>

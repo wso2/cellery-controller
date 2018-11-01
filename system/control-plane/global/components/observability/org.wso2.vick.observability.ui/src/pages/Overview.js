@@ -16,9 +16,10 @@
  * under the License.
  */
 
-import React, {Component} from 'react';
+import React from "react";
 
-class Overview extends Component {
+class Overview extends React.Component {
+
     render() {
         return (
             <div>
@@ -26,6 +27,7 @@ class Overview extends Component {
             </div>
         );
     }
+
 }
 
 export default Overview;

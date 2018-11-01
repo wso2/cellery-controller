@@ -16,102 +16,111 @@
  * under the License.
  */
 
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import {withStyles} from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import MenuItem from '@material-ui/core/MenuItem';
-import Menu from '@material-ui/core/Menu';
+import AccountCircle from "@material-ui/icons/AccountCircle";
+import AppBar from "@material-ui/core/AppBar";
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import Divider from "@material-ui/core/Divider";
+import Drawer from "@material-ui/core/Drawer";
+import IconButton from "@material-ui/core/IconButton";
+import InboxIcon from "@material-ui/icons/MoveToInbox";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import Menu from "@material-ui/core/Menu";
+import MenuIcon from "@material-ui/icons/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import PropTypes from "prop-types";
+import React from "react";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import classNames from "classnames";
 import {withRouter} from "react-router-dom";
+import {withStyles} from "@material-ui/core/styles";
 
 const drawerWidth = 240;
 
-const styles = theme => ({
+const styles = (theme) => ({
     root: {
-        display: 'flex',
-        flexGrow: 1,
+        display: "flex",
+        flexGrow: 1
     },
     grow: {
-        flexGrow: 1,
+        flexGrow: 1
     },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
-        transition: theme.transitions.create(['width', 'margin'], {
+        transition: theme.transitions.create(["width", "margin"], {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
+            duration: theme.transitions.duration.leavingScreen
+        })
     },
     appBarShift: {
         marginLeft: drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
+        transition: theme.transitions.create(["width", "margin"], {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
+            duration: theme.transitions.duration.enteringScreen
+        })
     },
     menuButton: {
         marginLeft: 12,
-        marginRight: 20,
+        marginRight: 20
     },
     hide: {
-        display: 'none',
+        display: "none"
     },
     drawerPaper: {
-        position: 'relative',
-        whiteSpace: 'nowrap',
+        position: "relative",
+        whiteSpace: "nowrap",
         width: drawerWidth,
-        transition: theme.transitions.create('width', {
+        transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
+            duration: theme.transitions.duration.enteringScreen
+        })
     },
     drawerPaperClose: {
-        overflowX: 'hidden',
-        transition: theme.transitions.create('width', {
+        overflowX: "hidden",
+        transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
+            duration: theme.transitions.duration.leavingScreen
         }),
         width: theme.spacing.unit * 7,
-        [theme.breakpoints.up('sm')]: {
-            width: theme.spacing.unit * 9,
-        },
+        [theme.breakpoints.up("sm")]: {
+            width: theme.spacing.unit * 9
+        }
     },
     toolbar: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        padding: '0 8px',
-        ...theme.mixins.toolbar,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        padding: "0 8px",
+        ...theme.mixins.toolbar
     },
     content: {
         flexGrow: 1,
-        padding: theme.spacing.unit * 3,
-    },
+        padding: theme.spacing.unit * 3
+    }
 });
 
 class AppLayout extends React.Component {
+
+    constructor() {
+        super();
+        this.handleUserInfoMenu = this.handleUserInfoMenu.bind(this);
+        this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
+        this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
+        this.handleDrawerClose = this.handleDrawerClose.bind(this);
+    }
+
     state = {
         open: false,
         userInfo: null
     };
 
-    handleUserInfoMenu = event => {
+    handleUserInfoMenu = (event) => {
         this.setState({userInfo: event.currentTarget});
     };
 
@@ -137,7 +146,7 @@ class AppLayout extends React.Component {
                 <AppBar
                     position="fixed"
                     className={classNames(classes.appBar, {
-                        [classes.appBarShift]: open,
+                        [classes.appBarShift]: open
                     })}
                 >
                     <Toolbar disableGutters={!open}>
@@ -146,7 +155,7 @@ class AppLayout extends React.Component {
                             aria-label="Open drawer"
                             onClick={this.handleDrawerOpen}
                             className={classNames(classes.menuButton, {
-                                [classes.hide]: open,
+                                [classes.hide]: open
                             })}
                         >
                             <MenuIcon/>
@@ -157,7 +166,7 @@ class AppLayout extends React.Component {
                         {username && (
                             <div>
                                 <IconButton
-                                    aria-owns={userInfoOpen ? 'user-info-appbar' : undefined}
+                                    aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
                                     aria-haspopup="true"
                                     onClick={this.handleUserInfoMenu}
                                     color="inherit"
@@ -168,17 +177,17 @@ class AppLayout extends React.Component {
                                     id="user-info-appbar"
                                     anchorEl={this.state.userInfo}
                                     anchorOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
+                                        vertical: "top",
+                                        horizontal: "right"
                                     }}
                                     transformOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
+                                        vertical: "top",
+                                        horizontal: "right"
                                     }}
                                     open={userInfoOpen}
                                     onClose={this.handleUserInfoClose}
                                 >
-                                    {/*TODO: Implement user login */}
+                                    {/* TODO: Implement user login */}
                                     <MenuItem onClick={this.handleUserInfoClose}>Profile - {username}</MenuItem>
                                     <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
                                 </Menu>
@@ -189,18 +198,18 @@ class AppLayout extends React.Component {
                 <Drawer
                     variant="permanent"
                     classes={{
-                        paper: classNames(classes.drawerPaper, !open && classes.drawerPaperClose),
+                        paper: classNames(classes.drawerPaper, !open && classes.drawerPaperClose)
                     }}
                     open={this.state.open}
                 >
                     <div className={classes.toolbar}>
                         <IconButton onClick={this.handleDrawerClose}>
-                            {theme.direction === 'rtl' ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
+                            {theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
                         </IconButton>
                     </div>
                     <Divider/>
                     <List>
-                        {/*TODO : Change the icons accordingly to the page menu */}
+                        {/* TODO : Change the icons accordingly to the page menu */}
                         <ListItem button key="Overview" onClick={() => history.push("/")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Overview"/>
@@ -210,12 +219,12 @@ class AppLayout extends React.Component {
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                                  onClick={() => history.push("/micro-services")}>
+                            onClick={() => history.push("/micro-services")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>
                         <ListItem button key="Distributed Tracing"
-                                  onClick={() => history.push("/tracing")}>
+                            onClick={() => history.push("/tracing")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Distributed Tracing"/>
                         </ListItem>
@@ -228,13 +237,15 @@ class AppLayout extends React.Component {
             </div>
         );
     }
+
 }
 
 AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    username: PropTypes.object.isRequired
+    username: PropTypes.object.isRequired,
+    history: PropTypes.any.isRequired
 };
 
 export default withStyles(styles, {withTheme: true})(withRouter(AppLayout));

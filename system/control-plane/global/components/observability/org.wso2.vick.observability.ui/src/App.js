@@ -16,16 +16,18 @@
  * under the License.
  */
 
-import React, {Component} from 'react';
-import AppLayout from './AppLayout';
+import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
 import MicroService from "./pages/MicroService";
 import Overview from "./pages/Overview";
-import SignIn from './pages/SignIn';
-import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import PropTypes from "prop-types";
+import React from "react";
+import SignIn from "./pages/SignIn";
 import Tracing from "./pages/tracing/Tracing";
+import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 
-class App extends Component {
+class App extends React.Component {
+
     render() {
         const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
@@ -46,8 +48,13 @@ class App extends Component {
                         : <SignIn/>
                 }
             </BrowserRouter>
-        )
+        );
     }
+
 }
+
+App.propTypes = {
+    username: PropTypes.string
+};
 
 export default App;
