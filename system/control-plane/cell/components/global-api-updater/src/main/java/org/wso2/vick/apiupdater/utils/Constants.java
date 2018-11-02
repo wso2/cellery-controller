@@ -71,6 +71,7 @@ public class Constants {
         public static final String PATHS = "paths";
         public static final String URL = "url";
         public static final String SWAGGER = "swagger";
+        public static final String ADDITIONAL_PROPERTIES = "additionalProperties";
     }
 
     /**
@@ -128,5 +129,7 @@ public class Constants {
         public static final String PATH_APIS = "/apis";
         public static final String PATH_LABELS = "/labels";
         public static final String PATH_LIFECYCLE = "/apis/change-lifecycle?";
+
+        public static final String CELL_NAME_PROPERTY = "cell_name";
     }
 }

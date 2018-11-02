@@ -305,6 +305,12 @@ public class UpdateManager {
                 globalApiCreateRequest.setApiDefinition(getAPIDefinition(api));
                 globalApiCreateRequest.setEndpointConfig(getGlobalEndpoint());
                 globalApiCreateRequest.setGatewayEnvironments(Constants.Utils.PRODUCTION_AND_SANDBOX);
+
+                // Set some additional properties.
+                Map<String, String> additionalProperties = new HashMap<>();
+                additionalProperties.put(Constants.Utils.CELL_NAME_PROPERTY, cellConfig.getCell());
+                globalApiCreateRequest.setAdditionalProperties(additionalProperties);
+
                 apiPayloadsArray.put(globalApiCreateRequest);
             }
         }
