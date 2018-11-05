@@ -43,5 +43,6 @@ public class VickSTSConstants {
         public static final String SUBJECT = "subject";
         public static final String SCOPE = "scope";
         public static final String AUDIENCE = "audience";
+        public static final String USER_CONTEXT_JWT = "user-context-jwt";
     }
 }

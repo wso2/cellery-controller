@@ -26,4 +26,9 @@ public class VickStsException extends Exception {
 
         super(msg, e);
     }
+
+    VickStsException(String msg) {
+
+        super(msg);
+    }
 }
