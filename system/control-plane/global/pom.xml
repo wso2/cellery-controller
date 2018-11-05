@@ -235,6 +235,18 @@
             </dependency>
             <!--End of dashboard dependencies-->
 
+            <!--Observability API dependencies-->
+            <dependency>
+                <groupId>org.wso2.msf4j</groupId>
+                <artifactId>msf4j-core</artifactId>
+                <version>${msf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>20.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -261,6 +273,8 @@
         <commons.io.version>2.6</commons.io.version>
         <protobuf.wso2.version>3.6.1.wso2v1</protobuf.wso2.version>
         <vick.version>${project.version}</vick.version>
+        <msf4j.version>2.6.4</msf4j.version>
+        <guave.version>20.0</guave.version>
 
         <!-- external jars for receiver -->
         <protobuf.java.version>3.6.1</protobuf.java.version>
