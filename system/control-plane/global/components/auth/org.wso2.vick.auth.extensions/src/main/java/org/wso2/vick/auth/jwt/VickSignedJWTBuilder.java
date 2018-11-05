@@ -36,11 +36,13 @@ import org.wso2.vick.auth.exception.VickAuthException;
 
 import java.security.Key;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The JWT token builder for VICK.
@@ -62,7 +64,7 @@ public class VickSignedJWTBuilder {
 
     // By default we set the expiry to be 20mins (So that it will be greater than GatewayCache timeout)
     private long expiryInSeconds = 1200L;
-    private List<String> audience;
+    private List<String> audience = new ArrayList<>();
 
     public VickSignedJWTBuilder subject(String subject) {
 
@@ -96,6 +98,12 @@ public class VickSignedJWTBuilder {
     public VickSignedJWTBuilder audience(List<String> audience) {
 
         this.audience = audience;
+        return this;
+    }
+
+    public VickSignedJWTBuilder audience(String audience) {
+
+        this.audience.add(audience);
         return this;
     }
 
@@ -161,7 +169,9 @@ public class VickSignedJWTBuilder {
         if (CollectionUtils.isEmpty(audience)) {
             return Collections.singletonList(MICRO_GATEWAY_DEFAULT_AUDIENCE_VALUE);
         } else {
-            return audience;
+            return audience.stream()
+                    .filter(StringUtils::isNotBlank)
+                    .collect(Collectors.toList());
         }
     }
 }

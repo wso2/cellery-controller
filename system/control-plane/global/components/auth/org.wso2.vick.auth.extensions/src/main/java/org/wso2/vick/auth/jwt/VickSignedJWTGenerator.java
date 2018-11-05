@@ -23,6 +23,10 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.api.APIManagementException;
+import org.wso2.carbon.apimgt.api.APIProvider;
+import org.wso2.carbon.apimgt.api.model.API;
+import org.wso2.carbon.apimgt.api.model.APIIdentifier;
+import org.wso2.carbon.apimgt.impl.APIManagerFactory;
 import org.wso2.carbon.apimgt.keymgt.service.TokenValidationContext;
 import org.wso2.carbon.apimgt.keymgt.token.JWTGenerator;
 import org.wso2.vick.auth.exception.VickAuthException;
@@ -40,7 +44,7 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
     private static final Log log = LogFactory.getLog(VickSignedJWTGenerator.class);
     private static final String CONSUMER_KEY_CLAIM = "consumerKey";
-    private static final String TRUSTED_IDP_CLAIMS = "trusted_idp_claims";
+    private static final String CELL_NAME = "cell_name";
 
     @Override
     public String generateToken(TokenValidationContext validationContext) throws APIManagementException {
@@ -50,7 +54,8 @@ public class VickSignedJWTGenerator extends JWTGenerator {
             return jwtBuilder.subject(getEndUserName(validationContext))
                     .scopes(getScopes(validationContext))
                     .claim(CONSUMER_KEY_CLAIM, getConsumerKey(validationContext))
-                    .claim(TRUSTED_IDP_CLAIMS, getClaimsFromSignedJWT(validationContext))
+                    .claims(getClaimsFromSignedJWT(validationContext))
+                    .audience(getDestinationCell(validationContext))
                     .build();
         } catch (VickAuthException e) {
             throw new APIManagementException("Error generating JWT for context: " + validationContext, e);
@@ -81,12 +86,34 @@ public class VickSignedJWTGenerator extends JWTGenerator {
         if (Utils.isSignedJWT(accessToken)) {
             try {
                 SignedJWT signedJWT = SignedJWT.parse(accessToken);
-                return signedJWT.getJWTClaimsSet().getClaims();
+                return Utils.getCustomClaims(signedJWT);
             } catch (ParseException e) {
                 log.error("Error retrieving claims from the JWT Token.", e);
             }
         }
 
         return Collections.emptyMap();
+    }
+
+    private String getDestinationCell(TokenValidationContext validationContext) throws APIManagementException {
+
+        String providerName = validationContext.getValidationInfoDTO().getApiPublisher();
+        String apiName = validationContext.getValidationInfoDTO().getApiName();
+        String apiVersion = validationContext.getVersion();
+
+        APIIdentifier apiIdentifier = new APIIdentifier(providerName, apiName, apiVersion);
+        APIProvider apiProvider = APIManagerFactory.getInstance().getAPIProvider(providerName);
+        API api = apiProvider.getAPI(apiIdentifier);
+
+        Object cellName = api.getAdditionalProperties().get(CELL_NAME);
+        if (cellName instanceof String) {
+            String destinationCell = String.valueOf(cellName);
+            log.debug("Destination Cell for API call is '" + destinationCell + "'");
+            return destinationCell;
+        } else {
+            log.debug("Property:" + CELL_NAME + " was not found for the API. This API call is going to an API not " +
+                    "published by a VICK Cell.");
+            return null;
+        }
     }
 }

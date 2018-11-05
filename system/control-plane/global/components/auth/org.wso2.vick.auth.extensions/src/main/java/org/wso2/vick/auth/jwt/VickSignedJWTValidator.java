@@ -18,9 +18,6 @@
 
 package org.wso2.vick.auth.jwt;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.commons.lang.StringUtils;
@@ -41,9 +38,6 @@ import org.wso2.carbon.idp.mgt.IdentityProviderManagementException;
 import org.wso2.carbon.idp.mgt.IdentityProviderManager;
 import org.wso2.vick.auth.util.Utils;
 
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -124,7 +118,7 @@ public class VickSignedJWTValidator extends OAuth2JWTTokenValidator {
                 validateAudience(claimsSet);
 
                 IdentityProvider trustedIdp = getTrustedIdp(claimsSet);
-                return validateSignature(signedJWT, trustedIdp);
+                return Utils.validateSignature(signedJWT, trustedIdp);
             }
         } catch (ParseException ex) {
             throw new IdentityOAuth2Exception("Error while validating JWT.", ex);
@@ -202,56 +196,6 @@ public class VickSignedJWTValidator extends OAuth2JWTTokenValidator {
                 log.debug("Not Before Time(nbf) of Token was validated successfully.");
             }
         }
-    }
-
-    private boolean validateSignature(SignedJWT signedJWT, IdentityProvider idp) throws IdentityOAuth2Exception {
-
-        JWSVerifier verifier;
-        X509Certificate x509Certificate = getCertToValidateJwt(signedJWT, idp);
-
-        String signatureAlgorithm = signedJWT.getHeader().getAlgorithm().getName();
-        validateSignatureAlgorithm(signatureAlgorithm);
-
-        PublicKey publicKey = x509Certificate.getPublicKey();
-        if (publicKey instanceof RSAPublicKey) {
-            verifier = new RSASSAVerifier((RSAPublicKey) publicKey);
-        } else {
-            throw new IdentityOAuth2Exception("Public key is not an RSA public key.");
-        }
-
-        try {
-            return signedJWT.verify(verifier);
-        } catch (JOSEException e) {
-            throw new IdentityOAuth2Exception("Error while validating signature of jwt.", e);
-        }
-
-    }
-
-    private void validateSignatureAlgorithm(String signatureAlgorithm) throws IdentityOAuth2Exception {
-
-        if (StringUtils.isEmpty(signatureAlgorithm)) {
-            throw new IdentityOAuth2Exception("Algorithm must not be null.");
-
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Signature Algorithm found in the Token Header: " + signatureAlgorithm);
-            }
-            if (!StringUtils.startsWithIgnoreCase(signatureAlgorithm, "RS")) {
-                throw new IdentityOAuth2Exception("Signature validation for algorithm: " + signatureAlgorithm
-                        + " is not supported.");
-            }
-        }
-    }
-
-    private X509Certificate getCertToValidateJwt(SignedJWT signedJWT,
-                                                 IdentityProvider idp) throws IdentityOAuth2Exception {
-
-        X509Certificate x509Certificate = resolveSignerCertificate(signedJWT.getHeader(), idp);
-        if (x509Certificate == null) {
-            throw new IdentityOAuth2Exception("Unable to locate certificate for Identity Provider: "
-                    + idp.getDisplayName());
-        }
-        return x509Certificate;
     }
 
     private IdentityProvider getTrustedIdp(JWTClaimsSet claimsSet) throws IdentityOAuth2Exception {
