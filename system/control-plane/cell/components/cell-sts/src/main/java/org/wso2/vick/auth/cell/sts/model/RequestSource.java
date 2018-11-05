@@ -18,25 +18,55 @@
  */
 package org.wso2.vick.auth.cell.sts.model;
 
+import org.wso2.vick.auth.cell.sts.CellStsUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class RequestSource {
 
     private String cellName;
-
     private String workload;
+
+    private RequestSource() {
+    }
 
     public String getCellName() {
         return cellName;
-    }
-
-    public void setCellName(String cellName) {
-        this.cellName = cellName;
     }
 
     public String getWorkload() {
         return workload;
     }
 
-    public void setWorkload(String workload) {
-        this.workload = workload;
+    @Override
+    public String toString() {
+        Map<String, String> configJson = new HashMap<>();
+        configJson.put("Cell Name", cellName);
+        configJson.put("Workload", workload);
+
+        return CellStsUtils.getPrettyPrintJson(configJson);
+    }
+
+    public static class RequestSourceBuilder {
+        private String cellName;
+        private String workload;
+
+        public RequestSourceBuilder setWorkload(String workload) {
+            this.workload = workload;
+            return this;
+        }
+
+        public RequestSourceBuilder setCellName(String cellName) {
+            this.cellName = cellName;
+            return this;
+        }
+
+        public RequestSource build() {
+            RequestSource requestSource = new RequestSource();
+            requestSource.cellName = cellName;
+            requestSource.workload = workload;
+            return requestSource;
+        }
     }
 }

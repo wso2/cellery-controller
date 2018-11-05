@@ -18,9 +18,10 @@
  */
 package org.wso2.vick.auth.cell.sts.model.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.json.simple.JSONObject;
+import org.wso2.vick.auth.cell.sts.CellStsUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CellStsConfiguration {
 
@@ -70,11 +71,10 @@ public class CellStsConfiguration {
 
     @Override
     public String toString() {
-        JSONObject configJson = new JSONObject();
+        Map<String, String> configJson = new HashMap<>();
         configJson.put("Global STS Endpoint", stsEndpoint);
         configJson.put("Cell Name", cellName);
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(configJson);
+        return CellStsUtils.getPrettyPrintJson(configJson);
     }
 }

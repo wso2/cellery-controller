@@ -18,25 +18,68 @@
  */
 package org.wso2.vick.auth.cell.sts.model;
 
+import org.wso2.vick.auth.cell.sts.CellStsUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class RequestDestination {
 
     private String cellName;
-
     private String workload;
+    private boolean isExternalToVick;
+
+    private RequestDestination() {
+    }
 
     public String getCellName() {
         return cellName;
-    }
-
-    public void setCellName(String cellName) {
-        this.cellName = cellName;
     }
 
     public String getWorkload() {
         return workload;
     }
 
-    public void setWorkload(String workload) {
-        this.workload = workload;
+    public boolean isExternalToVick() {
+        return isExternalToVick;
+    }
+
+    @Override
+    public String toString() {
+        Map<String, String> configJson = new HashMap<>();
+        configJson.put("Cell Name", cellName);
+        configJson.put("Workload", workload);
+
+        return CellStsUtils.getPrettyPrintJson(configJson);
+    }
+
+    public static class RequestDestinationBuilder {
+        private String cellName;
+        private String workload;
+        private boolean isExternalToVick;
+
+        public RequestDestinationBuilder setCellName(String cellName) {
+            this.cellName = cellName;
+            return this;
+        }
+
+        public RequestDestinationBuilder setWorkload(String workload) {
+            this.workload = workload;
+            return this;
+        }
+
+        public RequestDestinationBuilder setExternalToVick(boolean externalToVick) {
+            isExternalToVick = externalToVick;
+            return this;
+        }
+
+        public RequestDestination build() {
+            RequestDestination destination = new RequestDestination();
+            destination.cellName = cellName;
+            destination.workload = workload;
+            destination.isExternalToVick = isExternalToVick;
+
+            return destination;
+        }
     }
 }
