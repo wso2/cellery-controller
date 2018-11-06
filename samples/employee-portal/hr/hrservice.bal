@@ -99,6 +99,8 @@ service<http:Service> hr bind { port: 8080 } {
         io:println("response: ");
         io:println(resp);
         res.setJsonPayload(untaint resp);
+
+        caller->respond(res) but { error e => log:printError("Error sending response", err = e) };
     }
 }
 
