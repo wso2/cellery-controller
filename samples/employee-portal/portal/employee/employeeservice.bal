@@ -30,8 +30,8 @@ service<http:Service> employee bind { port: 8080 } {
         }
 
         //check the header
-        if (req.hasHeader("x-emp-name")) {
-            string empName = req.getHeader("x-emp-name");
+        if (req.hasHeader("x-vick-auth-subject")) {
+            string empName = req.getHeader("x-vick-auth-subject");
             log:printInfo(empName);
             if (employeeIdMap.hasKey(empName)) {
                 json employeeIdJson = { id: employeeIdMap[empName], designation: employeeDesignationMap[empName] };
@@ -63,7 +63,6 @@ function getSalaryDetails(string empName, string salaryServiceName, http:Request
     };
 
     json salary;
-    req.addHeader("x-emp-name", empName);
     var response = clientEP->get("/payroll/salary", message = req);
 
     match response {

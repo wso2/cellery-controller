@@ -45,100 +45,72 @@ service<http:Service> hr bind { port: 8080 } {
             io:println(header + ": " + req.getHeader(untaint header));
         }
 
-        // get JWT header
-        if (req.hasHeader(AUTH_HEADER)) {
-            match extractJwtTokenFromHeader(req.getHeader(AUTH_HEADER)) {
-                string jwtToken => {
-                    string[] jwtParts = jwtToken.split("\\.");
-                    if (lengthof jwtParts < 3) {
-                        // wrong jwt format, incorrect request
-                        log:printInfo("JWT token does not have header, payload and signature separated by '.'");
-                        res.statusCode = 401;
-                    } else {
-                        log:printInfo("Request recieved: ");
-                        io:println(req);
-                        match internal:parseJson(check jwtParts[1].base64Decode()) {
-                            json payload => {
-                                string sub = check <string> payload[JWT_SUB_TOKEN];
-                                string employeeName = sub.split("@")[0];
-                                io:println("employee name: " + employeeName);
-                                // set the username as a header in the request
-                                req.setHeader(EMPLOYEE_NAME_HEADER, employeeName);
-                                json employeeDetails;
-                                match getEmployeeDetails(req) {
-                                    http:Response response => {
-                                        match response.getJsonPayload() {
-                                            json jsonEmpDetails => {
-                                                employeeDetails = jsonEmpDetails;
-                                                io:println("employee details: ");
-                                                io:println(employeeDetails);
-                                            }
-                                            error e => {
-                                                log:printError("Error in extracting response from Employee service", err = e);
-                                                res.statusCode = 500;
-                                                caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
-                                                done;
-                                            }
-                                        }
-                                    }
-                                    error e => {
-                                        res.statusCode = 500;
-                                        caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
-                                        done;
-                                    }
-                                }
-                                json stockOptionDetails;
-                                match getStockOptionData(req) {
-                                    http:Response response => {
-                                        match response.getJsonPayload() {
-                                            json jsonStocks => {
-                                                stockOptionDetails = jsonStocks;
-                                                io:println("stock details: ");
-                                                io:println(stockOptionDetails);
-                                            }
-                                            error e => {
-                                                log:printError("Error in extracting response from Stock service", err = e);
-                                                res.statusCode = 500;
-                                                caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
-                                                done;
-                                            }
-                                        }
-                                    }
-                                    error e => {
-                                        res.statusCode = 500;
-                                        caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
-                                        done;
-                                    }
-                                }
-                                json resp = buildResponse(employeeDetails, stockOptionDetails);
-                                io:println("response: ");
-                                io:println(resp);
-                                res.setJsonPayload(untaint resp);
-                            }
-                            error e =>  {
-                                log:printError("Error parsing Json", err = e);
-                            }
+        string employeeName = req.getHeader("x-vick-auth-subject");
+        io:println("employee name: " + employeeName);
+
+        json employeeDetails;
+            match getEmployeeDetails(req) {
+                http:Response response => {
+                    match response.getJsonPayload() {
+                        json jsonEmpDetails => {
+                            employeeDetails = jsonEmpDetails;
+                            io:println("employee details: ");
+                            io:println(employeeDetails);
+                        }
+                        error e => {
+                            log:printError("Error in extracting response from Employee service", err = e);
+                            res.statusCode = 500;
+                            caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
+                            done;
                         }
                     }
                 }
                 error e => {
-                    // jwt token extraction error
-                    log:printError("Unabe to extract JWT token", err = e);
-                    res.statusCode = 401;
+                    res.statusCode = 500;
+                    caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
+                    done;
                 }
             }
-        } else {
-            // no authorization header, incorrect request
-            log:printInfo("No auth header sent");
-            res.statusCode = 401;
-        }
-        caller->respond(res) but { error e => log:printError("Error sending response", err = e) };
+
+        json stockOptionDetails;
+            match getStockOptionData(req) {
+                http:Response response => {
+                    match response.getJsonPayload() {
+                        json jsonStocks => {
+                            stockOptionDetails = jsonStocks;
+                            io:println("stock details: ");
+                            io:println(stockOptionDetails);
+                        }
+                        error e => {
+                            log:printError("Error in extracting response from Stock service", err = e);
+                            res.statusCode = 500;
+                            caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
+                            done;
+                        }
+                    }
+                }
+                error e => {
+                    res.statusCode = 500;
+                    caller->respond(res) but { error e1 => log:printError("Error sending response", err = e1) };
+                    done;
+                }
+            }
+        json resp = buildResponse(employeeDetails, stockOptionDetails);
+        io:println("response: ");
+        io:println(resp);
+        res.setJsonPayload(untaint resp);
     }
 }
 
-function buildResponse(json employeeDetails, json stockOptions) returns json  {
-    json response = { employee: { details: employeeDetails, stocks: stockOptions } };
+
+function buildResponse(json employeeDetails , json stockOptions)
+returns json
+{
+    json response = {
+        employee: { details: employeeDetails, stocks: stockOptions }
+    };
     return response;
+
 }
 
 function getEmployeeDetails(http:Request clientRequest) returns http:Response|error {
@@ -165,21 +137,4 @@ function getStockOptionData(http:Request clientRequest) returns http:Response|er
             return e;
         }
     }
-}
-
-function extractJwtTokenFromHeader(string authHeader) returns (string)|error {
-    // extract auth header
-    if (!authHeader.hasPrefix(BEARER_PREFIX)) {
-        error err = {message: "Auth failure"};
-        return err;
-    }
-    try {
-        return authHeader.substring(6, authHeader.length()).trim();
-    } catch (error err) {
-        return err;
-    }
-}
-
-function decodeJwtPayload (string jwtPayload) returns string|error {
-    return jwtPayload.base64Decode();
 }
