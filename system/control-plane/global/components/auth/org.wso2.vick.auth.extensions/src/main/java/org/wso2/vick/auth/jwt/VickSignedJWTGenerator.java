@@ -29,6 +29,11 @@ import org.wso2.carbon.apimgt.api.model.APIIdentifier;
 import org.wso2.carbon.apimgt.impl.APIManagerFactory;
 import org.wso2.carbon.apimgt.keymgt.service.TokenValidationContext;
 import org.wso2.carbon.apimgt.keymgt.token.JWTGenerator;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
+import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
+import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
+import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 import org.wso2.vick.auth.exception.VickAuthException;
 import org.wso2.vick.auth.util.Utils;
 
@@ -63,9 +68,22 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
     }
 
-    private String getEndUserName(TokenValidationContext validationContext) {
+    private String getEndUserName(TokenValidationContext validationContext) throws APIManagementException {
 
-        return validationContext.getValidationInfoDTO().getEndUserName();
+        try {
+            String accessToken = validationContext.getAccessToken();
+            AccessTokenDO tokenInfo = OAuth2Util.getAccessTokenDOfromTokenIdentifier(accessToken);
+            AuthenticatedUser authzUser = tokenInfo.getAuthzUser();
+            String endUserName = validationContext.getValidationInfoDTO().getEndUserName();
+            if (authzUser.isFederatedUser()) {
+                return endUserName;
+            } else {
+                return MultitenantUtils.getTenantAwareUsername(endUserName);
+            }
+        } catch (IdentityOAuth2Exception e) {
+            throw new APIManagementException("Error while retrieving authenticated user metadata.", e);
+        }
+
     }
 
     private String getConsumerKey(TokenValidationContext validationContext) {
@@ -99,7 +117,7 @@ public class VickSignedJWTGenerator extends JWTGenerator {
 
         String providerName = validationContext.getValidationInfoDTO().getApiPublisher();
         String apiName = validationContext.getValidationInfoDTO().getApiName();
-        String apiVersion = validationContext.getVersion();
+        String apiVersion = removeDefaultVersion(validationContext);
 
         APIIdentifier apiIdentifier = new APIIdentifier(providerName, apiName, apiVersion);
         APIProvider apiProvider = APIManagerFactory.getInstance().getAPIProvider(providerName);
@@ -115,5 +133,9 @@ public class VickSignedJWTGenerator extends JWTGenerator {
                     "published by a VICK Cell.");
             return null;
         }
+    }
+
+    private String removeDefaultVersion(TokenValidationContext validationContext) {
+        return validationContext.getVersion().replace("_default_", "");
     }
 }
