@@ -111,6 +111,12 @@ func TestCreateGatewayDeployment(t *testing.T) {
 											ContainerPort: 8080,
 										},
 									},
+									Env: []corev1.EnvVar{
+										{
+											Name:  "CELL_NAME",
+											Value: "foo",
+										},
+									},
 									VolumeMounts: []corev1.VolumeMount{
 										{
 											Name:      gatewayBuildVolumeName,
@@ -192,7 +198,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Name:      "foo-deployment",
 					Labels: map[string]string{
 						vick.CellGatewayLabelKey: "foo",
-						"my-label-key": "my-label-value",
+						"my-label-key":           "my-label-value",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -207,14 +213,14 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							vick.CellGatewayLabelKey: "foo",
-							"my-label-key": "my-label-value",
+							"my-label-key":           "my-label-value",
 						},
 					},
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								vick.CellGatewayLabelKey: "foo",
-								"my-label-key": "my-label-value",
+								"my-label-key":           "my-label-value",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "false",
@@ -250,6 +256,12 @@ func TestCreateGatewayDeployment(t *testing.T) {
 									Ports: []corev1.ContainerPort{
 										{
 											ContainerPort: 8080,
+										},
+									},
+									Env: []corev1.EnvVar{
+										{
+											Name:  "CELL_NAME",
+											Value: "foo",
 										},
 									},
 									VolumeMounts: []corev1.VolumeMount{

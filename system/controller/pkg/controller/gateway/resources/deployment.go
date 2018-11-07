@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"github.com/wso2/product-vick/system/controller/pkg/apis/vick"
 	"github.com/wso2/product-vick/system/controller/pkg/apis/vick/v1alpha1"
 	"github.com/wso2/product-vick/system/controller/pkg/controller"
 	"github.com/wso2/product-vick/system/controller/pkg/controller/gateway/config"
@@ -31,6 +32,12 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
+	var cellName string
+	cellName, ok := gateway.Labels[vick.CellLabelKey]
+	if !ok {
+		cellName = gateway.Name
+	}
+
 	one := int32(1)
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -76,6 +83,12 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 						{
 							Name:  "cell-gateway",
 							Image: gatewayConfig.Image,
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CELL_NAME",
+									Value: cellName,
+								},
+							},
 							Ports: []corev1.ContainerPort{{
 								ContainerPort: gatewayContainerPort,
 							}},
