@@ -116,12 +116,41 @@ class Span {
     }
 
     /**
+     * Walk down the trace tree starting from this span in DFS manner.
+     * When a node has multiple children they will be traveled in the order of their start time.
+     *
+     * @param {function} nodeCallBack The callback to be called in each node.
+     *                                The function should return the data that should be passed down to the next level.
+     * @param {Object} data The initial data to be passed down the trace tree
+     */
+    walk(nodeCallBack, data = {}) {
+        const newData = nodeCallBack(this, data);
+
+        // Get the list of children of this node
+        const children = [];
+        const childrenIterator = this.children.values();
+        let currentChild = childrenIterator.next();
+        while (!currentChild.done) {
+            children.push(currentChild.value);
+            currentChild = childrenIterator.next();
+        }
+
+        // Sorting by start time
+        children.sort((a, b) => a.startTime - b.startTime);
+
+        // Traversing down the tree to sort by tree structure
+        for (let i = 0; i < children.length; i++) {
+            children[i].walk(nodeCallBack, newData);
+        }
+    }
+
+    /**
      * Get a unique ID to represent this span.
      *
      * @returns {string} the unique ID to represent this span
      */
     getUniqueId() {
-        return `${this.traceId}--${this.spanId}--${this.kind}`;
+        return `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
     }
 
 }

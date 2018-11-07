@@ -23,7 +23,7 @@ import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
-import Tracing from "./pages/tracing/Tracing";
+import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 
 class App extends React.Component {

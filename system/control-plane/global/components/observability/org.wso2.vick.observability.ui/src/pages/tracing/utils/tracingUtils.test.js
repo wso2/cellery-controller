@@ -28,8 +28,8 @@ describe("TracingUtils", () => {
         serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "get-hr-info",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 100000,
-        duration: 10000,
+        startTime: 10000000,
+        duration: 3160000,
         tags: {}
     });
     const globalGatewayClientSpan = new Span({
@@ -39,8 +39,8 @@ describe("TracingUtils", () => {
         serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10010,
-        duration: 9980,
+        startTime: 10010000,
+        duration: 3110000,
         tags: {}
     });
     const hrCellGatewayServerSpan = new Span({
@@ -50,8 +50,8 @@ describe("TracingUtils", () => {
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10020,
-        duration: 9960,
+        startTime: 10020000,
+        duration: 3090000,
         tags: {}
     });
     const hrCellGatewayClientSpan = new Span({
@@ -61,8 +61,8 @@ describe("TracingUtils", () => {
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10030,
-        duration: 9940,
+        startTime: 10030000,
+        duration: 3060000,
         tags: {}
     });
     const employeeServiceServerSpan = new Span({
@@ -72,8 +72,8 @@ describe("TracingUtils", () => {
         serviceName: "employee-service",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10060,
-        duration: 9940,
+        startTime: 10040000,
+        duration: 3040000,
         tags: {}
     });
     const employeeServiceToIstioMixerClientSpan = new Span({
@@ -83,8 +83,8 @@ describe("TracingUtils", () => {
         serviceName: "employee-service",
         operationName: "is-authorized",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10060,
-        duration: 9940,
+        startTime: 10050000,
+        duration: 990000,
         tags: {}
     });
     const istioMixerServerSpan = new Span({
@@ -94,8 +94,8 @@ describe("TracingUtils", () => {
         serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "is-authorized",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10040,
-        duration: 9920,
+        startTime: 10060000,
+        duration: 940000,
         tags: {}
     });
     const istioMixerWorkerSpan = new Span({
@@ -104,8 +104,8 @@ describe("TracingUtils", () => {
         parentSpanId: "span-d-id",
         serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "authorization",
-        startTime: 10050,
-        duration: 9900,
+        startTime: 10070000,
+        duration: 890000,
         tags: {}
     });
     const employeeServiceToReviewsServiceClientSpan = new Span({
@@ -115,8 +115,8 @@ describe("TracingUtils", () => {
         serviceName: "employee-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10060,
-        duration: 9940,
+        startTime: 11050000,
+        duration: 990000,
         tags: {}
     });
     const reviewsServiceServerSpan = new Span({
@@ -126,8 +126,8 @@ describe("TracingUtils", () => {
         serviceName: "reviews-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10000,
-        duration: 100,
+        startTime: 11100000,
+        duration: 890000,
         tags: {}
     });
     const employeeServiceToStockOptionsCellClientSpan = new Span({
@@ -137,8 +137,8 @@ describe("TracingUtils", () => {
         serviceName: "employee-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10060,
-        duration: 9940,
+        startTime: 12060000,
+        duration: 990000,
         tags: {}
     });
     const stockOptionsCellGatewayServerSpan = new Span({
@@ -148,8 +148,8 @@ describe("TracingUtils", () => {
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10000,
-        duration: 100,
+        startTime: 12100000,
+        duration: 890000,
         tags: {}
     });
     const stockOptionsCellGatewayClientSpan = new Span({
@@ -159,8 +159,8 @@ describe("TracingUtils", () => {
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
-        startTime: 10000,
-        duration: 100,
+        startTime: 12150000,
+        duration: 790000,
         tags: {}
     });
     const stockOptionsServiceServerSpan = new Span({
@@ -170,8 +170,8 @@ describe("TracingUtils", () => {
         serviceName: "stock-options-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
-        startTime: 10000,
-        duration: 100,
+        startTime: 12200000,
+        duration: 690000,
         tags: {}
     });
 
@@ -181,8 +181,8 @@ describe("TracingUtils", () => {
                 globalGatewayServerSpan, globalGatewayClientSpan, hrCellGatewayServerSpan, hrCellGatewayClientSpan,
                 employeeServiceServerSpan, employeeServiceToIstioMixerClientSpan, istioMixerServerSpan,
                 istioMixerWorkerSpan, employeeServiceToReviewsServiceClientSpan, reviewsServiceServerSpan,
-                employeeServiceToStockOptionsCellClientSpan, stockOptionsCellGatewayServerSpan, stockOptionsCellGatewayClientSpan,
-                stockOptionsServiceServerSpan,
+                employeeServiceToStockOptionsCellClientSpan, stockOptionsCellGatewayServerSpan,
+                stockOptionsCellGatewayClientSpan, stockOptionsServiceServerSpan,
             ];
 
             // Shuffle spans list
@@ -328,6 +328,27 @@ describe("TracingUtils", () => {
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock_options");
             expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsServiceServerSpan.isSystemComponent).toBe(false);
+        });
+    });
+
+    describe("getOrderedList()", () => {
+        it("should return the ordered list of spans based on start time", () => {
+            const spanList = TracingUtils.getOrderedList(globalGatewayServerSpan);
+
+            expect(spanList[0]).toBe(globalGatewayServerSpan);
+            expect(spanList[1]).toBe(globalGatewayClientSpan);
+            expect(spanList[2]).toBe(hrCellGatewayServerSpan);
+            expect(spanList[3]).toBe(hrCellGatewayClientSpan);
+            expect(spanList[4]).toBe(employeeServiceServerSpan);
+            expect(spanList[5]).toBe(employeeServiceToIstioMixerClientSpan);
+            expect(spanList[6]).toBe(istioMixerServerSpan);
+            expect(spanList[7]).toBe(istioMixerWorkerSpan);
+            expect(spanList[8]).toBe(employeeServiceToReviewsServiceClientSpan);
+            expect(spanList[9]).toBe(reviewsServiceServerSpan);
+            expect(spanList[10]).toBe(employeeServiceToStockOptionsCellClientSpan);
+            expect(spanList[11]).toBe(stockOptionsCellGatewayServerSpan);
+            expect(spanList[12]).toBe(stockOptionsCellGatewayClientSpan);
+            expect(spanList[13]).toBe(stockOptionsServiceServerSpan);
         });
     });
 

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -16,22 +17,27 @@
  * under the License.
  */
 
+import Button from "@material-ui/core/Button";
 import PropTypes from "prop-types";
 import React from "react";
-import TracingSearch from "./TracingSearch";
-import TracingTimeline from "./TracingTimeline";
-import {Redirect, Route, Switch, withRouter} from "react-router-dom";
+import {withRouter} from "react-router-dom";
 
-const Tracing = ({match}) => (
-    <Switch>
-        <Route exact path={`${match.url}/search`} component={TracingSearch}/>
-        <Route exact path={`${match.url}/id/:traceId`} component={TracingTimeline}/>
-        <Redirect from={`${match.url}/`} to={`${match.url}/search`}/>
-    </Switch>
-);
-
-Tracing.propTypes = {
-    match: PropTypes.object.isRequired
+const Search = (props) => {
+    const {history} = props;
+    const traceId = "asfedsn3jff-sdfnskjenvf";
+    return (
+        <div>
+            <Button variant="contained" color="primary" onClick={() => history.push(`/tracing/id/${traceId}`)}>
+                Search
+            </Button>
+        </div>
+    );
 };
 
-export default withRouter(Tracing);
+Search.propTypes = {
+    history: PropTypes.shape({
+        push: PropTypes.func.isRequired
+    }).isRequired
+};
+
+export default withRouter(Search);

@@ -76,24 +76,35 @@ class TracingUtils {
     /**
      * Traverse the span tree and label the nodes.
      *
-     * @param {Span} rootSpan The root span of the tree
-     * @param {{name: string, version: string}} parentCell The name of the cell this span's parent belongs to
+     * @param {Span} tree The root span of the tree
      */
-    static labelSpanTree(rootSpan, parentCell = null) {
-        rootSpan.isSystemComponent = this.isFromSystemComponent(rootSpan);
-        if (this.isFromCellGateway(rootSpan)) {
-            rootSpan.cell = this.getCell(rootSpan);
-        } else if (!rootSpan.isSystemComponent) {
-            rootSpan.cell = parentCell;
-        }
+    static labelSpanTree(tree) {
+        tree.walk((span, data) => {
+            span.isSystemComponent = TracingUtils.isFromSystemComponent(span);
+            if (TracingUtils.isFromCellGateway(span)) {
+                span.cell = this.getCell(span);
+            } else if (!span.isSystemComponent) {
+                span.cell = data;
+            }
+            return span.cell;
+        }, null);
+    }
 
-        // Traversing down the tree
-        const childrenIterator = rootSpan.children.values();
-        let currentChild = childrenIterator.next();
-        while (!currentChild.done) {
-            this.labelSpanTree(currentChild.value, rootSpan.cell);
-            currentChild = childrenIterator.next();
-        }
+    /**
+     * Traverse the span tree and generate a list of ordered spans.
+     *
+     * @param {Span} tree The root span of the tree
+     * @returns {Array.<Span>} The list of spans ordered by time and tree structure
+     */
+    static getOrderedList(tree) {
+        const spanList = [];
+
+        tree.walk((span, data) => {
+            data.push(span);
+            return data;
+        }, spanList);
+
+        return spanList;
     }
 
     /**
