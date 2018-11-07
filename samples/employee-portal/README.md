@@ -42,13 +42,14 @@ The above will deploy the three cells in the default namespace. To check the cel
 kubectl get cells  
 ```  
   
-Which will output the following result if all the cells are ready   
-NAME  | STATUS | GATEWAY |   SERVICES | AGE
-------------- | -------------  | ------------- | ------------- | ------------- |
-employee  | Ready | employee--gateway-service | 3 | 21s
-hr   | Ready |  hr--gateway-service | 2 | 21s
-stock-options |  Ready | stock-options--gateway-service | 2 | 21s
-   
+Which will output the following result if all the cells are ready  
+ 
+| NAME  | STATUS | GATEWAY |   SERVICES | AGE |
+| ------ | ------  | ------ | ------ | ------ |
+| employee | Ready | employee--gateway-service | 3 | 21s |
+| hr | Ready | hr--gateway-service | 2 | 21s |
+| stock-options | Ready | stock-options--gateway-service | 2 | 21s |
+
   
 > NOTE: You need to have kubectl version 1.11 or above which support server-side column rendering to see the all 
 columns in the above table.
