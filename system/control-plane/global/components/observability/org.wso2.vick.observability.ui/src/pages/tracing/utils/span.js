@@ -44,6 +44,8 @@ class Span {
         this.duration = spanData.duration ? spanData.duration : 0;
         this.tags = spanData.tags ? spanData.tags : {};
 
+        this.treeDepth = null;
+
         /** @type {Span} **/
         this.parent = null;
 

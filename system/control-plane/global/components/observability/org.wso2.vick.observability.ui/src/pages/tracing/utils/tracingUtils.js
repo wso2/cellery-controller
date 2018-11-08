@@ -83,11 +83,20 @@ class TracingUtils {
             span.isSystemComponent = TracingUtils.isFromSystemComponent(span);
             if (TracingUtils.isFromCellGateway(span)) {
                 span.cell = this.getCell(span);
+                span.serviceName = `${span.cell.name}-cell-gateway`;
             } else if (!span.isSystemComponent) {
-                span.cell = data;
+                span.cell = data.cell;
             }
-            return span.cell;
-        }, null);
+            span.treeDepth = data.currentDepth;
+
+            return {
+                currentDepth: data.currentDepth + 1,
+                cell: span.cell
+            };
+        }, {
+            cell: null,
+            currentDepth: 0
+        });
     }
 
     /**
@@ -119,7 +128,7 @@ class TracingUtils {
             const matches = cellGatewaySpan.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
-                    name: matches[1],
+                    name: matches[1].replace(/_/g, "-"),
                     version: matches[2].replace(/_/g, ".")
                 };
             } else {

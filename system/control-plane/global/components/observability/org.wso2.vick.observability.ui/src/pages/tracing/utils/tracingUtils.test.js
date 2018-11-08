@@ -269,65 +269,79 @@ describe("TracingUtils", () => {
 
             expect(globalGatewayServerSpan.cell).toBe(null);
             expect(globalGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(globalGatewayServerSpan.treeDepth).toBe(0);
 
             expect(globalGatewayClientSpan.cell).toBe(null);
             expect(globalGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(globalGatewayClientSpan.treeDepth).toBe(1);
 
             expect(hrCellGatewayServerSpan.cell).not.toBeNull();
             expect(hrCellGatewayServerSpan.cell.name).toBe("hr");
             expect(hrCellGatewayServerSpan.cell.version).toBe("1.0.0");
             expect(hrCellGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(hrCellGatewayServerSpan.treeDepth).toBe(2);
 
             expect(hrCellGatewayClientSpan.cell).not.toBeNull();
             expect(hrCellGatewayClientSpan.cell.name).toBe("hr");
             expect(hrCellGatewayClientSpan.cell.version).toBe("1.0.0");
             expect(hrCellGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(hrCellGatewayClientSpan.treeDepth).toBe(3);
 
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
             expect(employeeServiceServerSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceServerSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToIstioMixerClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToIstioMixerClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
             expect(istioMixerServerSpan.cell).toBeNull();
             expect(istioMixerServerSpan.isSystemComponent).toBe(true);
+            expect(istioMixerServerSpan.treeDepth).toBe(6);
 
             expect(istioMixerWorkerSpan.cell).toBeNull();
             expect(istioMixerWorkerSpan.isSystemComponent).toBe(true);
+            expect(istioMixerWorkerSpan.treeDepth).toBe(7);
 
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToReviewsServiceClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToReviewsServiceClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
             expect(reviewsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(reviewsServiceServerSpan.isSystemComponent).toBe(false);
+            expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToStockOptionsCellClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToStockOptionsCellClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock_options");
             expect(stockOptionsCellGatewayServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(stockOptionsCellGatewayServerSpan.treeDepth).toBe(6);
 
             expect(stockOptionsCellGatewayClientSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock_options");
             expect(stockOptionsCellGatewayClientSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(stockOptionsCellGatewayClientSpan.treeDepth).toBe(7);
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock_options");
             expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsServiceServerSpan.isSystemComponent).toBe(false);
+            expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
     });
 

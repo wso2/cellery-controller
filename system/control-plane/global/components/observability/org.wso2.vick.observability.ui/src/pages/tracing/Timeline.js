@@ -17,12 +17,34 @@
  */
 
 import "vis/dist/vis-timeline-graph2d.min.css";
+import "./Timeline.css";
 import Constants from "./utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
+import ReactDOM from "react-dom";
 import Span from "./utils/span";
 import TracingUtils from "./utils/tracingUtils";
+import classNames from "classnames";
 import vis from "vis";
+import {withStyles} from "@material-ui/core";
+
+const styles = () => ({
+    serviceName: {
+        fontWeight: 500,
+        fontSize: "normal"
+    },
+    operationName: {
+        color: "#7c7c7c",
+        fontSize: "small"
+    },
+    kindBadge: {
+        borderRadius: "8px",
+        color: "white",
+        padding: "2px 5px",
+        marginLeft: "15px",
+        fontSize: "12px"
+    }
+});
 
 class Timeline extends React.Component {
 
@@ -212,13 +234,47 @@ class Timeline extends React.Component {
     }
 
     componentDidUpdate() {
+        const {classes} = this.props;
+        const kindsData = {
+            CLIENT: {
+                name: "Client",
+                color: "#9c27b0"
+            },
+            SERVER: {
+                name: "Server",
+                color: "#4caf50"
+            },
+            PRODUCER: {
+                name: "Producer",
+                color: "#03a9f4"
+            },
+            CONSUMER: {
+                name: "Consumer",
+                color: "#009688"
+            }
+        };
+
         const options = {
-            width: "100%",
-            height: "700px",
             orientation: "top",
             showMajorLabels: true,
             editable: false,
-            groupEditable: false
+            groupEditable: false,
+            groupTemplate: (item, element) => {
+                const newElement = document.createElement("div");
+                const kindData = kindsData[item.kind];
+                ReactDOM.render((
+                    <span style={{paddingLeft: `${(item.depth + (item.isLeaf ? 1 : 0)) * 15}px`}}>
+                        <span className={classNames(classes.serviceName)}>{`${item.serviceName} `}</span>
+                        <span className={classNames(classes.operationName)}>{item.operationName}</span>
+                        {(kindData
+                            ? <span className={classNames(classes.kindBadge)}
+                                style={{backgroundColor: kindData.color}}>{kindData.name}</span>
+                            : null
+                        )}
+                    </span>
+                ), newElement);
+                return newElement;
+            }
         };
 
         /*
@@ -254,8 +310,12 @@ class Timeline extends React.Component {
             groups.push({
                 id: span.getUniqueId(),
                 order: i,
-                content: `${span.serviceName} <small style="color: #7c7c7c;">${span.operationName}</small>`,
-                nestedGroups: nestedGroups.length > 0 ? nestedGroups : null
+                nestedGroups: nestedGroups.length > 0 ? nestedGroups : null,
+                depth: span.treeDepth,
+                isLeaf: span.children.size === 0,
+                serviceName: span.serviceName,
+                operationName: span.operationName,
+                kind: span.kind
             });
         }
 
@@ -279,7 +339,8 @@ Timeline.propTypes = {
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
         }).isRequired
-    }).isRequired
+    }).isRequired,
+    classes: PropTypes.any.isRequired
 };
 
-export default Timeline;
+export default withStyles(styles, {withTheme: true})(Timeline);
