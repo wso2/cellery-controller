@@ -22,7 +22,7 @@ four microservices deployed across three different cells based on their responsi
   * This microservice returns the stock related data for the employee.  
   * Exposes a cell level API, when invoked returns the response from stock microservice.  
   
-![picture alt](https://raw.githubusercontent.com/NipunaPrashan/product-vick/cell-gateway/samples/employee-portal/src/images/employee-portal-architecture-diagram.png)  
+![picture alt](https://raw.githubusercontent.com/wso2/product-vick/cell-gateway/samples/employee-portal/src/images/employee-portal-architecture-diagram.png)  
   
   
 ### Deploying the application into VICK  
