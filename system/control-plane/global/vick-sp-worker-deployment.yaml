@@ -111,9 +111,9 @@ spec:
       - name: sp-worker-conf
         configMap:
           name: sp-worker-conf
-      - name: sp-worker-bin
-        configMap:
-          name: sp-worker-bin
+ #     - name: sp-worker-bin
+ #       configMap:
+ #         name: sp-worker-bin
       - name: sp-worker-siddhi
         configMap:
           name: sp-worker-siddhi
