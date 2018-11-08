@@ -22,10 +22,10 @@ four microservices deployed across three different cells based on their responsi
   * This microservice returns the stock related data for the employee.  
   * Exposes a cell level API, when invoked returns the response from stock microservice.  
   
-![picture alt](https://github.com/wso2/product-vick/blob/master/samples/employee-portal/src/images/employee-portal-architecture-diagram.png)  
+![picture alt](https://raw.githubusercontent.com/wso2/product-vick/master/samples/employee-portal/src/images/employee-portal-architecture-diagram.png)  
   
   
-### Deploying the application into VICK  
+## Deploying the application into VICK  
 Once you set up the VICK runtime on Kubernetes, you can use kubectl to deploy the sample cells into VICK.  
   
 Run following commands to deploy three cells,  
@@ -55,7 +55,7 @@ Which will output the following result if all the cells are ready
 columns in the above table.
 
 
-### Invoking the application
+## Invoking the application
 
 1.  Find your external cluster IP by running the following command (VICK currently uses nginx as the ingress controller),
 
@@ -80,7 +80,7 @@ columns in the above table.
 6.  Finally, the microservice in HR cell will return the result back to global API gateway.
 
 
-### Sample Response
+## Sample Response
 
 ```
 {
