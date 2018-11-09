@@ -1,1 +1,0 @@
-VICK command line tool
