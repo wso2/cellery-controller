@@ -16,6 +16,20 @@
  * under the License.
  */
 
+div.vis-resize-handle {
+    transform: translateX(-5px);
+    background-color: #919191;
+    cursor: ew-resize;
+    position: absolute;
+    width: 5px;
+    height: 100%;
+    user-select: none;
+}
+
+div.vis-panel.vis-left {
+    max-width: 80%;
+}
+
 /*
  * vis timeline overrides
  */
@@ -28,11 +42,11 @@ div.vis-label::before {
     content: none !important;
 }
 
-div.vis-label.expanded > div.vis-inner > div > span::before {
+div.vis-label.expanded > div.vis-inner > div > div > div:first-child:before {
     content: "\25BC";
 }
 
-div.vis-label.collapsed > div.vis-inner > div > span::before {
+div.vis-label.collapsed > div.vis-inner > div > div > div:first-child:before {
     content: "\25B6";
 }
 

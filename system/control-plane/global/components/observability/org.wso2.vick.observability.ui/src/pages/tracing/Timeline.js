@@ -25,10 +25,19 @@ import ReactDOM from "react-dom";
 import Span from "./utils/span";
 import TracingUtils from "./utils/tracingUtils";
 import classNames from "classnames";
+import interact from "interactjs";
 import vis from "vis";
 import {withStyles} from "@material-ui/core";
 
 const styles = () => ({
+    spanLabelContainer: {
+        width: 500,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        boxSizing: "border-box",
+        display: "inline-block"
+    },
     serviceName: {
         fontWeight: 500,
         fontSize: "normal"
@@ -42,7 +51,8 @@ const styles = () => ({
         color: "white",
         padding: "2px 5px",
         marginLeft: "15px",
-        fontSize: "12px"
+        fontSize: "12px",
+        display: "inline-block"
     }
 });
 
@@ -53,12 +63,14 @@ class Timeline extends React.Component {
 
         this.state = {
             traceId: props.match.params.traceId,
-            spanTreeRootNode: null,
+            traceTree: null,
             spans: []
         };
 
         this.timelineNode = React.createRef();
         this.timeline = null;
+        this.spanLabelWidth = 0;
+        this.RESIZE_HANDLE_CLASS = "vis-resize-handle";
 
         // TODO : Remove this section and query the backend and retrieve spans.
         const self = this;
@@ -227,7 +239,7 @@ class Timeline extends React.Component {
             TracingUtils.labelSpanTree(rootSpan);
 
             self.setState({
-                spanTreeRootNode: rootSpan,
+                traceTree: rootSpan,
                 spans: TracingUtils.getOrderedList(rootSpan)
             });
         });
@@ -235,6 +247,7 @@ class Timeline extends React.Component {
 
     componentDidUpdate() {
         const {classes} = this.props;
+        const self = this;
         const kindsData = {
             CLIENT: {
                 name: "Client",
@@ -254,24 +267,40 @@ class Timeline extends React.Component {
             }
         };
 
+        // Finding the maximum tree height
+        let treeHeight = 0;
+        this.state.traceTree.walk((span) => {
+            if (span.treeDepth > treeHeight) {
+                treeHeight = span.treeDepth;
+            }
+        });
+        treeHeight += 1;
+
         const options = {
             orientation: "top",
             showMajorLabels: true,
             editable: false,
             groupEditable: false,
-            groupTemplate: (item, element) => {
+            showCurrentTime: false,
+            groupTemplate: (item) => {
                 const newElement = document.createElement("div");
                 const kindData = kindsData[item.kind];
                 ReactDOM.render((
-                    <span style={{paddingLeft: `${(item.depth + (item.isLeaf ? 1 : 0)) * 15}px`}}>
-                        <span className={classNames(classes.serviceName)}>{`${item.serviceName} `}</span>
-                        <span className={classNames(classes.operationName)}>{item.operationName}</span>
+                    <div>
+                        <div style={{
+                            paddingLeft: `${(item.depth + (item.isLeaf ? 1 : 0)) * 15}px`,
+                            minWidth: `${(treeHeight + 1) * 15 + 100}px`,
+                            width: (self.spanLabelWidth > 0 ? self.spanLabelWidth : null)
+                        }} className={classNames(classes.spanLabelContainer)}>
+                            <span className={classNames(classes.serviceName)}>{`${item.serviceName} `}</span>
+                            <span className={classNames(classes.operationName)}>{item.operationName}</span>
+                        </div>
                         {(kindData
-                            ? <span className={classNames(classes.kindBadge)}
-                                style={{backgroundColor: kindData.color}}>{kindData.name}</span>
+                            ? <div className={classNames(classes.kindBadge)}
+                                style={{backgroundColor: kindData.color}}>{kindData.name}</div>
                             : null
                         )}
-                    </span>
+                    </div>
                 ), newElement);
                 return newElement;
             }
@@ -286,6 +315,7 @@ class Timeline extends React.Component {
         options.groupOrder = (a, b) => b.order - a.order;
         const spans = this.state.spans.reverse();
 
+        // Populating timeline items and groups
         const groups = [];
         const items = [];
         for (let i = 0; i < spans.length; i++) {
@@ -295,20 +325,21 @@ class Timeline extends React.Component {
             const nestedGroups = [];
             span.walk((currentSpan, data) => {
                 if (currentSpan !== span) {
-                    data.push(currentSpan.getUniqueId());
+                    data.push(`${span.getUniqueId()}-span-group`);
                 }
                 return data;
             }, nestedGroups);
 
+            // Adding span
             items.push({
                 id: `${span.getUniqueId()}-span`,
                 start: new Date(span.startTime),
                 end: new Date(span.startTime + span.duration),
                 content: `${span.duration} ms`,
-                group: span.getUniqueId()
+                group: `${span.getUniqueId()}-span-group`
             });
             groups.push({
-                id: span.getUniqueId(),
+                id: `${span.getUniqueId()}-span-group`,
                 order: i,
                 nestedGroups: nestedGroups.length > 0 ? nestedGroups : null,
                 depth: span.treeDepth,
@@ -319,6 +350,11 @@ class Timeline extends React.Component {
             });
         }
 
+        // Clear previous interactions (eg:- resizability) added to the timeline
+        const selector = `.${classNames(classes.spanLabelContainer)}`;
+        Timeline.clearInteractions(`.${this.RESIZE_HANDLE_CLASS}`);
+        Timeline.clearInteractions(selector);
+
         // Creating / Updating the timeline
         if (!this.timeline) {
             this.timeline = new vis.Timeline(this.timelineNode.current);
@@ -326,6 +362,72 @@ class Timeline extends React.Component {
         this.timeline.setOptions(options);
         this.timeline.setGroups(new vis.DataSet(groups));
         this.timeline.setItems(new vis.DataSet(items));
+        this.timeline.on("change", () => {
+            if (self.spanLabelWidth > 0) {
+                // Set the last known width upon timeline redraw
+                document.querySelectorAll(`.${classNames(classes.spanLabelContainer)}`).forEach((node) => {
+                    node.style.width = self.spanLabelWidth;
+                });
+            }
+        });
+
+        // Add resizable functionality
+        this.addHorizontalResizability(selector);
+    }
+
+    /**
+     * Add resizability to a set of items in the timeline.
+     *
+     * @param {string} selector The CSS selector of the items to which the resizability should be added
+     */
+    addHorizontalResizability(selector) {
+        const self = this;
+        const edges = {right: true};
+
+        // Add the horizontal resize handle
+        const newNode = document.createElement("div");
+        newNode.classList.add(this.RESIZE_HANDLE_CLASS);
+        const parent = document.querySelector(".vis-panel.vis-top");
+        parent.insertBefore(newNode, parent.childNodes[0]);
+
+        // Handling the resizing
+        interact(selector).resizable({
+            manualStart: true,
+            edges: edges
+        }).on("resizemove", (event) => {
+            const targets = event.target;
+            targets.forEach((target) => {
+                // Update the element's style
+                target.style.width = `${event.rect.width}px`;
+
+                // Store the current width to be used when the timeline is redrawn
+                self.spanLabelWidth = event.rect.width;
+
+                // Trigger timeline redraw
+                self.timeline.body.emitter.emit("_change");
+            });
+        });
+
+        // Handling dragging of the resize handle
+        interact(".vis-resize-handle").on("down", (event) => {
+            event.interaction.start(
+                {
+                    name: "resize",
+                    edges: edges
+                },
+                interact(selector),
+                document.querySelectorAll(selector)
+            );
+        });
+    }
+
+    /**
+     * Clear interactions added to the timeline.
+     *
+     * @param {string} selector The CSS selector of the items from which the interactions should be cleared
+     */
+    static clearInteractions(selector) {
+        interact(selector).unset();
     }
 
     render() {

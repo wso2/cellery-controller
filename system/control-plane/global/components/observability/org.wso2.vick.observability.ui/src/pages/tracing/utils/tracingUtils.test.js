@@ -175,6 +175,66 @@ describe("TracingUtils", () => {
         tags: {}
     });
 
+    describe("getCell()", () => {
+        it("should return the cell information if the span is from a Cell Gateway", () => {
+            const cell = TracingUtils.getCell(hrCellGatewayServerSpan);
+
+            expect(cell.name).toBe("hr");
+            expect(cell.version).toBe("1.0.0");
+        });
+
+        it("should throw error if the span is not not from a Cell Gateway", () => {
+            expect(() => TracingUtils.getCell(globalGatewayServerSpan)).toThrow();
+            expect(() => TracingUtils.getCell(istioMixerServerSpan)).toThrow();
+            expect(() => TracingUtils.getCell(employeeServiceServerSpan)).toThrow();
+        });
+
+        it("should return null if null is provided", () => {
+            expect(TracingUtils.getCell(null)).toBeNull();
+            expect(TracingUtils.getCell(undefined)).toBeNull();
+        });
+    });
+
+    describe("isFromCellGateway()", () => {
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(TracingUtils.isFromCellGateway(hrCellGatewayServerSpan)).toBe(true);
+        });
+
+        it("should return false if the span is not from a Cell Gateway", () => {
+            expect(TracingUtils.isFromCellGateway(globalGatewayServerSpan)).toBe(false);
+            expect(TracingUtils.isFromCellGateway(istioMixerServerSpan)).toBe(false);
+            expect(TracingUtils.isFromCellGateway(employeeServiceServerSpan)).toBe(false);
+        });
+
+        it("should return false if null is provided", () => {
+            expect(TracingUtils.isFromCellGateway(null)).toBe(false);
+            expect(TracingUtils.isFromCellGateway(undefined)).toBe(false);
+        });
+    });
+
+    describe("isFromSystemComponent()", () => {
+        it("should return true if the span is from Global Gateway", () => {
+            expect(TracingUtils.isFromSystemComponent(globalGatewayServerSpan)).toBe(true);
+        });
+
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(TracingUtils.isFromSystemComponent(hrCellGatewayServerSpan)).toBe(true);
+        });
+
+        it("should return true if the span is from Istio Mixer", () => {
+            expect(TracingUtils.isFromSystemComponent(istioMixerServerSpan)).toBe(true);
+        });
+
+        it("should return false if the span is from a custom service", () => {
+            expect(TracingUtils.isFromSystemComponent(employeeServiceServerSpan)).toBe(false);
+        });
+
+        it("should return false if null is provided", () => {
+            expect(TracingUtils.isFromSystemComponent(null)).toBe(false);
+            expect(TracingUtils.isFromSystemComponent(undefined)).toBe(false);
+        });
+    });
+
     describe("buildTree()", () => {
         it("should build the tracing tree from the spans list", () => {
             const orderedSpanList = [
@@ -326,19 +386,19 @@ describe("TracingUtils", () => {
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
-            expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock_options");
+            expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock-options");
             expect(stockOptionsCellGatewayServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayServerSpan.isSystemComponent).toBe(true);
             expect(stockOptionsCellGatewayServerSpan.treeDepth).toBe(6);
 
             expect(stockOptionsCellGatewayClientSpan.cell).not.toBeNull();
-            expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock_options");
+            expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock-options");
             expect(stockOptionsCellGatewayClientSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayClientSpan.isSystemComponent).toBe(true);
             expect(stockOptionsCellGatewayClientSpan.treeDepth).toBe(7);
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
-            expect(stockOptionsServiceServerSpan.cell.name).toBe("stock_options");
+            expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
             expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsServiceServerSpan.isSystemComponent).toBe(false);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
@@ -363,66 +423,6 @@ describe("TracingUtils", () => {
             expect(spanList[11]).toBe(stockOptionsCellGatewayServerSpan);
             expect(spanList[12]).toBe(stockOptionsCellGatewayClientSpan);
             expect(spanList[13]).toBe(stockOptionsServiceServerSpan);
-        });
-    });
-
-    describe("getCell()", () => {
-        it("should return the cell information if the span is from a Cell Gateway", () => {
-            const cell = TracingUtils.getCell(hrCellGatewayServerSpan);
-
-            expect(cell.name).toBe("hr");
-            expect(cell.version).toBe("1.0.0");
-        });
-
-        it("should throw error if the span is not not from a Cell Gateway", () => {
-            expect(() => TracingUtils.getCell(globalGatewayServerSpan)).toThrow();
-            expect(() => TracingUtils.getCell(istioMixerServerSpan)).toThrow();
-            expect(() => TracingUtils.getCell(employeeServiceServerSpan)).toThrow();
-        });
-
-        it("should return null if null is provided", () => {
-            expect(TracingUtils.getCell(null)).toBeNull();
-            expect(TracingUtils.getCell(undefined)).toBeNull();
-        });
-    });
-
-    describe("isFromCellGateway()", () => {
-        it("should return true if the span is from a Cell Gateway", () => {
-            expect(TracingUtils.isFromCellGateway(hrCellGatewayServerSpan)).toBe(true);
-        });
-
-        it("should return false if the span is not from a Cell Gateway", () => {
-            expect(TracingUtils.isFromCellGateway(globalGatewayServerSpan)).toBe(false);
-            expect(TracingUtils.isFromCellGateway(istioMixerServerSpan)).toBe(false);
-            expect(TracingUtils.isFromCellGateway(employeeServiceServerSpan)).toBe(false);
-        });
-
-        it("should return false if null is provided", () => {
-            expect(TracingUtils.isFromCellGateway(null)).toBe(false);
-            expect(TracingUtils.isFromCellGateway(undefined)).toBe(false);
-        });
-    });
-
-    describe("isFromSystemComponent()", () => {
-        it("should return true if the span is from Global Gateway", () => {
-            expect(TracingUtils.isFromSystemComponent(globalGatewayServerSpan)).toBe(true);
-        });
-
-        it("should return true if the span is from a Cell Gateway", () => {
-            expect(TracingUtils.isFromSystemComponent(hrCellGatewayServerSpan)).toBe(true);
-        });
-
-        it("should return true if the span is from Istio Mixer", () => {
-            expect(TracingUtils.isFromSystemComponent(istioMixerServerSpan)).toBe(true);
-        });
-
-        it("should return false if the span is from a custom service", () => {
-            expect(TracingUtils.isFromSystemComponent(employeeServiceServerSpan)).toBe(false);
-        });
-
-        it("should return false if null is provided", () => {
-            expect(TracingUtils.isFromSystemComponent(null)).toBe(false);
-            expect(TracingUtils.isFromSystemComponent(undefined)).toBe(false);
         });
     });
 
