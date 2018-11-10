@@ -16,23 +16,9 @@
  * under the License.
  */
 
-div.vis-resize-handle {
-    transform: translateX(-5px);
-    background-color: #919191;
-    cursor: ew-resize;
-    position: absolute;
-    width: 5px;
-    height: 100%;
-    user-select: none;
+div.vis-group {
+    cursor: pointer;
 }
-
-div.vis-panel.vis-left {
-    max-width: 80%;
-}
-
-/*
- * vis timeline overrides
- */
 
 div.vis-inner {
      padding-left: 0 !important;
@@ -54,6 +40,25 @@ div.vis-nested-group {
     background-color: initial;
 }
 
-div.vis-item.vis-range {
+div.vis-panel.vis-left {
+    max-width: 80%;
+}
+
+div.vis-item-span {
     border-radius: 5px !important;
+    max-height: 8px;
+}
+
+div.vis-item-span > div.vis-item-overflow {
+    top: -7px;
+}
+
+div.vis-item-span > div.vis-item-overflow > div.vis-item-content {
+    padding: 0 !important;
+    font-size: 12px;
+}
+
+div.vis-item-span-description {
+    background-color: #f3f3f3;
+    border: #f3f3f3;
 }
