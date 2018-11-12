@@ -35,9 +35,9 @@
             </jndiConfig>
             <definition type="RDBMS">
                 <configuration>
-                    <url>jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_APIMGT_DB?autoReconnect=true&amp;useSSL=false</url>
-                    <username>wso2carbon</username>
-                    <password>wso2carbon</password>
+                    <url>jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_APIMGT_DB?autoReconnect=true&amp;useSSL=false</url>
+                    <username>DATABASE_USERNAME</username>
+                    <password>DATABASE_PASSWORD</password>
                     <defaultAutoCommit>false</defaultAutoCommit>
                     <driverClassName>com.mysql.jdbc.Driver</driverClassName>
                     <maxActive>50</maxActive>
@@ -57,9 +57,9 @@
             </jndiConfig>
             <definition type="RDBMS">
                 <configuration>
-                    <url>jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_COMMON_DB?autoReconnect=true&amp;useSSL=false</url>
-                    <username>wso2carbon</username>
-                    <password>wso2carbon</password>
+                    <url>jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_COMMON_DB?autoReconnect=true&amp;useSSL=false</url>
+                    <username>DATABASE_USERNAME</username>
+                    <password>DATABASE_PASSWORD</password>
                     <driverClassName>com.mysql.jdbc.Driver</driverClassName>
                     <maxActive>50</maxActive>
                     <maxWait>60000</maxWait>
@@ -78,9 +78,9 @@
             </jndiConfig>
             <definition type="RDBMS">
                 <configuration>
-                    <url>jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_COMMON_DB?autoReconnect=true&amp;useSSL=false</url>
-                    <username>wso2carbon</username>
-                    <password>wso2carbon</password>
+                    <url>jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_COMMON_DB?autoReconnect=true&amp;useSSL=false</url>
+                    <username>DATABASE_USERNAME</username>
+                    <password>DATABASE_PASSWORD</password>
                     <driverClassName>com.mysql.jdbc.Driver</driverClassName>
                     <maxActive>50</maxActive>
                     <maxWait>60000</maxWait>
@@ -99,9 +99,9 @@
             </jndiConfig>
             <definition type="RDBMS">
                 <configuration>
-                    <url>jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_STAT_DB?autoReconnect=true&amp;useSSL=false</url>
-                    <username>wso2carbon</username>
-                    <password>wso2carbon</password>
+                    <url>jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_STAT_DB?autoReconnect=true&amp;useSSL=false</url>
+                    <username>DATABASE_USERNAME</username>
+                    <password>DATABASE_PASSWORD</password>
                     <driverClassName>com.mysql.jdbc.Driver</driverClassName>
                     <maxActive>50</maxActive>
                     <maxWait>60000</maxWait>
