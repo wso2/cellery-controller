@@ -16,6 +16,8 @@
  * under the License.
  */
 
+/* eslint max-lines: ["off"] */
+
 import Constants from "./constants";
 import Span from "./span";
 import TracingUtils from "./tracingUtils";
@@ -175,6 +177,14 @@ describe("TracingUtils", () => {
         tags: {}
     });
 
+    const orderedSpanList = [
+        globalGatewayServerSpan, globalGatewayClientSpan, hrCellGatewayServerSpan, hrCellGatewayClientSpan,
+        employeeServiceServerSpan, employeeServiceToIstioMixerClientSpan, istioMixerServerSpan,
+        istioMixerWorkerSpan, employeeServiceToReviewsServiceClientSpan, reviewsServiceServerSpan,
+        employeeServiceToStockOptionsCellClientSpan, stockOptionsCellGatewayServerSpan,
+        stockOptionsCellGatewayClientSpan, stockOptionsServiceServerSpan
+    ];
+
     describe("getCell()", () => {
         it("should return the cell information if the span is from a Cell Gateway", () => {
             const cell = TracingUtils.getCell(hrCellGatewayServerSpan);
@@ -212,45 +222,61 @@ describe("TracingUtils", () => {
         });
     });
 
-    describe("isFromSystemComponent()", () => {
+    describe("isFromVICKSystemComponent()", () => {
         it("should return true if the span is from Global Gateway", () => {
-            expect(TracingUtils.isFromSystemComponent(globalGatewayServerSpan)).toBe(true);
+            expect(TracingUtils.isFromVICKSystemComponent(globalGatewayServerSpan)).toBe(true);
         });
 
         it("should return true if the span is from a Cell Gateway", () => {
-            expect(TracingUtils.isFromSystemComponent(hrCellGatewayServerSpan)).toBe(true);
+            expect(TracingUtils.isFromVICKSystemComponent(hrCellGatewayServerSpan)).toBe(true);
         });
 
         it("should return true if the span is from Istio Mixer", () => {
-            expect(TracingUtils.isFromSystemComponent(istioMixerServerSpan)).toBe(true);
+            expect(TracingUtils.isFromVICKSystemComponent(istioMixerServerSpan)).toBe(false);
         });
 
         it("should return false if the span is from a custom service", () => {
-            expect(TracingUtils.isFromSystemComponent(employeeServiceServerSpan)).toBe(false);
+            expect(TracingUtils.isFromVICKSystemComponent(employeeServiceServerSpan)).toBe(false);
         });
 
         it("should return false if null is provided", () => {
-            expect(TracingUtils.isFromSystemComponent(null)).toBe(false);
-            expect(TracingUtils.isFromSystemComponent(undefined)).toBe(false);
+            expect(TracingUtils.isFromVICKSystemComponent(null)).toBe(false);
+            expect(TracingUtils.isFromVICKSystemComponent(undefined)).toBe(false);
+        });
+    });
+
+    describe("isFromIstioSystemComponent()", () => {
+        it("should return true if the span is from Global Gateway", () => {
+            expect(TracingUtils.isFromIstioSystemComponent(globalGatewayServerSpan)).toBe(false);
+        });
+
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(TracingUtils.isFromIstioSystemComponent(hrCellGatewayServerSpan)).toBe(false);
+        });
+
+        it("should return true if the span is from Istio Mixer", () => {
+            expect(TracingUtils.isFromIstioSystemComponent(istioMixerServerSpan)).toBe(true);
+        });
+
+        it("should return false if the span is from a custom service", () => {
+            expect(TracingUtils.isFromIstioSystemComponent(employeeServiceServerSpan)).toBe(false);
+        });
+
+        it("should return false if null is provided", () => {
+            expect(TracingUtils.isFromIstioSystemComponent(null)).toBe(false);
+            expect(TracingUtils.isFromIstioSystemComponent(undefined)).toBe(false);
         });
     });
 
     describe("buildTree()", () => {
         it("should build the tracing tree from the spans list", () => {
-            const orderedSpanList = [
-                globalGatewayServerSpan, globalGatewayClientSpan, hrCellGatewayServerSpan, hrCellGatewayClientSpan,
-                employeeServiceServerSpan, employeeServiceToIstioMixerClientSpan, istioMixerServerSpan,
-                istioMixerWorkerSpan, employeeServiceToReviewsServiceClientSpan, reviewsServiceServerSpan,
-                employeeServiceToStockOptionsCellClientSpan, stockOptionsCellGatewayServerSpan,
-                stockOptionsCellGatewayClientSpan, stockOptionsServiceServerSpan,
-            ];
-
             // Shuffle spans list
-            const spansList = orderedSpanList.map(a => [Math.random(), a])
+            const spansList = orderedSpanList.map((a) => [Math.random(), a])
                 .sort((a, b) => a[0] - b[0])
-                .map(a => a[1]);
+                .map((a) => a[1]);
 
             expect(TracingUtils.buildTree(spansList)).toBe(globalGatewayServerSpan);
+
             expect(globalGatewayServerSpan.parent).toBeNull();
             expect(globalGatewayServerSpan.sibling).toBeNull();
             expect(globalGatewayServerSpan.children.size).toBe(1);
@@ -304,7 +330,8 @@ describe("TracingUtils", () => {
             expect(employeeServiceToStockOptionsCellClientSpan.parent).toBe(employeeServiceServerSpan);
             expect(employeeServiceToStockOptionsCellClientSpan.sibling).toBe(stockOptionsCellGatewayServerSpan);
             expect(employeeServiceToStockOptionsCellClientSpan.children.size).toBe(1);
-            expect(employeeServiceToStockOptionsCellClientSpan.children.has(stockOptionsCellGatewayServerSpan)).toBe(true);
+            expect(employeeServiceToStockOptionsCellClientSpan.children.has(stockOptionsCellGatewayServerSpan))
+                .toBe(true);
 
             expect(stockOptionsCellGatewayServerSpan.parent).toBe(employeeServiceToStockOptionsCellClientSpan);
             expect(stockOptionsCellGatewayServerSpan.sibling).toBe(employeeServiceToStockOptionsCellClientSpan);
@@ -327,103 +354,131 @@ describe("TracingUtils", () => {
         it("should label the necessary nodes according to cell, component type", () => {
             TracingUtils.labelSpanTree(globalGatewayServerSpan);
 
-            expect(globalGatewayServerSpan.cell).toBe(null);
-            expect(globalGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(globalGatewayServerSpan.cell).toBeNull();
+            expect(globalGatewayServerSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(globalGatewayServerSpan.treeDepth).toBe(0);
 
-            expect(globalGatewayClientSpan.cell).toBe(null);
-            expect(globalGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(globalGatewayClientSpan.cell).toBeNull();
+            expect(globalGatewayClientSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(globalGatewayClientSpan.treeDepth).toBe(1);
 
             expect(hrCellGatewayServerSpan.cell).not.toBeNull();
             expect(hrCellGatewayServerSpan.cell.name).toBe("hr");
             expect(hrCellGatewayServerSpan.cell.version).toBe("1.0.0");
-            expect(hrCellGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(hrCellGatewayServerSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(hrCellGatewayServerSpan.treeDepth).toBe(2);
 
             expect(hrCellGatewayClientSpan.cell).not.toBeNull();
             expect(hrCellGatewayClientSpan.cell.name).toBe("hr");
             expect(hrCellGatewayClientSpan.cell.version).toBe("1.0.0");
-            expect(hrCellGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(hrCellGatewayClientSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(hrCellGatewayClientSpan.treeDepth).toBe(3);
 
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
             expect(employeeServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceServerSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToIstioMixerClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToIstioMixerClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
             expect(istioMixerServerSpan.cell).toBeNull();
-            expect(istioMixerServerSpan.isSystemComponent).toBe(true);
+            expect(istioMixerServerSpan.componentType).toBe(Constants.Span.ComponentType.ISTIO);
             expect(istioMixerServerSpan.treeDepth).toBe(6);
 
             expect(istioMixerWorkerSpan.cell).toBeNull();
-            expect(istioMixerWorkerSpan.isSystemComponent).toBe(true);
+            expect(istioMixerWorkerSpan.componentType).toBe(Constants.Span.ComponentType.ISTIO);
             expect(istioMixerWorkerSpan.treeDepth).toBe(7);
 
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToReviewsServiceClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToReviewsServiceClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToReviewsServiceClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
             expect(reviewsServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(reviewsServiceServerSpan.isSystemComponent).toBe(false);
+            expect(reviewsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToStockOptionsCellClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToStockOptionsCellClientSpan.isSystemComponent).toBe(false);
+            expect(employeeServiceToStockOptionsCellClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock-options");
             expect(stockOptionsCellGatewayServerSpan.cell.version).toBe("1.0.0");
-            expect(stockOptionsCellGatewayServerSpan.isSystemComponent).toBe(true);
+            expect(stockOptionsCellGatewayServerSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(stockOptionsCellGatewayServerSpan.treeDepth).toBe(6);
 
             expect(stockOptionsCellGatewayClientSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock-options");
             expect(stockOptionsCellGatewayClientSpan.cell.version).toBe("1.0.0");
-            expect(stockOptionsCellGatewayClientSpan.isSystemComponent).toBe(true);
+            expect(stockOptionsCellGatewayClientSpan.componentType).toBe(Constants.Span.ComponentType.VICK);
             expect(stockOptionsCellGatewayClientSpan.treeDepth).toBe(7);
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
             expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(stockOptionsServiceServerSpan.isSystemComponent).toBe(false);
+            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
     });
 
     describe("getOrderedList()", () => {
-        it("should return the ordered list of spans based on start time", () => {
-            const spanList = TracingUtils.getOrderedList(globalGatewayServerSpan);
+        it("should return the nodes ordered by start time and tree structure", () => {
+            const resultList = TracingUtils.getOrderedList(globalGatewayServerSpan);
 
-            expect(spanList[0]).toBe(globalGatewayServerSpan);
-            expect(spanList[1]).toBe(globalGatewayClientSpan);
-            expect(spanList[2]).toBe(hrCellGatewayServerSpan);
-            expect(spanList[3]).toBe(hrCellGatewayClientSpan);
-            expect(spanList[4]).toBe(employeeServiceServerSpan);
-            expect(spanList[5]).toBe(employeeServiceToIstioMixerClientSpan);
-            expect(spanList[6]).toBe(istioMixerServerSpan);
-            expect(spanList[7]).toBe(istioMixerWorkerSpan);
-            expect(spanList[8]).toBe(employeeServiceToReviewsServiceClientSpan);
-            expect(spanList[9]).toBe(reviewsServiceServerSpan);
-            expect(spanList[10]).toBe(employeeServiceToStockOptionsCellClientSpan);
-            expect(spanList[11]).toBe(stockOptionsCellGatewayServerSpan);
-            expect(spanList[12]).toBe(stockOptionsCellGatewayClientSpan);
-            expect(spanList[13]).toBe(stockOptionsServiceServerSpan);
+            expect(resultList).toHaveLength(14);
+            expect(resultList[0]).toBe(globalGatewayServerSpan);
+            expect(resultList[1]).toBe(globalGatewayClientSpan);
+            expect(resultList[2]).toBe(hrCellGatewayServerSpan);
+            expect(resultList[3]).toBe(hrCellGatewayClientSpan);
+            expect(resultList[4]).toBe(employeeServiceServerSpan);
+            expect(resultList[5]).toBe(employeeServiceToIstioMixerClientSpan);
+            expect(resultList[6]).toBe(istioMixerServerSpan);
+            expect(resultList[7]).toBe(istioMixerWorkerSpan);
+            expect(resultList[8]).toBe(employeeServiceToReviewsServiceClientSpan);
+            expect(resultList[9]).toBe(reviewsServiceServerSpan);
+            expect(resultList[10]).toBe(employeeServiceToStockOptionsCellClientSpan);
+            expect(resultList[11]).toBe(stockOptionsCellGatewayServerSpan);
+            expect(resultList[12]).toBe(stockOptionsCellGatewayClientSpan);
+            expect(resultList[13]).toBe(stockOptionsServiceServerSpan);
         });
     });
 
+    describe("removeSpanFromTree()", () => {
+        it("should remove the references in other nodes that point to this to form the tree", () => {
+            TracingUtils.removeSpanFromTree(employeeServiceServerSpan);
+
+            expect(employeeServiceToIstioMixerClientSpan.parent).toBe(hrCellGatewayClientSpan);
+            expect(employeeServiceToReviewsServiceClientSpan.parent).toBe(hrCellGatewayClientSpan);
+            expect(employeeServiceToStockOptionsCellClientSpan.parent).toBe(hrCellGatewayClientSpan);
+
+            expect(hrCellGatewayClientSpan.children.size).toBe(3);
+            expect(hrCellGatewayClientSpan.children.has(employeeServiceToIstioMixerClientSpan)).toBe(true);
+            expect(hrCellGatewayClientSpan.children.has(employeeServiceToReviewsServiceClientSpan)).toBe(true);
+            expect(hrCellGatewayClientSpan.children.has(employeeServiceToStockOptionsCellClientSpan)).toBe(true);
+            expect(hrCellGatewayClientSpan.sibling).toBeNull();
+        });
+    });
+
+    describe("resetTreeSpanReferences()", () => {
+        it("should clear all connections to other nodes", () => {
+            TracingUtils.resetTreeSpanReferences(orderedSpanList);
+
+            for (let i = 0; i < orderedSpanList.length; i++) {
+                expect(orderedSpanList[i].children.size).toBe(0);
+                expect(orderedSpanList[i].parent).toBeNull();
+                expect(orderedSpanList[i].sibling).toBeNull();
+            }
+        });
+    });
 });

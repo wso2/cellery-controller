@@ -61,14 +61,17 @@ class TracingUtils {
         // Adding references to the connected nodes
         for (let i = 0; i < spansList.length; i++) {
             for (let j = 0; j < spansList.length; j++) {
-                const spanA = spansList[i];
-                const spanB = spansList[j];
-                if (i !== j && (spanA.isSiblingOf(spanB) || spanA.isParentOf(spanB)
-                        || spanB.isParentOf(spanA))) {
-                    spanA.addSpanReference(spanB);
+                if (i !== j) {
+                    spansList[i].addSpanReference(spansList[j]);
                 }
             }
         }
+
+        // Calculating the tree depths
+        rootSpan.walk((span, data) => {
+            span.treeDepth = data;
+            return data + 1;
+        }, 0);
 
         return rootSpan;
     }
@@ -80,23 +83,23 @@ class TracingUtils {
      */
     static labelSpanTree(tree) {
         tree.walk((span, data) => {
-            span.isSystemComponent = TracingUtils.isFromSystemComponent(span);
+            if (TracingUtils.isFromIstioSystemComponent(span)) {
+                span.componentType = Constants.Span.ComponentType.ISTIO;
+            } else if (TracingUtils.isFromVICKSystemComponent(span)) {
+                span.componentType = Constants.Span.ComponentType.VICK;
+            } else {
+                span.componentType = Constants.Span.ComponentType.USER;
+            }
+
             if (TracingUtils.isFromCellGateway(span)) {
                 span.cell = this.getCell(span);
                 span.serviceName = `${span.cell.name}-cell-gateway`;
-            } else if (!span.isSystemComponent) {
-                span.cell = data.cell;
+            } else if (span.componentType !== Constants.Span.ComponentType.ISTIO) {
+                span.cell = data;
             }
-            span.treeDepth = data.currentDepth;
 
-            return {
-                currentDepth: data.currentDepth + 1,
-                cell: span.cell
-            };
-        }, {
-            cell: null,
-            currentDepth: 0
-        });
+            return span.cell;
+        }, null);
     }
 
     /**
@@ -107,12 +110,9 @@ class TracingUtils {
      */
     static getOrderedList(tree) {
         const spanList = [];
-
-        tree.walk((span, data) => {
-            data.push(span);
-            return data;
-        }, spanList);
-
+        tree.walk((span) => {
+            spanList.push(span);
+        });
         return spanList;
     }
 
@@ -149,15 +149,57 @@ class TracingUtils {
     }
 
     /**
-     * Check whether a span belongs to the System.
+     * Check whether a span belongs to the VICK System.
      *
      * @param {Span} span The span which should be checked
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
-    static isFromSystemComponent(span) {
+    static isFromVICKSystemComponent(span) {
         return Boolean(span) && (this.isFromCellGateway(span)
-            || span.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME
             || span.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
+    }
+
+    /**
+     * Check whether a span belongs to the Istio System.
+     *
+     * @param {Span} span The span which should be checked
+     * @returns {boolean} True if the component to which the span belongs to is a system component
+     */
+    static isFromIstioSystemComponent(span) {
+        return Boolean(span) && span.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
+    }
+
+    /**
+     * Reset the tree references to one another resulting in the destruction of the tree structure.
+     * This is required when the tree needs to be built again with different connections.
+     *
+     * @param {Array.<Span>} spans The list of spans to reset
+     */
+    static resetTreeSpanReferences(spans) {
+        for (let i = 0; i < spans.length; i++) {
+            spans[i].resetSpanReferences();
+        }
+    }
+
+    /**
+     * Remove a span from the tree preserving the tree structure.
+     *
+     * @param {Span} spanToBeRemoved The span to be removed
+     */
+    static removeSpanFromTree(spanToBeRemoved) {
+        const parent = spanToBeRemoved.parent;
+        if (parent) {
+            parent.children.delete(spanToBeRemoved);
+        }
+        spanToBeRemoved.children.forEach((child) => {
+            if (parent) {
+                parent.children.add(child);
+            }
+            child.parent = parent;
+        });
+        if (spanToBeRemoved.sibling) {
+            spanToBeRemoved.sibling.sibling = null;
+        }
     }
 
 }

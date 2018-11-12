@@ -26,6 +26,11 @@ const Constants = {
             SERVER: "SERVER",
             PRODUCER: "PRODUCER",
             CONSUMER: "CONSUMER"
+        },
+        ComponentType: {
+            VICK: "VICK",
+            ISTIO: "Istio",
+            USER: "User"
         }
     },
     VICK: {

@@ -25,29 +25,38 @@ import React from "react";
 import SignIn from "./pages/SignIn";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
+
+const theme = createMuiTheme({
+    typography: {
+        useNextVariants: true
+    }
+});
 
 class App extends React.Component {
 
     render() {
         const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
-            <BrowserRouter>
-                {
-                    user
-                        ? (
-                            <AppLayout username={user}>
-                                <Switch>
-                                    <Route exact path="/" component={Overview}/>
-                                    <Route exact path="/cells" component={Cell}/>
-                                    <Route exact path="/micro-services" component={MicroService}/>
-                                    <Route path="/tracing" component={Tracing}/>
-                                    <Redirect from="/*" to="/"/>
-                                </Switch>
-                            </AppLayout>
-                        )
-                        : <SignIn/>
-                }
-            </BrowserRouter>
+            <MuiThemeProvider theme={theme}>
+                <BrowserRouter>
+                    {
+                        user
+                            ? (
+                                <AppLayout username={user}>
+                                    <Switch>
+                                        <Route exact path="/" component={Overview}/>
+                                        <Route exact path="/cells" component={Cell}/>
+                                        <Route exact path="/micro-services" component={MicroService}/>
+                                        <Route path="/tracing" component={Tracing}/>
+                                        <Redirect from="/*" to="/"/>
+                                    </Switch>
+                                </AppLayout>
+                            )
+                            : <SignIn/>
+                    }
+                </BrowserRouter>
+            </MuiThemeProvider>
         );
     }
 

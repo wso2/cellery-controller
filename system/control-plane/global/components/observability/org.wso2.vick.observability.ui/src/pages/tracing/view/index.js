@@ -23,7 +23,7 @@ import SequenceDiagram from "./SequenceDiagram";
 import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import Timeline from "./Timeline";
+import Timeline from "./timeline";
 import TracingUtils from "../utils/tracingUtils";
 
 class View extends React.Component {
@@ -33,10 +33,8 @@ class View extends React.Component {
         const traceId = props.match.params.traceId;
 
         this.state = {
-            traceTree: null,
             spans: [],
-            selectedTabIndex: 0,
-            isLoading: true
+            selectedTabIndex: 0
         };
 
         this.handleTabChange = this.handleTabChange.bind(this);
@@ -276,14 +274,14 @@ class View extends React.Component {
     }
 
     render() {
-        const {traceTree, spans, selectedTabIndex} = this.state;
+        const {spans, selectedTabIndex} = this.state;
 
-        const timeline = <Timeline traceTree={traceTree} spans={spans}/>;
+        const timeline = <Timeline spans={spans}/>;
         const sequenceDiagram = <SequenceDiagram/>;
         const tabContent = [timeline, sequenceDiagram];
 
         return (
-            this.state.isLoading
+            this.state.spans.length === 0
                 ? null
                 : (
                     <div>

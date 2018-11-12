@@ -44,7 +44,11 @@ class Span {
         this.duration = spanData.duration ? spanData.duration : 0;
         this.tags = spanData.tags ? spanData.tags : {};
 
-        this.treeDepth = null;
+        /** @type {string} **/
+        this.componentType = "";
+
+        /** @type {{name: string, version: string}} **/
+        this.cell = null;
 
         /** @type {Span} **/
         this.parent = null;
@@ -55,11 +59,7 @@ class Span {
         /** @type {Span} **/
         this.sibling = null;
 
-        /** @type {boolean} **/
-        this.isSystemComponent = false;
-
-        /** @type {{name: string, version: string}} **/
-        this.cell = null;
+        this.treeDepth = null;
     }
 
     /**
@@ -86,12 +86,26 @@ class Span {
             if (this.spanId === span.spanId && this.kind === Constants.Span.Kind.CLIENT
                     && span.kind === Constants.Span.Kind.SERVER) { // Siblings
                 isParentOfSpan = true;
-            } else if (this.spanId === span.parentSpanId && this.kind !== Constants.Span.Kind.CLIENT
-                    && span.kind !== Constants.Span.Kind.SERVER) {
+            } else if (this.spanId === span.parentSpanId) {
                 isParentOfSpan = true;
+                if (this.hasSibling()) {
+                    isParentOfSpan = isParentOfSpan && this.kind === Constants.Span.Kind.SERVER;
+                }
+                if (span.hasSibling()) {
+                    isParentOfSpan = isParentOfSpan && span.kind === Constants.Span.Kind.CLIENT;
+                }
             }
         }
         return isParentOfSpan;
+    }
+
+    /**
+     * Check if this span has a sibling.
+     *
+     * @returns {boolean} True if this span has a sibling
+     */
+    hasSibling() {
+        return this.kind === Constants.Span.Kind.CLIENT || this.kind === Constants.Span.Kind.SERVER;
     }
 
     /**
@@ -118,15 +132,29 @@ class Span {
     }
 
     /**
+     * Reset all references to spans.
+     */
+    resetSpanReferences() {
+        this.children.clear();
+        this.parent = null;
+        this.sibling = null;
+        this.treeDepth = 0;
+    }
+
+    /**
      * Walk down the trace tree starting from this span in DFS manner.
      * When a node has multiple children they will be traveled in the order of their start time.
      *
      * @param {function} nodeCallBack The callback to be called in each node.
-     *                                The function should return the data that should be passed down to the next level.
+     *                                The function should return the data that should be passed down to the children.
      * @param {Object} data The initial data to be passed down the trace tree
+     * @param {function} postTraverseCallBack The callback to be called after traversing a node.
      */
-    walk(nodeCallBack, data = {}) {
-        const newData = nodeCallBack(this, data);
+    walk(nodeCallBack, data = {}, postTraverseCallBack = null) {
+        let newData;
+        if (nodeCallBack) {
+            newData = nodeCallBack(this, data);
+        }
 
         // Get the list of children of this node
         const children = [];
@@ -140,9 +168,12 @@ class Span {
         // Sorting by start time
         children.sort((a, b) => a.startTime - b.startTime);
 
-        // Traversing down the tree to sort by tree structure
+        // Traversing down the tree structure
         for (let i = 0; i < children.length; i++) {
-            children[i].walk(nodeCallBack, newData);
+            children[i].walk(nodeCallBack, newData, postTraverseCallBack);
+        }
+        if (postTraverseCallBack) {
+            postTraverseCallBack(this);
         }
     }
 
@@ -153,6 +184,29 @@ class Span {
      */
     getUniqueId() {
         return `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
+    }
+
+    /**
+     * Create a shallow clone.
+     * This will create a clone without the span references.
+     *
+     * @returns {Span} The cloned span
+     */
+    shallowClone() {
+        const span = new Span({
+            traceId: this.traceId,
+            spanId: this.spanId,
+            parentSpanId: this.parentSpanId,
+            serviceName: this.serviceName,
+            operationName: this.operationName,
+            kind: this.kind,
+            startTime: this.startTime,
+            duration: this.duration,
+            tags: {...this.tags}
+        });
+        span.componentType = this.componentType;
+        span.cell = {...this.cell};
+        return span;
     }
 
 }
