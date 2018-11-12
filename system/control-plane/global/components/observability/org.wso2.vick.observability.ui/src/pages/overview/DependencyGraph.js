@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {Graph} from "react-d3-graph";
+import {Graph} from "../../components/dependency-graph/index";
 import PropTypes from "prop-types";
 import React, {Component} from "react";
 

@@ -25,6 +25,7 @@ import {withStyles} from "@material-ui/core/styles";
 import React, {Component} from "react";
 
 const graphConfig = {
+    directed: true,
     automaticRearrangeAfterDropNode: false,
     collapsible: false,
     height: 800,
@@ -39,7 +40,7 @@ const graphConfig = {
     width: 1400,
     d3: {
         alphaTarget: 0.05,
-        gravity: -2000,
+        gravity: -1500,
         linkLength: 100,
         linkStrength: 1
     },
