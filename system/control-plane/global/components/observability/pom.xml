@@ -36,6 +36,7 @@
         <module>org.wso2.vick.tracing.synapse.handler</module>
         <module>org.wso2.vick.observability.ui</module>
         <module>org.wso2.vick.observability.api</module>
+        <module>org.wso2.vick.observability.model.generator</module>
     </modules>
 
 </project>

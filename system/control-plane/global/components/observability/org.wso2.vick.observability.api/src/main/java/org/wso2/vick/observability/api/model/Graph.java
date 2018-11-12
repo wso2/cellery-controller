@@ -17,24 +17,24 @@
 */
 package org.wso2.vick.observability.api.model;
 
-import org.wso2.vick.observability.api.DependencyModelAPI;
+import org.wso2.vick.observability.model.generator.Node;
 
 import java.util.List;
+import java.util.Set;
 
 /**
- * This is the POJO of the whole Graph information that is being returned to by the MSF4J services -
- * {@link DependencyModelAPI}
+ * This is the POJO of the whole Graph information that is being returned to by the MSF4J services - DependencyModelAPI
  */
 public class Graph {
-    private List<GraphNode> nodes;
+    private Set<Node> nodes;
     private List<GraphEdge> edges;
 
-    public Graph(List<GraphNode> nodes, List<GraphEdge> edges) {
+    public Graph(Set<Node> nodes, List<GraphEdge> edges) {
         this.nodes = nodes;
         this.edges = edges;
     }
 
-    public List<GraphNode> getNodes() {
+    public Set<Node> getNodes() {
         return nodes;
     }
 

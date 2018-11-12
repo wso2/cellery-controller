@@ -17,6 +17,7 @@
  */
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import App from "./App";
 import AppBar from "@material-ui/core/AppBar";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
@@ -34,13 +35,13 @@ import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import PropTypes from "prop-types";
 import React from "react";
+import ReactDOM from "react-dom";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import ReactDOM from "react-dom";
-import App from "./App";
+
 
 const drawerWidth = 240;
 
@@ -227,12 +228,12 @@ class AppLayout extends React.Component {
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                                  onClick={() => history.push("/micro-services")}>
+                            onClick={() => history.push("/micro-services")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>
                         <ListItem button key="Distributed Tracing"
-                                  onClick={() => history.push("/tracing")}>
+                            onClick={() => history.push("/tracing")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Distributed Tracing"/>
                         </ListItem>

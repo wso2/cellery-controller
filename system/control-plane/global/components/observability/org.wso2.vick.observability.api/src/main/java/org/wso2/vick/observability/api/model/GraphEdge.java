@@ -17,26 +17,23 @@
 */
 package org.wso2.vick.observability.api.model;
 
-import org.wso2.vick.observability.api.DependencyModelAPI;
-
 /**
- * This is the POJO of the Graph edge information that is being returned to by the MSF4J services -
- * {@link DependencyModelAPI}
+ * This is the POJO of the Graph edge information that is being returned to by the MSF4J services - DependencyModelAPI
  */
 public class GraphEdge {
-    private int from;
-    private int to;
+    private String source;
+    private String target;
 
-    public GraphEdge(int from, int to) {
-        this.from = from;
-        this.to = to;
+    public GraphEdge(String from, String to) {
+        this.source = from;
+        this.target = to;
     }
 
-    public int getFrom() {
-        return from;
+    public String getSource() {
+        return source;
     }
 
-    public int getTo() {
-        return to;
+    public String getTarget() {
+        return target;
     }
 }

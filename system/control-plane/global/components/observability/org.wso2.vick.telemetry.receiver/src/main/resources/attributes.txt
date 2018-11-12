@@ -14,7 +14,7 @@ target.namespace
 target.labels
 target.user
 request.headers
-request.id
+request.index
 request.path
 request.host
 request.method
@@ -100,7 +100,7 @@ x-forwarded-for
 x-forwarded-host
 x-forwarded-proto
 x-http-method-override
-x-request-id
+x-request-index
 x-requested-with
 application/json
 application/xml
@@ -123,7 +123,7 @@ x-b3-traceid
 x-b3-sampled
 x-b3-spanid
 tcp
-connection.id
+connection.index
 connection.received.bytes
 connection.received.bytes_total
 connection.sent.bytes

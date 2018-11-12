@@ -60,7 +60,8 @@
                 "exceptMethods": [
                     "render",
                     "constructor",
-                    "componentDidMount"
+                    "componentDidMount",
+                    "shouldComponentUpdate"
                 ]
             }
         ],

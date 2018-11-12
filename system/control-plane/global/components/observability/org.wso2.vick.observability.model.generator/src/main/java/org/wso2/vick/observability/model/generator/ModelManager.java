@@ -15,7 +15,7 @@
 * under the License.
 *
 */
-package org.wso2.vick.observability.api;
+package org.wso2.vick.observability.model.generator;
 
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
@@ -26,13 +26,13 @@ import java.util.Set;
  * This is the Manager, singleton class which performs the operations in the in memory dependency tree.
  */
 
-public class DependencyModelManager {
-    private static final DependencyModelManager instance = new DependencyModelManager();
+public class ModelManager {
+    private static final ModelManager instance = new ModelManager();
     private static final String EDGE_NAME_CONNECTOR = " ---> ";
 
     private MutableNetwork<Node, String> dependencyGraph;
 
-    private DependencyModelManager() {
+    private ModelManager() {
         this.dependencyGraph = NetworkBuilder.directed()
                 .allowsParallelEdges(true)
                 .expectedNodeCount(100000)
@@ -40,7 +40,7 @@ public class DependencyModelManager {
                 .build();
     }
 
-    public static DependencyModelManager getInstance() {
+    public static ModelManager getInstance() {
         return instance;
     }
 
@@ -48,19 +48,19 @@ public class DependencyModelManager {
         this.dependencyGraph.addNode(node);
     }
 
-    public void addEdge(Node parent, Node child) {
-        this.dependencyGraph.addEdge(parent, child, getEdgeName(parent, child));
+    public void addLink(Node parent, Node child) {
+        this.dependencyGraph.addEdge(parent, child, getLinkName(parent, child));
     }
 
-    private String getEdgeName(Node parent, Node child) {
-        return parent.getName() + EDGE_NAME_CONNECTOR + child.getName();
+    private String getLinkName(Node parent, Node child) {
+        return parent.getId() + EDGE_NAME_CONNECTOR + child.getId();
     }
 
     public Set<Node> getNodes() {
         return this.dependencyGraph.nodes();
     }
 
-    public Set<String> getEdges() {
+    public Set<String> getLinks() {
         return this.dependencyGraph.edges();
     }
 

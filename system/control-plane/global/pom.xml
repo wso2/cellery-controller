@@ -246,6 +246,11 @@
                 <artifactId>guava</artifactId>
                 <version>20.0</version>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.observability.model.generator</artifactId>
+                <version>${vick.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

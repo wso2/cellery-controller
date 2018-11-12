@@ -16,40 +16,42 @@
  * under the License.
  */
 
-import React, {Component} from "react";
-import { Graph } from 'react-d3-graph';
+import {Graph} from "react-d3-graph";
 import PropTypes from "prop-types";
+import React, {Component} from "react";
 
 
 class DependencyGraph extends Component {
 
-    constructor(props){
-        super(props);
-    }
-
     shouldComponentUpdate(nextProps, nextState) {
-        return false;
+        console.log(nextProps);
+        console.log(nextState);
+        return nextProps.reloadGraph;
     }
-
 
     render() {
-        return (
-            <Graph
-                id={this.props.id}
-                data={this.props.data}
-                config={this.props.config}
-                onClickNode={this.props.onClickNode}
-                onRightClickNode={this.props.onRightClickNode}
-                onClickGraph={this.props.onClickGraph}
-                onClickLink={this.props.onClickLink}
-                onRightClickLink={this.props.onRightClickNode}
-                onMouseOverNode={this.props.onMouseOverNode}
-                onMouseOutNode={this.props.onMouseOutNode}
-                onMouseOverLink={this.props.onMouseOverLink}
-                onMouseOutLink={this.props.onMouseOutLink}
-            />
-        );
+        if (this.props.data.nodes) {
+            return (
+                <Graph
+                    id={this.props.id}
+                    data={this.props.data}
+                    config={this.props.config}
+                    onClickNode={this.props.onClickNode}
+                    onRightClickNode={this.props.onRightClickNode}
+                    onClickGraph={this.props.onClickGraph}
+                    onClickLink={this.props.onClickLink}
+                    onRightClickLink={this.props.onRightClickNode}
+                    onMouseOverNode={this.props.onMouseOverNode}
+                    onMouseOutNode={this.props.onMouseOutNode}
+                    onMouseOverLink={this.props.onMouseOverLink}
+                    onMouseOutLink={this.props.onMouseOutLink}
+                />
+            );
+        } else {
+            return (<div>Nothing to show</div>);
+        }
     }
+
 }
 
 DependencyGraph.propTypes = {

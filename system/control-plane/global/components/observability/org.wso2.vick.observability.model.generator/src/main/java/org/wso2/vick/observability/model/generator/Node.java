@@ -15,22 +15,22 @@
 * under the License.
 *
 */
-package org.wso2.vick.observability.api;
+package org.wso2.vick.observability.model.generator;
 
 /**
  * This is the POJO to store the asset related details in the document.
  */
 public class Node implements Comparable {
-    private String name;
+    private String id;
     private String tags;
 
     public Node(String name, String tags) {
-        this.name = name;
+        this.id = name;
         this.tags = tags;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
     public String getTags() {
@@ -42,17 +42,17 @@ public class Node implements Comparable {
             if (this.equals(anotherNode)) {
                 return 0;
             }
-            return name.compareTo(((Node) anotherNode).name);
+            return id.compareTo(((Node) anotherNode).id);
         } else {
             return -1;
         }
     }
 
     public boolean equals(Object object) {
-        return object != null && object instanceof Node && name.equalsIgnoreCase(((Node) object).name);
+        return object != null && object instanceof Node && id.equalsIgnoreCase(((Node) object).id);
     }
 
     public int hashCode() {
-        return name.hashCode();
+        return id.hashCode();
     }
 }
