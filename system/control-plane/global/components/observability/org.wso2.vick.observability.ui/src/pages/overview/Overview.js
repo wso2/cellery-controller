@@ -47,10 +47,10 @@ const graphConfig = {
     node: {
         color: "#d3d3d3",
         fontColor: "black",
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: "normal",
         highlightColor: "red",
-        highlightFontSize: 12,
+        highlightFontSize: 18,
         highlightFontWeight: "bold",
         highlightStrokeColor: "SAME",
         highlightStrokeWidth: 1.5,
@@ -131,8 +131,6 @@ class Overview extends Component {
             .then(res => res.json())
             .then(
                 (result) => {
-                    console.log("result came...");
-                    console.log(result);
                     this.setState({
                         data: {
                             nodes: result.nodes,
@@ -162,19 +160,46 @@ class Overview extends Component {
                     this.setState({error: error});
                 }
             );
-        console.log(this.state.data);
         this.onMouseOverCell = this.onMouseOverCell.bind(this);
         this.onMouseOutCell = this.onMouseOutCell.bind(this);
     }
 
     onMouseOverCell(nodeId) {
+        let outbound = new Set();
+        let inbound = new Set();
+        this.state.data.links.map((element) => {
+            if (element.source === nodeId) {
+                outbound.add(element.target);
+            } else if (element.target === nodeId) {
+                inbound.add(element.source);
+            }
+        });
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
-                topic: `Cell : ${nodeId}`
+                topic: `Cell : ${nodeId}`,
+                content: [
+                    {
+                        key: "Outbound Cells",
+                        setValue: this.popluateArray(outbound)
+                    },
+                    {
+                        key: "Inbound Cells",
+                        setValue: this.popluateArray(inbound)
+                    }
+
+                ]
             },
             reloadGraph: false
         }));
+    }
+
+    popluateArray(setElements) {
+        let arrayElements = [];
+        setElements.forEach((setElement) => {
+            arrayElements.push(setElement);
+        });
+        return arrayElements;
     }
 
     onMouseOutCell(nodeId) {
@@ -185,20 +210,8 @@ class Overview extends Component {
     }
 
 
-
-
     render() {
         const {classes} = this.props;
-        // let nodeName = "Harry";
-        // const data = {
-        //     nodes: [
-        //         {id: nodeName, svg: "green-cell.svg", onMouseOverNode: this.onMouseOverCell},
-        //         {id: "Sally", svg: "yello-cell.svg", onMouseOverNode: this.onMouseOverCell},
-        //         {id: "Alice", onMouseOverNode: this.onMouseOverCell},
-        //         {id: "Sinthuja", onMouseOverNode: this.onMouseOverCell}
-        //     ],
-        //     links: [{source: nodeName, target: "Sally"}, {source: nodeName, target: "Alice"}]
-        // };
         return (
             <div>
                 <DependencyGraph
@@ -221,11 +234,19 @@ class Overview extends Component {
                             {this.state.summary.topic}
                         </Typography>
                         <br/>
+
                         {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
                                                                                  gutterBottom>
                                 {element.key} : {element.value}
+                                {element.setValue &&
+                                (<ul>
+                                    {element.setValue.map((setValueElement) => <li>{setValueElement}</li>)}
+                                </ul>)
+                                }
+
                             </Typography>
                         )}
+
                     </CardContent>
                 </Card>
             </div>
