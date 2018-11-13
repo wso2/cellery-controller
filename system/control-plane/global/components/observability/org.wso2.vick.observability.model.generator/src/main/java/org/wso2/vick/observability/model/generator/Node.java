@@ -22,10 +22,12 @@ package org.wso2.vick.observability.model.generator;
  */
 public class Node implements Comparable {
     private String id;
+    private String serviceName;
     private String tags;
 
-    public Node(String name, String tags) {
+    public Node(String name, String serviceName, String tags) {
         this.id = name;
+        this.serviceName = serviceName;
         this.tags = tags;
     }
 
@@ -35,6 +37,10 @@ public class Node implements Comparable {
 
     public String getTags() {
         return tags;
+    }
+
+    public String getServiceName() {
+        return serviceName;
     }
 
     public int compareTo(Object anotherNode) {

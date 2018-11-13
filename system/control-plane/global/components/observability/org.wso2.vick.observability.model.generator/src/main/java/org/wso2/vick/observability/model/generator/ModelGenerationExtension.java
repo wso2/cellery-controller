@@ -73,35 +73,40 @@ public class ModelGenerationExtension extends StreamProcessor {
         while (complexEventChunk.hasNext()) {
             StreamEvent streamEvent = complexEventChunk.next();
             String componentName = (String) componentNameExecutor.execute(streamEvent);
-            String spanId = (String) spanIdExecutor.execute(streamEvent);
-            String parentId = (String) parentIdExecutor.execute(streamEvent);
-            String serviceName = (String) serviceNameExecutor.execute(streamEvent);
-            String tags = (String) tagExecutor.execute(streamEvent);
-            spanId = spanId.split("-")[0].trim();
-            log.info(parentId + " -----> " + spanId);
-            Node node = new Node(getNodeName(componentName, serviceName), tags);
-            spanIdNodeCache.put(spanId, node);
+            if (!componentName.trim().startsWith("istio")) {
+                String spanId = (String) spanIdExecutor.execute(streamEvent);
+                String parentId = (String) parentIdExecutor.execute(streamEvent);
+                String serviceName = (String) serviceNameExecutor.execute(streamEvent);
+                String tags = (String) tagExecutor.execute(streamEvent);
+                log.info(spanId);
+                spanId = spanId.split("-")[0].trim();
+                Node node = new Node(componentName, serviceName, tags);
+                spanIdNodeCache.put(spanId, node);
 
-            ModelManager.getInstance().addNode(node);
-            if (parentId != null) {
-                Node parentNode = spanIdNodeCache.getIfPresent(parentId);
-                if (parentNode != null) {
-                    ModelManager.getInstance().addLink(parentNode, node);
-                } else {
-                    List<Node> waitingNodes = pendingEdges.putIfAbsent(parentId,
-                            new ArrayList<>(Collections.singletonList(node)));
-                    if (waitingNodes != null) {
-                        waitingNodes.add(node);
+                ModelManager.getInstance().addNode(node);
+                if (parentId != null) {
+                    Node parentNode = spanIdNodeCache.getIfPresent(parentId);
+                    if (parentNode != null) {
+                        ModelManager.getInstance().addLink(parentNode, node, serviceName);
+                    } else {
+                        List<Node> waitingNodes = pendingEdges.putIfAbsent(parentId,
+                                new ArrayList<>(Collections.singletonList(node)));
+                        if (waitingNodes != null) {
+                            waitingNodes.add(node);
+                        }
                     }
                 }
-            }
-            List<Node> pendingChildNodes = this.pendingEdges.get(spanId);
-            if (pendingChildNodes != null) {
-                for (Node child : pendingChildNodes) {
-                    ModelManager.getInstance().addLink(spanIdNodeCache.getIfPresent(spanId), child);
+                List<Node> pendingChildNodes = this.pendingEdges.get(spanId);
+                if (pendingChildNodes != null) {
+                    for (Node child : pendingChildNodes) {
+                        Node parentNode = spanIdNodeCache.getIfPresent(spanId);
+                        if (parentNode != null) {
+                            ModelManager.getInstance().addLink(parentNode, child, parentNode.getServiceName());
+                        }
+                    }
                 }
+                this.pendingEdges.remove(spanId);
             }
-            this.pendingEdges.remove(spanId);
         }
     }
 

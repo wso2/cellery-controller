@@ -41,9 +41,9 @@ public class DependencyModelAPI {
         List<GraphEdge> graphEdges = new ArrayList<>();
 
         for (String edges : ModelManager.getInstance().getLinks()) {
-            String[] parentChildNodeNames = ModelManager.getInstance().
-                    getParentChildNodeNames(edges);
-            GraphEdge edge = new GraphEdge(parentChildNodeNames[0], parentChildNodeNames[1]);
+            String[] edgeNameElements = ModelManager.getInstance().
+                    edgeNameElements(edges);
+            GraphEdge edge = new GraphEdge(edgeNameElements[0], edgeNameElements[1]);
             graphEdges.add(edge);
         }
         return Response.ok().header("Access-Control-Allow-Origin", "*")
