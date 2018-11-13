@@ -282,7 +282,7 @@ function update_control_plane_datasources () {
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-dashboard/conf/deployment.yaml
+        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/status-dashboard/conf/deployment.yaml
     done
 }
 
@@ -479,7 +479,7 @@ control_plane_yaml=(
     "sp-worker/siddhi/tracer-app.siddhi"
     "sp-worker/siddhi/telemetry-app.siddhi"
     "sp-worker/conf/deployment.yaml"
-    "status-dashboard//conf/deployment.yaml"
+    "status-dashboard/conf/deployment.yaml"
     "mysql/dbscripts/init.sql"
 )
 
