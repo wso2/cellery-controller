@@ -41,7 +41,7 @@ const graphConfig = {
     d3: {
         alphaTarget: 0.05,
         gravity: -1500,
-        linkLength: 100,
+        linkLength: 150,
         linkStrength: 1
     },
     node: {
@@ -103,19 +103,19 @@ class Overview extends Component {
                 content: [
                     {
                         key: "Total cells",
-                        value: "11"
+                        value: ""
                     },
                     {
                         key: "Successful cells",
-                        value: "5"
+                        value: ""
                     },
                     {
                         key: "Failed cells",
-                        value: "5"
+                        value: ""
                     },
                     {
                         key: "Warning cells",
-                        value: "1"
+                        value: ""
                     }
                 ]
             },
@@ -131,12 +131,35 @@ class Overview extends Component {
             .then(res => res.json())
             .then(
                 (result) => {
-                    this.setState({
+                    let summaryContent = [
+                        {
+                            key: "Total cells",
+                            value: result.nodes.length
+                        },
+                        {
+                            key: "Successful cells",
+                            value: ""
+                        },
+                        {
+                            key: "Failed cells",
+                            value: ""
+                        },
+                        {
+                            key: "Warning cells",
+                            value: ""
+                        }
+                    ];
+                    this.defaultState.summary.content = summaryContent;
+                    this.setState((prevState) => ({
                         data: {
                             nodes: result.nodes,
                             links: result.edges
+                        },
+                        summary: {
+                            ...prevState.summary,
+                            content: summaryContent
                         }
-                    });
+                    }));
 
                     // TODO: testing...
                     // let nodeName = "Harry";
@@ -234,16 +257,15 @@ class Overview extends Component {
                             {this.state.summary.topic}
                         </Typography>
                         <br/>
-
                         {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
                                                                                  gutterBottom>
                                 {element.key} : {element.value}
-                                {element.setValue &&
+                                {(element.setValue && element.setValue.length > 0) &&
                                 (<ul>
                                     {element.setValue.map((setValueElement) => <li>{setValueElement}</li>)}
                                 </ul>)
                                 }
-
+                                {!(element.value || (element.setValue && element.setValue.length > 0)) ? "None" : ""}
                             </Typography>
                         )}
 
