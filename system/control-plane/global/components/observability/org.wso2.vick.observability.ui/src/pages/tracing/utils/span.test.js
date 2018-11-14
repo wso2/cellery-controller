@@ -16,8 +16,10 @@
  * under the License.
  */
 
-import Constants from "./Constants";
-import Span from "./Span";
+/* eslint max-lines: ["off"] */
+
+import Constants from "./constants";
+import Span from "./span";
 
 describe("Span", () => {
     describe("isSiblingOf()", () => {
@@ -170,7 +172,7 @@ describe("Span", () => {
             }
         });
 
-        it(`should return false if this span and the provided span is of the same type; `
+        it("should return false if this span and the provided span is of the same type; "
                 + `${Constants.Span.Kind.CLIENT}/${Constants.Span.Kind.SERVER}`, () => {
             const clientKindSpanA = new Span({
                 traceId: "trace-a-id",
@@ -391,6 +393,75 @@ describe("Span", () => {
         });
     });
 
+    describe("hasSibling()", () => {
+        it("should return true if a client or server span is provided", () => {
+            const clientSpan = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-a-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const serverSpan = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-b-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.SERVER,
+                startTime: 10010,
+                duration: 50,
+                tags: {}
+            });
+
+            expect(clientSpan.hasSibling()).toBe(true);
+            expect(serverSpan.hasSibling()).toBe(true);
+        });
+
+        it("should return false if a span of kind not equal to client or server is provided", () => {
+            const producerSpan = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-b-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.PRODUCER,
+                startTime: 10010,
+                duration: 50,
+                tags: {}
+            });
+            const consumerSpan = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-a-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CONSUMER,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const unknownTypeSpan = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-b-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                startTime: 10010,
+                duration: 50,
+                tags: {}
+            });
+
+            expect(producerSpan.hasSibling()).toBe(false);
+            expect(consumerSpan.hasSibling()).toBe(false);
+            expect(unknownTypeSpan.hasSibling()).toBe(false);
+        });
+    });
+
     describe("addSpanReference()", () => {
         it("should add as child and return true if the child is provided", () => {
             const span = new Span({
@@ -565,6 +636,188 @@ describe("Span", () => {
         });
     });
 
+    describe("resetSpanReferences()", () => {
+        it("should clear all the span references", () => {
+            const span = new Span({
+                traceId: "trace-id",
+                spanId: "span-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const siblingSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-server-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.SERVER,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const parentSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-parent-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const childSpanA = new Span({
+                traceId: "trace-id",
+                spanId: "span-child-a-id",
+                parentSpanId: "span-id",
+                serviceName: "worker",
+                operationName: "work",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const childSpanB = new Span({
+                traceId: "trace-id",
+                spanId: "span-child-b-id",
+                parentSpanId: "span-id",
+                serviceName: "worker",
+                operationName: "work",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+
+            span.addSpanReference(siblingSpan);
+            span.addSpanReference(parentSpan);
+            span.addSpanReference(childSpanA);
+            span.addSpanReference(childSpanB);
+            span.resetSpanReferences();
+
+            expect(span.children.size).toBe(0);
+            expect(span.parent).toBeNull();
+            expect(span.sibling).toBeNull();
+            expect(span.treeDepth).toBe(0);
+        });
+    });
+
+    describe("walk()", () => {
+        it("should walk down the tree", () => {
+            const parentSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-parent-id",
+                parentSpanId: "span-parent-parent-id",
+                serviceName: "parent-service",
+                operationName: "get-resource",
+                startTime: 10000,
+                duration: 1000,
+                tags: {}
+            });
+            const siblingSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10020,
+                duration: 980,
+                tags: {}
+            });
+            const span = new Span({
+                traceId: "trace-id",
+                spanId: "span-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.SERVER,
+                startTime: 10010,
+                duration: 960,
+                tags: {}
+            });
+            const childSpanA = new Span({
+                traceId: "trace-id",
+                spanId: "span-child--a-id",
+                parentSpanId: "span-id",
+                serviceName: "worker-A",
+                operationName: "work",
+                startTime: 10030,
+                duration: 400,
+                tags: {}
+            });
+            const childSpanB = new Span({
+                traceId: "trace-id",
+                spanId: "span-child-b-id",
+                parentSpanId: "span-id",
+                serviceName: "worker-B",
+                operationName: "work",
+                startTime: 10530,
+                duration: 300,
+                tags: {}
+            });
+
+            const spansList = [span, parentSpan, siblingSpan, childSpanA, childSpanB];
+            for (let i = 0; i < spansList.length; i++) {
+                for (let j = 0; j < spansList.length; j++) {
+                    if (i !== j) {
+                        spansList[i].addSpanReference(spansList[j]);
+                    }
+                }
+            }
+
+            const initialData = {count: 0};
+            const preWalkNodes = [];
+            const postWalkNodes = [];
+            const walkData = [initialData];
+            parentSpan.walk((node, data) => {
+                expect(preWalkNodes).not.toContain(node);
+                expect(postWalkNodes).not.toContain(node);
+                expect(walkData).toContain(data);
+
+                const newData = {
+                    id: node.getUniqueId(),
+                    count: data.count + 1
+                };
+                preWalkNodes.push(node);
+                walkData.push(newData);
+                return newData;
+            }, initialData, (node) => {
+                expect(preWalkNodes).toContain(node);
+                expect(postWalkNodes).not.toContain(node);
+
+                postWalkNodes.push(node);
+            });
+
+            expect(preWalkNodes[0]).toBe(parentSpan);
+            expect(preWalkNodes[1]).toBe(siblingSpan);
+            expect(preWalkNodes[2]).toBe(span);
+            expect(preWalkNodes[3]).toBe(childSpanA);
+            expect(preWalkNodes[4]).toBe(childSpanB);
+
+            expect(postWalkNodes[0]).toBe(childSpanA);
+            expect(postWalkNodes[1]).toBe(childSpanB);
+            expect(postWalkNodes[2]).toBe(span);
+            expect(postWalkNodes[3]).toBe(siblingSpan);
+            expect(postWalkNodes[4]).toBe(parentSpan);
+
+            expect(walkData[0].id).toBeUndefined();
+            expect(walkData[0].count).toBe(0);
+            expect(walkData[1].id).toBe(parentSpan.getUniqueId());
+            expect(walkData[1].count).toBe(1);
+            expect(walkData[2].id).toBe(siblingSpan.getUniqueId());
+            expect(walkData[2].count).toBe(2);
+            expect(walkData[3].id).toBe(span.getUniqueId());
+            expect(walkData[3].count).toBe(3);
+            expect(walkData[4].id).toBe(childSpanA.getUniqueId());
+            expect(walkData[4].count).toBe(4);
+            expect(walkData[5].id).toBe(childSpanB.getUniqueId());
+            expect(walkData[5].count).toBe(4);
+        });
+    });
+
     describe("getUniqueId()", () => {
         it("should return a unique ID across traces", () => {
             const span = new Span({
@@ -614,6 +867,107 @@ describe("Span", () => {
             expect(span.getUniqueId()).not.toBe(siblingSpan.getUniqueId());
             expect(span.getUniqueId()).not.toBe(parentSpan.getUniqueId());
             expect(span.getUniqueId()).not.toBe(differentTraceSpan.getUniqueId());
+        });
+    });
+
+    describe("shallowClone()", () => {
+        it("should return a copy of the initial span without span references", () => {
+            const span = new Span({
+                traceId: "trace-id",
+                spanId: "span-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const siblingSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-server-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "server-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.SERVER,
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const parentSpan = new Span({
+                traceId: "trace-id",
+                spanId: "span-parent-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const childSpanA = new Span({
+                traceId: "trace-id",
+                spanId: "span-child--aid",
+                parentSpanId: "span-id",
+                serviceName: "worker",
+                operationName: "work",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+            const childSpanB = new Span({
+                traceId: "trace-id",
+                spanId: "span-child-b-id",
+                parentSpanId: "span-id",
+                serviceName: "worker",
+                operationName: "work",
+                startTime: 10000,
+                duration: 100,
+                tags: {}
+            });
+
+            span.addSpanReference(siblingSpan);
+            span.addSpanReference(parentSpan);
+            span.addSpanReference(childSpanA);
+            span.addSpanReference(childSpanB);
+            span.componentType = Constants.Span.ComponentType.VICK;
+            span.cell = {
+                name: "cell-a",
+                version: "1.0.0"
+            };
+
+            const clone = span.shallowClone();
+
+            expect(clone).not.toBe(span);
+            expect(clone.traceId).toBe(span.traceId);
+            expect(clone.spanId).toBe(span.spanId);
+            expect(clone.parentSpanId).toBe(span.parentSpanId);
+            expect(clone.serviceName).toBe(span.serviceName);
+            expect(clone.operationName).toBe(span.operationName);
+            expect(clone.kind).toBe(span.kind);
+            expect(clone.startTime).toBe(span.startTime);
+            expect(clone.duration).toBe(span.duration);
+            expect(clone.tags).not.toBe(span.tags);
+            for (const tagKey in clone.tags) {
+                if (clone.tags.hasOwnProperty(tagKey)) {
+                    expect(span.tags[tagKey]).not.toBeNull();
+                    expect(clone.tags[tagKey]).toBe(span.tags[tagKey]);
+                }
+            }
+            for (const tagKey in span.tags) {
+                if (span.tags.hasOwnProperty(tagKey)) {
+                    expect(clone.tags[tagKey]).not.toBeNull();
+                    expect(span.tags[tagKey]).toBe(clone.tags[tagKey]);
+                }
+            }
+            expect(clone.componentType).toBe(span.componentType);
+            expect(clone.cell).not.toBeNull();
+            expect(clone.cell).not.toBe(span.cell);
+            expect(clone.cell.name).toBe(span.cell.name);
+            expect(clone.cell.version).toBe(span.cell.version);
+
+            expect(clone.parent).toBeNull();
+            expect(clone.sibling).toBeNull();
+            expect(clone.children.size).toBe(0);
         });
     });
 });

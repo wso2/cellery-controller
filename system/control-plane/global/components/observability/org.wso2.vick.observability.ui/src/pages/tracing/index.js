@@ -18,13 +18,20 @@
 
 import PropTypes from "prop-types";
 import React from "react";
+import Search from "./Search";
+import View from "./view";
+import {Redirect, Route, Switch, withRouter} from "react-router-dom";
 
-const TracingTimeline = ({match}) => (
-    <div>Hello World Tracing Timeline for {match.params.traceId}!</div>
+const Tracing = ({match}) => (
+    <Switch>
+        <Route exact path={`${match.url}/search`} component={Search}/>
+        <Route exact path={`${match.url}/id/:traceId`} component={View}/>
+        <Redirect from={`${match.url}/`} to={`${match.url}/search`}/>
+    </Switch>
 );
 
-TracingTimeline.propTypes = {
+Tracing.propTypes = {
     match: PropTypes.object.isRequired
 };
 
-export default TracingTimeline;
+export default withRouter(Tracing);

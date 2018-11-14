@@ -109,16 +109,17 @@ class AppLayout extends React.Component {
 
     constructor() {
         super();
+
         this.handleUserInfoMenu = this.handleUserInfoMenu.bind(this);
         this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
         this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
         this.handleDrawerClose = this.handleDrawerClose.bind(this);
-    }
 
-    state = {
-        open: false,
-        userInfo: null
-    };
+        this.state = {
+            open: false,
+            userInfo: null
+        };
+    }
 
     handleUserInfoMenu = (event) => {
         this.setState({userInfo: event.currentTarget});
@@ -244,7 +245,7 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    username: PropTypes.object.isRequired,
+    username: PropTypes.string.isRequired,
     history: PropTypes.any.isRequired
 };
 

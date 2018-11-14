@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -17,10 +16,32 @@
  * under the License.
  */
 
-import React from "react";
+/**
+ * Constants to be used by Constants UI
+ */
+const Constants = {
+    Span: {
+        Kind: {
+            CLIENT: "CLIENT",
+            SERVER: "SERVER",
+            PRODUCER: "PRODUCER",
+            CONSUMER: "CONSUMER"
+        },
+        ComponentType: {
+            VICK: "VICK",
+            ISTIO: "Istio",
+            USER: "User"
+        }
+    },
+    VICK: {
+        Cell: {
+            GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.*)_(\d+_\d+_\d+)_.*$/
+        },
+        System: {
+            ISTIO_MIXER_NAME: "istio-mixer",
+            GLOBAL_GATEWAY_NAME: "global-gateway"
+        }
+    }
+};
 
-const TracingSearch = () => (
-    <div>Hello World Tracing Search!</div>
-);
-
-export default TracingSearch;
+export default Constants;

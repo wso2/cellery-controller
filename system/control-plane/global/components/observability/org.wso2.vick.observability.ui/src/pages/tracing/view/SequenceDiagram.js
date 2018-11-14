@@ -16,27 +16,10 @@
  * under the License.
  */
 
-/**
- * Constants to be used by Constants UI
- */
-const Constants = {
-    Span: {
-        Kind: {
-            CLIENT: "CLIENT",
-            SERVER: "SERVER",
-            PRODUCER: "PRODUCER",
-            CONSUMER: "CONSUMER"
-        }
-    },
-    VICK: {
-        Cell: {
-            GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.*)_(\d+_\d+_\d+)_.*$/
-        },
-        System: {
-            ISTIO_MIXER_NAME: "istio-mixer",
-            GLOBAL_GATEWAY_NAME: "global-gateway"
-        }
-    }
-};
+import React from "react";
 
-export default Constants;
+const SequenceDiagram = () => (
+    <div>Sequence Diagram</div>
+);
+
+export default SequenceDiagram;
