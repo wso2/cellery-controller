@@ -18,6 +18,7 @@
 
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
+import {ColorProvider} from "./pages/color";
 import MicroService from "./pages/MicroService";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
@@ -39,23 +40,25 @@ class App extends React.Component {
         const user = this.props.username ? this.props.username : localStorage.getItem("username");
         return (
             <MuiThemeProvider theme={theme}>
-                <BrowserRouter>
-                    {
-                        user
-                            ? (
-                                <AppLayout username={user}>
-                                    <Switch>
-                                        <Route exact path="/" component={Overview}/>
-                                        <Route exact path="/cells" component={Cell}/>
-                                        <Route exact path="/micro-services" component={MicroService}/>
-                                        <Route path="/tracing" component={Tracing}/>
-                                        <Redirect from="/*" to="/"/>
-                                    </Switch>
-                                </AppLayout>
-                            )
-                            : <SignIn/>
-                    }
-                </BrowserRouter>
+                <ColorProvider>
+                    <BrowserRouter>
+                        {
+                            user
+                                ? (
+                                    <AppLayout username={user}>
+                                        <Switch>
+                                            <Route exact path="/" component={Overview}/>
+                                            <Route exact path="/cells" component={Cell}/>
+                                            <Route exact path="/micro-services" component={MicroService}/>
+                                            <Route path="/tracing" component={Tracing}/>
+                                            <Redirect from="/*" to="/"/>
+                                        </Switch>
+                                    </AppLayout>
+                                )
+                                : <SignIn/>
+                        }
+                    </BrowserRouter>
+                </ColorProvider>
             </MuiThemeProvider>
         );
     }

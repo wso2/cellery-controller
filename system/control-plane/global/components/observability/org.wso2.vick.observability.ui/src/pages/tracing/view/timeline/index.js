@@ -81,7 +81,7 @@ class Timeline extends React.Component {
 
             // Apply service type filter
             isSelected = this.state.selectedServiceTypes.includes(span.componentType)
-                || span.componentType === Constants.Span.ComponentType.USER;
+                || span.componentType === Constants.Span.ComponentType.MICROSERVICE;
 
             if (isSelected) {
                 filteredSpans.push(span);
@@ -101,7 +101,7 @@ class Timeline extends React.Component {
         for (const filterName in Constants.Span.ComponentType) {
             if (Constants.Span.ComponentType.hasOwnProperty(filterName)) {
                 const serviceType = Constants.Span.ComponentType[filterName];
-                if (serviceType !== Constants.Span.ComponentType.USER) {
+                if (serviceType !== Constants.Span.ComponentType.MICROSERVICE) {
                     serviceTypes.push(serviceType);
                 }
             }
@@ -109,10 +109,10 @@ class Timeline extends React.Component {
 
         return (
             <div>
-                <Grid container justify={"flex-end"}>
+                <Grid container justify={"flex-start"}>
                     <Grid item xs={4}>
                         <FormControl className={classNames(classes.formControl)}>
-                            <InputLabel htmlFor="select-multiple-checkbox">Service Type</InputLabel>
+                            <InputLabel htmlFor="select-multiple-checkbox">Type</InputLabel>
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}
                                 input={<Input id="select-multiple-checkbox"/>}
@@ -137,6 +137,11 @@ class Timeline extends React.Component {
                                         );
                                     })
                                 }
+                                <MenuItem key={Constants.Span.ComponentType.MICROSERVICE}
+                                    value={Constants.Span.ComponentType.MICROSERVICE} style={{pointerEvents: "none"}}>
+                                    <Checkbox checked={true} disabled={true}/>
+                                    <ListItemText primary={Constants.Span.ComponentType.MICROSERVICE}/>
+                                </MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>

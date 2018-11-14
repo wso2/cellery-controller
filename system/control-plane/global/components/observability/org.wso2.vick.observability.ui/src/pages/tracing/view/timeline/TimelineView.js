@@ -22,6 +22,8 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
+import ColorGenerator from "../../../color/colorGenerator";
+import Constants from "../../utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -35,6 +37,7 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import interact from "interactjs";
 import vis from "vis";
+import {withColorGenerator} from "../../../color";
 import {withStyles} from "@material-ui/core";
 
 const styles = () => ({
@@ -173,13 +176,15 @@ class TimelineView extends React.Component {
     }
 
     calculateTrace() {
-        this.trace.tree = TracingUtils.buildTree(this.props.spans);
+        const {spans, colorGenerator} = this.props;
+        this.trace.tree = TracingUtils.buildTree(spans);
         this.trace.spans = TracingUtils.getOrderedList(this.trace.tree);
 
         // Finding the maximum tree height
         this.trace.treeHeight = 0;
         let minLimit = Number.MAX_VALUE;
         let maxLimit = 0;
+        const cellNames = [];
         this.trace.tree.walk((span) => {
             if (span.treeDepth > this.trace.treeHeight) {
                 this.trace.treeHeight = span.treeDepth;
@@ -190,14 +195,18 @@ class TimelineView extends React.Component {
             if (span.startTime + span.duration > maxLimit) {
                 maxLimit = span.startTime + span.duration;
             }
+            if (span.cell.name && !cellNames.includes(span.cell.name)) {
+                cellNames.push(span.cell.name);
+            }
         });
         this.trace.treeHeight += 1;
         this.trace.minTime = minLimit;
         this.trace.maxTime = maxLimit;
+        colorGenerator.addKeys(cellNames);
     }
 
     drawTimeline() {
-        const {classes} = this.props;
+        const {classes, colorGenerator} = this.props;
         const self = this;
 
         // Un-selecting the spans
@@ -268,6 +277,24 @@ class TimelineView extends React.Component {
                 let content = <span>{item.content}</span>;
                 if (item.itemType === TimelineView.Constants.ItemType.SPAN) {
                     content = <span>{item.span.duration} ms</span>;
+
+                    // Finding the proper color for this item
+                    let colorKey = item.span.cell.name;
+                    if (!colorKey) {
+                        if (item.span.componentType === Constants.Span.ComponentType.VICK) {
+                            colorKey = ColorGenerator.Constants.VICK;
+                        } else if (item.span.componentType === Constants.Span.ComponentType.ISTIO) {
+                            colorKey = ColorGenerator.Constants.ISTIO;
+                        } else {
+                            colorKey = item.span.componentType;
+                        }
+                    }
+                    const color = colorGenerator.getColor(colorKey);
+
+                    // Applying the color onto the item
+                    const parent = element.parentElement.parentElement;
+                    parent.style.backgroundColor = color;
+                    parent.style.borderColor = color;
                 } else if (item.itemType === TimelineView.Constants.ItemType.SPAN_DESCRIPTION) {
                     const rows = [];
                     for (const key in item.span.tags) {
@@ -525,7 +552,8 @@ TimelineView.propTypes = {
     classes: PropTypes.any.isRequired,
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
-    ).isRequired
+    ).isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
 TimelineView.Constants = {
@@ -536,4 +564,4 @@ TimelineView.Constants = {
     }
 };
 
-export default withStyles(styles, {withTheme: true})(TimelineView);
+export default withStyles(styles, {withTheme: true})(withColorGenerator(TimelineView));
