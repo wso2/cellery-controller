@@ -15,8 +15,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
+import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import DependencyGraph from "./DependencyGraph";
 import PropTypes from "prop-types";
@@ -31,7 +32,7 @@ const graphConfig = {
     height: 800,
     highlightDegree: 1,
     highlightOpacity: 0.2,
-    linkHighlightBehavior: true,
+    linkHighlightBehavior: false,
     maxZoom: 8,
     minZoom: 0.1,
     nodeHighlightBehavior: true,
@@ -86,11 +87,16 @@ const styles = {
 
 const cardCssStyle = {
     width: 300,
-    height: 300,
+    height: 500,
     position: "fixed",
     bottom: 0,
     right: 0,
     top: 70
+};
+
+const buttonStyle = {
+    left: 170,
+    bottom: 0,
 };
 
 class Overview extends Component {
@@ -119,6 +125,7 @@ class Overview extends Component {
                     }
                 ]
             },
+            isOverallSummary: true,
             data: {
                 nodes: null,
                 links: null,
@@ -160,24 +167,6 @@ class Overview extends Component {
                             content: summaryContent
                         }
                     }));
-
-                    // TODO: testing...
-                    // let nodeName = "Harry";
-                    // const results = {
-                    //     nodes: [
-                    //         {id: nodeName, svg: "green-cell.svg", onMouseOverNode: this.onMouseOverCell},
-                    //         {id: "Sally", svg: "yello-cell.svg", onMouseOverNode: this.onMouseOverCell},
-                    //         {id: "Alice", onMouseOverNode: this.onMouseOverCell},
-                    //         {id: "Sinthuja", onMouseOverNode: this.onMouseOverCell}
-                    //     ],
-                    //     links: [{source: nodeName, target: "Sally"}, {source: nodeName, target: "Alice"}]
-                    // };
-                    // this.setState({
-                    //     data: {
-                    //         nodes: results.nodes,
-                    //         links: results.links
-                    //     }
-                    // });
                 },
                 (error) => {
                     this.setState({error: error});
@@ -185,6 +174,7 @@ class Overview extends Component {
             );
         this.onClickCell = this.onClickCell.bind(this);
         this.onClickGraph = this.onClickGraph.bind(this);
+        this.popluateArray = this.popluateArray.bind(this);
     }
 
     onClickCell(nodeId) {
@@ -213,7 +203,8 @@ class Overview extends Component {
 
                 ]
             },
-            reloadGraph: false
+            reloadGraph: false,
+            isOverallSummary: false
         }));
     }
 
@@ -228,7 +219,8 @@ class Overview extends Component {
     onClickGraph() {
         this.setState({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
-            reloadGraph: true
+            reloadGraph: true,
+            isOverallSummary: true
         });
     }
 
@@ -270,6 +262,12 @@ class Overview extends Component {
                         )}
 
                     </CardContent>
+                    {(!this.state.isOverallSummary) && (
+                        <CardActions>
+                            <Button size="small" variant="contained" color="primary" style={buttonStyle}>More
+                                Details</Button>
+                        </CardActions>
+                    )}
                 </Card>
             </div>
         );
