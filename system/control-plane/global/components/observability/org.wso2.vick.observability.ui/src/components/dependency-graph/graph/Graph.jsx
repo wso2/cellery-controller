@@ -219,7 +219,7 @@ export default class Graph extends React.Component {
     onMouseOverNode = id => {
         this.props.onMouseOverNode && this.props.onMouseOverNode(id);
 
-        this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(id, true);
+        // this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(id, true);
     };
 
     /**
@@ -230,7 +230,7 @@ export default class Graph extends React.Component {
     onMouseOutNode = id => {
         this.props.onMouseOutNode && this.props.onMouseOutNode(id);
 
-        this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(id, false);
+        // this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(id, false);
     };
 
     /**
@@ -404,6 +404,7 @@ export default class Graph extends React.Component {
             );
         } else {
             this.props.onClickNode && this.props.onClickNode(clickedNodeId);
+            this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(clickedNodeId, true);
         }
     };
 
@@ -421,6 +422,7 @@ export default class Graph extends React.Component {
             e.target.attributes.name.value === `svg-container-${this.state.id}`
         ) {
             this.props.onClickGraph && this.props.onClickGraph();
+            this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(this.state.highlightedNode, false);
         }
     };
 

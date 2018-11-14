@@ -61,7 +61,7 @@ const graphConfig = {
         size: 600,
         strokeColor: "green",
         strokeWidth: 2,
-        svg: "red-cell.svg"
+        svg: "green-cell.svg"
     },
     link: {
         color: "#d3d3d3",
@@ -138,15 +138,15 @@ class Overview extends Component {
                         },
                         {
                             key: "Successful cells",
-                            value: ""
+                            value: result.nodes.length
                         },
                         {
                             key: "Failed cells",
-                            value: ""
+                            value: "0"
                         },
                         {
                             key: "Warning cells",
-                            value: ""
+                            value: "0"
                         }
                     ];
                     this.defaultState.summary.content = summaryContent;
@@ -183,11 +183,11 @@ class Overview extends Component {
                     this.setState({error: error});
                 }
             );
-        this.onMouseOverCell = this.onMouseOverCell.bind(this);
-        this.onMouseOutCell = this.onMouseOutCell.bind(this);
+        this.onClickCell = this.onClickCell.bind(this);
+        this.onClickGraph = this.onClickGraph.bind(this);
     }
 
-    onMouseOverCell(nodeId) {
+    onClickCell(nodeId) {
         let outbound = new Set();
         let inbound = new Set();
         this.state.data.links.map((element) => {
@@ -225,7 +225,7 @@ class Overview extends Component {
         return arrayElements;
     }
 
-    onMouseOutCell(nodeId) {
+    onClickGraph() {
         this.setState({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
             reloadGraph: true
@@ -241,9 +241,9 @@ class Overview extends Component {
                     id="graph-id"
                     data={this.state.data}
                     config={graphConfig}
-                    onMouseOverNode={this.onMouseOverCell}
-                    onMouseOutNode={this.onMouseOutCell}
                     reloadGraph={this.state.reloadGraph}
+                    onClickNode={this.onClickCell}
+                    onClickGraph={this.onClickGraph}
                 />
                 <Card className={classes.card} style={cardCssStyle} transformOrigin={{
                     vertical: "top",
