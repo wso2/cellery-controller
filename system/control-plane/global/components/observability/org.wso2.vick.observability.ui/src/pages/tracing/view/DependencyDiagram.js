@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -17,28 +16,10 @@
  * under the License.
  */
 
-import Button from "@material-ui/core/Button";
-import PropTypes from "prop-types";
 import React from "react";
-import {withRouter} from "react-router-dom";
 
-const Search = (props) => {
-    const {history} = props;
-    const traceId = "asfedsn3jff-sdfnskjenvf";
-    return (
-        <div>
-            <Button variant="contained" color="primary"
-                onClick={() => history.push({pathname: `./id/${traceId}`})}>
-                Search
-            </Button>
-        </div>
-    );
-};
+const DependencyDiagram = () => (
+    <div>Sequence Diagram</div>
+);
 
-Search.propTypes = {
-    history: PropTypes.shape({
-        push: PropTypes.func.isRequired
-    }).isRequired
-};
-
-export default withRouter(Search);
+export default DependencyDiagram;

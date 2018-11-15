@@ -24,8 +24,8 @@ import {Redirect, Route, Switch, withRouter} from "react-router-dom";
 
 const Tracing = ({match}) => (
     <Switch>
-        <Route exact path={`${match.url}/search`} component={Search}/>
-        <Route exact path={`${match.url}/id/:traceId`} component={View}/>
+        <Route exact path={`${match.path}/search`} component={Search}/>
+        <Route exact path={`${match.path}/id/:traceId`} component={View}/>
         <Redirect from={`${match.url}/`} to={`${match.url}/search`}/>
     </Switch>
 );
