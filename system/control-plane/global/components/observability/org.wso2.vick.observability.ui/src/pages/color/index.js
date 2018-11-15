@@ -49,31 +49,6 @@ ColorProvider.propTypes = {
 };
 
 /**
- * Color consumer used to retrieve the color generator instance.
- *
- * @param {Object} props Props passed into the color consumer
- * @returns {React.Component} Color Consumer React Component
- * @constructor
- */
-class ColorConsumer extends React.Component {
-
-    render() {
-        const {Component} = this.props;
-
-        return (
-            <Component colorGenerator={this.context} {...this.props}/>
-        );
-    }
-
-}
-
-ColorConsumer.contextType = ColorContext;
-
-ColorConsumer.propTypes = {
-    Component: PropTypes.any.isRequired
-};
-
-/**
  * Higher Order Component for accessing the Color Generator.
  *
  * @param {React.Component} Component component which needs access to the color generator.
@@ -82,7 +57,11 @@ ColorConsumer.propTypes = {
 const withColorGenerator = (Component) => class ColorGeneratorProvider extends React.Component {
 
     render() {
-        return (<ColorConsumer Component={Component} {...this.props}/>);
+        return (
+            <ColorContext.Consumer>
+                {(colorGenerator) => <Component colorGenerator={colorGenerator} {...this.props}/>}
+            </ColorContext.Consumer>
+        );
     }
 
 };

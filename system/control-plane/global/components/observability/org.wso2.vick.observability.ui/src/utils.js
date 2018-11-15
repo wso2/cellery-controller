@@ -21,7 +21,6 @@
  */
 class Utils {
 
-
     /**
      * Parse the query param string and get an object of key value pairs.
      *
@@ -30,7 +29,7 @@ class Utils {
      */
     static parseQueryParams(queryParamString) {
         const queryParameters = {};
-        if (queryParameters) {
+        if (queryParamString) {
             let query = queryParamString;
             if (queryParamString.startsWith("?")) {
                 query = queryParamString.substr(1);

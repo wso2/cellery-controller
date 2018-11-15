@@ -35,8 +35,7 @@ import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
     formControl: {
-        margin: theme.spacing.unit,
-        width: "100%"
+        margin: theme.spacing.unit
     }
 });
 
@@ -109,9 +108,9 @@ class Timeline extends React.Component {
 
         return (
             <div>
-                <Grid container justify={"flex-start"}>
-                    <Grid item xs={4}>
-                        <FormControl className={classNames(classes.formControl)}>
+                <Grid container justify={"flex-start"} spacing={24}>
+                    <Grid item xs={3}>
+                        <FormControl className={classNames(classes.formControl)} fullWidth={true}>
                             <InputLabel htmlFor="select-multiple-checkbox">Type</InputLabel>
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}

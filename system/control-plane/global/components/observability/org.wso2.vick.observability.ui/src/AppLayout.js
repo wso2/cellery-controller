@@ -220,7 +220,7 @@ class AppLayout extends React.Component {
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                            onClick={() => history.push("/micro-services")}>
+                            onClick={() => history.push("/microservices")}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>

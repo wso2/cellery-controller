@@ -19,7 +19,7 @@
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
 import {ColorProvider} from "./pages/color";
-import MicroService from "./pages/MicroService";
+import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
 import React from "react";
@@ -49,7 +49,7 @@ class App extends React.Component {
                                         <Switch>
                                             <Route exact path="/" component={Overview}/>
                                             <Route exact path="/cells" component={Cell}/>
-                                            <Route exact path="/micro-services" component={MicroService}/>
+                                            <Route exact path="/microservices" component={Microservice}/>
                                             <Route path="/tracing" component={Tracing}/>
                                             <Redirect from="/*" to="/"/>
                                         </Switch>
