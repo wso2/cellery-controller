@@ -37,10 +37,10 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import interact from "interactjs";
 import vis from "vis";
-import {withColorGenerator} from "../../../color";
+import {withColor} from "../../../color";
 import {withStyles} from "@material-ui/core";
 
-const styles = () => ({
+const styles = (theme) => ({
     spanLabelContainer: {
         width: 500,
         whiteSpace: "nowrap",
@@ -74,14 +74,14 @@ const styles = () => ({
         height: "100%",
         userSelect: "none"
     },
-    spanDurationLabel: {
-        maxHeight: null
-    },
     spanDescriptionContent: {
         margin: "5px 12px 5px 7px"
     },
     overallDescriptionContainer: {
-        padding: "30px 0 20px 0"
+        paddingTop: theme.spacing.unit * 3,
+        paddingRight: 0,
+        paddingBottom: theme.spacing.unit * 2,
+        paddingLeft: 0
     },
     overallDescriptionKey: {
         fontWeight: 500,
@@ -94,7 +94,8 @@ const styles = () => ({
     overallDescriptionSeparator: {
         borderStyle: "solid",
         borderWidth: "0 0 0 1px",
-        margin: "0 10px"
+        marginLeft: theme.spacing.unit * 2,
+        marginRight: theme.spacing.unit * 2
     }
 });
 
@@ -564,4 +565,4 @@ TimelineView.Constants = {
     }
 };
 
-export default withStyles(styles, {withTheme: true})(withColorGenerator(TimelineView));
+export default withStyles(styles, {withTheme: true})(withColor(TimelineView));

@@ -37,6 +37,7 @@ import React from "react";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
+import {withConfig} from "./pages/config";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 
@@ -138,7 +139,7 @@ class AppLayout extends React.Component {
     };
 
     render() {
-        const {classes, history, children, theme, username} = this.props;
+        const {classes, history, children, theme, config} = this.props;
         const {open, userInfo} = this.state;
         const userInfoOpen = Boolean(userInfo);
         return (
@@ -164,7 +165,7 @@ class AppLayout extends React.Component {
                         <Typography variant="h6" color="inherit" className={classes.grow}>
                             WSO2 VICK Observability
                         </Typography>
-                        {username && (
+                        {config.username && (
                             <div>
                                 <IconButton
                                     aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
@@ -189,7 +190,7 @@ class AppLayout extends React.Component {
                                     onClose={this.handleUserInfoClose}
                                 >
                                     {/* TODO: Implement user login */}
-                                    <MenuItem onClick={this.handleUserInfoClose}>Profile - {username}</MenuItem>
+                                    <MenuItem onClick={this.handleUserInfoClose}>Profile - {config.username}</MenuItem>
                                     <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
                                 </Menu>
                             </div>
@@ -245,8 +246,8 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    username: PropTypes.string.isRequired,
+    config: PropTypes.any.isRequired,
     history: PropTypes.any.isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(AppLayout));
+export default withStyles(styles, {withTheme: true})(withRouter(withConfig(AppLayout)));

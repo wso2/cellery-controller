@@ -16,54 +16,54 @@
  * under the License.
  */
 
-import ColorGenerator from "./colorGenerator";
 import PropTypes from "prop-types";
 import React from "react";
 
 // Creating a context that can be accessed
-const ColorContext = React.createContext(null);
+const ConfigContext = React.createContext({});
 
 /**
- * Color Provider to provide the color generator.
+ * Config Provider to provide the configuration.
  *
- * @param {Object} props Props passed into the color provider
+ * @param {Object} props Props passed into the config provider
  * @returns {React.Component} Color Provider React Component
  * @constructor
  */
-class ColorProvider extends React.Component {
+class ConfigProvider extends React.Component {
 
     render() {
-        this.colorGenerator = new ColorGenerator();
+        const {children, config} = this.props;
 
         return (
-            <ColorContext.Provider value={this.colorGenerator}>
-                {this.props.children}
-            </ColorContext.Provider>
+            <ConfigContext.Provider value={config}>
+                {children}
+            </ConfigContext.Provider>
         );
     }
 
 }
 
-ColorProvider.propTypes = {
-    children: PropTypes.any.isRequired
+ConfigProvider.propTypes = {
+    children: PropTypes.any.isRequired,
+    config: PropTypes.any.isRequired
 };
 
 /**
  * Higher Order Component for accessing the Color Generator.
  *
- * @param {React.Component} Component component which needs access to the color generator.
- * @returns {Object} The new HOC with access to the color generator.
+ * @param {React.Component} Component component which needs access to the configuration.
+ * @returns {Object} The new HOC with access to the configuration.
  */
-const withColor = (Component) => class ColorGeneratorProvider extends React.Component {
+const withConfig = (Component) => class ColorGeneratorProvider extends React.Component {
 
     render() {
         return (
-            <ColorContext.Consumer>
-                {(colorGenerator) => <Component colorGenerator={colorGenerator} {...this.props}/>}
-            </ColorContext.Consumer>
+            <ConfigContext.Consumer>
+                {(config) => <Component config={config} {...this.props}/>}
+            </ConfigContext.Consumer>
         );
     }
 
 };
 
-export {withColor, ColorProvider};
+export {withConfig, ConfigProvider};

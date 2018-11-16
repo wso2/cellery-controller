@@ -19,6 +19,7 @@
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
 import {ColorProvider} from "./pages/color";
+import {ConfigProvider} from "./pages/config";
 import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
@@ -37,27 +38,33 @@ const theme = createMuiTheme({
 class App extends React.Component {
 
     render() {
-        const user = this.props.username ? this.props.username : localStorage.getItem("username");
+        const configuration = {
+            username: this.props.username ? this.props.username : localStorage.getItem("username"),
+            backendURL: "wso2sp-worker.vick-system:9000"
+        };
+
         return (
             <MuiThemeProvider theme={theme}>
                 <ColorProvider>
-                    <BrowserRouter>
-                        {
-                            user
-                                ? (
-                                    <AppLayout username={user}>
-                                        <Switch>
-                                            <Route exact path="/" component={Overview}/>
-                                            <Route exact path="/cells" component={Cell}/>
-                                            <Route exact path="/microservices" component={Microservice}/>
-                                            <Route path="/tracing" component={Tracing}/>
-                                            <Redirect from="/*" to="/"/>
-                                        </Switch>
-                                    </AppLayout>
-                                )
-                                : <SignIn/>
-                        }
-                    </BrowserRouter>
+                    <ConfigProvider config={configuration}>
+                        <BrowserRouter>
+                            {
+                                configuration.username
+                                    ? (
+                                        <AppLayout>
+                                            <Switch>
+                                                <Route exact path="/" component={Overview}/>
+                                                <Route exact path="/cells" component={Cell}/>
+                                                <Route exact path="/microservices" component={Microservice}/>
+                                                <Route path="/tracing" component={Tracing}/>
+                                                <Redirect from="/*" to="/"/>
+                                            </Switch>
+                                        </AppLayout>
+                                    )
+                                    : <SignIn/>
+                            }
+                        </BrowserRouter>
+                    </ConfigProvider>
                 </ColorProvider>
             </MuiThemeProvider>
         );
