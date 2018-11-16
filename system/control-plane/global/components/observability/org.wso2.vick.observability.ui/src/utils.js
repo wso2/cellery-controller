@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import axios from "axios";
+
 /**
  * Common utilities.
  */
@@ -43,6 +45,42 @@ class Utils {
             }
         }
         return queryParameters;
+    }
+
+    /**
+     * Call the backend API.
+     *
+     * @param {Object} config Axios configuration object
+     * @returns {Promise} A promise for the API call
+     */
+    static callBackendAPI(config) {
+        return new Promise((resolve, reject) => {
+            if (!config.headers) {
+                config.headers = {};
+            }
+            config.headers.Accept = "application/json";
+
+            axios(config)
+                .then((response) => {
+                    if (response.status >= 200 && response.status < 400) {
+                        resolve(response.data);
+                    } else {
+                        reject(response.data);
+                    }
+                })
+                .catch((error) => {
+                    if (error.response) {
+                        const errorResponse = error.response;
+                        if (errorResponse.status === 401) {
+                            // Redirect to home page since the user is not authorised
+                            window.location.href = `${window.location.origin}`;
+                        } else {
+                            reject(errorResponse.data);
+                        }
+                    }
+                    reject(error);
+                });
+        });
     }
 
 }

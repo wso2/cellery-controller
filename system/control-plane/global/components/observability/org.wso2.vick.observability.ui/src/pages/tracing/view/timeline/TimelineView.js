@@ -22,7 +22,7 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import ColorGenerator from "../../../color/colorGenerator";
+import ColorGenerator from "../../../utils/color/colorGenerator";
 import Constants from "../../utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
@@ -37,7 +37,7 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import interact from "interactjs";
 import vis from "vis";
-import {withColor} from "../../../color";
+import {withColor} from "../../../utils/color";
 import {withStyles} from "@material-ui/core";
 
 const styles = (theme) => ({
@@ -283,9 +283,9 @@ class TimelineView extends React.Component {
                     let colorKey = item.span.cell.name;
                     if (!colorKey) {
                         if (item.span.componentType === Constants.Span.ComponentType.VICK) {
-                            colorKey = ColorGenerator.Constants.VICK;
+                            colorKey = colorGenerator.Constants.VICK;
                         } else if (item.span.componentType === Constants.Span.ComponentType.ISTIO) {
-                            colorKey = ColorGenerator.Constants.ISTIO;
+                            colorKey = colorGenerator.Constants.ISTIO;
                         } else {
                             colorKey = item.span.componentType;
                         }

@@ -86,18 +86,25 @@ class Search extends React.Component {
             },
             traces: []
         });
+        this.loadCellData();
 
         this.getChangeHandler = this.getChangeHandler.bind(this);
-        this.onSearchButtonClick = this.onSearchButtonClick.bind(this);
+        this.search = this.search.bind(this);
         this.loadTracePage = this.loadTracePage.bind(this);
     }
 
     componentDidMount() {
-        this.search();
-    }
-
-    componentDidUpdate() {
-        this.search();
+        const {location} = this.props;
+        const queryParams = Utils.parseQueryParams(location.search);
+        let isQueryParamsEmpty = true;
+        for (const key in queryParams) {
+            if (queryParams.hasOwnProperty(key) && queryParams[key]) {
+                isQueryParamsEmpty = false;
+            }
+        }
+        if (!isQueryParamsEmpty) {
+            this.search();
+        }
     }
 
     render() {
@@ -212,7 +219,7 @@ class Search extends React.Component {
                         </Grid>
                     </Grid>
                 </Grid>
-                <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}
+                <Button variant="contained" color="primary" onClick={this.search}
                     className={classNames(classes.searchButton)}>Search</Button>
                 {
                     traces.length > 0
@@ -225,85 +232,15 @@ class Search extends React.Component {
     }
 
     /**
-     * Get the on change handler for a particular state filter attribute.
-     *
-     * @param {string} name The name of the filter
-     * @returns {Function} The on change handler
-     */
-    getChangeHandler(name) {
-        return (event) => {
-            const newState = Search.generateValidState({
-                ...this.state,
-                filter: {
-                    ...this.state.filter,
-                    [name]: event.target.value
-                }
-            });
-            this.setState(newState);
-        };
-    }
-
-    /**
-     * Redirect the current page to trigger a search.
-     */
-    onSearchButtonClick() {
-        const {
-            cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
-        } = this.state.filter;
-        const {history, match} = this.props;
-
-        // Build search object
-        const search = {};
-        const addSearchParam = (condition, key, value) => {
-            if (condition) {
-                search[key] = value;
-            }
-        };
-        addSearchParam(cell && cell !== Search.Constants.ALL_VALUE, "cell", cell);
-        addSearchParam(microservice && microservice !== Search.Constants.ALL_VALUE, "microservice", microservice);
-        addSearchParam(operation && operation !== Search.Constants.ALL_VALUE, "operation", operation);
-        addSearchParam(tags, "tags", tags);
-        addSearchParam(minDuration, "minDuration", minDuration * minDurationMultiplier);
-        addSearchParam(maxDuration, "maxDuration", maxDuration * maxDurationMultiplier);
-
-        // Building the search query string
-        const searchParams = [];
-        for (const searchKey in search) {
-            if (search.hasOwnProperty(searchKey)) {
-                searchParams.push(`${searchKey}=${encodeURIComponent(search[searchKey])}`);
-            }
-        }
-
-        history.replace(`${match.url}?${searchParams.join("&")}`);
-    }
-
-    /**
-     * Load the trace page.
-     *
-     * @param {string} traceId The trace ID of the selected trace
-     * @param {string} microservice The microservice name if a microservice was selected
-     */
-    loadTracePage(traceId, microservice) {
-        this.props.history.push({
-            pathname: `./id/${traceId}`,
-            state: {
-                highlightedMicroservice: microservice
-            }
-        });
-    }
-
-    /**
      * Search for traces.
      * Call the backend and search for traces.
      */
-    search() {
-        const {location} = this.props;
-        const queryParams = Utils.parseQueryParams(location.search);
-
+    loadCellData() {
         // TODO : Load values from the server
         const self = this;
         setTimeout(() => {
-            self.setState({
+            self.setState(Search.generateValidState({
+                ...this.state,
                 data: {
                     cells: ["cellA", "cellB", "cellC"],
                     microservices: [
@@ -347,8 +284,65 @@ class Search extends React.Component {
                         {name: "cellC-microserviceC-operationC", microservice: "cellC-microserviceC", cell: "cellC"}
                     ]
                 }
-            });
+            }));
         }, 1000);
+    }
+
+    /**
+     * Get the on change handler for a particular state filter attribute.
+     *
+     * @param {string} name The name of the filter
+     * @returns {Function} The on change handler
+     */
+    getChangeHandler(name) {
+        return (event) => {
+            const newState = Search.generateValidState({
+                ...this.state,
+                filter: {
+                    ...this.state.filter,
+                    [name]: event.target.value
+                }
+            });
+            this.setState(newState);
+        };
+    }
+
+    search() {
+        const {
+            cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
+        } = this.state.filter;
+
+        // Build search object
+        const search = {};
+        const addSearchParam = (key, value) => {
+            if (value) {
+                search[key] = value;
+            }
+        };
+        addSearchParam("cell", cell);
+        addSearchParam("microservice", microservice);
+        addSearchParam("operation", operation);
+        addSearchParam("tags", tags);
+        addSearchParam("minDuration", minDuration * minDurationMultiplier);
+        addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
+
+        // TODO : Search in the backend
+        console.log(search);
+    }
+
+    /**
+     * Load the trace page.
+     *
+     * @param {string} traceId The trace ID of the selected trace
+     * @param {string} microservice The microservice name if a microservice was selected
+     */
+    loadTracePage(traceId, microservice) {
+        this.props.history.push({
+            pathname: `./id/${traceId}`,
+            state: {
+                highlightedMicroservice: microservice
+            }
+        });
     }
 
     /**

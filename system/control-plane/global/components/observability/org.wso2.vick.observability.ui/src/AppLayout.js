@@ -37,7 +37,7 @@ import React from "react";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import {withConfig} from "./pages/config";
+import {withConfig} from "./pages/utils/config";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 

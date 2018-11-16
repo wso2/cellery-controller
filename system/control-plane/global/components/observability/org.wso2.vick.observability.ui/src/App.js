@@ -18,8 +18,8 @@
 
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
-import {ColorProvider} from "./pages/color";
-import {ConfigProvider} from "./pages/config";
+import {ColorProvider} from "./pages/utils/color";
+import {ConfigProvider} from "./pages/utils/config";
 import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
