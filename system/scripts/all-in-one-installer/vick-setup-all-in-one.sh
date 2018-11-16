@@ -53,7 +53,7 @@ function install_k8s_kubeadm () {
 }
 
 function configure_k8s_kubeadm () {
-node_type=$1
+local node_type=$1
 if [ -z $node_type ]; then
     node_type="master"
 fi
@@ -492,29 +492,39 @@ istio_yaml=("istio-demo-vick.yaml")
 declare -A config_params
 declare -A nfs_config_params
 #-----------------------------------------------------------------------------------------------------------------------
+
+
+#Install K8s
+if [ -n $iaas ]; then
+    if [ $iaas == "GCP" ]; then
+        echo "GCP selected"
+        if [ -n $gcp_project ]; then
+            install_k8s_gcp $gcp_project
+        else
+            echo "GCP project name is required"
+            exit 0
+        fi
+    elif [ $iaas == "kubeadm" ]; then
+        echo "kubeadm selected"
+        install_k8s_kubeadm $k8s_version
+        #configure master node
+        configure_k8s_kubeadm
+    else
+        echo "Installation script only supports GCP and Kubeadm"
+        exit 0
+    fi
+else
+    echo "Installing vick in to an existing K8s cluster"
+fi
+
 #Create temporary foldr to download vick artifacts
 create_artifact_folder $download_path
 
-echo "Downloading vick artifacts"
+echo "Downloading vick artifacts to ${download_path}"
 
 download_vick_artifacts $control_plane_base_url $download_path "${control_plane_yaml[@]}"
-
 download_vick_artifacts $crd_base_url  $download_path "${crd_yaml[@]}"
-
 download_vick_artifacts $istio_base_url $download_path "${istio_yaml[@]}"
-
-#Install K8s
-if [ $iaas == "GCP" ]; then
-    echo "GCP selected"
-    install_k8s_gcp $gcp_project
-elif [ $iaas == "kubeadm" ]; then
-     echo "kubeadm selected"
-    install_k8s_kubeadm $k8s_version
-    #configure master node
-    configure_k8s_kubeadm
-else
-    echo "Installation script only supports GCP and Kubeadm"
-fi
 
 #Init control plane
 echo "Creating vick-system namespace and the service account"
@@ -522,38 +532,41 @@ echo "Creating vick-system namespace and the service account"
 init_control_plane $download_path
 
 #Deploy/Configure NFS APIM artifact
-read -p "Do you want to deploy NFS server [Y/n]: " install_nfs < /dev/tty
+ if [ $iaas == "GCP" ]; then
+    read -p "Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
 
-if [ $install_nfs == "Y" ]; then
-    if [ $iaas == "GCP" ]; then
-        create_nfs_share_gcp "data"
-    elif [ $iaas == "kubeadm" ]; then
-        echo "Kubeadm based setup does not require a NFS server"
-    fi
-elif [ $install_nfs == "n" ]; then
-    if [ $iaas != "kubeadm" ]; then
+    if [ $install_nfs == "n" ]; then
          read_nfs_connection
+    else
+        create_nfs_share_gcp "data"
     fi
+    update_apim_nfs_volumes $download_path
 fi
-update_apim_nfs_volumes $download_path
 
 #Deploy/configure MySQL / APIM datasources
-read -p "Do you want to deploy MySQL server in to vick-system namespace [Y/n]: " install_mysql < /dev/tty
+read -p "Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
 
-if [ $install_mysql == "Y" ] && [ $iaas == "GCP" ]; then
-    #Read db user / passwd
-    read_control_plane_datasources_configs
-    #Update the sql
-    update_control_plance_sql $download_path
-    deploy_mysql_server_gcp $download_path "vick-mysql-9"
-elif [ $install_mysql == "Y" ] && [ $iaas == "kubeadm" ]; then
-    read_control_plane_datasources_configs
-    #update the sql file
-    update_control_plance_sql $download_path
-    deploy_mysql_server $download_path
+if [ $install_mysql == "y" ]; then
+
+    if [ $iaas == "GCP" ]; then
+        #Read db user / passwd
+        read_control_plane_datasources_configs
+        #Update the sql
+        update_control_plance_sql $download_path
+        deploy_mysql_server_gcp $download_path "vick-mysql-9"
+    elif [ $iaas == "kubeadm" ]; then
+        read_control_plane_datasources_configs
+        #update the sql file
+        update_control_plance_sql $download_path
+        deploy_mysql_server $download_path
+    else
+        echo "Installer can not deploy MySQL server to existing K8s clusters"
+        read_control_plane_datasources_configs
+    fi
 else
     read_control_plane_datasources_configs
 fi
+
 update_control_plane_datasources $download_path
 
 echo "Deploying the control plane API Manager"
