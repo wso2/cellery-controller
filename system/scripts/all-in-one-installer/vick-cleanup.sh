@@ -1,20 +1,19 @@
 #!/bin/bash
 
-#cat vick-cleanup.sh |bash -s -- GCP
+#cat vick-cleanup.sh |bash -s -- kubeadm
 
 iaas=$1
 
 if [ -z $iaas ]; then
-    echo "Please provide the K8s provider. [ GCP | kubeadm ]"
-    exit 0
+    echo "Please provide the K8s provider. [ GCP | kubeadm ]."
+    exit 1
 fi
 
 if [ $iaas == "kubeadm" ]; then
 
-    echo "Removing docker kubeadm kubelet kubectl"
+    echo "Removing docker kubeadm kubelet kubectl."
     echo
-    read -p "Do you want to purge kubelet kubectl and docker [y/N]" deb_remove_option
-    echo
+    read -p "Do you want to purge kubelet kubectl and docker [y/N]: " deb_remove_option
 
     sudo kubeadm reset
 
@@ -24,13 +23,18 @@ if [ $iaas == "kubeadm" ]; then
         DEL_LEVEL="remove"
     fi
 
-    sudo apt-get $DEL_LEVEL kubelet kubeadm kubectl docker.io docker-ce
+    sudo apt-get $DEL_LEVEL -y kubelet kubeadm kubectl docker.io docker-ce
 
-    echo "Removing /mnt/mysql and /mnt/apim_repository_deployment_server"
+    echo "Removing /mnt/mysql and /mnt/apim_repository_deployment_server."
     echo
 
-    sudo rm -fr /mnt/mysql
-    sudo rm -fr /mnt/apim_repository_deployment_server
+    if [ -d /mnt/mysql ]; then
+        sudo mv /mnt/mysql "/mnt/mysql.$(date +%s)"
+    fi
+
+    if [ -d /mnt/apim_repository_deployment_server ]; then
+        sudo mv /mnt/apim_repository_deployment_server "/mnt/apim_repository_deployment_server.$(date +%s)"
+    fi
 fi
 
-echo "VICK cleanup is finished"
+echo "VICK cleanup is finished."
