@@ -325,6 +325,14 @@ function deploy_global_gw () {
     kubectl apply -f ${download_location}/vick-apim-gw-ingress.yaml -n vick-system
 }
 
+function deploy_global_pubstore () {
+    local download_location=$1
+    #Create pubstore ingress
+    #pubstore ingress is pointed to gatway service. In the future pubstore ingress will be pointed to pubstore service.
+    kubectl apply -f ${download_location}/vick-apim-pub-store-ingress.yaml -n vick-system
+}
+
+}
 function deploy_sp_dashboard_worker () {
     local download_location=$1
     #Create SP worker configmaps
@@ -572,6 +580,7 @@ update_control_plane_datasources $download_path
 echo "Deploying the control plane API Manager"
 
 deploy_global_gw $download_path $iaas
+deploy_global_pubstore $download_path
 
 echo "Deploying SP"
 
