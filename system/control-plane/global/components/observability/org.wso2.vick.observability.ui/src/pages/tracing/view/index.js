@@ -25,6 +25,7 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
+import TopToolbar from "../../utils/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
 import Utils from "../../../utils";
 
@@ -296,7 +297,8 @@ class View extends React.Component {
             spans.length === 0
                 ? null
                 : (
-                    <div>
+                    <React.Fragment>
+                        <TopToolbar title={"Distributed Tracing"}/>
                         <Tabs value={selectedTabIndex} indicatorColor="primary"
                             onChange={this.handleTabChange}>
                             <Tab label="Timeline"/>
@@ -304,7 +306,7 @@ class View extends React.Component {
                             <Tab label="Dependency Diagram"/>
                         </Tabs>
                         {tabContent[selectedTabIndex]}
-                    </div>
+                    </React.Fragment>
                 )
         );
     }

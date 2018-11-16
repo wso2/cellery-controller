@@ -22,7 +22,7 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import ColorGenerator from "../../../utils/color/colorGenerator";
+import {ColorGenerator} from "../../../utils/color/colorGenerator";
 import Constants from "../../utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
@@ -34,11 +34,10 @@ import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
-import classNames from "classnames";
 import interact from "interactjs";
 import vis from "vis";
-import {withColor} from "../../../utils/color";
 import {withStyles} from "@material-ui/core";
+import {ColorGeneratorConstants, withColor} from "../../../utils/color";
 
 const styles = (theme) => ({
     spanLabelContainer: {
@@ -130,8 +129,8 @@ class TimelineView extends React.Component {
         const {classes} = this.props;
 
         // Removing interactions added to the timeline
-        TimelineView.clearInteractions(`.${classNames(classes.resizeHandle)}`);
-        TimelineView.clearInteractions(`.${classNames(classes.spanLabelContainer)}`);
+        TimelineView.clearInteractions(`.${classes.resizeHandle}`);
+        TimelineView.clearInteractions(`.${classes.spanLabelContainer}`);
 
         // Destroying the timeline
         if (this.timeline) {
@@ -154,25 +153,25 @@ class TimelineView extends React.Component {
         const traceStart = new Date(this.trace.minTime).toGMTString();
 
         return (
-            <div>
-                <div className={classNames(classes.overallDescriptionContainer)}>
-                    <span className={classNames(classes.overallDescriptionKey)}>Trace Start:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{traceStart}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Duration:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{duration}ms</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Services:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{serviceNames.length}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Depth:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{this.trace.treeHeight}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Total Spans:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{this.trace.spans.length}</span>
+            <React.Fragment>
+                <div className={classes.overallDescriptionContainer}>
+                    <span className={classes.overallDescriptionKey}>Trace Start:</span>
+                    <span className={classes.overallDescriptionValue}>{traceStart}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Duration:</span>
+                    <span className={classes.overallDescriptionValue}>{duration}ms</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Services:</span>
+                    <span className={classes.overallDescriptionValue}>{serviceNames.length}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Depth:</span>
+                    <span className={classes.overallDescriptionValue}>{this.trace.treeHeight}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Total Spans:</span>
+                    <span className={classes.overallDescriptionValue}>{this.trace.spans.length}</span>
                 </div>
                 <div ref={this.timelineNode}/>
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -259,12 +258,12 @@ class TimelineView extends React.Component {
                                 paddingLeft: `${(item.span.treeDepth + (isLeaf === 0 ? 1 : 0)) * 15}px`,
                                 minWidth: `${(this.trace.treeHeight + 1) * 15 + 100}px`,
                                 width: `${(self.spanLabelWidth > 0 ? self.spanLabelWidth : null)}px`
-                            }} className={classNames(classes.spanLabelContainer)}>
-                                <span className={classNames(classes.serviceName)}>{`${item.span.serviceName} `}</span>
-                                <span className={classNames(classes.operationName)}>{item.span.operationName}</span>
+                            }} className={classes.spanLabelContainer}>
+                                <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
+                                <span className={classes.operationName}>{item.span.operationName}</span>
                             </div>
                             {(kindData
-                                ? <div className={classNames(classes.kindBadge)}
+                                ? <div className={classes.kindBadge}
                                     style={{backgroundColor: kindData.color}}>{kindData.name}</div>
                                 : null
                             )}
@@ -283,9 +282,9 @@ class TimelineView extends React.Component {
                     let colorKey = item.span.cell.name;
                     if (!colorKey) {
                         if (item.span.componentType === Constants.Span.ComponentType.VICK) {
-                            colorKey = colorGenerator.Constants.VICK;
+                            colorKey = ColorGeneratorConstants.VICK;
                         } else if (item.span.componentType === Constants.Span.ComponentType.ISTIO) {
-                            colorKey = colorGenerator.Constants.ISTIO;
+                            colorKey = ColorGeneratorConstants.ISTIO;
                         } else {
                             colorKey = item.span.componentType;
                         }
@@ -348,8 +347,8 @@ class TimelineView extends React.Component {
         const reversedSpans = this.trace.spans.slice().reverse();
 
         // Clear previous interactions (eg:- resizability) added to the timeline
-        const selector = `.${classNames(classes.spanLabelContainer)}`;
-        TimelineView.clearInteractions(`.${classNames(classes.resizeHandle)}`);
+        const selector = `.${classes.spanLabelContainer}`;
+        TimelineView.clearInteractions(`.${classes.resizeHandle}`);
         TimelineView.clearInteractions(selector);
 
         // Creating / Updating the timeline
@@ -472,7 +471,7 @@ class TimelineView extends React.Component {
 
         // Add the horizontal resize handle
         const newNode = document.createElement("div");
-        newNode.classList.add(classNames(classes.resizeHandle));
+        newNode.classList.add(classes.resizeHandle);
         const parent = document.querySelector(".vis-panel.vis-top");
         parent.insertBefore(newNode, parent.childNodes[0]);
 
@@ -495,7 +494,7 @@ class TimelineView extends React.Component {
         });
 
         // Handling dragging of the resize handle
-        interact(`.${classNames(classes.resizeHandle)}`).on("down", (event) => {
+        interact(`.${classes.resizeHandle}`).on("down", (event) => {
             event.interaction.start(
                 {
                     name: "resize",

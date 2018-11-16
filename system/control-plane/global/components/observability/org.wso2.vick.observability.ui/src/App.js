@@ -19,7 +19,6 @@
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
 import {ColorProvider} from "./pages/utils/color";
-import {ConfigProvider} from "./pages/utils/config";
 import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
@@ -27,53 +26,60 @@ import React from "react";
 import SignIn from "./pages/SignIn";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import {ConfigConstants, ConfigHolder} from "./pages/utils/config/configHolder";
+import {ConfigProvider, withConfig} from "./pages/utils/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
 
+/**
+ * Protected Portal of the App.
+ *
+ * @param {Object} props Props passed to the component
+ * @returns {React.Component} Protected portal react component
+ */
+let ProtectedPortal = (props) => (
+    props.config.get(ConfigConstants.USER)
+        ? (
+            <AppLayout>
+                <Switch>
+                    <Route exact path="/" component={Overview}/>
+                    <Route exact path="/cells" component={Cell}/>
+                    <Route exact path="/microservices" component={Microservice}/>
+                    <Route path="/tracing" component={Tracing}/>
+                    <Redirect from="/*" to="/"/>
+                </Switch>
+            </AppLayout>
+        )
+        : <SignIn/>
+);
+
+ProtectedPortal.propTypes = {
+    config: PropTypes.instanceOf(ConfigHolder).isRequired
+};
+
+ProtectedPortal = withConfig(ProtectedPortal);
+
+// Create the main theme of the App
 const theme = createMuiTheme({
     typography: {
         useNextVariants: true
     }
 });
 
-class App extends React.Component {
-
-    render() {
-        const configuration = {
-            username: this.props.username ? this.props.username : localStorage.getItem("username"),
-            backendURL: "wso2sp-worker.vick-system:9000"
-        };
-
-        return (
-            <MuiThemeProvider theme={theme}>
-                <ColorProvider>
-                    <ConfigProvider config={configuration}>
-                        <BrowserRouter>
-                            {
-                                configuration.username
-                                    ? (
-                                        <AppLayout>
-                                            <Switch>
-                                                <Route exact path="/" component={Overview}/>
-                                                <Route exact path="/cells" component={Cell}/>
-                                                <Route exact path="/microservices" component={Microservice}/>
-                                                <Route path="/tracing" component={Tracing}/>
-                                                <Redirect from="/*" to="/"/>
-                                            </Switch>
-                                        </AppLayout>
-                                    )
-                                    : <SignIn/>
-                            }
-                        </BrowserRouter>
-                    </ConfigProvider>
-                </ColorProvider>
-            </MuiThemeProvider>
-        );
-    }
-
-}
-
-App.propTypes = {
-    username: PropTypes.string
-};
+/**
+ * The Observability Main App.
+ *
+ * @returns {React.Component} App react component
+ */
+const App = () => (
+    <MuiThemeProvider theme={theme}>
+        <ColorProvider>
+            <ConfigProvider>
+                <BrowserRouter>
+                    <ProtectedPortal/>
+                </BrowserRouter>
+            </ConfigProvider>
+        </ColorProvider>
+    </MuiThemeProvider>
+);
 
 export default App;

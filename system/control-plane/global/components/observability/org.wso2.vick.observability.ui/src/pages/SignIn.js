@@ -31,7 +31,9 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
 import Typography from "@material-ui/core/Typography";
+import Utils from "../utils";
 import withStyles from "@material-ui/core/styles/withStyles";
+import {ConfigConstants, withConfig} from "./utils/config";
 
 const styles = (theme) => ({
     layout: {
@@ -74,9 +76,12 @@ class SignIn extends React.Component {
     }
 
     handleLogin = () => {
+        const {config} = this.props;
+
         const username = document.getElementById("username").value;
-        localStorage.setItem("username", username);
-        ReactDOM.render(<App username={username}/>, document.getElementById("root"));
+        config.set(ConfigConstants.USER, username);
+        Utils.signIn(username);
+        ReactDOM.render(<App/>, document.getElementById("root"));
     };
 
     handleKeyPress = (event) => {
@@ -110,25 +115,15 @@ class SignIn extends React.Component {
                             </FormControl>
                             <FormControl margin="normal" required fullWidth>
                                 <InputLabel htmlFor="password">Password</InputLabel>
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    id="password"
-                                    autoComplete="current-password"
-                                    onKeyPress={this.handleKeyPress}
-                                />
+                                <Input name="password" type="password" id="password" autoComplete="current-password"
+                                    onKeyPress={this.handleKeyPress}/>
                             </FormControl>
                             <FormControlLabel
                                 control={<Checkbox value="remember" color="primary"/>}
                                 label="Remember me"
                             />
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                color="primary"
-                                className={classes.submit}
-                                onClick={this.handleLogin}
-                            >
+                            <Button fullWidth variant="contained" color="primary" className={classes.submit}
+                                onClick={this.handleLogin}>
                                 Sign in
                             </Button>
                         </form>
@@ -141,7 +136,10 @@ class SignIn extends React.Component {
 }
 
 SignIn.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    config: PropTypes.shape({
+        set: PropTypes.func.isRequired
+    }).isRequired
 };
 
-export default withStyles(styles)(SignIn);
+export default withStyles(styles)(withConfig(SignIn));

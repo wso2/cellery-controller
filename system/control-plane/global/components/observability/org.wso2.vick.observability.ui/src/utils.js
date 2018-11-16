@@ -37,14 +37,46 @@ class Utils {
                 query = queryParamString.substr(1);
             }
 
-            const queries = query.split("&");
-            for (let i = 0; i < queries.length; i++) {
-                const queryPair = queries[i].split("=");
-                const key = decodeURIComponent(queryPair[0]);
-                queryParameters[key] = decodeURIComponent(queryPair[1]);
+            if (query) {
+                const queries = query.split("&");
+                for (let i = 0; i < queries.length; i++) {
+                    const queryPair = queries[i].split("=");
+                    const key = decodeURIComponent(queryPair[0]);
+
+                    if (key) {
+                        queryParameters[key] = (queryPair.length === 2 && queryPair[1])
+                            ? decodeURIComponent(queryPair[1])
+                            : true;
+                    }
+                }
             }
         }
         return queryParameters;
+    }
+
+    /**
+     * Sign in the user.
+     *
+     * @param {string} user The user to be signed in
+     */
+    static signIn(user) {
+        localStorage.setItem("user", user);
+    }
+
+    /**
+     * Sign out the current user.
+     */
+    static signOut() {
+        localStorage.removeItem("user");
+    }
+
+    /**
+     * Get the currently authenticated user.
+     *
+     * @returns {string} The current user
+     */
+    static getAuthenticatedUser() {
+        return localStorage.getItem("user");
     }
 
     /**
@@ -58,7 +90,9 @@ class Utils {
             if (!config.headers) {
                 config.headers = {};
             }
-            config.headers.Accept = "application/json";
+            if (!config.headers.Accept) {
+                config.headers.Accept = "application/json";
+            }
 
             axios(config)
                 .then((response) => {
@@ -73,12 +107,12 @@ class Utils {
                         const errorResponse = error.response;
                         if (errorResponse.status === 401) {
                             // Redirect to home page since the user is not authorised
-                            window.location.href = `${window.location.origin}`;
-                        } else {
-                            reject(errorResponse.data);
+                            Utils.signOut();
                         }
+                        reject(new Error(errorResponse.data));
+                    } else {
+                        reject(error);
                     }
-                    reject(error);
                 });
         });
     }

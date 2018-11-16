@@ -16,15 +16,15 @@
  * under the License.
  */
 
-import ColorGenerator from "./colorGenerator";
+import {ColorGenerator, ColorGeneratorConstants} from "./colorGenerator";
 
 describe("ColorGenerator", () => {
     describe("constructor()", () => {
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
         });
     });
 
@@ -40,8 +40,8 @@ describe("ColorGenerator", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
 
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
@@ -54,8 +54,8 @@ describe("ColorGenerator", () => {
             colorGenerator.addKeys(keyList);
             colorGenerator.addKeys([KEY_2, KEY_5]);
 
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.Constants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
@@ -70,8 +70,8 @@ describe("ColorGenerator", () => {
 
         beforeEach(() => {
             keyList = [];
-            keyList.push(ColorGenerator.Constants.VICK);
-            keyList.push(ColorGenerator.Constants.ISTIO);
+            keyList.push(ColorGeneratorConstants.VICK);
+            keyList.push(ColorGeneratorConstants.ISTIO);
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }
@@ -82,16 +82,20 @@ describe("ColorGenerator", () => {
             colorGenerator.addKeys(keyList);
             const spy = jest.spyOn(colorGenerator, "addKeys");
 
+            let similarColors = 0;
             for (let i = 0; i < keyList.length; i++) {
                 for (let j = 0; j < keyList.length; j++) {
                     if (i !== j) {
                         const colorA = colorGenerator.getColor(keyList[i]);
                         const colorB = colorGenerator.getColor(keyList[j]);
-                        expect(colorA).not.toBe(colorB);
+                        if (colorA === colorB) {
+                            similarColors += 1;
+                        }
                     }
                 }
             }
-            expect(spy).not.toHaveBeenCalled();
+            expect(similarColors).toBeLessThan(5); // There are few overlaps
+            expect(spy).not.toHaveBeenCalledTimes(keyCount);
         });
 
         it("should return the same color for the same key when invoked multiple times", () => {
@@ -129,8 +133,8 @@ describe("ColorGenerator", () => {
 
         beforeEach(() => {
             keyList = [];
-            keyList.push(ColorGenerator.Constants.VICK);
-            keyList.push(ColorGenerator.Constants.ISTIO);
+            keyList.push(ColorGeneratorConstants.VICK);
+            keyList.push(ColorGeneratorConstants.ISTIO);
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }

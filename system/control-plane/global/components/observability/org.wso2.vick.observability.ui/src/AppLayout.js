@@ -36,10 +36,11 @@ import PropTypes from "prop-types";
 import React from "react";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
+import Utils from "./utils";
 import classNames from "classnames";
-import {withConfig} from "./pages/utils/config";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
+import {ConfigConstants, withConfig} from "./pages/utils/config";
 
 const drawerWidth = 240;
 
@@ -108,10 +109,10 @@ const styles = (theme) => ({
 
 class AppLayout extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
-        this.handleUserInfoMenu = this.handleUserInfoMenu.bind(this);
+        this.handleUserInfoMenuOpen = this.handleUserInfoMenuOpen.bind(this);
         this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
         this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
         this.handleDrawerClose = this.handleDrawerClose.bind(this);
@@ -122,7 +123,7 @@ class AppLayout extends React.Component {
         };
     }
 
-    handleUserInfoMenu = (event) => {
+    handleUserInfoMenuOpen = (event) => {
         this.setState({userInfo: event.currentTarget});
     };
 
@@ -142,68 +143,72 @@ class AppLayout extends React.Component {
         const {classes, history, children, theme, config} = this.props;
         const {open, userInfo} = this.state;
         const userInfoOpen = Boolean(userInfo);
+
+        const navigationState = {
+            hideBackButton: true
+        };
         return (
             <div className={classes.root}>
                 <CssBaseline/>
-                <AppBar
-                    position="fixed"
+                <AppBar position="fixed"
                     className={classNames(classes.appBar, {
                         [classes.appBarShift]: open
-                    })}
-                >
+                    })}>
                     <Toolbar disableGutters={!open}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="Open drawer"
+                        <IconButton color="inherit" aria-label="Open drawer"
                             onClick={this.handleDrawerOpen}
                             className={classNames(classes.menuButton, {
                                 [classes.hide]: open
-                            })}
-                        >
+                            })}>
                             <MenuIcon/>
                         </IconButton>
                         <Typography variant="h6" color="inherit" className={classes.grow}>
                             WSO2 VICK Observability
                         </Typography>
-                        {config.username && (
-                            <div>
-                                <IconButton
-                                    aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
-                                    aria-haspopup="true"
-                                    onClick={this.handleUserInfoMenu}
-                                    color="inherit"
-                                >
-                                    <AccountCircle/>
-                                </IconButton>
-                                <Menu
-                                    id="user-info-appbar"
-                                    anchorEl={this.state.userInfo}
-                                    anchorOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right"
-                                    }}
-                                    transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right"
-                                    }}
-                                    open={userInfoOpen}
-                                    onClose={this.handleUserInfoClose}
-                                >
-                                    {/* TODO: Implement user login */}
-                                    <MenuItem onClick={this.handleUserInfoClose}>Profile - {config.username}</MenuItem>
-                                    <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
-                                </Menu>
-                            </div>
-                        )}
+                        {
+                            config.get(ConfigConstants.USER)
+                                ? (
+                                    <div>
+                                        <IconButton
+                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
+                                            aria-haspopup="true"
+                                            onClick={this.handleUserInfoMenuOpen}
+                                            color="inherit">
+                                            <AccountCircle/>
+                                        </IconButton>
+                                        <Menu id="user-info-appbar" anchorEl={this.state.userInfo}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}
+                                            open={userInfoOpen}
+                                            onClose={this.handleUserInfoClose}>
+                                            {/* TODO: Implement user login */}
+                                            <MenuItem onClick={this.handleUserInfoClose}>
+                                                Profile - {config.get(ConfigConstants.USER)}
+                                            </MenuItem>
+                                            <MenuItem onClick={this.handleUserInfoClose}>
+                                                My account
+                                            </MenuItem>
+                                            <MenuItem onClick={() => Utils.signOut()}>
+                                                Logout
+                                            </MenuItem>
+                                        </Menu>
+                                    </div>
+                                )
+                                : null
+                        }
                     </Toolbar>
                 </AppBar>
-                <Drawer
-                    variant="permanent"
+                <Drawer variant="permanent"
                     classes={{
                         paper: classNames(classes.drawerPaper, !open && classes.drawerPaperClose)
                     }}
-                    open={this.state.open}
-                >
+                    open={this.state.open}>
                     <div className={classes.toolbar}>
                         <IconButton onClick={this.handleDrawerClose}>
                             {theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
@@ -212,21 +217,21 @@ class AppLayout extends React.Component {
                     <Divider/>
                     <List>
                         {/* TODO : Change the icons accordingly to the page menu */}
-                        <ListItem button key="Overview" onClick={() => history.push("/")}>
+                        <ListItem button key="Overview" onClick={() => history.push("/", navigationState)}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Overview"/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={() => history.push("/cells")}>
+                        <ListItem button key="Cells" onClick={() => history.push("/cells", navigationState)}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Cells"/>
                         </ListItem>
                         <ListItem button key="Micro Services"
-                            onClick={() => history.push("/microservices")}>
+                            onClick={() => history.push("/microservices", navigationState)}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Micro Services"/>
                         </ListItem>
                         <ListItem button key="Distributed Tracing"
-                            onClick={() => history.push("/tracing")}>
+                            onClick={() => history.push("/tracing", navigationState)}>
                             <ListItemIcon><InboxIcon/></ListItemIcon>
                             <ListItemText primary="Distributed Tracing"/>
                         </ListItem>

@@ -30,7 +30,6 @@ import Select from "@material-ui/core/Select/Select";
 import Span from "../../utils/span";
 import TimelineView from "./TimelineView";
 import TracingUtils from "../../utils/tracingUtils";
-import classNames from "classnames";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
@@ -107,10 +106,10 @@ class Timeline extends React.Component {
         }
 
         return (
-            <div>
+            <React.Fragment>
                 <Grid container justify={"flex-start"} spacing={24}>
                     <Grid item xs={3}>
-                        <FormControl className={classNames(classes.formControl)} fullWidth={true}>
+                        <FormControl className={classes.formControl} fullWidth={true}>
                             <InputLabel htmlFor="select-multiple-checkbox">Type</InputLabel>
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}
@@ -146,7 +145,7 @@ class Timeline extends React.Component {
                     </Grid>
                 </Grid>
                 <TimelineView spans={this.getFilteredSpans()}/>
-            </div>
+            </React.Fragment>
         );
     }
 

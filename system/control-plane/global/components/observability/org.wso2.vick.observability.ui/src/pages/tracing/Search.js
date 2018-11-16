@@ -26,14 +26,18 @@ import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
 import TextField from "@material-ui/core/TextField/TextField";
+import TopToolbar from "../utils/TopToolbar";
+import Typography from "@material-ui/core/Typography/Typography";
 import Utils from "../../utils";
-import classNames from "classnames";
 import {withRouter} from "react-router-dom/";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
+    subheading: {
+        marginBottom: theme.spacing.unit * 2
+    },
     formControl: {
-        margin: theme.spacing.unit
+        marginBottom: theme.spacing.unit * 2
     },
     durationTextField: {
         marginTop: theme.spacing.unit * 2
@@ -44,9 +48,6 @@ const styles = (theme) => ({
     },
     searchForm: {
         marginBottom: theme.spacing.unit * 2
-    },
-    searchButton: {
-        marginLeft: theme.spacing.unit
     }
 });
 
@@ -88,6 +89,7 @@ class Search extends React.Component {
         });
         this.loadCellData();
 
+        this.loadCellData = this.loadCellData.bind(this);
         this.getChangeHandler = this.getChangeHandler.bind(this);
         this.search = this.search.bind(this);
         this.loadTracePage = this.loadTracePage.bind(this);
@@ -116,8 +118,12 @@ class Search extends React.Component {
         );
 
         return (
-            <div>
-                <Grid container justify={"flex-start"} className={classNames(classes.searchForm)}>
+            <React.Fragment>
+                <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
+                <Typography variant="h6" color="inherit" className={classes.subheading}>
+                    Search Traces
+                </Typography>
+                <Grid container justify={"flex-start"} className={classes.searchForm}>
                     <Grid container justify={"flex-start"} spacing={24}>
                         <Grid item xs={3}>
                             <FormControl className={classes.formControl} fullWidth={true}>
@@ -167,12 +173,12 @@ class Search extends React.Component {
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
                                 <TextField id="min-duration" value={filter.minDuration}
-                                    className={classNames(classes.durationTextField)}
+                                    className={classes.durationTextField}
                                     onChange={this.getChangeHandler("minDuration")} type="number"
                                     placeholder={"Eg: 10"}
                                     InputProps={{
                                         startAdornment: (
-                                            <InputAdornment className={classNames(classes.startInputAdornment)}
+                                            <InputAdornment className={classes.startInputAdornment}
                                                 variant="filled" position="start">Min</InputAdornment>
                                         ),
                                         endAdornment: (
@@ -193,12 +199,12 @@ class Search extends React.Component {
                         <Grid item xs={3}>
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <TextField id="max-duration" value={filter.maxDuration}
-                                    className={classNames(classes.durationTextField)}
+                                    className={classes.durationTextField}
                                     onChange={this.getChangeHandler("maxDuration")} type="number"
                                     placeholder={"Eg: 1,000"}
                                     InputProps={{
                                         startAdornment: (
-                                            <InputAdornment className={classNames(classes.startInputAdornment)}
+                                            <InputAdornment className={classes.startInputAdornment}
                                                 variant="filled" position="start">Max</InputAdornment>
                                         ),
                                         endAdornment: (
@@ -219,15 +225,14 @@ class Search extends React.Component {
                         </Grid>
                     </Grid>
                 </Grid>
-                <Button variant="contained" color="primary" onClick={this.search}
-                    className={classNames(classes.searchButton)}>Search</Button>
+                <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
                 {
                     traces.length > 0
                         ? traces.map(
                             (trace) => <TraceResult key={trace.traceId} trace={trace} onClick={this.loadTracePage}/>)
                         : null
                 }
-            </div>
+            </React.Fragment>
         );
     }
 
@@ -240,7 +245,7 @@ class Search extends React.Component {
         const self = this;
         setTimeout(() => {
             self.setState(Search.generateValidState({
-                ...this.state,
+                ...self.state,
                 data: {
                     cells: ["cellA", "cellB", "cellC"],
                     microservices: [
@@ -327,7 +332,6 @@ class Search extends React.Component {
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
 
         // TODO : Search in the backend
-        console.log(search);
     }
 
     /**

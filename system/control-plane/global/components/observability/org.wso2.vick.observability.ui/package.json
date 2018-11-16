@@ -23,7 +23,7 @@
     "start": "react-scripts start",
     "lint": "eslint --color --fix src/",
     "build": "react-scripts build",
-    "test": "CI=true react-scripts test --colors",
+    "test": "CI=true react-scripts test --colors --resetModules --restoreMocks --testURL=http://test.vick.com",
     "eject": "react-scripts eject"
   },
   "browserslist": [

@@ -107,6 +107,9 @@
                                 <argument>run</argument>
                                 <argument>test</argument>
                             </arguments>
+                            <environmentVariables>
+                                <CI>true</CI>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>

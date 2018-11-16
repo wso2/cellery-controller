@@ -16,9 +16,9 @@
  * under the License.
  */
 
-import ColorGenerator from "./colorGenerator";
 import PropTypes from "prop-types";
 import React from "react";
+import {ColorGenerator, ColorGeneratorConstants} from "./colorGenerator";
 
 // Creating a context that can be accessed
 const ColorContext = React.createContext(null);
@@ -32,12 +32,18 @@ const ColorContext = React.createContext(null);
  */
 class ColorProvider extends React.Component {
 
-    render() {
+    constructor(props) {
+        super(props);
+
         this.colorGenerator = new ColorGenerator();
+    }
+
+    render() {
+        const {children} = this.props;
 
         return (
             <ColorContext.Provider value={this.colorGenerator}>
-                {this.props.children}
+                {children}
             </ColorContext.Provider>
         );
     }
@@ -66,4 +72,4 @@ const withColor = (Component) => class ColorGeneratorProvider extends React.Comp
 
 };
 
-export {withColor, ColorProvider};
+export {withColor, ColorProvider, ColorGeneratorConstants};

@@ -27,8 +27,8 @@ class ColorGenerator {
         this.colorMap = {};
 
         this.addKeys([
-            ColorGenerator.Constants.VICK,
-            ColorGenerator.Constants.ISTIO
+            ColorGeneratorConstants.VICK,
+            ColorGeneratorConstants.ISTIO
         ]);
     }
 
@@ -94,9 +94,9 @@ class ColorGenerator {
 
 }
 
-ColorGenerator.Constants = {
+const ColorGeneratorConstants = {
     VICK: "VICK",
     ISTIO: "Istio"
 };
 
-export default ColorGenerator;
+export {ColorGenerator, ColorGeneratorConstants};
