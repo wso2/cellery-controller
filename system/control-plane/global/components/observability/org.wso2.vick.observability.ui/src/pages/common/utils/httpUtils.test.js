@@ -19,7 +19,8 @@
 
 /* eslint prefer-promise-reject-errors: ["off"] */
 
-import Utils from "./utils";
+import AuthUtils from "./authUtils";
+import HttpUtils from "./httpUtils";
 import axios from "axios";
 
 jest.mock("axios");
@@ -27,7 +28,7 @@ jest.mock("axios");
 describe("Utils", () => {
     describe("parseQueryParams()", () => {
         it("should parse and return the query parameters as an object", () => {
-            const query = Utils.parseQueryParams("?key1=value1&key2=value2&key3=value3");
+            const query = HttpUtils.parseQueryParams("?key1=value1&key2=value2&key3=value3");
 
             expect(Object.keys(query)).toHaveLength(3);
             expect(query.key1).toBe("value1");
@@ -36,7 +37,7 @@ describe("Utils", () => {
         });
 
         it("should parse and return the query if the query string doesn't have the '?' prefix", () => {
-            const query = Utils.parseQueryParams("key1=value1&key2=value2&key3=value3");
+            const query = HttpUtils.parseQueryParams("key1=value1&key2=value2&key3=value3");
 
             expect(Object.keys(query)).toHaveLength(3);
             expect(query.key1).toBe("value1");
@@ -45,7 +46,7 @@ describe("Utils", () => {
         });
 
         it("should parse and return the decoded query parameters if the query parameters had been URL encoded", () => {
-            const query = Utils.parseQueryParams("?key1=value%201&key2=value%2D2&key%213=value3");
+            const query = HttpUtils.parseQueryParams("?key1=value%201&key2=value%2D2&key%213=value3");
 
             expect(Object.keys(query)).toHaveLength(3);
             expect(query.key1).toBe("value 1");
@@ -54,7 +55,7 @@ describe("Utils", () => {
         });
 
         it("should true for the parameters which has a key but doesn't have a value", () => {
-            const query = Utils.parseQueryParams("?key1=&key2");
+            const query = HttpUtils.parseQueryParams("?key1=&key2");
 
             expect(Object.keys(query)).toHaveLength(2);
             expect(query.key1).toBe(true);
@@ -62,12 +63,12 @@ describe("Utils", () => {
         });
 
         it("should return object with no keys without failing if empty query is provided", () => {
-            expect(Object.keys(Utils.parseQueryParams("?"))).toHaveLength(0);
-            expect(Object.keys(Utils.parseQueryParams(""))).toHaveLength(0);
-            expect(Object.keys(Utils.parseQueryParams("?="))).toHaveLength(0);
-            expect(Object.keys(Utils.parseQueryParams("?&&=&&"))).toHaveLength(0);
-            expect(Object.keys(Utils.parseQueryParams(undefined))).toHaveLength(0);
-            expect(Object.keys(Utils.parseQueryParams(null))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams("?"))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams(""))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams("?="))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams("?&&=&&"))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams(undefined))).toHaveLength(0);
+            expect(Object.keys(HttpUtils.parseQueryParams(null))).toHaveLength(0);
         });
     });
 
@@ -89,7 +90,7 @@ describe("Utils", () => {
                 });
             });
 
-            await Utils.callBackendAPI({
+            await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test",
                 headers: {
@@ -114,7 +115,7 @@ describe("Utils", () => {
                 });
             });
 
-            await Utils.callBackendAPI({
+            await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test"
             });
@@ -136,7 +137,7 @@ describe("Utils", () => {
                 });
             });
 
-            await Utils.callBackendAPI({
+            await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test",
                 headers: {
@@ -164,7 +165,7 @@ describe("Utils", () => {
                 });
             }));
 
-            return Utils.callBackendAPI({
+            return HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test",
                 headers: {
@@ -182,7 +183,7 @@ describe("Utils", () => {
                 });
             }));
 
-            return Utils.callBackendAPI({
+            return HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test",
                 headers: {
@@ -213,7 +214,7 @@ describe("Utils", () => {
         });
 
         it("should sign out and reject with response when axios rejects with a 401 status code", async () => {
-            const spy = jest.spyOn(Utils, "signOut");
+            const spy = jest.spyOn(AuthUtils, "signOut");
 
             await expect(mockReject(401)).rejects.toEqual(new Error(DATA));
             expect(spy).toHaveBeenCalledTimes(1);

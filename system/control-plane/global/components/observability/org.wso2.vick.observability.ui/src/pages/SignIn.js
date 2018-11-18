@@ -31,9 +31,9 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
 import Typography from "@material-ui/core/Typography";
-import Utils from "../utils";
+import Utils from "./common/utils";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {ConfigConstants, withConfig} from "./utils/config";
+import {ConfigConstants, withConfig} from "./common/config";
 
 const styles = (theme) => ({
     layout: {

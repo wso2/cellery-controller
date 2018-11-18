@@ -22,7 +22,7 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import {ColorGenerator} from "../../../utils/color/colorGenerator";
+import {ColorGenerator} from "../../../common/color/colorGenerator";
 import Constants from "../../utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
@@ -37,7 +37,7 @@ import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import vis from "vis";
 import {withStyles} from "@material-ui/core";
-import {ColorGeneratorConstants, withColor} from "../../../utils/color";
+import {ColorGeneratorConstants, withColor} from "../../../common/color";
 
 const styles = (theme) => ({
     spanLabelContainer: {

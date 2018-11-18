@@ -24,9 +24,11 @@ import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import PropTypes from "prop-types";
 import React from "react";
+import Refresh from "@material-ui/icons/Refresh";
 import Select from "@material-ui/core/Select/Select";
 import Toolbar from "@material-ui/core/Toolbar/Toolbar";
 import Typography from "@material-ui/core/Typography/Typography";
+import moment from "moment";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import {ConfigConstants, withConfig} from "./config";
@@ -74,14 +76,16 @@ class TopToolbar extends React.Component {
 
         this.refreshIntervalID = null;
 
+        this.refreshManually = this.refreshManually.bind(this);
         this.setRefreshInterval = this.setRefreshInterval.bind(this);
         this.setTimePeriod = this.setTimePeriod.bind(this);
         this.startRefreshTask = this.startRefreshTask.bind(this);
         this.stopRefreshTask = this.stopRefreshTask.bind(this);
+        this.refresh = this.refresh.bind(this);
     }
 
     componentDidMount() {
-        this.startRefreshTask();
+        this.refreshManually();
     }
 
     componentDidUpdate() {
@@ -126,6 +130,9 @@ class TopToolbar extends React.Component {
                             <MenuItem value={5 * 60 * 1000}>Every 5 min</MenuItem>
                         </Select>
                     </FormControl>
+                    <IconButton aria-label="Refresh" onClick={this.refreshManually}>
+                        <Refresh/>
+                    </IconButton>
                 </Toolbar>
                 <Divider/>
             </div>
@@ -137,8 +144,8 @@ class TopToolbar extends React.Component {
 
         config.set(ConfigConstants.GLOBAL_FILTER, {
             ...config.get(ConfigConstants.GLOBAL_FILTER),
-            startTime: 0,
-            endTime: 100
+            startTime: "now - 24h",
+            endTime: "now"
         });
 
         this.stopRefreshTask(); // Stop any existing refresh tasks (Will be restarted when the component is updated)
@@ -163,20 +170,50 @@ class TopToolbar extends React.Component {
         });
     }
 
+    /**
+     * Call the update method and refresh the relevant parts of the page.
+     * This will also reset the refresh task.
+     */
+    refreshManually() {
+        this.stopRefreshTask();
+        this.refresh();
+        this.startRefreshTask();
+    }
+
+    /**
+     * Start the refresh task which periodically calls the update method.
+     */
     startRefreshTask() {
-        const {onUpdate} = this.props;
-        const {startTime, endTime, refreshInterval} = this.state;
+        const {refreshInterval} = this.state;
+        const self = this;
 
         this.stopRefreshTask(); // Stop any existing refresh tasks
         if (refreshInterval && refreshInterval > 0) {
-            this.refreshIntervalID = setInterval(() => onUpdate(startTime, endTime), refreshInterval);
+            this.refreshIntervalID = setInterval(() => self.refresh(), refreshInterval);
         }
     }
 
+    /**
+     * Stop the refresh task which was started by #startRefreshTask().
+     */
     stopRefreshTask() {
         if (this.refreshIntervalID) {
             clearInterval(this.refreshIntervalID);
             this.refreshIntervalID = null;
+        }
+    }
+
+    /**
+     * Refresh the components by calling the on Update.
+     */
+    refresh() {
+        const {onUpdate} = this.props;
+
+        if (onUpdate) {
+            const derivedStartTime = moment();
+            const derivedEndTime = moment().subtract("1", "days");
+
+            onUpdate(derivedStartTime, derivedEndTime);
         }
     }
 

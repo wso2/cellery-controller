@@ -19,6 +19,7 @@
 import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
+import HttpUtils from "../common/utils/httpUtils";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
@@ -26,9 +27,8 @@ import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
 import TextField from "@material-ui/core/TextField/TextField";
-import TopToolbar from "../utils/TopToolbar";
+import TopToolbar from "../common/TopToolbar";
 import Typography from "@material-ui/core/Typography/Typography";
-import Utils from "../../utils";
 import {withRouter} from "react-router-dom/";
 import withStyles from "@material-ui/core/styles/withStyles";
 
@@ -64,7 +64,7 @@ class Search extends React.Component {
         super(props);
         const {location} = props;
 
-        const queryParams = Utils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(location.search);
         this.state = Search.generateValidState({
             data: {
                 cells: [],
@@ -87,7 +87,6 @@ class Search extends React.Component {
             },
             traces: []
         });
-        this.loadCellData();
 
         this.loadCellData = this.loadCellData.bind(this);
         this.getChangeHandler = this.getChangeHandler.bind(this);
@@ -97,7 +96,7 @@ class Search extends React.Component {
 
     componentDidMount() {
         const {location} = this.props;
-        const queryParams = Utils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(location.search);
         let isQueryParamsEmpty = true;
         for (const key in queryParams) {
             if (queryParams.hasOwnProperty(key) && queryParams[key]) {

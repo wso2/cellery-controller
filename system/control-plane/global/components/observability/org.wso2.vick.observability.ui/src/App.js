@@ -18,7 +18,7 @@
 
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
-import {ColorProvider} from "./pages/utils/color";
+import {ColorProvider} from "./pages/common/color";
 import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
@@ -26,8 +26,8 @@ import React from "react";
 import SignIn from "./pages/SignIn";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
-import {ConfigConstants, ConfigHolder} from "./pages/utils/config/configHolder";
-import {ConfigProvider, withConfig} from "./pages/utils/config";
+import {ConfigConstants, ConfigHolder} from "./pages/common/config/configHolder";
+import {ConfigProvider, withConfig} from "./pages/common/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
 
 /**

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Utils from "../../../utils";
+import Utils from "../utils";
 
 /**
  * Configuration holder.

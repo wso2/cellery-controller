@@ -36,11 +36,11 @@ import PropTypes from "prop-types";
 import React from "react";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
-import Utils from "./utils";
+import Utils from "./pages/common/utils";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import {ConfigConstants, withConfig} from "./pages/utils/config";
+import {ConfigConstants, withConfig} from "./pages/common/config";
 
 const drawerWidth = 240;
 

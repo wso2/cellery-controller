@@ -16,12 +16,10 @@
  * under the License.
  */
 
+import AuthUtils from "./authUtils";
 import axios from "axios";
 
-/**
- * Common utilities.
- */
-class Utils {
+class HttpUtils {
 
     /**
      * Parse the query param string and get an object of key value pairs.
@@ -55,31 +53,6 @@ class Utils {
     }
 
     /**
-     * Sign in the user.
-     *
-     * @param {string} user The user to be signed in
-     */
-    static signIn(user) {
-        localStorage.setItem("user", user);
-    }
-
-    /**
-     * Sign out the current user.
-     */
-    static signOut() {
-        localStorage.removeItem("user");
-    }
-
-    /**
-     * Get the currently authenticated user.
-     *
-     * @returns {string} The current user
-     */
-    static getAuthenticatedUser() {
-        return localStorage.getItem("user");
-    }
-
-    /**
      * Call the backend API.
      *
      * @param {Object} config Axios configuration object
@@ -107,7 +80,7 @@ class Utils {
                         const errorResponse = error.response;
                         if (errorResponse.status === 401) {
                             // Redirect to home page since the user is not authorised
-                            Utils.signOut();
+                            AuthUtils.signOut();
                         }
                         reject(new Error(errorResponse.data));
                     } else {
@@ -119,4 +92,4 @@ class Utils {
 
 }
 
-export default Utils;
+export default HttpUtils;

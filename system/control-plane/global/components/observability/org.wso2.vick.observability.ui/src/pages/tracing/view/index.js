@@ -18,6 +18,7 @@
 
 import Constants from "../utils/constants";
 import DependencyDiagram from "./DependencyDiagram";
+import HttpUtils from "../../common/utils/httpUtils";
 import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./SequenceDiagram";
@@ -25,9 +26,8 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
-import TopToolbar from "../../utils/TopToolbar";
+import TopToolbar from "../../common/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
-import Utils from "../../../utils";
 
 class View extends React.Component {
 
@@ -41,7 +41,7 @@ class View extends React.Component {
             "sequence-diagram",
             "dependency-diagram"
         ];
-        const queryParams = Utils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(location.search);
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
