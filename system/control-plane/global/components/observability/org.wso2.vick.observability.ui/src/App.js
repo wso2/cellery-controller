@@ -19,6 +19,7 @@
 import AppLayout from "./AppLayout";
 import Cell from "./pages/Cell";
 import {ColorProvider} from "./pages/common/color";
+import {ConfigHolder} from "./pages/common/config/configHolder";
 import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
@@ -26,8 +27,7 @@ import React from "react";
 import SignIn from "./pages/SignIn";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
-import {ConfigConstants, ConfigHolder} from "./pages/common/config/configHolder";
-import {ConfigProvider, withConfig} from "./pages/common/config";
+import {ConfigConstants, ConfigProvider, withConfig} from "./pages/common/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
 
 /**
@@ -36,27 +36,42 @@ import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
  * @param {Object} props Props passed to the component
  * @returns {React.Component} Protected portal react component
  */
-let ProtectedPortal = (props) => (
-    props.config.get(ConfigConstants.USER)
-        ? (
-            <AppLayout>
-                <Switch>
-                    <Route exact path="/" component={Overview}/>
-                    <Route exact path="/cells" component={Cell}/>
-                    <Route exact path="/microservices" component={Microservice}/>
-                    <Route path="/tracing" component={Tracing}/>
-                    <Redirect from="/*" to="/"/>
-                </Switch>
-            </AppLayout>
-        )
-        : <SignIn/>
-);
+class UnConfiguredProtectedPortal extends React.Component {
 
-ProtectedPortal.propTypes = {
+    constructor(props) {
+        super(props);
+        this.update = this.update.bind(this);
+        props.config.addListener(ConfigConstants.USER, this.update);
+    }
+
+    update() {
+        this.forceUpdate();
+    }
+
+    render() {
+        const {config} = this.props;
+        return config.get(ConfigConstants.USER)
+            ? (
+                <AppLayout>
+                    <Switch>
+                        <Route exact path="/" component={Overview}/>
+                        <Route exact path="/cells" component={Cell}/>
+                        <Route exact path="/microservices" component={Microservice}/>
+                        <Route path="/tracing" component={Tracing}/>
+                        <Redirect from="/*" to="/"/>
+                    </Switch>
+                </AppLayout>
+            )
+            : <SignIn/>;
+    }
+
+}
+
+UnConfiguredProtectedPortal.propTypes = {
     config: PropTypes.instanceOf(ConfigHolder).isRequired
 };
 
-ProtectedPortal = withConfig(ProtectedPortal);
+const ProtectedPortal = withConfig(UnConfiguredProtectedPortal);
 
 // Create the main theme of the App
 const theme = createMuiTheme({

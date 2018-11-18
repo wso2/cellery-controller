@@ -210,8 +210,8 @@ class TopToolbar extends React.Component {
         const {onUpdate} = this.props;
 
         if (onUpdate) {
-            const derivedStartTime = moment();
-            const derivedEndTime = moment().subtract("1", "days");
+            const derivedStartTime = moment().valueOf();
+            const derivedEndTime = moment().subtract("1", "days").valueOf();
 
             onUpdate(derivedStartTime, derivedEndTime);
         }

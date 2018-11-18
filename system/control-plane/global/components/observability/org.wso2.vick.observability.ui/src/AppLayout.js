@@ -18,8 +18,10 @@
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
+import AuthUtils from "./pages/common/utils/authUtils";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import {ConfigHolder} from "./pages/common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
@@ -36,7 +38,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
-import Utils from "./pages/common/utils";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
@@ -194,7 +195,10 @@ class AppLayout extends React.Component {
                                             <MenuItem onClick={this.handleUserInfoClose}>
                                                 My account
                                             </MenuItem>
-                                            <MenuItem onClick={() => Utils.signOut()}>
+                                            <MenuItem onClick={() => {
+                                                AuthUtils.signOut();
+                                                config.set(ConfigConstants.USER, null);
+                                            }}>
                                                 Logout
                                             </MenuItem>
                                         </Menu>
@@ -251,7 +255,7 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    config: PropTypes.any.isRequired,
+    config: PropTypes.instanceOf(ConfigHolder).isRequired,
     history: PropTypes.any.isRequired
 };
 

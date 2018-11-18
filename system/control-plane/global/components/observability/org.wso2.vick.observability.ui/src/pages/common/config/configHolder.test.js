@@ -28,12 +28,12 @@ describe("ConfigHolder", () => {
             configHolder.set("key3", "value3");
 
             expect(Object.keys(configHolder.config)).toHaveLength(3);
-            expect(configHolder.config.key1).toBe("value1");
-            expect(configHolder.config.key2).toBe("value2");
-            expect(configHolder.config.key3).toBe("value3");
+            expect(configHolder.config.key1.value).toBe("value1");
+            expect(configHolder.config.key2.value).toBe("value2");
+            expect(configHolder.config.key3.value).toBe("value3");
         });
 
-        it("should not add keys and should not fail upon passing undefined or null", () => {
+        it("should not fail upon passing undefined or null", () => {
             const configHolder = new ConfigHolder();
             configHolder.set("key1", null);
             configHolder.set("key2", undefined);
@@ -44,16 +44,27 @@ describe("ConfigHolder", () => {
             configHolder.set(undefined, null);
             configHolder.set(undefined, undefined);
 
-            expect(Object.keys(configHolder.config)).toHaveLength(0);
+            expect(Object.keys(configHolder.config)).toHaveLength(2);
+            expect(configHolder.config.key1.value).toBeNull();
+            expect(configHolder.config.key2.value).toBeUndefined();
         });
     });
 
     describe("get()", () => {
         it("should return the value stored before for the specified key", () => {
             const configHolder = new ConfigHolder();
-            configHolder.config.key1 = "value1";
-            configHolder.config.key2 = "value2";
-            configHolder.config.key3 = "value3";
+            configHolder.config.key1 = {
+                value: "value1",
+                listeners: []
+            };
+            configHolder.config.key2 = {
+                value: "value2",
+                listeners: []
+            };
+            configHolder.config.key3 = {
+                value: "value3",
+                listeners: []
+            };
 
             expect(configHolder.get("key1", "defaultValue1")).toBe("value1");
             expect(configHolder.get("key2", "defaultValue2")).toBe("value2");
@@ -62,9 +73,18 @@ describe("ConfigHolder", () => {
 
         it("should return the value stored before for the specified key when the default value is not provided", () => {
             const configHolder = new ConfigHolder();
-            configHolder.config.key1 = "value1";
-            configHolder.config.key2 = "value2";
-            configHolder.config.key3 = "value3";
+            configHolder.config.key1 = {
+                value: "value1",
+                listeners: []
+            };
+            configHolder.config.key2 = {
+                value: "value2",
+                listeners: []
+            };
+            configHolder.config.key3 = {
+                value: "value3",
+                listeners: []
+            };
 
             expect(configHolder.get("key1", "defaultValue1")).toBe("value1");
             expect(configHolder.get("key2", "defaultValue2")).toBe("value2");
@@ -73,9 +93,18 @@ describe("ConfigHolder", () => {
 
         it("should return the default value provided if the provided key was does not exist", () => {
             const configHolder = new ConfigHolder();
-            configHolder.config.key1 = "value1";
-            configHolder.config.key2 = "value2";
-            configHolder.config.key3 = "value3";
+            configHolder.config.key1 = {
+                value: "value1",
+                listeners: []
+            };
+            configHolder.config.key2 = {
+                value: "value2",
+                listeners: []
+            };
+            configHolder.config.key3 = {
+                value: "value3",
+                listeners: []
+            };
 
             expect(configHolder.get("non-existent-key1", "defaultValue1")).toBe("defaultValue1");
             expect(configHolder.get("non-existent-key2", "defaultValue2")).toBe("defaultValue2");
@@ -84,9 +113,18 @@ describe("ConfigHolder", () => {
 
         it("should return null if the provided key was does not exist and default value was not provided", () => {
             const configHolder = new ConfigHolder();
-            configHolder.config.key1 = "value1";
-            configHolder.config.key2 = "value2";
-            configHolder.config.key3 = "value3";
+            configHolder.config.key1 = {
+                value: "value1",
+                listeners: []
+            };
+            configHolder.config.key2 = {
+                value: "value2",
+                listeners: []
+            };
+            configHolder.config.key3 = {
+                value: "value3",
+                listeners: []
+            };
 
             expect(configHolder.get("non-existent-key1")).toBeNull();
             expect(configHolder.get("non-existent-key2")).toBeNull();

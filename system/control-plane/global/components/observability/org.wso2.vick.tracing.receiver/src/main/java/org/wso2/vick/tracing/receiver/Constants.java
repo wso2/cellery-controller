@@ -27,7 +27,7 @@ public class Constants {
 
     public static final String TRACING_RECEIVER_HOST_KEY = "host";
     public static final String TRACING_RECEIVER_PORT_KEY = "port";
-    public static final String TRACING_RECEIVER_API_CONTEXT_KEY = "apiContext";
+    public static final String TRACING_RECEIVER_API_CONTEXT_KEY = "api.context";
 
     public static final String DEFAULT_TRACING_RECEIVER_IP = "0.0.0.0";
     public static final String DEFAULT_TRACING_RECEIVER_PORT = "9411";

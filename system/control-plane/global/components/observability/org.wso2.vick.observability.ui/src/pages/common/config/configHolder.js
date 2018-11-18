@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Utils from "../utils";
+import AuthUtils from "../utils/authUtils";
 
 /**
  * Configuration holder.
@@ -29,26 +29,95 @@ class ConfigHolder {
      */
     config = {};
 
+    /**
+     * Set the value for a particular key.
+     *
+     * @param {string} key The key for which the value should be added
+     * @param {Object} value The new value that should be set
+     */
     set(key, value) {
-        if (key && value) {
-            this.config[key] = value;
+        if (key) {
+            if (!this.config[key]) {
+                this.config[key] = {
+                    value: null,
+                    listeners: []
+                };
+            }
+            this.notify(key, value);
+            this.config[key].value = value;
         }
     }
 
-    get(key, defaultValue) {
+    /**
+     * Get the value for a particular key.
+     *
+     * @param {string} key The key for which the value should be retrieved
+     * @param {Object} defaultValue The default value which should be returned if the value does not exist
+     * @returns {Object} The value for the key provided
+     */
+    get(key, defaultValue = null) {
         let value = (defaultValue ? defaultValue : null);
         if (this.config[key]) {
-            value = this.config[key];
+            value = this.config[key].value;
         }
         return value;
     }
 
+    /**
+     * Notify the listeners about a configuration change.
+     *
+     * @param {string} key The key of which the listeners should be notified
+     * @param {Object} newValue The new value of the key
+     * @private
+     */
+    notify(key, newValue) {
+        const oldValue = this.config[key].value;
+        if (oldValue !== newValue) {
+            this.config[key].listeners.forEach((listener) => listener(key, oldValue, newValue));
+        }
+    }
+
+    /**
+     * Add a listener for a particular config key.
+     *
+     * @param {string} key The config key for which the listener should be added
+     * @param {Function} callback The callback function which should be called upon update
+     */
+    addListener(key, callback) {
+        if (!this.config[key]) {
+            this.config[key] = {};
+        }
+        if (!this.config[key].listeners) {
+            this.config[key].listeners = [];
+        }
+        this.config[key].listeners.push(callback);
+    }
+
+    /**
+     * Remove a listener previously added.
+     *
+     * @param {string} key The key from which the listener should be added
+     * @param {Function} callback The callback which should be removed
+     */
+    removeListener(key, callback) {
+        if (this.config[key] && this.config[key].listeners) {
+            const listeners = this.config[key].listeners;
+            const removeIndex = listeners.indexOf(callback);
+            listeners.splice(removeIndex, removeIndex + 1);
+        }
+    }
+
+    /**
+     * Load the configuration that should be used.
+     *
+     * @returns {Promise<Object>} Promise which resolves when the configuration is loaded or rejects
+     */
     loadConfig() {
         const self = this;
         return new Promise((resolve) => {
             // TODO : Load configuration from server
-            self.config = {
-                user: Utils.getAuthenticatedUser(),
+            const loadedConfiguration = {
+                user: AuthUtils.getAuthenticatedUser(),
                 backendURL: "wso2sp-worker.vick-system:9000",
                 globalFilter: {
                     startTime: "now-24h",
@@ -56,7 +125,17 @@ class ConfigHolder {
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
             };
-            resolve(self.config);
+            const newConfig = {};
+            for (const configKey in loadedConfiguration) {
+                if (loadedConfiguration.hasOwnProperty(configKey)) {
+                    newConfig[configKey] = {
+                        ...self.config[configKey],
+                        value: loadedConfiguration[configKey]
+                    };
+                }
+            }
+            self.config = newConfig;
+            resolve();
         });
     }
 

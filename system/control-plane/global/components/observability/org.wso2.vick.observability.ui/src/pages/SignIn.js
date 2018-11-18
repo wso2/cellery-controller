@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import App from "../App";
+import AuthUtils from "./common/utils/authUtils";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
@@ -29,9 +29,7 @@ import LockIcon from "@material-ui/icons/LockOutlined";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import ReactDOM from "react-dom";
 import Typography from "@material-ui/core/Typography";
-import Utils from "./common/utils";
 import withStyles from "@material-ui/core/styles/withStyles";
 import {ConfigConstants, withConfig} from "./common/config";
 
@@ -69,8 +67,8 @@ const styles = (theme) => ({
 
 class SignIn extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.handleLogin = this.handleLogin.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
     }
@@ -79,9 +77,8 @@ class SignIn extends React.Component {
         const {config} = this.props;
 
         const username = document.getElementById("username").value;
+        AuthUtils.signIn(username);
         config.set(ConfigConstants.USER, username);
-        Utils.signIn(username);
-        ReactDOM.render(<App/>, document.getElementById("root"));
     };
 
     handleKeyPress = (event) => {
