@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import {ConfigConstants} from "../config";
+
 /**
  * Common utilities.
  */
@@ -24,17 +26,27 @@ class AuthUtils {
     /**
      * Sign in the user.
      *
-     * @param {string} user The user to be signed in
+     * @param {string} username The user to be signed in
+     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
      */
-    static signIn(user) {
-        localStorage.setItem("user", user);
+    static signIn(username, globalConfig) {
+        if (username) {
+            localStorage.setItem(ConfigConstants.USER, username);
+            globalConfig.set(ConfigConstants.USER, username);
+        } else {
+            throw Error(`Username provided cannot be "${username}"`);
+        }
     }
 
     /**
      * Sign out the current user.
+     * The provided global configuration will be updated accordingly as well.
+     *
+     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
      */
-    static signOut() {
-        localStorage.removeItem("user");
+    static signOut(globalConfig) {
+        localStorage.removeItem(ConfigConstants.USER);
+        globalConfig.unset(ConfigConstants.USER);
     }
 
     /**
@@ -43,7 +55,7 @@ class AuthUtils {
      * @returns {string} The current user
      */
     static getAuthenticatedUser() {
-        return localStorage.getItem("user");
+        return localStorage.getItem(ConfigConstants.USER);
     }
 
 }

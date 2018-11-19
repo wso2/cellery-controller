@@ -196,8 +196,7 @@ class AppLayout extends React.Component {
                                                 My account
                                             </MenuItem>
                                             <MenuItem onClick={() => {
-                                                AuthUtils.signOut();
-                                                config.set(ConfigConstants.USER, null);
+                                                AuthUtils.signOut(config);
                                             }}>
                                                 Logout
                                             </MenuItem>

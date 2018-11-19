@@ -22,10 +22,11 @@
 import AuthUtils from "./authUtils";
 import HttpUtils from "./httpUtils";
 import axios from "axios";
+import {ConfigConstants, ConfigHolder} from "../config/configHolder";
 
 jest.mock("axios");
 
-describe("Utils", () => {
+describe("HttpUtils", () => {
     describe("parseQueryParams()", () => {
         it("should parse and return the query parameters as an object", () => {
             const query = HttpUtils.parseQueryParams("?key1=value1&key2=value2&key3=value3");
@@ -73,6 +74,13 @@ describe("Utils", () => {
     });
 
     describe("callBackendAPI()", () => {
+        let config;
+
+        beforeEach(() => {
+            config = new ConfigHolder();
+            config.set(ConfigConstants.USER, "user1");
+        });
+
         it("should add application/json header", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
@@ -96,7 +104,7 @@ describe("Utils", () => {
                 headers: {
                     "X-Key": "value"
                 }
-            });
+            }, config);
         });
 
         it("should add application/json header if no headers are provided", async () => {
@@ -118,7 +126,7 @@ describe("Utils", () => {
             await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "http://www.example.com/test"
-            });
+            }, config);
         });
 
         it("should not change headers if Accept header is already provided", async () => {
@@ -143,7 +151,7 @@ describe("Utils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            });
+            }, config);
         });
 
         const DATA = "testData";
@@ -171,7 +179,7 @@ describe("Utils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            });
+            }, config);
         };
         const mockReject = (statusCode) => {
             axios.mockResolvedValue(new Promise((resolve, reject) => {
@@ -189,7 +197,7 @@ describe("Utils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            });
+            }, config);
         };
 
         resolveStatusCodes.forEach((statusCode) => {

@@ -17,18 +17,19 @@
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
+import {ConfigHolder} from "./config/configHolder";
 import Divider from "@material-ui/core/Divider/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import PropTypes from "prop-types";
+import QueryUtils from "./utils/queryUtils";
 import React from "react";
 import Refresh from "@material-ui/icons/Refresh";
 import Select from "@material-ui/core/Select/Select";
 import Toolbar from "@material-ui/core/Toolbar/Toolbar";
 import Typography from "@material-ui/core/Typography/Typography";
-import moment from "moment";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import {ConfigConstants, withConfig} from "./config";
@@ -67,7 +68,7 @@ class TopToolbar extends React.Component {
             };
         } else {
             this.state = {
-                startTime: "now - 24h",
+                startTime: "now - 24 hours",
                 endTime: "now",
                 refreshInterval: 30 * 1000
             };
@@ -144,7 +145,7 @@ class TopToolbar extends React.Component {
 
         config.set(ConfigConstants.GLOBAL_FILTER, {
             ...config.get(ConfigConstants.GLOBAL_FILTER),
-            startTime: "now - 24h",
+            startTime: "now - 24 hours",
             endTime: "now"
         });
 
@@ -208,12 +209,13 @@ class TopToolbar extends React.Component {
      */
     refresh() {
         const {onUpdate} = this.props;
+        const {startTime, endTime} = this.state;
 
         if (onUpdate) {
-            const derivedStartTime = moment().valueOf();
-            const derivedEndTime = moment().subtract("1", "days").valueOf();
-
-            onUpdate(derivedStartTime, derivedEndTime);
+            onUpdate(
+                QueryUtils.parseTime(startTime),
+                QueryUtils.parseTime(endTime)
+            );
         }
     }
 
@@ -223,7 +225,7 @@ TopToolbar.propTypes = {
     onUpdate: PropTypes.func,
     title: PropTypes.string.isRequired,
     classes: PropTypes.any.isRequired,
-    config: PropTypes.any.isRequired,
+    config: PropTypes.instanceOf(ConfigHolder).isRequired,
     history: PropTypes.shape({
         goBack: PropTypes.func.isRequired
     }),

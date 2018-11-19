@@ -20,6 +20,7 @@ import AuthUtils from "./common/utils/authUtils";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
+import {ConfigHolder} from "./common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -134,9 +135,7 @@ class SignIn extends React.Component {
 
 SignIn.propTypes = {
     classes: PropTypes.object.isRequired,
-    config: PropTypes.shape({
-        set: PropTypes.func.isRequired
-    }).isRequired
+    config: PropTypes.instanceOf(ConfigHolder).isRequired
 };
 
 export default withStyles(styles)(withConfig(SignIn));

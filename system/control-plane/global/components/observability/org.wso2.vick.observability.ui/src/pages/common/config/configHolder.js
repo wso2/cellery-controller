@@ -39,12 +39,23 @@ class ConfigHolder {
         if (key) {
             if (!this.config[key]) {
                 this.config[key] = {
-                    value: null,
-                    listeners: []
+                    value: null
                 };
             }
             this.notify(key, value);
             this.config[key].value = value;
+        }
+    }
+
+    /**
+     * Unset the value for a particular key.
+     *
+     * @param {string} key The key for which the value should be removed
+     */
+    unset(key) {
+        if (key && this.config[key]) {
+            this.notify(key, null);
+            this.config[key].value = null;
         }
     }
 
@@ -56,25 +67,11 @@ class ConfigHolder {
      * @returns {Object} The value for the key provided
      */
     get(key, defaultValue = null) {
-        let value = (defaultValue ? defaultValue : null);
+        let value = defaultValue;
         if (this.config[key]) {
             value = this.config[key].value;
         }
         return value;
-    }
-
-    /**
-     * Notify the listeners about a configuration change.
-     *
-     * @param {string} key The key of which the listeners should be notified
-     * @param {Object} newValue The new value of the key
-     * @private
-     */
-    notify(key, newValue) {
-        const oldValue = this.config[key].value;
-        if (oldValue !== newValue) {
-            this.config[key].listeners.forEach((listener) => listener(key, oldValue, newValue));
-        }
     }
 
     /**
@@ -100,10 +97,27 @@ class ConfigHolder {
      * @param {Function} callback The callback which should be removed
      */
     removeListener(key, callback) {
-        if (this.config[key] && this.config[key].listeners) {
+        if (this.config[key]) {
             const listeners = this.config[key].listeners;
-            const removeIndex = listeners.indexOf(callback);
-            listeners.splice(removeIndex, removeIndex + 1);
+            if (listeners) {
+                const removeIndex = listeners.indexOf(callback);
+                listeners.splice(removeIndex, 1);
+            }
+        }
+    }
+
+    /**
+     * Notify the listeners about a configuration change.
+     *
+     * @param {string} key The key of which the listeners should be notified
+     * @param {Object} newValue The new value of the key
+     * @private
+     */
+    notify(key, newValue) {
+        const oldValue = this.config[key].value;
+        const listeners = this.config[key].listeners;
+        if (oldValue !== newValue && listeners) {
+            listeners.forEach((listener) => listener(key, oldValue, newValue));
         }
     }
 
@@ -120,7 +134,7 @@ class ConfigHolder {
                 user: AuthUtils.getAuthenticatedUser(),
                 backendURL: "wso2sp-worker.vick-system:9000",
                 globalFilter: {
-                    startTime: "now-24h",
+                    startTime: "now - 24 hours",
                     endTime: "now",
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
@@ -129,8 +143,8 @@ class ConfigHolder {
             for (const configKey in loadedConfiguration) {
                 if (loadedConfiguration.hasOwnProperty(configKey)) {
                     newConfig[configKey] = {
-                        ...self.config[configKey],
-                        value: loadedConfiguration[configKey]
+                        value: loadedConfiguration[configKey],
+                        listeners: []
                     };
                 }
             }

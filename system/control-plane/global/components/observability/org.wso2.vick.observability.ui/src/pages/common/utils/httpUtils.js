@@ -56,9 +56,10 @@ class HttpUtils {
      * Call the backend API.
      *
      * @param {Object} config Axios configuration object
+     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
      * @returns {Promise} A promise for the API call
      */
-    static callBackendAPI(config) {
+    static callBackendAPI(config, globalConfig) {
         return new Promise((resolve, reject) => {
             if (!config.headers) {
                 config.headers = {};
@@ -80,7 +81,7 @@ class HttpUtils {
                         const errorResponse = error.response;
                         if (errorResponse.status === 401) {
                             // Redirect to home page since the user is not authorised
-                            AuthUtils.signOut();
+                            AuthUtils.signOut(globalConfig);
                         }
                         reject(new Error(errorResponse.data));
                     } else {

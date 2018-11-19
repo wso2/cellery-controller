@@ -127,7 +127,7 @@ describe("ColorGenerator", () => {
         });
     });
 
-    describe("generateColors()", () => {
+    describe("regenerateNewColorScheme()", () => {
         const keyCount = 200;
         let keyList;
 
