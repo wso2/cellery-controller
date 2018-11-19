@@ -22,16 +22,19 @@ import Search from "./Search";
 import View from "./view";
 import {Redirect, Route, Switch, withRouter} from "react-router-dom";
 
-const Tracing = ({match}) => (
+const Tracing = ({match, location}) => (
     <Switch>
-        <Route exact path={`${match.url}/search`} component={Search}/>
-        <Route exact path={`${match.url}/id/:traceId`} component={View}/>
-        <Redirect from={`${match.url}/`} to={`${match.url}/search`}/>
+        <Route exact path={`${match.path}/search`} component={Search}/>
+        <Route exact path={`${match.path}/id/:traceId`} component={View}/>
+        <Redirect from={`${match.url}/`} to={{pathname: `${match.url}/search`, state: location.state}}/>
     </Switch>
 );
 
 Tracing.propTypes = {
-    match: PropTypes.object.isRequired
+    match: PropTypes.object.isRequired,
+    location: PropTypes.shape({
+        state: PropTypes.object
+    }).isRequired
 };
 
 export default withRouter(Tracing);

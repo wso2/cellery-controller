@@ -16,21 +16,36 @@
  * under the License.
  */
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/**
+ * Common utilities.
+ */
+class AuthUtils {
+
+    /**
+     * Sign in the user.
+     *
+     * @param {string} user The user to be signed in
+     */
+    static signIn(user) {
+        localStorage.setItem("user", user);
+    }
+
+    /**
+     * Sign out the current user.
+     */
+    static signOut() {
+        localStorage.removeItem("user");
+    }
+
+    /**
+     * Get the currently authenticated user.
+     *
+     * @returns {string} The current user
+     */
+    static getAuthenticatedUser() {
+        return localStorage.getItem("user");
+    }
+
 }
 
-html, body, #root {
-  height: 100%;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
+export default AuthUtils;

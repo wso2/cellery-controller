@@ -315,7 +315,7 @@ describe("TracingUtils", () => {
             expect(istioMixerServerSpan.children.has(istioMixerWorkerSpan)).toBe(true);
 
             expect(istioMixerWorkerSpan.parent).toBe(istioMixerServerSpan);
-            expect(istioMixerWorkerSpan.sibling).toBe(null);
+            expect(istioMixerWorkerSpan.sibling).toBeNull();
             expect(istioMixerWorkerSpan.children.size).toBe(0);
 
             expect(employeeServiceToReviewsServiceClientSpan.parent).toBe(employeeServiceServerSpan);
@@ -377,13 +377,13 @@ describe("TracingUtils", () => {
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
             expect(employeeServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(employeeServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToIstioMixerClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
             expect(istioMixerServerSpan.cell).toBeNull();
@@ -397,19 +397,21 @@ describe("TracingUtils", () => {
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToReviewsServiceClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToReviewsServiceClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(employeeServiceToReviewsServiceClientSpan.componentType)
+                .toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
             expect(reviewsServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(reviewsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(reviewsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToStockOptionsCellClientSpan.cell.version).toBe("1.0.0");
-            expect(employeeServiceToStockOptionsCellClientSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(employeeServiceToStockOptionsCellClientSpan.componentType)
+                .toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
@@ -427,7 +429,7 @@ describe("TracingUtils", () => {
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
             expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
-            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.USER);
+            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.Span.ComponentType.MICROSERVICE);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
     });

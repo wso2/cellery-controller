@@ -22,6 +22,8 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
+import {ColorGenerator} from "../../../common/color/colorGenerator";
+import Constants from "../../utils/constants";
 import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -32,12 +34,12 @@ import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
-import classNames from "classnames";
 import interact from "interactjs";
 import vis from "vis";
 import {withStyles} from "@material-ui/core";
+import {ColorGeneratorConstants, withColor} from "../../../common/color";
 
-const styles = () => ({
+const styles = (theme) => ({
     spanLabelContainer: {
         width: 500,
         whiteSpace: "nowrap",
@@ -71,14 +73,14 @@ const styles = () => ({
         height: "100%",
         userSelect: "none"
     },
-    spanDurationLabel: {
-        maxHeight: null
-    },
     spanDescriptionContent: {
         margin: "5px 12px 5px 7px"
     },
     overallDescriptionContainer: {
-        padding: "30px 0 20px 0"
+        paddingTop: theme.spacing.unit * 3,
+        paddingRight: 0,
+        paddingBottom: theme.spacing.unit * 2,
+        paddingLeft: 0
     },
     overallDescriptionKey: {
         fontWeight: 500,
@@ -91,7 +93,8 @@ const styles = () => ({
     overallDescriptionSeparator: {
         borderStyle: "solid",
         borderWidth: "0 0 0 1px",
-        margin: "0 10px"
+        marginLeft: theme.spacing.unit * 2,
+        marginRight: theme.spacing.unit * 2
     }
 });
 
@@ -126,8 +129,8 @@ class TimelineView extends React.Component {
         const {classes} = this.props;
 
         // Removing interactions added to the timeline
-        TimelineView.clearInteractions(`.${classNames(classes.resizeHandle)}`);
-        TimelineView.clearInteractions(`.${classNames(classes.spanLabelContainer)}`);
+        TimelineView.clearInteractions(`.${classes.resizeHandle}`);
+        TimelineView.clearInteractions(`.${classes.spanLabelContainer}`);
 
         // Destroying the timeline
         if (this.timeline) {
@@ -150,36 +153,38 @@ class TimelineView extends React.Component {
         const traceStart = new Date(this.trace.minTime).toGMTString();
 
         return (
-            <div>
-                <div className={classNames(classes.overallDescriptionContainer)}>
-                    <span className={classNames(classes.overallDescriptionKey)}>Trace Start:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{traceStart}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Duration:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{duration}ms</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Services:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{serviceNames.length}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Depth:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{this.trace.treeHeight}</span>
-                    <span className={classNames(classes.overallDescriptionSeparator)}/>
-                    <span className={classNames(classes.overallDescriptionKey)}>Total Spans:</span>
-                    <span className={classNames(classes.overallDescriptionValue)}>{this.trace.spans.length}</span>
+            <React.Fragment>
+                <div className={classes.overallDescriptionContainer}>
+                    <span className={classes.overallDescriptionKey}>Trace Start:</span>
+                    <span className={classes.overallDescriptionValue}>{traceStart}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Duration:</span>
+                    <span className={classes.overallDescriptionValue}>{duration}ms</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Services:</span>
+                    <span className={classes.overallDescriptionValue}>{serviceNames.length}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Depth:</span>
+                    <span className={classes.overallDescriptionValue}>{this.trace.treeHeight}</span>
+                    <span className={classes.overallDescriptionSeparator}/>
+                    <span className={classes.overallDescriptionKey}>Total Spans:</span>
+                    <span className={classes.overallDescriptionValue}>{this.trace.spans.length}</span>
                 </div>
                 <div ref={this.timelineNode}/>
-            </div>
+            </React.Fragment>
         );
     }
 
     calculateTrace() {
-        this.trace.tree = TracingUtils.buildTree(this.props.spans);
+        const {spans, colorGenerator} = this.props;
+        this.trace.tree = TracingUtils.buildTree(spans);
         this.trace.spans = TracingUtils.getOrderedList(this.trace.tree);
 
         // Finding the maximum tree height
         this.trace.treeHeight = 0;
         let minLimit = Number.MAX_VALUE;
         let maxLimit = 0;
+        const cellNames = [];
         this.trace.tree.walk((span) => {
             if (span.treeDepth > this.trace.treeHeight) {
                 this.trace.treeHeight = span.treeDepth;
@@ -190,14 +195,18 @@ class TimelineView extends React.Component {
             if (span.startTime + span.duration > maxLimit) {
                 maxLimit = span.startTime + span.duration;
             }
+            if (span.cell.name && !cellNames.includes(span.cell.name)) {
+                cellNames.push(span.cell.name);
+            }
         });
         this.trace.treeHeight += 1;
         this.trace.minTime = minLimit;
         this.trace.maxTime = maxLimit;
+        colorGenerator.addKeys(cellNames);
     }
 
     drawTimeline() {
-        const {classes} = this.props;
+        const {classes, colorGenerator} = this.props;
         const self = this;
 
         // Un-selecting the spans
@@ -249,12 +258,12 @@ class TimelineView extends React.Component {
                                 paddingLeft: `${(item.span.treeDepth + (isLeaf === 0 ? 1 : 0)) * 15}px`,
                                 minWidth: `${(this.trace.treeHeight + 1) * 15 + 100}px`,
                                 width: `${(self.spanLabelWidth > 0 ? self.spanLabelWidth : null)}px`
-                            }} className={classNames(classes.spanLabelContainer)}>
-                                <span className={classNames(classes.serviceName)}>{`${item.span.serviceName} `}</span>
-                                <span className={classNames(classes.operationName)}>{item.span.operationName}</span>
+                            }} className={classes.spanLabelContainer}>
+                                <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
+                                <span className={classes.operationName}>{item.span.operationName}</span>
                             </div>
                             {(kindData
-                                ? <div className={classNames(classes.kindBadge)}
+                                ? <div className={classes.kindBadge}
                                     style={{backgroundColor: kindData.color}}>{kindData.name}</div>
                                 : null
                             )}
@@ -268,6 +277,24 @@ class TimelineView extends React.Component {
                 let content = <span>{item.content}</span>;
                 if (item.itemType === TimelineView.Constants.ItemType.SPAN) {
                     content = <span>{item.span.duration} ms</span>;
+
+                    // Finding the proper color for this item
+                    let colorKey = item.span.cell.name;
+                    if (!colorKey) {
+                        if (item.span.componentType === Constants.Span.ComponentType.VICK) {
+                            colorKey = ColorGeneratorConstants.VICK;
+                        } else if (item.span.componentType === Constants.Span.ComponentType.ISTIO) {
+                            colorKey = ColorGeneratorConstants.ISTIO;
+                        } else {
+                            colorKey = item.span.componentType;
+                        }
+                    }
+                    const color = colorGenerator.getColor(colorKey);
+
+                    // Applying the color onto the item
+                    const parent = element.parentElement.parentElement;
+                    parent.style.backgroundColor = color;
+                    parent.style.borderColor = color;
                 } else if (item.itemType === TimelineView.Constants.ItemType.SPAN_DESCRIPTION) {
                     const rows = [];
                     for (const key in item.span.tags) {
@@ -320,8 +347,8 @@ class TimelineView extends React.Component {
         const reversedSpans = this.trace.spans.slice().reverse();
 
         // Clear previous interactions (eg:- resizability) added to the timeline
-        const selector = `.${classNames(classes.spanLabelContainer)}`;
-        TimelineView.clearInteractions(`.${classNames(classes.resizeHandle)}`);
+        const selector = `.${classes.spanLabelContainer}`;
+        TimelineView.clearInteractions(`.${classes.resizeHandle}`);
         TimelineView.clearInteractions(selector);
 
         // Creating / Updating the timeline
@@ -444,7 +471,7 @@ class TimelineView extends React.Component {
 
         // Add the horizontal resize handle
         const newNode = document.createElement("div");
-        newNode.classList.add(classNames(classes.resizeHandle));
+        newNode.classList.add(classes.resizeHandle);
         const parent = document.querySelector(".vis-panel.vis-top");
         parent.insertBefore(newNode, parent.childNodes[0]);
 
@@ -467,7 +494,7 @@ class TimelineView extends React.Component {
         });
 
         // Handling dragging of the resize handle
-        interact(`.${classNames(classes.resizeHandle)}`).on("down", (event) => {
+        interact(`.${classes.resizeHandle}`).on("down", (event) => {
             event.interaction.start(
                 {
                     name: "resize",
@@ -525,7 +552,8 @@ TimelineView.propTypes = {
     classes: PropTypes.any.isRequired,
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
-    ).isRequired
+    ).isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
 TimelineView.Constants = {
@@ -536,4 +564,4 @@ TimelineView.Constants = {
     }
 };
 
-export default withStyles(styles, {withTheme: true})(TimelineView);
+export default withStyles(styles, {withTheme: true})(withColor(TimelineView));

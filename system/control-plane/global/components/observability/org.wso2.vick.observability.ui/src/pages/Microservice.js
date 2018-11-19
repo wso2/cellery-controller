@@ -16,21 +16,18 @@
  * under the License.
  */
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+import React, {Component} from "react";
+
+class Microservice extends Component {
+
+    render() {
+        return (
+            <div>
+                Hello World Micro Service!
+            </div>
+        );
+    }
+
 }
 
-html, body, #root {
-  height: 100%;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
+export default Microservice;

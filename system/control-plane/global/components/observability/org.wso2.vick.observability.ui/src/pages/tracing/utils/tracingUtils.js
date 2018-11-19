@@ -88,7 +88,7 @@ class TracingUtils {
             } else if (TracingUtils.isFromVICKSystemComponent(span)) {
                 span.componentType = Constants.Span.ComponentType.VICK;
             } else {
-                span.componentType = Constants.Span.ComponentType.USER;
+                span.componentType = Constants.Span.ComponentType.MICROSERVICE;
             }
 
             if (TracingUtils.isFromCellGateway(span)) {

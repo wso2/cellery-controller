@@ -16,18 +16,10 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import React from "react";
 
-class MicroService extends Component {
+const DependencyDiagram = () => (
+    <div>Sequence Diagram</div>
+);
 
-    render() {
-        return (
-            <div>
-                Hello World Micro Service!
-            </div>
-        );
-    }
-
-}
-
-export default MicroService;
+export default DependencyDiagram;

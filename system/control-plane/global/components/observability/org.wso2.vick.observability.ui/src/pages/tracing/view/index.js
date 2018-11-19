@@ -17,6 +17,8 @@
  */
 
 import Constants from "../utils/constants";
+import DependencyDiagram from "./DependencyDiagram";
+import HttpUtils from "../../common/utils/httpUtils";
 import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./SequenceDiagram";
@@ -24,17 +26,27 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
+import TopToolbar from "../../common/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
 
 class View extends React.Component {
 
     constructor(props) {
         super(props);
-        const traceId = props.match.params.traceId;
+        const {match, location} = props;
+        const traceId = match.params.traceId;
+
+        this.tabs = [
+            "timeline",
+            "sequence-diagram",
+            "dependency-diagram"
+        ];
+        const queryParams = HttpUtils.parseQueryParams(location.search);
+        const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
             spans: [],
-            selectedTabIndex: 0
+            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
         };
 
         this.handleTabChange = this.handleTabChange.bind(this);
@@ -278,20 +290,23 @@ class View extends React.Component {
 
         const timeline = <Timeline spans={spans}/>;
         const sequenceDiagram = <SequenceDiagram/>;
-        const tabContent = [timeline, sequenceDiagram];
+        const dependencyDiagram = <DependencyDiagram/>;
+        const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
         return (
-            this.state.spans.length === 0
+            spans.length === 0
                 ? null
                 : (
-                    <div>
+                    <React.Fragment>
+                        <TopToolbar title={"Distributed Tracing"}/>
                         <Tabs value={selectedTabIndex} indicatorColor="primary"
                             onChange={this.handleTabChange}>
                             <Tab label="Timeline"/>
                             <Tab label="Sequence Diagram"/>
+                            <Tab label="Dependency Diagram"/>
                         </Tabs>
                         {tabContent[selectedTabIndex]}
-                    </div>
+                    </React.Fragment>
                 )
         );
     }
@@ -303,6 +318,9 @@ View.propTypes = {
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
         }).isRequired
+    }).isRequired,
+    location: PropTypes.shape({
+        search: PropTypes.string.isRequired
     }).isRequired
 };
 

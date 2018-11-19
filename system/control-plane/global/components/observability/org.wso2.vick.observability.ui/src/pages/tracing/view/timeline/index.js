@@ -30,13 +30,11 @@ import Select from "@material-ui/core/Select/Select";
 import Span from "../../utils/span";
 import TimelineView from "./TimelineView";
 import TracingUtils from "../../utils/tracingUtils";
-import classNames from "classnames";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
     formControl: {
-        margin: theme.spacing.unit,
-        width: "100%"
+        margin: theme.spacing.unit
     }
 });
 
@@ -81,7 +79,7 @@ class Timeline extends React.Component {
 
             // Apply service type filter
             isSelected = this.state.selectedServiceTypes.includes(span.componentType)
-                || span.componentType === Constants.Span.ComponentType.USER;
+                || span.componentType === Constants.Span.ComponentType.MICROSERVICE;
 
             if (isSelected) {
                 filteredSpans.push(span);
@@ -101,18 +99,18 @@ class Timeline extends React.Component {
         for (const filterName in Constants.Span.ComponentType) {
             if (Constants.Span.ComponentType.hasOwnProperty(filterName)) {
                 const serviceType = Constants.Span.ComponentType[filterName];
-                if (serviceType !== Constants.Span.ComponentType.USER) {
+                if (serviceType !== Constants.Span.ComponentType.MICROSERVICE) {
                     serviceTypes.push(serviceType);
                 }
             }
         }
 
         return (
-            <div>
-                <Grid container justify={"flex-end"}>
-                    <Grid item xs={4}>
-                        <FormControl className={classNames(classes.formControl)}>
-                            <InputLabel htmlFor="select-multiple-checkbox">Service Type</InputLabel>
+            <React.Fragment>
+                <Grid container justify={"flex-start"} spacing={24}>
+                    <Grid item xs={3}>
+                        <FormControl className={classes.formControl} fullWidth={true}>
+                            <InputLabel htmlFor="select-multiple-checkbox">Type</InputLabel>
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}
                                 input={<Input id="select-multiple-checkbox"/>}
@@ -137,12 +135,17 @@ class Timeline extends React.Component {
                                         );
                                     })
                                 }
+                                <MenuItem key={Constants.Span.ComponentType.MICROSERVICE}
+                                    value={Constants.Span.ComponentType.MICROSERVICE} style={{pointerEvents: "none"}}>
+                                    <Checkbox checked={true} disabled={true}/>
+                                    <ListItemText primary={Constants.Span.ComponentType.MICROSERVICE}/>
+                                </MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
                 </Grid>
                 <TimelineView spans={this.getFilteredSpans()}/>
-            </div>
+            </React.Fragment>
         );
     }
 

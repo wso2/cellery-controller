@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import App from "../App";
+import AuthUtils from "./common/utils/authUtils";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
@@ -29,9 +29,9 @@ import LockIcon from "@material-ui/icons/LockOutlined";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import ReactDOM from "react-dom";
 import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
+import {ConfigConstants, withConfig} from "./common/config";
 
 const styles = (theme) => ({
     layout: {
@@ -67,16 +67,18 @@ const styles = (theme) => ({
 
 class SignIn extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.handleLogin = this.handleLogin.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
     }
 
     handleLogin = () => {
+        const {config} = this.props;
+
         const username = document.getElementById("username").value;
-        localStorage.setItem("username", username);
-        ReactDOM.render(<App username={username}/>, document.getElementById("root"));
+        AuthUtils.signIn(username);
+        config.set(ConfigConstants.USER, username);
     };
 
     handleKeyPress = (event) => {
@@ -110,25 +112,15 @@ class SignIn extends React.Component {
                             </FormControl>
                             <FormControl margin="normal" required fullWidth>
                                 <InputLabel htmlFor="password">Password</InputLabel>
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    id="password"
-                                    autoComplete="current-password"
-                                    onKeyPress={this.handleKeyPress}
-                                />
+                                <Input name="password" type="password" id="password" autoComplete="current-password"
+                                    onKeyPress={this.handleKeyPress}/>
                             </FormControl>
                             <FormControlLabel
                                 control={<Checkbox value="remember" color="primary"/>}
                                 label="Remember me"
                             />
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                color="primary"
-                                className={classes.submit}
-                                onClick={this.handleLogin}
-                            >
+                            <Button fullWidth variant="contained" color="primary" className={classes.submit}
+                                onClick={this.handleLogin}>
                                 Sign in
                             </Button>
                         </form>
@@ -141,7 +133,10 @@ class SignIn extends React.Component {
 }
 
 SignIn.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    config: PropTypes.shape({
+        set: PropTypes.func.isRequired
+    }).isRequired
 };
 
-export default withStyles(styles)(SignIn);
+export default withStyles(styles)(withConfig(SignIn));
