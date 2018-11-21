@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #cat vick-cleanup.sh |bash -s -- kubeadm
 
@@ -13,9 +13,7 @@ if [ $iaas == "kubeadm" ]; then
 
     echo "Removing docker kubeadm kubelet kubectl."
     echo
-    read -p "Do you want to purge kubelet kubectl and docker [y/N]: " deb_remove_option
-
-    sudo kubeadm reset
+    read -p "Do you want to purge kubelet kubectl and docker [y/N]: " deb_remove_option < /dev/tty
 
     if [ $deb_remove_option == "y" ]; then
         DEL_LEVEL="purge"

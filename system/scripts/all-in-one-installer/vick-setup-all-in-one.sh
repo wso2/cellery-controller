@@ -17,7 +17,11 @@
 #
 # ------------------------------------------------------------------------
 
-#cat vick-setup-all-in-one.sh |bash -s -- GCP knative-deep
+#Deploy VICK with kubeadm K8s provider.
+#cat vick-setup-all-in-one.sh |bash -s -- kubeadm
+
+#Deploy VICK with GCP K8s provier.
+#cat vick-setup-all-in-one.sh |bash -s -- GCP proj-vick
 
 function install_k8s_kubeadm () {
     K8S_VERSION=$1
@@ -332,7 +336,6 @@ function deploy_global_pubstore () {
     kubectl apply -f ${download_location}/vick-apim-pub-store-ingress.yaml -n vick-system
 }
 
-}
 function deploy_sp_dashboard_worker () {
     local download_location=$1
     #Create SP worker configmaps
