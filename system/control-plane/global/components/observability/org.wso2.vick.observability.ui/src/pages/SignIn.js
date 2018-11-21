@@ -31,8 +31,8 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Typography from "@material-ui/core/Typography";
+import {withConfig} from "./common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {ConfigConstants, withConfig} from "./common/config";
 
 const styles = (theme) => ({
     layout: {
@@ -78,8 +78,7 @@ class SignIn extends React.Component {
         const {config} = this.props;
 
         const username = document.getElementById("username").value;
-        AuthUtils.signIn(username);
-        config.set(ConfigConstants.USER, username);
+        AuthUtils.signIn(username, config);
     };
 
     handleKeyPress = (event) => {

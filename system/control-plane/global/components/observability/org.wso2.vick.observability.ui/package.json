@@ -1,7 +1,17 @@
 {
   "name": "org.wso2.vick.observability.ui",
   "version": "0.1.0",
-  "private": true,
+  "description": "WSO2 VICK Observability Portal",
+  "author": "WSO2 Org",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rimraf ./build/ && rimraf ./node-server/public/",
+    "start": "react-scripts start",
+    "lint": "eslint --color --fix src/",
+    "build": "react-scripts build",
+    "test": "CI=true react-scripts test --colors --resetModules --restoreMocks --testURL=http://test.vick.com",
+    "eject": "react-scripts eject"
+  },
   "dependencies": {
     "@material-ui/core": "^3.3.2",
     "@material-ui/icons": "^3.0.1",
@@ -16,16 +26,10 @@
     "react-dom": "^16.6.0",
     "react-router-dom": "^4.3.1",
     "react-scripts": "2.1.0",
-    "rimraf": "^2.6.2",
     "vis": "^4.21.0"
   },
-  "scripts": {
-    "clean": "rimraf ./dist/",
-    "start": "react-scripts start",
-    "lint": "eslint --color --fix src/",
-    "build": "react-scripts build",
-    "test": "CI=true react-scripts test --colors --resetModules --restoreMocks --testURL=http://test.vick.com",
-    "eject": "react-scripts eject"
+  "devDependencies": {
+    "rimraf": "^2.6.2"
   },
   "browserslist": [
     ">0.2%",
