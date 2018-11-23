@@ -870,6 +870,142 @@ describe("Span", () => {
         });
     });
 
+    const globalGatewayServerSpan = new Span({
+        traceId: "trace-x-id",
+        spanId: "span-a-id",
+        parentSpanId: "trace-x-id",
+        serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
+        operationName: "get-hr-info",
+        kind: Constants.Span.Kind.SERVER,
+        startTime: 10000000,
+        duration: 3160000,
+        tags: {}
+    });
+    const hrCellGatewayServerSpan = new Span({
+        traceId: "trace-x-id",
+        spanId: "span-b-id",
+        parentSpanId: "span-a-id",
+        serviceName: "src:0.0.0.hr_1_0_0_employee",
+        operationName: "call-hr-cell",
+        kind: Constants.Span.Kind.SERVER,
+        startTime: 10020000,
+        duration: 3090000,
+        tags: {}
+    });
+    const employeeServiceServerSpan = new Span({
+        traceId: "trace-x-id",
+        spanId: "span-c-id",
+        parentSpanId: "span-b-id",
+        serviceName: "hr--employee-service",
+        operationName: "get-employee-data",
+        kind: Constants.Span.Kind.SERVER,
+        startTime: 10040000,
+        duration: 3040000,
+        tags: {}
+    });
+    const istioMixerServerSpan = new Span({
+        traceId: "trace-x-id",
+        spanId: "span-d-id",
+        parentSpanId: "span-c-id",
+        serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
+        operationName: "is-authorized",
+        kind: Constants.Span.Kind.SERVER,
+        startTime: 10060000,
+        duration: 940000,
+        tags: {}
+    });
+
+    describe("isFromCellGateway()", () => {
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(hrCellGatewayServerSpan.isFromCellGateway()).toBe(true);
+        });
+
+        it("should return false if the span is not from a Cell Gateway", () => {
+            expect(globalGatewayServerSpan.isFromCellGateway()).toBe(false);
+            expect(istioMixerServerSpan.isFromCellGateway()).toBe(false);
+            expect(employeeServiceServerSpan.isFromCellGateway()).toBe(false);
+        });
+    });
+
+    describe("isFromVICKSystemComponent()", () => {
+        it("should return true if the span is from Global Gateway", () => {
+            expect(globalGatewayServerSpan.isFromVICKSystemComponent()).toBe(true);
+        });
+
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(hrCellGatewayServerSpan.isFromVICKSystemComponent()).toBe(true);
+        });
+
+        it("should return true if the span is from Istio Mixer", () => {
+            expect(istioMixerServerSpan.isFromVICKSystemComponent()).toBe(false);
+        });
+
+        it("should return false if the span is from a custom service", () => {
+            expect(employeeServiceServerSpan.isFromVICKSystemComponent()).toBe(false);
+        });
+    });
+
+    describe("isFromIstioSystemComponent()", () => {
+        it("should return true if the span is from Global Gateway", () => {
+            expect(globalGatewayServerSpan.isFromIstioSystemComponent()).toBe(false);
+        });
+
+        it("should return true if the span is from a Cell Gateway", () => {
+            expect(hrCellGatewayServerSpan.isFromIstioSystemComponent()).toBe(false);
+        });
+
+        it("should return true if the span is from Istio Mixer", () => {
+            expect(istioMixerServerSpan.isFromIstioSystemComponent()).toBe(true);
+        });
+
+        it("should return false if the span is from a custom service", () => {
+            expect(employeeServiceServerSpan.isFromIstioSystemComponent()).toBe(false);
+        });
+    });
+
+    describe("getCell()", () => {
+        it("should return the cell information if the span is from a Cell Gateway", () => {
+            const cell = hrCellGatewayServerSpan.getCell();
+
+            expect(cell.name).toBe("hr");
+            expect(cell.version).toBe("1.0.0");
+        });
+
+        it("should return the cell name only if the span is from a Cell Microservice", () => {
+            const cell = employeeServiceServerSpan.getCell();
+
+            expect(cell.name).toBe("hr");
+            expect(cell.version).toBeNull();
+        });
+
+        it("should return the cell if the span already has a cell set", () => {
+            const span = new Span({
+                traceId: "trace-id",
+                spanId: "span-id",
+                parentSpanId: "span-parent-id",
+                serviceName: "service",
+                operationName: "test",
+                kind: Constants.Span.Kind.SERVER,
+                startTime: 10060000,
+                duration: 940000,
+                tags: {}
+            });
+            span.cell = {
+                name: "test-cell",
+                version: "10.0.0"
+            };
+            const cell = span.getCell();
+
+            expect(cell.name).toBe("test-cell");
+            expect(cell.version).toBe("10.0.0");
+        });
+
+        it("should return null if the span is not not from a Cell Gateway", () => {
+            expect(globalGatewayServerSpan.getCell()).toBeNull();
+            expect(istioMixerServerSpan.getCell()).toBeNull();
+        });
+    });
+
     describe("shallowClone()", () => {
         it("should return a copy of the initial span without span references", () => {
             const span = new Span({

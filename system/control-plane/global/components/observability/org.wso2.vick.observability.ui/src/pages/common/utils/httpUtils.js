@@ -17,6 +17,7 @@
  */
 
 import AuthUtils from "./authUtils";
+import {ConfigConstants} from "../config";
 import axios from "axios";
 
 class HttpUtils {
@@ -67,6 +68,10 @@ class HttpUtils {
             if (!config.headers.Accept) {
                 config.headers.Accept = "application/json";
             }
+            if (!config.headers["Content-Type"]) {
+                config.headers["Content-Type"] = "application/json";
+            }
+            config.url = `${globalConfig.get(ConfigConstants.BACKEND_URL)}${config.url}`;
 
             axios(config)
                 .then((response) => {

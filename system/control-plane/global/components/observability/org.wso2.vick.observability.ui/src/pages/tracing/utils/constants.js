@@ -35,7 +35,8 @@ const Constants = {
     },
     VICK: {
         Cell: {
-            GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.*)_(\d+_\d+_\d+)_.*$/
+            GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.+)_(\d+_\d+_\d+)_.+$/,
+            MICROSERVICE_NAME_PATTERN: /(.+)--(.+)/
         },
         System: {
             ISTIO_MIXER_NAME: "istio-mixer",

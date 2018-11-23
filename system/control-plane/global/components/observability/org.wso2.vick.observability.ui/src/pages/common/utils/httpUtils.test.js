@@ -74,21 +74,24 @@ describe("HttpUtils", () => {
     });
 
     describe("callBackendAPI()", () => {
+        const backEndURL = "http://www.example.com";
         let config;
 
         beforeEach(() => {
             config = new ConfigHolder();
             config.set(ConfigConstants.USER, "user1");
+            config.set(ConfigConstants.BACKEND_URL, backEndURL);
         });
 
         it("should add application/json header", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(3);
                 expect(config.headers["X-Key"]).toBe("value");
                 expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
@@ -100,20 +103,21 @@ describe("HttpUtils", () => {
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     "X-Key": "value"
                 }
             }, config);
         });
 
-        it("should add application/json header if no headers are provided", async () => {
+        it("should add application/json Accept and Content-Type headers if no headers are provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(1);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
@@ -125,7 +129,7 @@ describe("HttpUtils", () => {
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test"
+                url: "/test"
             }, config);
         });
 
@@ -133,9 +137,10 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(1);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/xml");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
@@ -147,9 +152,58 @@ describe("HttpUtils", () => {
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
+                }
+            }, config);
+        });
+
+        it("should add application/json header if Content-Type header is provided", async () => {
+            axios.mockImplementation((config) => {
+                expect(Object.keys(config)).toHaveLength(3);
+                expect(config.method).toBe("GET");
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
+
+                return new Promise((resolve) => {
+                    resolve({
+                        status: 200,
+                        data: "testData"
+                    });
+                });
+            });
+
+            await HttpUtils.callBackendAPI({
+                method: "GET",
+                url: "/test"
+            }, config);
+        });
+
+        it("should not change headers if Content-Type header is already provided", async () => {
+            axios.mockImplementation((config) => {
+                expect(Object.keys(config)).toHaveLength(3);
+                expect(config.method).toBe("GET");
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/xml");
+
+                return new Promise((resolve) => {
+                    resolve({
+                        status: 200,
+                        data: "testData"
+                    });
+                });
+            });
+
+            await HttpUtils.callBackendAPI({
+                method: "GET",
+                url: "/test",
+                headers: {
+                    "Content-Type": "application/xml"
                 }
             }, config);
         });
@@ -175,7 +229,7 @@ describe("HttpUtils", () => {
 
             return HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
                 }
@@ -193,7 +247,7 @@ describe("HttpUtils", () => {
 
             return HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
                 }

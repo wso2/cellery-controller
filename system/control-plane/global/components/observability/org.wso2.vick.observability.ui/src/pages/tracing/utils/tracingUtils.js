@@ -83,16 +83,16 @@ class TracingUtils {
      */
     static labelSpanTree(tree) {
         tree.walk((span, data) => {
-            if (TracingUtils.isFromIstioSystemComponent(span)) {
+            if (span.isFromIstioSystemComponent()) {
                 span.componentType = Constants.Span.ComponentType.ISTIO;
-            } else if (TracingUtils.isFromVICKSystemComponent(span)) {
+            } else if (span.isFromVICKSystemComponent()) {
                 span.componentType = Constants.Span.ComponentType.VICK;
             } else {
                 span.componentType = Constants.Span.ComponentType.MICROSERVICE;
             }
 
-            if (TracingUtils.isFromCellGateway(span)) {
-                span.cell = this.getCell(span);
+            if (span.isFromCellGateway()) {
+                span.cell = span.getCell();
                 span.serviceName = `${span.cell.name}-cell-gateway`;
             } else if (span.componentType !== Constants.Span.ComponentType.ISTIO) {
                 span.cell = data;
@@ -114,59 +114,6 @@ class TracingUtils {
             spanList.push(span);
         });
         return spanList;
-    }
-
-    /**
-     * Get the cell name from cell gateway span.
-     *
-     * @param {Span} cellGatewaySpan A span belonging to the cell gateway
-     * @returns {Object} Cell details
-     */
-    static getCell(cellGatewaySpan) {
-        let cell = null;
-        if (cellGatewaySpan) {
-            const matches = cellGatewaySpan.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1].replace(/_/g, "-"),
-                    version: matches[2].replace(/_/g, ".")
-                };
-            } else {
-                throw Error(`Invalid cell gateway name: ${cellGatewaySpan.serviceName}`);
-            }
-        }
-        return cell;
-    }
-
-    /**
-     * Check whether a span belongs to the cell gateway.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a cell gateway
-     */
-    static isFromCellGateway(span) {
-        return Boolean(span) && Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(span.serviceName);
-    }
-
-    /**
-     * Check whether a span belongs to the VICK System.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a system component
-     */
-    static isFromVICKSystemComponent(span) {
-        return Boolean(span) && (this.isFromCellGateway(span)
-            || span.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
-    }
-
-    /**
-     * Check whether a span belongs to the Istio System.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a system component
-     */
-    static isFromIstioSystemComponent(span) {
-        return Boolean(span) && span.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
     }
 
     /**

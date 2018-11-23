@@ -17,6 +17,7 @@
  */
 
 import Button from "@material-ui/core/Button";
+import {ConfigHolder} from "../common/config/configHolder";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -26,9 +27,11 @@ import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
+import Span from "./utils/span";
 import TextField from "@material-ui/core/TextField/TextField";
 import TopToolbar from "../common/TopToolbar";
 import Typography from "@material-ui/core/Typography/Typography";
+import {withConfig} from "../common/config";
 import {withRouter} from "react-router-dom/";
 import withStyles from "@material-ui/core/styles/withStyles";
 
@@ -85,7 +88,7 @@ class Search extends React.Component {
                 availableMicroservices: [],
                 availableOperations: []
             },
-            traces: []
+            searchResults: []
         });
 
         this.loadCellData = this.loadCellData.bind(this);
@@ -110,7 +113,7 @@ class Search extends React.Component {
 
     render() {
         const {classes} = this.props;
-        const {data, filter, metaData, traces} = this.state;
+        const {data, filter, metaData, searchResults} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
@@ -226,8 +229,8 @@ class Search extends React.Component {
                 </Grid>
                 <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
                 {
-                    traces.length > 0
-                        ? traces.map(
+                    searchResults.length > 0
+                        ? searchResults.map(
                             (trace) => <TraceResult key={trace.traceId} trace={trace} onClick={this.loadTracePage}/>)
                         : null
                 }
@@ -241,55 +244,58 @@ class Search extends React.Component {
      */
     loadCellData() {
         // TODO : Load values from the server
+        const {config} = this.props;
         const self = this;
-        setTimeout(() => {
+        HttpUtils.callBackendAPI(
+            {
+                url: "/cells",
+                method: "POST",
+                data: {}
+            },
+            config
+        ).then((data) => {
+            const cells = [];
+            const microservices = [];
+            const operations = [];
+            const cellData = data.map((data) => data.event);
+
+            for (let i = 0; i < cellData.length; i++) {
+                const span = new Span(cellData[i]);
+                const cell = span.getCell();
+
+                const cellName = (cell ? cell.name : null);
+                const serviceName = span.serviceName;
+                const operationName = span.operationName;
+
+                if (cellName) {
+                    if (!cells.includes(cellName)) {
+                        cells.push(cellName);
+                    }
+                    if (!microservices.map((service) => service.name).includes(serviceName)) {
+                        microservices.push({
+                            name: serviceName,
+                            cell: cellName
+                        });
+                    }
+                    if (!operations.map((operation) => operation.name).includes(operationName)) {
+                        operations.push({
+                            name: operationName,
+                            microservice: serviceName,
+                            cell: cellName
+                        });
+                    }
+                }
+            }
+
             self.setState(Search.generateValidState({
                 ...self.state,
                 data: {
-                    cells: ["cellA", "cellB", "cellC"],
-                    microservices: [
-                        {name: "cellA-microserviceA", cell: "cellA"},
-                        {name: "cellA-microserviceB", cell: "cellA"},
-                        {name: "cellA-microserviceC", cell: "cellA"},
-                        {name: "cellB-microserviceA", cell: "cellB"},
-                        {name: "cellB-microserviceB", cell: "cellB"},
-                        {name: "cellB-microserviceC", cell: "cellB"},
-                        {name: "cellC-microserviceA", cell: "cellC"},
-                        {name: "cellC-microserviceB", cell: "cellC"},
-                        {name: "cellC-microserviceC", cell: "cellC"}
-                    ],
-                    operations: [
-                        {name: "cellA-microserviceA-operationA", microservice: "cellA-microserviceA", cell: "cellA"},
-                        {name: "cellA-microserviceA-operationB", microservice: "cellA-microserviceA", cell: "cellA"},
-                        {name: "cellA-microserviceA-operationC", microservice: "cellA-microserviceA", cell: "cellA"},
-                        {name: "cellA-microserviceB-operationA", microservice: "cellA-microserviceB", cell: "cellA"},
-                        {name: "cellA-microserviceB-operationB", microservice: "cellA-microserviceB", cell: "cellA"},
-                        {name: "cellA-microserviceB-operationC", microservice: "cellA-microserviceB", cell: "cellA"},
-                        {name: "cellA-microserviceC-operationA", microservice: "cellA-microserviceC", cell: "cellA"},
-                        {name: "cellA-microserviceC-operationB", microservice: "cellA-microserviceC", cell: "cellA"},
-                        {name: "cellA-microserviceC-operationC", microservice: "cellA-microserviceC", cell: "cellA"},
-                        {name: "cellB-microserviceA-operationA", microservice: "cellB-microserviceA", cell: "cellB"},
-                        {name: "cellB-microserviceA-operationB", microservice: "cellB-microserviceA", cell: "cellB"},
-                        {name: "cellB-microserviceA-operationC", microservice: "cellB-microserviceA", cell: "cellB"},
-                        {name: "cellB-microserviceB-operationA", microservice: "cellB-microserviceB", cell: "cellB"},
-                        {name: "cellB-microserviceB-operationB", microservice: "cellB-microserviceB", cell: "cellB"},
-                        {name: "cellB-microserviceB-operationC", microservice: "cellB-microserviceB", cell: "cellB"},
-                        {name: "cellB-microserviceC-operationA", microservice: "cellB-microserviceC", cell: "cellB"},
-                        {name: "cellB-microserviceC-operationB", microservice: "cellB-microserviceC", cell: "cellB"},
-                        {name: "cellB-microserviceC-operationC", microservice: "cellB-microserviceC", cell: "cellB"},
-                        {name: "cellC-microserviceA-operationA", microservice: "cellC-microserviceA", cell: "cellC"},
-                        {name: "cellC-microserviceA-operationB", microservice: "cellC-microserviceA", cell: "cellC"},
-                        {name: "cellC-microserviceA-operationC", microservice: "cellC-microserviceA", cell: "cellC"},
-                        {name: "cellC-microserviceB-operationA", microservice: "cellC-microserviceB", cell: "cellC"},
-                        {name: "cellC-microserviceB-operationB", microservice: "cellC-microserviceB", cell: "cellC"},
-                        {name: "cellC-microserviceB-operationC", microservice: "cellC-microserviceB", cell: "cellC"},
-                        {name: "cellC-microserviceC-operationA", microservice: "cellC-microserviceC", cell: "cellC"},
-                        {name: "cellC-microserviceC-operationB", microservice: "cellC-microserviceC", cell: "cellC"},
-                        {name: "cellC-microserviceC-operationC", microservice: "cellC-microserviceC", cell: "cellC"}
-                    ]
+                    cells: cells,
+                    microservices: microservices,
+                    operations: operations
                 }
             }));
-        }, 1000);
+        });
     }
 
     /**
@@ -410,7 +416,8 @@ Search.propTypes = {
     }).isRequired,
     match: PropTypes.shape({
         url: PropTypes.string.isRequired
-    }).isRequired
+    }).isRequired,
+    config: PropTypes.instanceOf(ConfigHolder)
 };
 
-export default withStyles(styles)(withRouter(Search));
+export default withStyles(styles)(withRouter(withConfig(Search)));
