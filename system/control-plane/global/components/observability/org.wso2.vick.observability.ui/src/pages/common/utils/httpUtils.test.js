@@ -96,7 +96,13 @@ describe("HttpUtils", () => {
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
@@ -122,7 +128,13 @@ describe("HttpUtils", () => {
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
@@ -145,7 +157,13 @@ describe("HttpUtils", () => {
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
@@ -171,7 +189,13 @@ describe("HttpUtils", () => {
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
@@ -194,7 +218,13 @@ describe("HttpUtils", () => {
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
@@ -208,7 +238,15 @@ describe("HttpUtils", () => {
             }, config);
         });
 
-        const DATA = "testData";
+        const ERROR_DATA = "testError";
+        const DATA = [
+            {
+                event: "testEvent"
+            }
+        ];
+        const OUTPUT = [
+            "testEvent"
+        ];
         const resolveStatusCodes = [
             200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
             300, 301, 302, 303, 304, 305, 306, 307, 308
@@ -240,7 +278,7 @@ describe("HttpUtils", () => {
                 reject({
                     response: {
                         status: statusCode,
-                        data: DATA
+                        data: ERROR_DATA
                     }
                 });
             }));
@@ -257,28 +295,28 @@ describe("HttpUtils", () => {
         resolveStatusCodes.forEach((statusCode) => {
             it(`should resolve with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).resolves.toBe(DATA);
+                return expect(mockResolve(statusCode)).resolves.toEqual(OUTPUT);
             });
         });
 
         rejectStatusCodes.forEach((statusCode) => {
             it(`should reject with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).rejects.toBe(DATA);
+                return expect(mockResolve(statusCode)).rejects.toEqual(DATA);
             });
         });
 
         rejectStatusCodes.filter((statusCode) => statusCode !== 401).forEach((statusCode) => {
             it(`should reject with response data when axios rejects with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockReject(statusCode)).rejects.toEqual(new Error(DATA));
+                return expect(mockReject(statusCode)).rejects.toEqual(new Error(ERROR_DATA));
             });
         });
 
         it("should sign out and reject with response when axios rejects with a 401 status code", async () => {
             const spy = jest.spyOn(AuthUtils, "signOut");
 
-            await expect(mockReject(401)).rejects.toEqual(new Error(DATA));
+            await expect(mockReject(401)).rejects.toEqual(new Error(ERROR_DATA));
             expect(spy).toHaveBeenCalledTimes(1);
         });
     });

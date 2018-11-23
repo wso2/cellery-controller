@@ -71,12 +71,17 @@ class HttpUtils {
             if (!config.headers["Content-Type"]) {
                 config.headers["Content-Type"] = "application/json";
             }
+            if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
+                config.data = {};
+            }
             config.url = `${globalConfig.get(ConfigConstants.BACKEND_URL)}${config.url}`;
 
             axios(config)
                 .then((response) => {
                     if (response.status >= 200 && response.status < 400) {
-                        resolve(response.data);
+                        if (response.data) {
+                            resolve(response.data.map((dataItem) => dataItem.event));
+                        }
                     } else {
                         reject(response.data);
                     }

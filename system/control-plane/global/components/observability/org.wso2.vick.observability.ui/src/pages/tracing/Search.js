@@ -17,7 +17,7 @@
  */
 
 import Button from "@material-ui/core/Button";
-import {ConfigHolder} from "../common/config/configHolder";
+import {ColorGeneratorConstants} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -25,15 +25,17 @@ import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import PropTypes from "prop-types";
+import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
+import SearchResult from "./SearchResult";
 import Select from "@material-ui/core/Select/Select";
 import Span from "./utils/span";
 import TextField from "@material-ui/core/TextField/TextField";
 import TopToolbar from "../common/TopToolbar";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withConfig} from "../common/config";
-import {withRouter} from "react-router-dom/";
 import withStyles from "@material-ui/core/styles/withStyles";
+import {ConfigConstants, ConfigHolder} from "../common/config/configHolder";
 
 const styles = (theme) => ({
     subheading: {
@@ -50,13 +52,12 @@ const styles = (theme) => ({
         marginBottom: theme.spacing.unit * 2
     },
     searchForm: {
-        marginBottom: theme.spacing.unit * 2
+        marginBottom: Number(theme.spacing.unit)
+    },
+    resultContainer: {
+        marginTop: theme.spacing.unit * 3
     }
 });
-
-const TraceResult = () => (
-    <div>Result</div>
-);
 
 /**
  * Trace Search.
@@ -94,7 +95,6 @@ class Search extends React.Component {
         this.loadCellData = this.loadCellData.bind(this);
         this.getChangeHandler = this.getChangeHandler.bind(this);
         this.search = this.search.bind(this);
-        this.loadTracePage = this.loadTracePage.bind(this);
     }
 
     componentDidMount() {
@@ -228,12 +228,9 @@ class Search extends React.Component {
                     </Grid>
                 </Grid>
                 <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
-                {
-                    searchResults.length > 0
-                        ? searchResults.map(
-                            (trace) => <TraceResult key={trace.traceId} trace={trace} onClick={this.loadTracePage}/>)
-                        : null
-                }
+                <div className={classes.resultContainer}>
+                    <SearchResult data={searchResults}/>
+                </div>
             </React.Fragment>
         );
     }
@@ -243,24 +240,21 @@ class Search extends React.Component {
      * Call the backend and search for traces.
      */
     loadCellData() {
-        // TODO : Load values from the server
         const {config} = this.props;
         const self = this;
         HttpUtils.callBackendAPI(
             {
                 url: "/cells",
-                method: "POST",
-                data: {}
+                method: "POST"
             },
             config
         ).then((data) => {
             const cells = [];
             const microservices = [];
             const operations = [];
-            const cellData = data.map((data) => data.event);
 
-            for (let i = 0; i < cellData.length; i++) {
-                const span = new Span(cellData[i]);
+            for (let i = 0; i < data.length; i++) {
+                const span = new Span(data[i]);
                 const cell = span.getCell();
 
                 const cellName = (cell ? cell.name : null);
@@ -305,15 +299,15 @@ class Search extends React.Component {
      * @returns {Function} The on change handler
      */
     getChangeHandler(name) {
+        const self = this;
         return (event) => {
-            const newState = Search.generateValidState({
+            self.setState(Search.generateValidState({
                 ...this.state,
                 filter: {
                     ...this.state.filter,
                     [name]: event.target.value
                 }
-            });
-            this.setState(newState);
+            }));
         };
     }
 
@@ -321,36 +315,107 @@ class Search extends React.Component {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = this.state.filter;
+        const {config} = this.props;
+        const self = this;
 
         // Build search object
         const search = {};
         const addSearchParam = (key, value) => {
-            if (value) {
+            if (value && value !== Search.Constants.ALL_VALUE) {
                 search[key] = value;
             }
         };
-        addSearchParam("cell", cell);
-        addSearchParam("microservice", microservice);
-        addSearchParam("operation", operation);
+        addSearchParam("cellName", cell);
+        addSearchParam("serviceName", microservice);
+        addSearchParam("operationName", operation);
         addSearchParam("tags", tags);
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
+        addSearchParam("queryStartTime",
+            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).startTime).valueOf());
+        addSearchParam("queryEndTime",
+            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).endTime).valueOf());
 
-        // TODO : Search in the backend
-    }
-
-    /**
-     * Load the trace page.
-     *
-     * @param {string} traceId The trace ID of the selected trace
-     * @param {string} microservice The microservice name if a microservice was selected
-     */
-    loadTracePage(traceId, microservice) {
-        this.props.history.push({
-            pathname: `./id/${traceId}`,
-            state: {
-                highlightedMicroservice: microservice
+        HttpUtils.callBackendAPI(
+            {
+                url: "/tracing/search",
+                method: "POST",
+                data: search
+            },
+            config
+        ).then((data) => {
+            const traces = {};
+            for (let i = 0; i < data.length; i++) {
+                const dataItem = data[i];
+                if (!traces[dataItem.traceId]) {
+                    traces[dataItem.traceId] = {};
+                }
+                if (!traces[dataItem.traceId][dataItem.cellName]) {
+                    traces[dataItem.traceId][dataItem.cellName] = {};
+                }
+                if (!traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName]) {
+                    traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName] = {};
+                }
+                const info = traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName];
+                info.count = dataItem.count;
+                info.rootServiceName = dataItem.rootServiceName;
+                info.rootOperationName = dataItem.rootOperationName;
+                info.rootStartTime = dataItem.rootStartTime;
+                info.rootDuration = dataItem.rootDuration;
             }
+            const fillResult = (cellName, services, result) => {
+                for (const serviceName in services) {
+                    if (services.hasOwnProperty(serviceName)) {
+                        const info = services[serviceName];
+
+                        const span = new Span({
+                            cellName: cellName,
+                            serviceName: serviceName
+                        });
+                        const cell = span.getCell();
+
+                        let cellNameKey;
+                        if (span.isFromVICKSystemComponent()) {
+                            cellNameKey = ColorGeneratorConstants.VICK;
+                        } else if (span.isFromIstioSystemComponent()) {
+                            cellNameKey = ColorGeneratorConstants.ISTIO;
+                        } else {
+                            cellNameKey = cell.name;
+                        }
+
+                        result.rootServiceName = info.rootServiceName;
+                        result.rootOperationName = info.rootOperationName;
+                        result.rootStartTime = info.rootStartTime;
+                        result.rootDuration = info.rootDuration;
+                        result.services.push({
+                            cellName: cellNameKey,
+                            serviceName: span.serviceName,
+                            count: info.count
+                        });
+                    }
+                }
+            };
+            const searchResults = [];
+            for (const traceId in traces) {
+                if (traces.hasOwnProperty(traceId)) {
+                    const cells = traces[traceId];
+                    const result = {
+                        traceId: traceId,
+                        services: []
+                    };
+
+                    for (const cellName in cells) {
+                        if (cells.hasOwnProperty(cellName)) {
+                            fillResult(cellName, cells[cellName], result);
+                        }
+                    }
+                    searchResults.push(result);
+                }
+            }
+            self.setState(Search.generateValidState({
+                ...self.state,
+                searchResults: searchResults
+            }));
         });
     }
 
@@ -408,16 +473,13 @@ Search.Constants = {
 
 Search.propTypes = {
     classes: PropTypes.object.isRequired,
-    history: PropTypes.shape({
-        push: PropTypes.func.isRequired
-    }).isRequired,
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired,
     match: PropTypes.shape({
         url: PropTypes.string.isRequired
     }).isRequired,
-    config: PropTypes.instanceOf(ConfigHolder)
+    config: PropTypes.instanceOf(ConfigHolder).isRequired
 };
 
-export default withStyles(styles)(withRouter(withConfig(Search)));
+export default withStyles(styles)(withConfig(Search));

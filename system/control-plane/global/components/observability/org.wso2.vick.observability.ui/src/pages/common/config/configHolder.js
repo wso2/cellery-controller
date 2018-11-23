@@ -134,7 +134,7 @@ class ConfigHolder {
                 user: AuthUtils.getAuthenticatedUser(),
                 backendURL: "http://localhost:8080/api",
                 globalFilter: {
-                    startTime: "now - 24 hours",
+                    startTime: "now - 1 year",
                     endTime: "now",
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
