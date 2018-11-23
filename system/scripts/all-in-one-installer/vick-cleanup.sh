@@ -21,8 +21,8 @@ if [ $iaas == "kubeadm" ]; then
         DEL_LEVEL="remove"
     fi
 
-    sudo kubeadm reset
-    
+    yes | sudo kubeadm reset
+
     sudo apt-get $DEL_LEVEL --allow-change-held-packages kubelet kubeadm kubectl docker.io docker-ce
 
     echo "Removing /mnt/mysql and /mnt/apim_repository_deployment_server."
