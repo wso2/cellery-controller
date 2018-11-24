@@ -18,7 +18,7 @@
 
 import React, {Component} from "react";
 
-class Microservice extends Component {
+class MicroService extends Component {
 
     render() {
         return (
@@ -30,4 +30,4 @@ class Microservice extends Component {
 
 }
 
-export default Microservice;
+export default MicroService;

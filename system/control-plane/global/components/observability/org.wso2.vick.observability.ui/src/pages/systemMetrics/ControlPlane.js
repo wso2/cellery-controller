@@ -18,16 +18,16 @@
 
 import React, {Component} from "react";
 
-class Cell extends Component {
+class ControlPlane extends Component {
 
     render() {
         return (
             <div>
-                Hello World Cells!
+                Control Plane Metrics
             </div>
         );
     }
 
 }
 
-export default Cell;
+export default ControlPlane;
