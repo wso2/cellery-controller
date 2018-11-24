@@ -17,14 +17,14 @@
  */
 
 import AppLayout from "./AppLayout";
-import Cell from "./pages/Cell";
+import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
 import {ConfigHolder} from "./pages/common/config/configHolder";
-import Microservice from "./pages/Microservice";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
+import SystemMetrics from "./pages/systemMetrics";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 import {ConfigConstants, ConfigProvider, withConfig} from "./pages/common/config";
@@ -55,9 +55,9 @@ class UnConfiguredProtectedPortal extends React.Component {
                 <AppLayout>
                     <Switch>
                         <Route exact path="/" component={Overview}/>
-                        <Route exact path="/cells" component={Cell}/>
-                        <Route exact path="/microservices" component={Microservice}/>
+                        <Route path="/cells" component={Cells}/>
                         <Route path="/tracing" component={Tracing}/>
+                        <Route path="/system-metrics" component={SystemMetrics}/>
                         <Redirect from="/*" to="/"/>
                     </Switch>
                 </AppLayout>

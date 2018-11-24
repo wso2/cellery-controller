@@ -43,7 +43,8 @@ const styles = (theme) => ({
         marginBottom: theme.spacing.unit * 3
     },
     title: {
-        flexGrow: 1
+        flexGrow: 1,
+        marginLeft: theme.spacing.unit * 2
     },
     startInputAdornment: {
         marginBottom: theme.spacing.unit * 2
