@@ -110,7 +110,7 @@ update SpanTable
     on SpanTable.TRACEID == TRACEID and SpanTable.spanId == siblingSpanId;
 -- * End of Queries for New Span's Sibling is in the SpanTable
 
-from SpanTablePrepStream#tracing:dependencyTree(serviceName, id, parentId, name, tags)
+from SpanTablePrepStream#tracing:dependencyTree(serviceName, id, parentId, name, tags, kind)
 select
     serviceName,
     name as operationName,
