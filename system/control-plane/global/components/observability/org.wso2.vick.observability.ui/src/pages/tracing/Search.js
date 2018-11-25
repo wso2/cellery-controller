@@ -24,6 +24,7 @@ import HttpUtils from "../common/utils/httpUtils";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
+import NotificationUtils from "../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
@@ -238,10 +239,16 @@ class Search extends React.Component {
     /**
      * Search for traces.
      * Call the backend and search for traces.
+     *
+     * @param {boolean} showOverlay Show the overlay while loading
      */
-    loadCellData() {
+    loadCellData(showOverlay) {
         const {config} = this.props;
         const self = this;
+
+        if (showOverlay) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Information", config);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/cells",
@@ -289,6 +296,9 @@ class Search extends React.Component {
                     operations: operations
                 }
             }));
+            NotificationUtils.hideLoadingOverlay(config);
+        }).catch(() => {
+            NotificationUtils.hideLoadingOverlay(config);
         });
     }
 
@@ -336,6 +346,7 @@ class Search extends React.Component {
         addSearchParam("queryEndTime",
             QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).endTime).valueOf());
 
+        NotificationUtils.showLoadingOverlay("Searching for Traces", config);
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing/search",
@@ -416,6 +427,9 @@ class Search extends React.Component {
                 ...self.state,
                 searchResults: searchResults
             }));
+            NotificationUtils.hideLoadingOverlay(config);
+        }).catch(() => {
+            NotificationUtils.hideLoadingOverlay(config);
         });
     }
 

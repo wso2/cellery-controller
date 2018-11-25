@@ -132,6 +132,10 @@ class ConfigHolder {
             // TODO : Load configuration from server
             const loadedConfiguration = {
                 user: AuthUtils.getAuthenticatedUser(),
+                loadingState: {
+                    isLoading: false,
+                    message: null
+                },
                 backendURL: "http://localhost:8080/api",
                 globalFilter: {
                     startTime: "now - 1 year",
@@ -156,9 +160,10 @@ class ConfigHolder {
 }
 
 const ConfigConstants = {
-    GLOBAL_FILTER: "globalFilter",
     USER: "user",
-    BACKEND_URL: "backendURL"
+    LOADING_STATE: "loadingState",
+    BACKEND_URL: "backendURL",
+    GLOBAL_FILTER: "globalFilter"
 };
 
 export {ConfigHolder, ConfigConstants};

@@ -19,6 +19,7 @@
 import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
+import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./SequenceDiagram";
@@ -57,6 +58,7 @@ class View extends React.Component {
         const traceId = match.params.traceId;
         const self = this;
 
+        NotificationUtils.showLoadingOverlay("Loading trace", config);
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing",
@@ -76,6 +78,9 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
+            NotificationUtils.hideLoadingOverlay(config);
+        }).catch(() => {
+            NotificationUtils.hideLoadingOverlay(config);
         });
     }
 

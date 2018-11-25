@@ -22,6 +22,7 @@ import AuthUtils from "./pages/common/utils/authUtils";
 import BarChart from "@material-ui/icons/BarChart";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import Collapse from "@material-ui/core/Collapse";
 import {ConfigHolder} from "./pages/common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -55,7 +56,8 @@ const drawerWidth = 240;
 const styles = (theme) => ({
     root: {
         display: "flex",
-        flexGrow: 1
+        flexGrow: 1,
+        minHeight: "100%"
     },
     grow: {
         flexGrow: 1
@@ -113,8 +115,32 @@ const styles = (theme) => ({
         ...theme.mixins.toolbar
     },
     content: {
+        position: "relative",
         flexGrow: 1,
-        padding: theme.spacing.unit * 3
+        padding: theme.spacing.unit * 3,
+        minHeight: "100%"
+    },
+    progressOverlay: {
+        position: "absolute",
+        zIndex: 1,
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgb(0, 0, 0, 0.5)"
+    },
+    progress: {
+        textAlign: "center",
+        margin: "auto"
+    },
+    progressIndicator: {
+        margin: theme.spacing.unit * 2
+    },
+    progressContent: {
+        fontSize: "large",
+        fontWeight: 500,
+        width: "100%",
+        color: "#ffffff"
     },
     nested: {
         paddingLeft: theme.spacing.unit * 3
@@ -130,11 +156,18 @@ class AppLayout extends React.Component {
         this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
         this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
         this.handleDrawerClose = this.handleDrawerClose.bind(this);
+        this.handleLoadingStateChange = this.handleLoadingStateChange.bind(this);
 
+        props.config.addListener(ConfigConstants.LOADING_STATE, this.handleLoadingStateChange);
+        const loadingState = props.config.get(ConfigConstants.LOADING_STATE);
         this.state = {
             open: false,
             userInfo: null,
-            subMenuOpen: false
+            subMenuOpen: false,
+            loadingState: {
+                isLoading: loadingState.isLoading,
+                message: loadingState.message
+            }
         };
     }
 
@@ -158,9 +191,18 @@ class AppLayout extends React.Component {
         this.setState((state) => ({subMenuOpen: !state.subMenuOpen}));
     };
 
+    handleLoadingStateChange(loadingStateKey, oldState, newState) {
+        this.setState({
+            loadingState: {
+                isLoading: newState.isLoading,
+                message: newState.message
+            }
+        });
+    }
+
     render() {
         const {classes, history, children, theme, config} = this.props;
-        const {open, userInfo} = this.state;
+        const {open, userInfo, loadingState} = this.state;
         const userInfoOpen = Boolean(userInfo);
 
         const navigationState = {
@@ -244,7 +286,6 @@ class AppLayout extends React.Component {
                     </div>
                     <Divider/>
                     <List>
-                        {/* TODO : Change the icons accordingly to the page menu */}
                         <ListItem button key="Overview" onClick={() => history.push("/", navigationState)}>
                             <ListItemIcon><DesktopWindows/></ListItemIcon>
                             <ListItemText primary="Overview"/>
@@ -293,6 +334,16 @@ class AppLayout extends React.Component {
                     </List>
                 </Drawer>
                 <main className={classes.content}>
+                    <div className={classes.progressOverlay} style={{
+                        display: loadingState.isLoading ? "grid" : "none"
+                    }}>
+                        <div className={classes.progress}>
+                            <CircularProgress className={classes.progressIndicator} thickness={4.5} size={45}/>
+                            <div className={classes.progressContent}>
+                                {loadingState.message ? loadingState.message : "Loading"}...
+                            </div>
+                        </div>
+                    </div>
                     <div className={classes.toolbar}/>
                     {children}
                 </main>

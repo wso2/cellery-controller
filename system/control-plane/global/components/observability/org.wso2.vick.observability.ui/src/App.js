@@ -40,17 +40,25 @@ class UnConfiguredProtectedPortal extends React.Component {
 
     constructor(props) {
         super(props);
-        this.update = this.update.bind(this);
-        props.config.addListener(ConfigConstants.USER, this.update);
+
+        this.state = {
+            isAuthenticated: Boolean(props.config.get(ConfigConstants.USER))
+        };
+
+        this.handleUserChange = this.handleUserChange.bind(this);
+
+        props.config.addListener(ConfigConstants.USER, this.handleUserChange);
     }
 
-    update() {
-        this.forceUpdate();
+    handleUserChange(userKey, oldUser, newUser) {
+        this.setState({
+            isAuthenticated: Boolean(newUser)
+        });
     }
 
     render() {
-        const {config} = this.props;
-        return config.get(ConfigConstants.USER)
+        const {isAuthenticated} = this.state;
+        return isAuthenticated
             ? (
                 <AppLayout>
                     <Switch>
