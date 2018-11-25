@@ -25,156 +25,156 @@ import TracingUtils from "./tracingUtils";
 describe("TracingUtils", () => {
     const globalGatewayServerSpan = new Span({
         traceId: "trace-x-id",
-        spanId: "span-a-id",
-        parentSpanId: "trace-x-id",
+        spanId: "trace-x-id",
+        parentId: "undefined",
         serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "get-hr-info",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10000000,
         duration: 3160000,
-        tags: {}
+        tags: "{}"
     });
     const globalGatewayClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-b-id",
-        parentSpanId: "span-a-id",
+        parentId: "trace-x-id",
         serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 10010000,
         duration: 3110000,
-        tags: {}
+        tags: "{}"
     });
     const hrCellGatewayServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-b-id",
-        parentSpanId: "span-a-id",
+        parentId: "trace-x-id",
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10020000,
         duration: 3090000,
-        tags: {}
+        tags: "{}"
     });
     const hrCellGatewayClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-c-id",
-        parentSpanId: "span-b-id",
+        parentId: "span-b-id",
         serviceName: "src:0.0.0.hr_1_0_0_employee",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 10030000,
         duration: 3060000,
-        tags: {}
+        tags: "{}"
     });
     const employeeServiceServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-c-id",
-        parentSpanId: "span-b-id",
+        parentId: "span-b-id",
         serviceName: "employee-service",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10040000,
         duration: 3040000,
-        tags: {}
+        tags: "{}"
     });
     const employeeServiceToIstioMixerClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-d-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: "employee-service",
         operationName: "is-authorized",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 10050000,
         duration: 990000,
-        tags: {}
+        tags: "{}"
     });
     const istioMixerServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-d-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "is-authorized",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10060000,
         duration: 940000,
-        tags: {}
+        tags: "{}"
     });
     const istioMixerWorkerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-e-id",
-        parentSpanId: "span-d-id",
+        parentId: "span-d-id",
         serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
         operationName: "authorization",
         startTime: 10070000,
         duration: 890000,
-        tags: {}
+        tags: "{}"
     });
     const employeeServiceToReviewsServiceClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-f-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: "employee-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 11050000,
         duration: 990000,
-        tags: {}
+        tags: "{}"
     });
     const reviewsServiceServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-f-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: "reviews-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.SERVER,
         startTime: 11100000,
         duration: 890000,
-        tags: {}
+        tags: "{}"
     });
     const employeeServiceToStockOptionsCellClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-g-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: "employee-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 12060000,
         duration: 990000,
-        tags: {}
+        tags: "{}"
     });
     const stockOptionsCellGatewayServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-g-id",
-        parentSpanId: "span-c-id",
+        parentId: "span-c-id",
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
         startTime: 12100000,
         duration: 890000,
-        tags: {}
+        tags: "{}"
     });
     const stockOptionsCellGatewayClientSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-h-id",
-        parentSpanId: "span-g-id",
+        parentId: "span-g-id",
         serviceName: "src:0.0.0.stock_options_1_0_0_employee",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 12150000,
         duration: 790000,
-        tags: {}
+        tags: "{}"
     });
     const stockOptionsServiceServerSpan = new Span({
         traceId: "trace-x-id",
         spanId: "span-h-id",
-        parentSpanId: "span-g-id",
+        parentId: "span-g-id",
         serviceName: "stock-options-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
         startTime: 12200000,
         duration: 690000,
-        tags: {}
+        tags: "{}"
     });
 
     const orderedSpanList = [

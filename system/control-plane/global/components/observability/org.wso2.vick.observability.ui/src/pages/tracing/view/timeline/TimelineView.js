@@ -367,8 +367,9 @@ class TimelineView extends React.Component {
                     .forEach(fitDescriptionToTimelineWindow);
 
                 // Adjust span duration labels
-                document.querySelectorAll("div.vis-item-span > div.vis-item-overflow").forEach((node) => {
-                    node.style.transform = `translateX(${node.offsetWidth + 7}px)`;
+                document.querySelectorAll("div.vis-item-span").forEach((node) => {
+                    node.querySelector("div.vis-item-overflow").style.transform
+                        = `translateX(${node.offsetWidth + 7}px)`;
                 });
 
                 // Adjust item vertical location

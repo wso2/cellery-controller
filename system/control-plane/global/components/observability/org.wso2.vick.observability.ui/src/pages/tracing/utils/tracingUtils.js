@@ -23,7 +23,6 @@ import Constants from "./constants";
  */
 class TracingUtils {
 
-
     /**
      * Build a tree model using a spans list.
      *
@@ -33,8 +32,8 @@ class TracingUtils {
     static buildTree(spansList) {
         // Finding the root spans candidates (There can be one root span or two sibling root spans)
         const spanIdList = spansList.map((span) => span.spanId);
-        const rootSpanCandidates = spansList.filter((span) => span.parentSpanId === span.traceId
-            || !spanIdList.includes(span.parentSpanId));
+        const rootSpanCandidates = spansList.filter((span) => span.spanId === span.traceId
+            || !spanIdList.includes(span.parentId));
 
         // Finding the root span and initializing current span
         let rootSpan;
@@ -56,6 +55,42 @@ class TracingUtils {
             rootSpanCandidates[1].sibling = rootSpanCandidates[0];
         } else {
             throw Error(`Invalid Trace: Expected 1 root span, found ${rootSpanCandidates.length} spans`);
+        }
+
+        // Fixing siblings kinds
+        for (let i = 0; i < spansList.length; i++) {
+            const span = spansList[i];
+            let siblingSpan;
+            for (let j = 0; j < spansList.length; j++) {
+                if (i !== j && span.spanId === spansList[j].spanId) {
+                    siblingSpan = spansList[j];
+                }
+            }
+            if (siblingSpan) {
+                if (!span.kind || !siblingSpan.kind) {
+                    const setSpanKind = (span, kind) => {
+                        if (!span.kind) {
+                            span.kind = kind;
+                            span.tags["span.kind"] = kind;
+                        }
+                    };
+                    if (span.kind === Constants.Span.Kind.CLIENT
+                        || siblingSpan.kind === Constants.Span.Kind.SERVER
+                        || span.startTime < siblingSpan.startTime) {
+                        setSpanKind(span, Constants.Span.Kind.CLIENT);
+                        setSpanKind(siblingSpan, Constants.Span.Kind.SERVER);
+                    } else {
+                        setSpanKind(span, Constants.Span.Kind.SERVER);
+                        setSpanKind(siblingSpan, Constants.Span.Kind.CLIENT);
+                    }
+                }
+            } else {
+                const unsetSpanKind = (span) => {
+                    span.kind = null;
+                    Reflect.deleteProperty(span.tags, "span.kind");
+                };
+                unsetSpanKind(span);
+            }
         }
 
         // Adding references to the connected nodes

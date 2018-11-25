@@ -239,12 +239,12 @@ describe("HttpUtils", () => {
         });
 
         const ERROR_DATA = "testError";
-        const DATA = [
+        const AXIOS_OUTPUT_DATA = [
             {
                 event: "testEvent"
             }
         ];
-        const OUTPUT = [
+        const SUCCESS_OUTPUT_DATA = [
             "testEvent"
         ];
         const resolveStatusCodes = [
@@ -261,7 +261,7 @@ describe("HttpUtils", () => {
             axios.mockResolvedValue(new Promise((resolve) => {
                 resolve({
                     status: statusCode,
-                    data: DATA
+                    data: AXIOS_OUTPUT_DATA
                 });
             }));
 
@@ -295,14 +295,14 @@ describe("HttpUtils", () => {
         resolveStatusCodes.forEach((statusCode) => {
             it(`should resolve with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).resolves.toEqual(OUTPUT);
+                return expect(mockResolve(statusCode)).resolves.toEqual(SUCCESS_OUTPUT_DATA);
             });
         });
 
         rejectStatusCodes.forEach((statusCode) => {
             it(`should reject with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).rejects.toEqual(DATA);
+                return expect(mockResolve(statusCode)).rejects.toEqual(AXIOS_OUTPUT_DATA);
             });
         });
 

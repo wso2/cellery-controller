@@ -32,13 +32,13 @@ class Span {
     constructor(spanData) {
         this.traceId = spanData.traceId;
         this.spanId = spanData.spanId;
-        this.parentSpanId = spanData.parentSpanId;
+        this.parentId = spanData.parentId;
         this.serviceName = spanData.serviceName;
         this.operationName = spanData.operationName;
         this.kind = (spanData.kind ? spanData.kind.toUpperCase() : null);
         this.startTime = spanData.startTime ? spanData.startTime : 0;
         this.duration = spanData.duration ? spanData.duration : 0;
-        this.tags = spanData.tags ? spanData.tags : {};
+        this.tags = spanData.tags ? JSON.parse(spanData.tags) : {};
 
         /** @type {string} **/
         this.componentType = "";
@@ -82,7 +82,7 @@ class Span {
             if (this.spanId === span.spanId && this.kind === Constants.Span.Kind.CLIENT
                     && span.kind === Constants.Span.Kind.SERVER) { // Siblings
                 isParentOfSpan = true;
-            } else if (this.spanId === span.parentSpanId) {
+            } else if (this.spanId === span.parentId) {
                 isParentOfSpan = true;
                 if (this.hasSibling()) {
                     isParentOfSpan = isParentOfSpan && this.kind === Constants.Span.Kind.SERVER;
@@ -252,14 +252,14 @@ class Span {
         const span = new Span({
             traceId: this.traceId,
             spanId: this.spanId,
-            parentSpanId: this.parentSpanId,
+            parentId: this.parentId,
             serviceName: this.serviceName,
             operationName: this.operationName,
             kind: this.kind,
             startTime: this.startTime,
-            duration: this.duration,
-            tags: {...this.tags}
+            duration: this.duration
         });
+        span.tags = {...this.tags};
         span.componentType = this.componentType;
         span.cell = {...this.cell};
         return span;

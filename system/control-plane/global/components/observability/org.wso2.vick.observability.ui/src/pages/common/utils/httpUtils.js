@@ -54,7 +54,7 @@ class HttpUtils {
     }
 
     /**
-     * Call the backend API.
+     * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
      * @param {ConfigHolder} globalConfig The global configuration provided to the current component
@@ -79,8 +79,10 @@ class HttpUtils {
             axios(config)
                 .then((response) => {
                     if (response.status >= 200 && response.status < 400) {
-                        if (response.data) {
+                        if (response.data.map) {
                             resolve(response.data.map((dataItem) => dataItem.event));
+                        } else {
+                            resolve(response.data);
                         }
                     } else {
                         reject(response.data);

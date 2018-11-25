@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Constants from "../utils/constants";
+import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
 import PropTypes from "prop-types";
@@ -28,13 +28,13 @@ import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
 import TopToolbar from "../../common/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
+import {withConfig} from "../../common/config";
 
 class View extends React.Component {
 
     constructor(props) {
         super(props);
-        const {match, location} = props;
-        const traceId = match.params.traceId;
+        const {location} = props;
 
         this.tabs = [
             "timeline",
@@ -50,224 +50,24 @@ class View extends React.Component {
         };
 
         this.handleTabChange = this.handleTabChange.bind(this);
+    }
 
-        // TODO : Remove this section and query the backend and retrieve spans.
+    componentDidMount() {
+        const {config, match} = this.props;
+        const traceId = match.params.traceId;
         const self = this;
-        setTimeout(() => {
-            const globalGatewayServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-a-id",
-                parentSpanId: traceId,
-                serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
-                operationName: "get-hr-info",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10000000,
-                duration: 3160000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
+
+        HttpUtils.callBackendAPI(
+            {
+                url: "/tracing",
+                method: "POST",
+                data: {
+                    traceId: traceId
                 }
-            });
-            const globalGatewayClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-b-id",
-                parentSpanId: "span-a-id",
-                serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
-                operationName: "call-hr-cell",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 10010000,
-                duration: 3110000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const hrCellGatewayServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-b-id",
-                parentSpanId: "span-a-id",
-                serviceName: "src:0.0.0.hr_1_0_0_employee",
-                operationName: "call-hr-cell",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10020000,
-                duration: 3090000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const hrCellGatewayClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-c-id",
-                parentSpanId: "span-b-id",
-                serviceName: "src:0.0.0.hr_1_0_0_employee",
-                operationName: "get-employee-data",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 10030000,
-                duration: 3060000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const employeeServiceServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-c-id",
-                parentSpanId: "span-b-id",
-                serviceName: "employee-service",
-                operationName: "get-employee-data",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10040000,
-                duration: 3040000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const employeeServiceToIstioMixerClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-d-id",
-                parentSpanId: "span-c-id",
-                serviceName: "employee-service",
-                operationName: "is-authorized",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 10050000,
-                duration: 990000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const istioMixerServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-d-id",
-                parentSpanId: "span-c-id",
-                serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
-                operationName: "is-authorized",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10060000,
-                duration: 940000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const istioMixerWorkerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-e-id",
-                parentSpanId: "span-d-id",
-                serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
-                operationName: "authorization",
-                startTime: 10070000,
-                duration: 890000,
-                tags: {
-                    "cache.hit": true
-                }
-            });
-            const employeeServiceToReviewsServiceClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-f-id",
-                parentSpanId: "span-c-id",
-                serviceName: "employee-service",
-                operationName: "get-reviews",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 11050000,
-                duration: 990000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const reviewsServiceServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-f-id",
-                parentSpanId: "span-c-id",
-                serviceName: "reviews-service",
-                operationName: "get-reviews",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 11100000,
-                duration: 890000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const employeeServiceToStockOptionsCellClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-g-id",
-                parentSpanId: "span-c-id",
-                serviceName: "employee-service",
-                operationName: "get-employee-stock-options",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 12060000,
-                duration: 990000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const stockOptionsCellGatewayServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-g-id",
-                parentSpanId: "span-c-id",
-                serviceName: "src:0.0.0.stock_options_1_0_0_employee",
-                operationName: "get-employee-stock-options",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 12100000,
-                duration: 890000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const stockOptionsCellGatewayClientSpan = new Span({
-                traceId: traceId,
-                spanId: "span-h-id",
-                parentSpanId: "span-g-id",
-                serviceName: "src:0.0.0.stock_options_1_0_0_employee",
-                operationName: "get-employee-stock-options",
-                kind: Constants.Span.Kind.CLIENT,
-                startTime: 12150000,
-                duration: 790000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.CLIENT,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const stockOptionsServiceServerSpan = new Span({
-                traceId: traceId,
-                spanId: "span-h-id",
-                parentSpanId: "span-g-id",
-                serviceName: "stock-options-service",
-                operationName: "get-employee-stock-options",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 12200000,
-                duration: 690000,
-                tags: {
-                    "span.kind": Constants.Span.Kind.SERVER,
-                    "http.status.code": 200,
-                    "http.method": "GET"
-                }
-            });
-            const spans = [
-                globalGatewayServerSpan, globalGatewayClientSpan, hrCellGatewayServerSpan, hrCellGatewayClientSpan,
-                employeeServiceServerSpan, employeeServiceToIstioMixerClientSpan, istioMixerServerSpan,
-                istioMixerWorkerSpan, employeeServiceToReviewsServiceClientSpan, reviewsServiceServerSpan,
-                employeeServiceToStockOptionsCellClientSpan, stockOptionsCellGatewayServerSpan,
-                stockOptionsCellGatewayClientSpan, stockOptionsServiceServerSpan
-            ];
+            },
+            config
+        ).then((data) => {
+            const spans = data.map((dataItem) => new Span(dataItem));
             const rootSpan = TracingUtils.buildTree(spans);
             TracingUtils.labelSpanTree(rootSpan);
 
@@ -314,6 +114,7 @@ class View extends React.Component {
 }
 
 View.propTypes = {
+    config: PropTypes.instanceOf(ConfigHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
@@ -324,4 +125,4 @@ View.propTypes = {
     }).isRequired
 };
 
-export default View;
+export default withConfig(View);
