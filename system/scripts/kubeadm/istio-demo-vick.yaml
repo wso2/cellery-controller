@@ -572,7 +572,7 @@ data:
       concurrency: 0
       #
       # Zipkin trace collector
-      zipkinAddress: 192.168.56.1:9411
+      zipkinAddress: wso2sp-worker.vick-system:9411
       #
       # Statsd metrics collector converts statsd metrics into Prometheus metrics.
       statsdUdpAddress: istio-statsd-prom-bridge.istio-system:9125
@@ -2947,7 +2947,7 @@ spec:
           - --serviceCluster
           - istio-egressgateway
           - --zipkinAddress
-          - 192.168.56.1:9411
+          - wso2sp-worker.vick-system:9411
           - --statsdUdpAddress
           - istio-statsd-prom-bridge:9125
           - --proxyAdminPort
@@ -3089,7 +3089,7 @@ spec:
           - --serviceCluster
           - istio-ingressgateway
           - --zipkinAddress
-          - 192.168.56.1:9411
+          - wso2sp-worker.vick-system:9411
           - --statsdUdpAddress
           - istio-statsd-prom-bridge:9125
           - --proxyAdminPort
@@ -3342,7 +3342,7 @@ spec:
           - unix:///sock/mixer.socket
           - --configStoreURL=k8s://
           - --configDefaultNamespace=istio-system
-          - --trace_zipkin_url=http://192.168.56.1:9411/api/v1/spans
+          - --trace_zipkin_url=http://wso2sp-worker.vick-system:9411/api/v1/spans
         resources:
           requests:
             cpu: 10m
@@ -3439,7 +3439,7 @@ spec:
           - unix:///sock/mixer.socket
           - --configStoreURL=k8s://
           - --configDefaultNamespace=istio-system
-          - --trace_zipkin_url=http://192.168.56.1:9411/api/v1/spans
+          - --trace_zipkin_url=http://wso2sp-worker.vick-system:9411/api/v1/spans
         resources:
           requests:
             cpu: 10m
