@@ -3,7 +3,7 @@
  * @description
  * Offers a series of methods to compute proper markers within a given context.
  */
-import { MARKERS, SIZES, HIGHLIGHTED } from './marker.const';
+import {HIGHLIGHTED, MARKERS, SIZES} from "./marker.const";
 
 /**
  * This function is a key template builder to access MARKERS structure.
@@ -31,9 +31,8 @@ function _getMarkerSize(transform, mMax, lMax) {
         return SIZES.S;
     } else if (transform >= mMax && transform < lMax) {
         return SIZES.M;
-    } else {
-        return SIZES.L;
     }
+    return SIZES.L;
 }
 
 /**
@@ -45,11 +44,11 @@ function _getMarkerSize(transform, mMax, lMax) {
  * @returns {string} the id of the result marker.
  * @memberof Marker/helper
  */
-function _computeMarkerId(highlight, transform, { maxZoom }) {
+function _computeMarkerId(highlight, transform, {maxZoom}) {
     const mMax = maxZoom / 4;
     const lMax = maxZoom / 2;
     const size = _getMarkerSize(transform, mMax, lMax);
-    const highlighted = highlight ? HIGHLIGHTED : '';
+    const highlighted = highlight ? HIGHLIGHTED : "";
     const markerKey = _markerKeyBuilder(size, highlighted);
 
     return MARKERS[markerKey];
@@ -64,16 +63,16 @@ function _computeMarkerId(highlight, transform, { maxZoom }) {
  * @memberof Marker/helper
  */
 function _memoizedComputeMarkerId() {
-    let cache = {};
+    const cache = {};
 
-    return (highlight, transform, { maxZoom }) => {
+    return (highlight, transform, {maxZoom}) => {
         const cacheKey = `${highlight};${transform};${maxZoom}`;
 
         if (cache[cacheKey]) {
             return cache[cacheKey];
         }
 
-        const markerId = _computeMarkerId(highlight, transform, { maxZoom });
+        const markerId = _computeMarkerId(highlight, transform, {maxZoom: maxZoom});
 
         cache[cacheKey] = markerId;
 
@@ -94,4 +93,4 @@ function _memoizedComputeMarkerId() {
  */
 const getMarkerId = _memoizedComputeMarkerId();
 
-export { getMarkerId };
+export {getMarkerId};

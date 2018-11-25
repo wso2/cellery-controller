@@ -4,17 +4,17 @@
  * Some methods that help no the process of rendering a node.
  */
 import {
+    symbol as d3Symbol,
     symbolCircle as d3SymbolCircle,
     symbolCross as d3SymbolCross,
     symbolDiamond as d3SymbolDiamond,
     symbolSquare as d3SymbolSquare,
     symbolStar as d3SymbolStar,
     symbolTriangle as d3SymbolTriangle,
-    symbolWye as d3SymbolWye,
-    symbol as d3Symbol
-} from 'd3-shape';
+    symbolWye as d3SymbolWye
+} from "d3-shape";
 
-import CONST from './node.const';
+import CONST from "./node.const";
 
 /**
  * Converts a string that specifies a symbol into a concrete instance
@@ -60,5 +60,5 @@ function buildSvgSymbol(size = CONST.DEFAULT_NODE_SIZE, symbolTypeDesc = CONST.S
 }
 
 export default {
-    buildSvgSymbol
+    buildSvgSymbol: buildSvgSymbol
 };

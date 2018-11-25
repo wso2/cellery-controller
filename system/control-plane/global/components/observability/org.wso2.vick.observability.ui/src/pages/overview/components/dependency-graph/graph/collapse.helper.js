@@ -50,7 +50,7 @@ function _isLeafNotDirected(inDegree, outDegree) {
  * @memberof Graph/collapse-helper
  */
 function _isLeaf(nodeId, linksMatrix, directed) {
-    const { inDegree, outDegree } = computeNodeDegree(nodeId, linksMatrix);
+    const {inDegree, outDegree} = computeNodeDegree(nodeId, linksMatrix);
 
     return directed ? _isLeafDirected(inDegree, outDegree) : _isLeafNotDirected(inDegree, outDegree);
 }
@@ -111,14 +111,14 @@ function computeNodeDegree(nodeId, linksMatrix = {}) {
  * where A has id equal to rootNodeId and B has inDegree 1 and outDegree 0 (or outDegree 1 but the connection is with A).
  * @memberof Graph/collapse-helper
  */
-function getTargetLeafConnections(rootNodeId, linksMatrix = {}, { directed }) {
+function getTargetLeafConnections(rootNodeId, linksMatrix = {}, {directed}) {
     const rootConnectionsNodesIds = Object.keys(linksMatrix[rootNodeId]);
 
     return rootConnectionsNodesIds.reduce((leafConnections, target) => {
         if (_isLeaf(target, linksMatrix, directed)) {
             leafConnections.push({
                 source: rootNodeId,
-                target
+                target: target
             });
         }
 
@@ -139,7 +139,7 @@ function getTargetLeafConnections(rootNodeId, linksMatrix = {}, { directed }) {
  * @memberof Graph/collapse-helper
  */
 function isNodeVisible(nodeId, linksMatrix) {
-    const { inDegree, outDegree } = computeNodeDegree(nodeId, linksMatrix);
+    const {inDegree, outDegree} = computeNodeDegree(nodeId, linksMatrix);
 
     return inDegree >= 1 || outDegree >= 1;
 }
@@ -152,14 +152,14 @@ function isNodeVisible(nodeId, linksMatrix) {
  * @memberof Graph/collapse-helper
  */
 function toggleLinksConnections(d3Links, connectionMatrix) {
-    return d3Links.map(d3Link => {
-        const { source, target } = d3Link;
+    return d3Links.map((d3Link) => {
+        const {source, target} = d3Link;
         const sourceId = source.id || source;
         const targetId = target.id || target;
-        // connectionMatrix[sourceId][targetId] can be 0 or non existent
+        // ConnectionMatrix[sourceId][targetId] can be 0 or non existent
         const connection = connectionMatrix && connectionMatrix[sourceId] && connectionMatrix[sourceId][targetId];
 
-        return connection ? { ...d3Link, isHidden: false } : { ...d3Link, isHidden: true };
+        return connection ? {...d3Link, isHidden: false} : {...d3Link, isHidden: true};
     });
 }
 
@@ -173,7 +173,7 @@ function toggleLinksConnections(d3Links, connectionMatrix) {
  * @returns {Object.<string, Object>} updated linksMatrix
  * @memberof Graph/collapse-helper
  */
-function toggleLinksMatrixConnections(linksMatrix, connections, { directed }) {
+function toggleLinksMatrixConnections(linksMatrix, connections, {directed}) {
     return connections.reduce(
         (newMatrix, link) => {
             if (!newMatrix[link.source]) {
@@ -194,7 +194,7 @@ function toggleLinksMatrixConnections(linksMatrix, connections, { directed }) {
 
             return newMatrix;
         },
-        { ...linksMatrix }
+        {...linksMatrix}
     );
 }
 

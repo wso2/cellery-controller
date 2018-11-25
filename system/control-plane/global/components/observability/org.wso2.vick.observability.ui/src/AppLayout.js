@@ -146,11 +146,6 @@ class AppLayout extends React.Component {
         this.setState({userInfo: null});
     };
 
-    handleLogout = () => {
-        localStorage.removeItem("username");
-        ReactDOM.render(<App />, document.getElementById("root"));
-    };
-
     handleDrawerOpen = () => {
         this.setState({open: true});
     };

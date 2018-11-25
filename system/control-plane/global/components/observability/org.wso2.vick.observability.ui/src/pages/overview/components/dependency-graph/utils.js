@@ -5,8 +5,10 @@
  * that are common across rd3g such as error logging.
  */
 
-// This variable assures that recursive methods such as merge and isDeepEqual do not fall on
-// circular JSON structure evaluation.
+/*
+ * This variable assures that recursive methods such as merge and isDeepEqual do not fall on
+ * circular JSON structure evaluation.
+ */
 const MAX_DEPTH = 20;
 
 /**
@@ -17,7 +19,7 @@ const MAX_DEPTH = 20;
  * @memberof utils
  */
 function _isPropertyNestedObject(o, k) {
-    return o.hasOwnProperty(k) && typeof o[k] === 'object' && o[k] !== null && !isEmptyObject(o[k]);
+    return o.hasOwnProperty(k) && typeof o[k] === "object" && o[k] !== null && !isEmptyObject(o[k]);
 }
 
 /**
@@ -29,7 +31,7 @@ function _isPropertyNestedObject(o, k) {
  * @memberof utils
  */
 function isDeepEqual(o1, o2, _depth = 0) {
-    let diffs = [];
+    const diffs = [];
 
     if (_depth === 0 && o1 === o2) {
         return true;
@@ -46,7 +48,7 @@ function isDeepEqual(o1, o2, _depth = 0) {
         return false;
     }
 
-    for (let k of o1Keys) {
+    for (const k of o1Keys) {
         const nestedO = _isPropertyNestedObject(o1, k) && _isPropertyNestedObject(o2, k);
 
         if (nestedO && _depth < MAX_DEPTH) {
@@ -73,7 +75,7 @@ function isDeepEqual(o1, o2, _depth = 0) {
  * @memberof utils
  */
 function isEmptyObject(o) {
-    return !!o && typeof o === 'object' && !Object.keys(o).length;
+    return Boolean(o) && typeof o === "object" && !Object.keys(o).length;
 }
 
 /**
@@ -87,20 +89,20 @@ function isEmptyObject(o) {
  * @memberof utils
  */
 function merge(o1 = {}, o2 = {}, _depth = 0) {
-    let o = {};
+    const o = {};
 
     if (Object.keys(o1 || {}).length === 0) {
         return o2 && !isEmptyObject(o2) ? o2 : {};
     }
 
-    for (let k of Object.keys(o1)) {
-        const nestedO = !!(o2[k] && typeof o2[k] === 'object' && typeof o1[k] === 'object' && _depth < MAX_DEPTH);
+    for (const k of Object.keys(o1)) {
+        const nestedO = Boolean(o2[k] && typeof o2[k] === "object" && typeof o1[k] === "object" && _depth < MAX_DEPTH);
 
         if (nestedO) {
             const r = merge(o1[k], o2[k], _depth + 1);
 
-            o[k] =
-                o1[k].hasOwnProperty('length') && o2[k].hasOwnProperty('length') ? Object.keys(r).map(rk => r[rk]) : r;
+            o[k]
+                = o1[k].hasOwnProperty("length") && o2[k].hasOwnProperty("length") ? Object.keys(r).map((rk) => r[rk]) : r;
         } else {
             o[k] = o2.hasOwnProperty(k) ? o2[k] : o1[k];
         }
@@ -135,7 +137,7 @@ function pick(o, props = []) {
  * @memberof utils
  */
 function antiPick(o, props = []) {
-    const wanted = Object.keys(o).filter(k => !props.includes(k));
+    const wanted = Object.keys(o).filter((k) => !props.includes(k));
 
     return pick(o, wanted);
 }
@@ -154,10 +156,10 @@ function throwErr(component, msg) {
 }
 
 export default {
-    isDeepEqual,
-    isEmptyObject,
-    merge,
-    pick,
-    antiPick,
-    throwErr
+    isDeepEqual: isDeepEqual,
+    isEmptyObject: isEmptyObject,
+    merge: merge,
+    pick: pick,
+    antiPick: antiPick,
+    throwErr: throwErr
 };

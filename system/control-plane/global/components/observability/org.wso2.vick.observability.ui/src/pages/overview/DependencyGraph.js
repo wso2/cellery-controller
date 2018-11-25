@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {Graph} from "../../components/dependency-graph/index";
+import {Graph} from "./components/dependency-graph/index";
 import PropTypes from "prop-types";
 import React, {Component} from "react";
 
@@ -47,9 +47,8 @@ class DependencyGraph extends Component {
                     onMouseOutLink={this.props.onMouseOutLink}
                 />
             );
-        } else {
-            return (<div>Nothing to show</div>);
         }
+        return (<div>Nothing to show</div>);
     }
 
 }

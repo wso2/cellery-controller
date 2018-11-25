@@ -3,7 +3,7 @@
  * @description
  * A set of helper methods to manipulate/create links.
  */
-import { LINE_TYPES } from './link.const';
+import {LINE_TYPES} from "./link.const";
 
 /**
  * Computes radius value for a straight line.
@@ -68,13 +68,13 @@ function getRadiusStrategy(type) {
  * @returns {string} the path definition for the requested link
  * @memberof Link/helper
  */
-function buildLinkPathDefinition({ source = {}, target = {} }, type = LINE_TYPES.STRAIGHT) {
-    const { x: sx, y: sy } = source;
-    const { x: tx, y: ty } = target;
+function buildLinkPathDefinition({source = {}, target = {}}, type = LINE_TYPES.STRAIGHT) {
+    const {x: sx, y: sy} = source;
+    const {x: tx, y: ty} = target;
     const validType = LINE_TYPES[type] || LINE_TYPES.STRAIGHT;
     const radius = getRadiusStrategy(validType)(sx, sy, tx, ty);
 
     return `M${sx},${sy}A${radius},${radius} 0 0,1 ${tx},${ty}`;
 }
 
-export { buildLinkPathDefinition };
+export {buildLinkPathDefinition};

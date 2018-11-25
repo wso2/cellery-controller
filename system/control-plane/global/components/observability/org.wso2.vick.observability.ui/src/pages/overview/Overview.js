@@ -24,6 +24,7 @@ import PropTypes from "prop-types";
 import Typography from "@material-ui/core/Typography";
 import {withStyles} from "@material-ui/core/styles";
 import React, {Component} from "react";
+import axios from 'axios';
 
 const graphConfig = {
     directed: true,
@@ -96,7 +97,7 @@ const cardCssStyle = {
 
 const buttonStyle = {
     left: 170,
-    bottom: 0,
+    bottom: 0
 };
 
 class Overview extends Component {
@@ -128,59 +129,58 @@ class Overview extends Component {
             isOverallSummary: true,
             data: {
                 nodes: null,
-                links: null,
+                links: null
             },
             error: null,
             reloadGraph: true
         };
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        fetch("http://localhost:9123/dependency-model/cell-overview")
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result);
-                    let summaryContent = [
-                        {
-                            key: "Total cells",
-                            value: result.nodes.length
-                        },
-                        {
-                            key: "Successful cells",
-                            value: result.nodes.length
-                        },
-                        {
-                            key: "Failed cells",
-                            value: "0"
-                        },
-                        {
-                            key: "Warning cells",
-                            value: "0"
-                        }
-                    ];
-                    this.defaultState.summary.content = summaryContent;
-                    this.setState((prevState) => ({
-                        data: {
-                            nodes: result.nodes,
-                            links: result.edges
-                        },
-                        summary: {
-                            ...prevState.summary,
-                            content: summaryContent
-                        }
-                    }));
+        //TODO: Update the url to the WSO2-sp worker node.
+        axios({
+            method: "GET",
+            url: "http://localhost:9123/dependency-model/cell-overview"
+        }).then((response) => {
+            let result = response.data;
+            const summaryContent = [
+                {
+                    key: "Total cells",
+                    value: result.nodes.length
                 },
-                (error) => {
-                    this.setState({error: error});
+                {
+                    key: "Successful cells",
+                    value: result.nodes.length
+                },
+                {
+                    key: "Failed cells",
+                    value: "0"
+                },
+                {
+                    key: "Warning cells",
+                    value: "0"
                 }
-            );
+            ];
+            this.defaultState.summary.content = summaryContent;
+            this.setState((prevState) => ({
+                data: {
+                    nodes: result.nodes,
+                    links: result.edges
+                },
+                summary: {
+                    ...prevState.summary,
+                    content: summaryContent
+                }
+            }));
+        }).catch((error) => {
+            this.setState({error: error});
+        });
         this.onClickCell = this.onClickCell.bind(this);
         this.onClickGraph = this.onClickGraph.bind(this);
-        this.popluateArray = this.popluateArray.bind(this);
+        this.populateArray = this.populateArray.bind(this);
     }
 
     onClickCell(nodeId) {
-        let outbound = new Set();
-        let inbound = new Set();
+        const outbound = new Set();
+        const inbound = new Set();
         this.state.data.links.map((element) => {
             if (element.source === nodeId) {
                 outbound.add(element.target);
@@ -188,7 +188,7 @@ class Overview extends Component {
                 inbound.add(element.source);
             }
         });
-        let services = new Set();
+        const services = new Set();
         this.state.data.nodes.map((element) => {
             if (element.id === nodeId) {
                 element.services.map((service) => {
@@ -203,15 +203,15 @@ class Overview extends Component {
                 content: [
                     {
                         key: "Outbound Cells",
-                        setValue: this.popluateArray(outbound)
+                        setValue: this.populateArray(outbound)
                     },
                     {
                         key: "Inbound Cells",
-                        setValue: this.popluateArray(inbound)
+                        setValue: this.populateArray(inbound)
                     },
                     {
                         key: "Micro Services",
-                        setValue: this.popluateArray(services)
+                        setValue: this.populateArray(services)
                     }
 
                 ]
@@ -221,8 +221,8 @@ class Overview extends Component {
         }));
     }
 
-    popluateArray(setElements) {
-        let arrayElements = [];
+    populateArray(setElements) {
+        const arrayElements = [];
         setElements.forEach((setElement) => {
             arrayElements.push(setElement);
         });
@@ -265,8 +265,8 @@ class Overview extends Component {
                         {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
                                                                                  gutterBottom>
                                 {element.key} : {element.value}
-                                {(element.setValue && element.setValue.length > 0) &&
-                                (<ul>
+                                {(element.setValue && element.setValue.length > 0)
+                                && (<ul>
                                     {element.setValue.map((setValueElement) => <li>{setValueElement}</li>)}
                                 </ul>)
                                 }
