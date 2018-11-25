@@ -26,10 +26,10 @@ public class Constants {
     public static final String ZIPKIN_PORT = "ZIPKIN_PORT";
     public static final String ZIPKIN_API_CONTEXT = "ZIPKIN_API_CONTEXT";
 
-    public static final String REQUEST_IN_SPAN = "VICK_TRACING_REQUEST_IN_SPAN";
-    public static final String REQUEST_OUT_SPAN = "VICK_TRACING_REQUEST_OUT_SPAN";
+    public static final String TRACING_CORRELATION_ID = "TRACING_CORRELATION_ID";
     public static final String GLOBAL_GATEWAY_SERVICE_NAME = "global-gateway";
     public static final boolean TRACING_SENDER_COMPRESSION_ENABLED = false;
+    public static final String B3_GLOBAL_GATEWAY_CORRELATION_ID_HEADER = "X-B3-GlobalGatewayCorrelationID";
 
     // Tag keys
     public static final String TAG_KEY_HTTP_METHOD = "http.method";

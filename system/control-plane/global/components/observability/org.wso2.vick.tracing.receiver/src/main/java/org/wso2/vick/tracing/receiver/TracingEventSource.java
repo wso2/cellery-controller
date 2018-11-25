@@ -19,8 +19,6 @@
 package org.wso2.vick.tracing.receiver;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -226,16 +224,6 @@ public class TracingEventSource extends Source {
                 for (ZipkinSpan span : spans) {
                     Map<String, Object> attributes = new HashMap<>();
 
-                    JsonArray tagsJsonArray = new JsonArray();
-                    for (String tagKey : span.getTags().keySet()) {
-                        JsonObject tagJsonObject = new JsonObject();
-                        tagJsonObject.addProperty(tagKey, span.getTags().get(tagKey));
-                        tagsJsonArray.add(tagJsonObject);
-                    }
-                    JsonObject kindTagJsonObject = new JsonObject();
-                    kindTagJsonObject.addProperty(Constants.SPAN_KIND_TAG_KEY, span.getKind());
-                    tagsJsonArray.add(kindTagJsonObject);
-
                     attributes.put(Constants.TRACE_ID, span.getTraceId());
                     attributes.put(Constants.SPAN_ID, span.getId());
                     attributes.put(Constants.PARENT_ID, span.getParentId());
@@ -244,7 +232,7 @@ public class TracingEventSource extends Source {
                     attributes.put(Constants.KIND, span.getKind());
                     attributes.put(Constants.TIMESTAMP, span.getTimestamp() / 1000);
                     attributes.put(Constants.DURATION, span.getDuration() / 1000);
-                    attributes.put(Constants.TAGS, gson.toJson(tagsJsonArray));
+                    attributes.put(Constants.TAGS, gson.toJson(span.getTags()));
 
                     sourceEventListener.onEvent(attributes, new String[0]);
                     if (logger.isDebugEnabled()) {
