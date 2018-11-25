@@ -17,12 +17,12 @@ kind: PersistentVolume
 metadata:
   name: wso2apim-local-pv
   labels:
-    purpose: apim-deployment-data
+    purpose: apim-repository-deployment-server
 spec:
   capacity:
     storage: 2Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-storage
   local:

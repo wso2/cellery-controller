@@ -41,7 +41,7 @@ data:
 
     [jwtTokenConfig]
     issuer="https://sts.vick.wso2.com"
-    audience="http://org.wso2.apimgt/gateway"
+    audience="@env:{CELL_NAME}"
     certificateAlias="wso2apim"
     trustStore.path="${ballerina.home}/bre/security/ballerinaTruststore.p12"
     trustStore.password="ballerina"

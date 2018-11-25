@@ -16,11 +16,18 @@
         "eslint:recommended",
         "plugin:react/recommended",
         "plugin:import/errors",
-        "plugin:import/warnings"
+        "plugin:import/warnings",
+        "plugin:jest/recommended"
     ],
     "plugins": [
-        "react"
+        "react",
+        "jest"
     ],
+    "settings": {
+        "react": {
+            "version": "16.6.0"
+        }
+    },
     "rules": {
         "accessor-pairs": "error",
         "array-bracket-newline": [
@@ -462,6 +469,10 @@
         "jsx-a11y/no-noninteractive-element-interactions": "off",
         "jsx-a11y/anchor-is-valid": "off",      // Due to using React-Router Link components
         "react/jsx-indent": ["error", 4],
-        "react/jsx-indent-props": ["error", 4]
+        "react/jsx-indent-props": ["error", 4],
+        "jest/prefer-to-be-null": ["error"],
+        "jest/prefer-to-be-undefined": ["error"],
+        "jest/prefer-to-contain": ["error"],
+        "jest/prefer-to-have-length": ["error"]
     }
 }

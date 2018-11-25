@@ -383,9 +383,9 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/HTTP_ANALYTICS_DB'
-          username: root
-          password: root
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/HTTP_ANALYTICS_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 30
           idleTimeout: 60000
@@ -417,9 +417,9 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/MESSAGE_TRACING_DB'
-          username: wso2carbon
-          password: wso2carbon
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/MESSAGE_TRACING_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 30
           idleTimeout: 60000
@@ -483,9 +483,9 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_STATS_DB'
-          username: wso2carbon
-          password: wso2carbon
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_STATS_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 50
           idleTimeout: 60000
@@ -500,9 +500,9 @@ wso2.datasources:
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:mysql://wso2apim-with-analytics-rdbms-service:3306/WSO2AM_MGW_ANALYTICS_DB'
-          username: wso2carbon
-          password: wso2carbon
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/WSO2AM_MGW_ANALYTICS_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 50
           idleTimeout: 60000

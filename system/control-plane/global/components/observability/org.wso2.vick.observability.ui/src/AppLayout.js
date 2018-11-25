@@ -17,15 +17,22 @@
  */
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
-import App from "./App";
 import AppBar from "@material-ui/core/AppBar";
+import AuthUtils from "./pages/common/utils/authUtils";
+import BarChart from "@material-ui/icons/BarChart";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import Collapse from "@material-ui/core/Collapse";
+import {ConfigHolder} from "./pages/common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
+import DesktopWindows from "@material-ui/icons/DesktopWindows";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
+import ExpandLess from "@material-ui/icons/ExpandLess";
+import ExpandMore from "@material-ui/icons/ExpandMore";
+import Grain from "@material-ui/icons/Grain";
 import IconButton from "@material-ui/core/IconButton";
-import InboxIcon from "@material-ui/icons/MoveToInbox";
+import InsertChartOutlined from "@material-ui/icons/InsertChartOutlined";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -35,13 +42,13 @@ import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import PropTypes from "prop-types";
 import React from "react";
-import ReactDOM from "react-dom";
+import Timeline from "@material-ui/icons/Timeline";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-
+import {ConfigConstants, withConfig} from "./pages/common/config";
 
 const drawerWidth = 240;
 
@@ -75,24 +82,27 @@ const styles = (theme) => ({
     hide: {
         display: "none"
     },
-    drawerPaper: {
-        position: "relative",
-        whiteSpace: "nowrap",
+    drawer: {
+        width: drawerWidth,
+        flexShrink: 0,
+        whiteSpace: "nowrap"
+    },
+    drawerOpen: {
         width: drawerWidth,
         transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen
         })
     },
-    drawerPaperClose: {
-        overflowX: "hidden",
+    drawerClose: {
         transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen
         }),
-        width: theme.spacing.unit * 7,
+        overflowX: "hidden",
+        width: theme.spacing.unit * 7 + 1,
         [theme.breakpoints.up("sm")]: {
-            width: theme.spacing.unit * 9
+            width: theme.spacing.unit * 9 + 1
         }
     },
     toolbar: {
@@ -105,25 +115,30 @@ const styles = (theme) => ({
     content: {
         flexGrow: 1,
         padding: theme.spacing.unit * 3
+    },
+    nested: {
+        paddingLeft: theme.spacing.unit * 3
     }
 });
 
 class AppLayout extends React.Component {
 
-    constructor() {
-        super();
-        this.handleUserInfoMenu = this.handleUserInfoMenu.bind(this);
+    constructor(props) {
+        super(props);
+
+        this.handleUserInfoMenuOpen = this.handleUserInfoMenuOpen.bind(this);
         this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
         this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
         this.handleDrawerClose = this.handleDrawerClose.bind(this);
+
+        this.state = {
+            open: false,
+            userInfo: null,
+            subMenuOpen: false
+        };
     }
 
-    state = {
-        open: false,
-        userInfo: null
-    };
-
-    handleUserInfoMenu = (event) => {
+    handleUserInfoMenuOpen = (event) => {
         this.setState({userInfo: event.currentTarget});
     };
 
@@ -144,73 +159,89 @@ class AppLayout extends React.Component {
         this.setState({open: false});
     };
 
+    handleClick = () => {
+        this.setState((state) => ({subMenuOpen: !state.subMenuOpen}));
+    };
+
     render() {
-        const {classes, history, children, theme, username} = this.props;
+        const {classes, history, children, theme, config} = this.props;
         const {open, userInfo} = this.state;
         const userInfoOpen = Boolean(userInfo);
+
+        const navigationState = {
+            hideBackButton: true
+        };
         return (
             <div className={classes.root}>
                 <CssBaseline/>
-                <AppBar
-                    position="fixed"
+                <AppBar position="fixed"
                     className={classNames(classes.appBar, {
                         [classes.appBarShift]: open
-                    })}
-                >
+                    })}>
                     <Toolbar disableGutters={!open}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="Open drawer"
+                        <IconButton color="inherit" aria-label="Open drawer"
                             onClick={this.handleDrawerOpen}
                             className={classNames(classes.menuButton, {
                                 [classes.hide]: open
-                            })}
-                        >
+                            })}>
                             <MenuIcon/>
                         </IconButton>
                         <Typography variant="h6" color="inherit" className={classes.grow}>
                             WSO2 VICK Observability
                         </Typography>
-                        {username && (
-                            <div>
-                                <IconButton
-                                    aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
-                                    aria-haspopup="true"
-                                    onClick={this.handleUserInfoMenu}
-                                    color="inherit"
-                                >
-                                    <AccountCircle/>
-                                </IconButton>
-                                <Menu
-                                    id="user-info-appbar"
-                                    anchorEl={this.state.userInfo}
-                                    anchorOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right"
-                                    }}
-                                    transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right"
-                                    }}
-                                    open={userInfoOpen}
-                                    onClose={this.handleUserInfoClose}
-                                >
-                                    {/* TODO: Implement user login */}
-                                    <MenuItem onClick={this.handleUserInfoClose}>Profile - {username}</MenuItem>
-                                    <MenuItem onClick={this.handleUserInfoClose}>My account</MenuItem>
-                                    <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
-                                </Menu>
-                            </div>
-                        )}
+                        {
+                            config.get(ConfigConstants.USER)
+                                ? (
+                                    <div>
+                                        <IconButton
+                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
+                                            aria-haspopup="true"
+                                            onClick={this.handleUserInfoMenuOpen}
+                                            color="inherit">
+                                            <AccountCircle/>
+                                        </IconButton>
+                                        <Menu id="user-info-appbar" anchorEl={this.state.userInfo}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}
+                                            open={userInfoOpen}
+                                            onClose={this.handleUserInfoClose}>
+                                            {/* TODO: Implement user login */}
+                                            <MenuItem onClick={this.handleUserInfoClose}>
+                                                Profile - {config.get(ConfigConstants.USER)}
+                                            </MenuItem>
+                                            <MenuItem onClick={this.handleUserInfoClose}>
+                                                My account
+                                            </MenuItem>
+                                            <MenuItem onClick={() => {
+                                                AuthUtils.signOut(config);
+                                            }}>
+                                                Logout
+                                            </MenuItem>
+                                        </Menu>
+                                    </div>
+                                )
+                                : null
+                        }
                     </Toolbar>
                 </AppBar>
-                <Drawer
-                    variant="permanent"
+                <Drawer variant="permanent"
+                    className={classNames(classes.drawer, {
+                        [classes.drawerOpen]: this.state.open,
+                        [classes.drawerClose]: !this.state.open
+                    })}
                     classes={{
-                        paper: classNames(classes.drawerPaper, !open && classes.drawerPaperClose)
+                        paper: classNames({
+                            [classes.drawerOpen]: this.state.open,
+                            [classes.drawerClose]: !this.state.open
+                        })
                     }}
-                    open={this.state.open}
-                >
+                    open={this.state.open}>
                     <div className={classes.toolbar}>
                         <IconButton onClick={this.handleDrawerClose}>
                             {theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
@@ -219,24 +250,51 @@ class AppLayout extends React.Component {
                     <Divider/>
                     <List>
                         {/* TODO : Change the icons accordingly to the page menu */}
-                        <ListItem button key="Overview" onClick={() => history.push("/")}>
-                            <ListItemIcon><InboxIcon/></ListItemIcon>
+                        <ListItem button key="Overview" onClick={() => history.push("/", navigationState)}>
+                            <ListItemIcon><DesktopWindows/></ListItemIcon>
                             <ListItemText primary="Overview"/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={() => history.push("/cells")}>
-                            <ListItemIcon><InboxIcon/></ListItemIcon>
+                        <ListItem button key="Cells" onClick={() => history.push("/cells", navigationState)}>
+                            <ListItemIcon><Grain/></ListItemIcon>
                             <ListItemText primary="Cells"/>
                         </ListItem>
-                        <ListItem button key="Micro Services"
-                            onClick={() => history.push("/micro-services")}>
-                            <ListItemIcon><InboxIcon/></ListItemIcon>
-                            <ListItemText primary="Micro Services"/>
-                        </ListItem>
                         <ListItem button key="Distributed Tracing"
-                            onClick={() => history.push("/tracing")}>
-                            <ListItemIcon><InboxIcon/></ListItemIcon>
+                            onClick={() => history.push("/tracing", navigationState)}>
+                            <ListItemIcon><Timeline/></ListItemIcon>
                             <ListItemText primary="Distributed Tracing"/>
                         </ListItem>
+                        <ListItem button onClick={this.handleClick}>
+                            <ListItemIcon>
+                                <InsertChartOutlined/>
+                            </ListItemIcon>
+                            <ListItemText inset primary="System Metrics"/>
+                            {this.state.subMenuOpen ? <ExpandLess/> : <ExpandMore/>}
+                        </ListItem>
+                        <Collapse in={this.state.subMenuOpen} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                                <ListItem button className={classes.nested} key="ControlPlane"
+                                    onClick={() => history.push("/system-metrics/control-plane", navigationState)}>
+                                    <ListItemIcon>
+                                        <BarChart/>
+                                    </ListItemIcon>
+                                    <ListItemText inset primary="Global Control Plane"/>
+                                </ListItem>
+                                <ListItem button className={classes.nested} key="PodUsage"
+                                    onClick={() => history.push("/system-metrics/pod-usage", navigationState)}>
+                                    <ListItemIcon>
+                                        <BarChart/>
+                                    </ListItemIcon>
+                                    <ListItemText inset primary="Pod Usage"/>
+                                </ListItem>
+                                <ListItem button className={classes.nested} key="NodeUsage"
+                                    onClick={() => history.push("/system-metrics/node-usage", navigationState)}>
+                                    <ListItemIcon>
+                                        <BarChart/>
+                                    </ListItemIcon>
+                                    <ListItemText inset primary="Node Usage"/>
+                                </ListItem>
+                            </List>
+                        </Collapse>
                     </List>
                 </Drawer>
                 <main className={classes.content}>
@@ -253,8 +311,8 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    username: PropTypes.string.isRequired,
+    config: PropTypes.instanceOf(ConfigHolder).isRequired,
     history: PropTypes.any.isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(AppLayout));
+export default withStyles(styles, {withTheme: true})(withRouter(withConfig(AppLayout)));

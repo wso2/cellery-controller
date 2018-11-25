@@ -74,6 +74,7 @@ public class VickStsEndpoint {
         stsRequest.setSource(form.getFirst(VickSTSConstants.VickSTSRequest.SUBJECT));
         stsRequest.setScopes(buildValueList(form.getFirst(VickSTSConstants.VickSTSRequest.SCOPE)));
         stsRequest.setAudiences(buildValueList(form.getFirst(VickSTSConstants.VickSTSRequest.AUDIENCE)));
+        stsRequest.setUserContextJwt(form.getFirst(VickSTSConstants.VickSTSRequest.USER_CONTEXT_JWT));
         return stsRequest;
     }
 

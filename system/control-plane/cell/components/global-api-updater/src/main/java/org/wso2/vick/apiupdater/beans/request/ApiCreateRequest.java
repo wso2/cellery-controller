@@ -25,6 +25,7 @@ import org.wso2.vick.apiupdater.utils.Constants;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class to represents information required for API creation.
@@ -63,6 +64,9 @@ public class ApiCreateRequest {
 
     @JsonProperty(Constants.JsonParamNames.ENDPOINT_CONFIG)
     private String endpointConfig;
+
+    @JsonProperty(Constants.JsonParamNames.ADDITIONAL_PROPERTIES)
+    private Map<String, String> additionalProperties;
 
     public ApiCreateRequest() {
         this.isDefaultVersion = true;
@@ -159,5 +163,13 @@ public class ApiCreateRequest {
 
     public void setLabels(List labels) {
         this.labels = labels;
+    }
+
+    public Map<String, String> getAdditionalProperties() {
+        return additionalProperties;
+    }
+
+    public void setAdditionalProperties(Map<String, String> additionalProperties) {
+        this.additionalProperties = additionalProperties;
     }
 }

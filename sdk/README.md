@@ -1,1 +1,0 @@
-VICK developer libraries

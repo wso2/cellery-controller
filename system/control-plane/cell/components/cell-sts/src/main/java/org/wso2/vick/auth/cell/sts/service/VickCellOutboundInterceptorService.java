@@ -38,7 +38,8 @@ public class VickCellOutboundInterceptorService extends VickCellInterceptorServi
     protected void handleRequest(CellStsRequest cellStsRequest,
                                  CellStsResponse cellStsResponse) throws VickCellSTSException {
 
-        log.info("Intercepting Sidecar Outbound call to destination:{}", getDestination(cellStsRequest));
+        log.debug("Intercepted Sidecar Outbound Request:\nSource:{}\nDestination:{}\n", cellStsRequest.getSource(),
+                cellStsRequest.getDestination());
         cellStsService.handleOutboundRequest(cellStsRequest, cellStsResponse);
     }
 }

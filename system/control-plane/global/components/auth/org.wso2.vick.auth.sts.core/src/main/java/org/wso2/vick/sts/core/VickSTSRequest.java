@@ -34,6 +34,8 @@ public class VickSTSRequest {
 
     private List<String> audiences;
 
+    private String userContextJwt;
+
     public String getSource() {
 
         return source;
@@ -62,5 +64,13 @@ public class VickSTSRequest {
     public void setAudiences(List<String> audiences) {
 
         this.audiences = audiences;
+    }
+
+    public String getUserContextJwt() {
+        return userContextJwt;
+    }
+
+    public void setUserContextJwt(String userContextJwt) {
+        this.userContextJwt = userContextJwt;
     }
 }

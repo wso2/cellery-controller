@@ -18,19 +18,16 @@
  */
 package org.wso2.vick.auth.cell.sts.model;
 
-import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.AttributeContextOuterClass;
-import org.wso2.vick.auth.cell.sts.generated.envoy.service.auth.v2alpha.ExternalAuth;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CellStsRequest {
 
+    private String requestId;
     private RequestSource source;
     private RequestDestination destination;
     private RequestContext requestContext;
-
     private Map<String, String> requestHeaders = new HashMap<>();
 
     public RequestSource getSource() {
@@ -49,22 +46,57 @@ public class CellStsRequest {
         return Collections.unmodifiableMap(requestHeaders);
     }
 
-    public CellStsRequest(ExternalAuth.CheckRequest request) {
-
-        requestHeaders.putAll(request.getAttributes().getRequest().getHttp().getHeadersMap());
-        requestContext = buildRequestContext(request);
+    public String getRequestId() {
+        return requestId;
     }
 
-
-    private RequestContext buildRequestContext(ExternalAuth.CheckRequest checkRequest) {
-
-        AttributeContextOuterClass.AttributeContext.HttpRequest httpRequest =
-                checkRequest.getAttributes().getRequest().getHttp();
-
-        return new RequestContext()
-                .setHost(httpRequest.getHost())
-                .setProtocol(httpRequest.getProtocol())
-                .setMethod(httpRequest.getMethod())
-                .setPath(httpRequest.getPath());
+    private CellStsRequest() {
     }
+
+    public static class CellStsRequestBuilder {
+
+        private String requestId;
+        private RequestSource source;
+        private RequestDestination destination;
+        private RequestContext requestContext;
+        private Map<String, String> requestHeaders = new HashMap<>();
+
+
+        public CellStsRequestBuilder setSource(RequestSource source) {
+            this.source = source;
+            return this;
+        }
+
+        public CellStsRequestBuilder setDestination(RequestDestination destination) {
+            this.destination = destination;
+            return this;
+        }
+
+        public CellStsRequestBuilder setRequestContext(RequestContext requestContext) {
+            this.requestContext = requestContext;
+            return this;
+        }
+
+        public CellStsRequestBuilder setRequestHeaders(Map<String, String> requestHeaders) {
+            this.requestHeaders = requestHeaders;
+            return this;
+        }
+
+        public CellStsRequestBuilder setRequestId(String requestId) {
+            this.requestId = requestId;
+            return this;
+        }
+
+        public CellStsRequest build() {
+            CellStsRequest request = new CellStsRequest();
+            request.requestId = requestId;
+            request.source = source;
+            request.destination = destination;
+            request.requestContext = requestContext;
+            request.requestHeaders = requestHeaders;
+
+            return request;
+        }
+     }
+
 }

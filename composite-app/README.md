@@ -1,1 +1,0 @@
-Composite app generation code

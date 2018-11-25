@@ -23,6 +23,12 @@ all: controller global-api-updater cell-sts
 controller:
 	go build -o ${BUILD_ROOT}/vick-controller -x ./system/controller/cmd/controller/
 
+.PHONY: controller-test
+controller-test:
+	go test -covermode=count -coverprofile=coverage.out ./system/controller/pkg/apis/... ./system/controller/pkg/client/... ./system/controller/pkg/controller/...
+
+controller-test-cover: controller-test
+	go tool cover -html=coverage.out
 
 global-api-updater:
 	mvn clean install -f system/control-plane/cell/components/global-api-updater/pom.xml
