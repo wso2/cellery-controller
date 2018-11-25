@@ -404,7 +404,9 @@ export default class Graph extends React.Component {
             );
         } else {
             this.props.onClickNode && this.props.onClickNode(clickedNodeId);
-            this.state.config.nodeHighlightBehavior && this._setNodeHighlightedValue(clickedNodeId, true);
+            if (this.state.config.nodeHighlightBehavior){
+                this._setNodeHighlightedValue(clickedNodeId, true);
+            }
         }
     };
 

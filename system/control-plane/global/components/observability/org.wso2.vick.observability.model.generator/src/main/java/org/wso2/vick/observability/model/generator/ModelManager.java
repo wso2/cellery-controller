@@ -63,15 +63,27 @@ public class ModelManager {
         return this.dependencyGraph.edges();
     }
 
-    public String[] getParentChildNodeNames(String edgeName) {
-        return edgeName.split(EDGE_NAME_CONNECTOR);
-    }
-
     private String generateEdgeName(String parentNodeId, String childNodeId, String serviceName) {
         return parentNodeId + EDGE_NAME_CONNECTOR + childNodeId + EDGE_NAME_CONNECTOR + serviceName;
     }
 
     public String[] edgeNameElements(String edgeName) {
         return edgeName.split(EDGE_NAME_CONNECTOR);
+    }
+
+    public void moveLinks(Node fromNode, Node targetNode, String newEdgePrefix) {
+        Set<String> outEdges = this.dependencyGraph.outEdges(fromNode);
+        for (String edgeName : outEdges) {
+            Node outNode = this.dependencyGraph.incidentNodes(outEdges).target();
+            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + getEdgePostFix(edgeName);
+            this.addLink(targetNode, outNode, newEdgeName);
+            this.dependencyGraph.removeEdge(edgeName);
+        }
+    }
+
+    private String getEdgePostFix(String edgeName) {
+        int index = edgeName.indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
+        index = edgeName.substring(index).indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
+        return edgeName.substring(index);
     }
 }

@@ -17,41 +17,44 @@
  */
 package org.wso2.vick.observability.api;
 
-import org.wso2.vick.observability.api.model.Graph;
-import org.wso2.vick.observability.api.model.GraphEdge;
-import org.wso2.vick.observability.model.generator.ModelManager;
+import org.wso2.vick.observability.api.model.CellInfo;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 /**
- * This is MSF4J service for the dependency model to plot the UI graph.
+ * API to expose kubernetes level details.
  */
-@Path("/dependency-model")
-public class DependencyModelAPI {
+@Path("/kubernetes-details")
+public class KubernetesAPI {
+    private Set<CellInfo> cellInfoMap = new HashSet<>();
 
     @GET
-    @Path("/cell-overview")
+    @Path("/cells/namespaces")
     @Produces("application/json")
-    public Response getCellOverview() {
-        List<GraphEdge> graphEdges = new ArrayList<>();
-
-        for (String edges : ModelManager.getInstance().getLinks()) {
-            String[] edgeNameElements = ModelManager.getInstance().
-                    edgeNameElements(edges);
-            GraphEdge edge = new GraphEdge(edgeNameElements[0], edgeNameElements[1]);
-            graphEdges.add(edge);
-        }
+    public Response getCellNamespace() {
         return Response.ok().header("Access-Control-Allow-Origin", "*")
                 .header("Access-Control-Allow-Credentials", "true")
                 .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
                 .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
-                .entity(new Graph(ModelManager.getInstance().getNodes(), graphEdges))
+                .entity(cellInfoMap)
                 .build();
     }
 
+    @POST
+    @Path("/cells/namespaces")
+    @Produces("application/json")
+    public Response addCellNamespaceMapping(CellInfo cellInfo) {
+        this.cellInfoMap.add(cellInfo);
+        return Response.ok().header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Credentials", "true")
+                .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
+                .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
+                .build();
+    }
 }

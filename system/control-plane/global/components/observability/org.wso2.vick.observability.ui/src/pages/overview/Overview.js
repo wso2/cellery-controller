@@ -134,10 +134,11 @@ class Overview extends Component {
             reloadGraph: true
         };
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        fetch("http://localhost:9123/dependencyModel/graph")
+        fetch("http://localhost:9123/dependency-model/cell-overview")
             .then(res => res.json())
             .then(
                 (result) => {
+                    console.log(result);
                     let summaryContent = [
                         {
                             key: "Total cells",
@@ -187,6 +188,14 @@ class Overview extends Component {
                 inbound.add(element.source);
             }
         });
+        let services = new Set();
+        this.state.data.nodes.map((element) => {
+            if (element.id === nodeId) {
+                element.services.map((service) => {
+                    services.add(service);
+                });
+            }
+        });
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
@@ -199,6 +208,10 @@ class Overview extends Component {
                     {
                         key: "Inbound Cells",
                         setValue: this.popluateArray(inbound)
+                    },
+                    {
+                        key: "Micro Services",
+                        setValue: this.popluateArray(services)
                     }
 
                 ]
