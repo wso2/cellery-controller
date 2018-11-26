@@ -19,7 +19,7 @@
 import React from "react";
 
 const DependencyDiagram = () => (
-    <div>Sequence Diagram</div>
+    <div>Dependency Diagram</div>
 );
 
 export default DependencyDiagram;

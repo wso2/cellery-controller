@@ -51,6 +51,7 @@ div.vis-item-span {
 
 div.vis-item-span > div.vis-item-overflow {
     top: -7px;
+    width: 5em;
 }
 
 div.vis-item-span > div.vis-item-overflow > div.vis-item-content {

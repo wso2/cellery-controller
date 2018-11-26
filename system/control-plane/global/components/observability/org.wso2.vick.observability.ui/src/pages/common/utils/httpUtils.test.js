@@ -74,58 +74,74 @@ describe("HttpUtils", () => {
     });
 
     describe("callBackendAPI()", () => {
+        const backEndURL = "http://www.example.com";
         let config;
 
         beforeEach(() => {
             config = new ConfigHolder();
             config.set(ConfigConstants.USER, "user1");
+            config.set(ConfigConstants.BACKEND_URL, backEndURL);
         });
 
         it("should add application/json header", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(3);
                 expect(config.headers["X-Key"]).toBe("value");
                 expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     "X-Key": "value"
                 }
             }, config);
         });
 
-        it("should add application/json header if no headers are provided", async () => {
+        it("should add application/json Accept and Content-Type headers if no headers are provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(1);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test"
+                url: "/test"
             }, config);
         });
 
@@ -133,28 +149,104 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe("http://www.example.com/test");
-                expect(Object.keys(config.headers)).toHaveLength(1);
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/xml");
+                expect(config.headers["Content-Type"]).toBe("application/json");
 
                 return new Promise((resolve) => {
                     resolve({
                         status: 200,
-                        data: "testData"
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
                     });
                 });
             });
 
             await HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
                 }
             }, config);
         });
 
-        const DATA = "testData";
+        it("should add application/json header if Content-Type header is provided", async () => {
+            axios.mockImplementation((config) => {
+                expect(Object.keys(config)).toHaveLength(3);
+                expect(config.method).toBe("GET");
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/json");
+
+                return new Promise((resolve) => {
+                    resolve({
+                        status: 200,
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
+                    });
+                });
+            });
+
+            await HttpUtils.callBackendAPI({
+                method: "GET",
+                url: "/test"
+            }, config);
+        });
+
+        it("should not change headers if Content-Type header is already provided", async () => {
+            axios.mockImplementation((config) => {
+                expect(Object.keys(config)).toHaveLength(3);
+                expect(config.method).toBe("GET");
+                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(Object.keys(config.headers)).toHaveLength(2);
+                expect(config.headers.Accept).toBe("application/json");
+                expect(config.headers["Content-Type"]).toBe("application/xml");
+
+                return new Promise((resolve) => {
+                    resolve({
+                        status: 200,
+                        data: [
+                            {
+                                event: {
+                                    value: "testData"
+                                }
+                            }
+                        ]
+                    });
+                });
+            });
+
+            await HttpUtils.callBackendAPI({
+                method: "GET",
+                url: "/test",
+                headers: {
+                    "Content-Type": "application/xml"
+                }
+            }, config);
+        });
+
+        const ERROR_DATA = "testError";
+        const AXIOS_OUTPUT_DATA = [
+            {
+                event: "testEvent"
+            }
+        ];
+        const SUCCESS_OUTPUT_DATA = [
+            "testEvent"
+        ];
         const resolveStatusCodes = [
             200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
             300, 301, 302, 303, 304, 305, 306, 307, 308
@@ -169,13 +261,13 @@ describe("HttpUtils", () => {
             axios.mockResolvedValue(new Promise((resolve) => {
                 resolve({
                     status: statusCode,
-                    data: DATA
+                    data: AXIOS_OUTPUT_DATA
                 });
             }));
 
             return HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
                 }
@@ -186,14 +278,14 @@ describe("HttpUtils", () => {
                 reject({
                     response: {
                         status: statusCode,
-                        data: DATA
+                        data: ERROR_DATA
                     }
                 });
             }));
 
             return HttpUtils.callBackendAPI({
                 method: "GET",
-                url: "http://www.example.com/test",
+                url: "/test",
                 headers: {
                     Accept: "application/xml"
                 }
@@ -203,28 +295,28 @@ describe("HttpUtils", () => {
         resolveStatusCodes.forEach((statusCode) => {
             it(`should resolve with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).resolves.toBe(DATA);
+                return expect(mockResolve(statusCode)).resolves.toEqual(SUCCESS_OUTPUT_DATA);
             });
         });
 
         rejectStatusCodes.forEach((statusCode) => {
             it(`should reject with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).rejects.toBe(DATA);
+                return expect(mockResolve(statusCode)).rejects.toEqual(AXIOS_OUTPUT_DATA);
             });
         });
 
         rejectStatusCodes.filter((statusCode) => statusCode !== 401).forEach((statusCode) => {
             it(`should reject with response data when axios rejects with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockReject(statusCode)).rejects.toEqual(new Error(DATA));
+                return expect(mockReject(statusCode)).rejects.toEqual(new Error(ERROR_DATA));
             });
         });
 
         it("should sign out and reject with response when axios rejects with a 401 status code", async () => {
             const spy = jest.spyOn(AuthUtils, "signOut");
 
-            await expect(mockReject(401)).rejects.toEqual(new Error(DATA));
+            await expect(mockReject(401)).rejects.toEqual(new Error(ERROR_DATA));
             expect(spy).toHaveBeenCalledTimes(1);
         });
     });

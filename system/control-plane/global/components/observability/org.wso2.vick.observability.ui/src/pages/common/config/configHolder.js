@@ -132,9 +132,13 @@ class ConfigHolder {
             // TODO : Load configuration from server
             const loadedConfiguration = {
                 user: AuthUtils.getAuthenticatedUser(),
-                backendURL: "wso2sp-worker.vick-system:9000",
+                loadingState: {
+                    isLoading: false,
+                    message: null
+                },
+                backendURL: "http://localhost:8080/api",
                 globalFilter: {
-                    startTime: "now - 24 hours",
+                    startTime: "now - 1 year",
                     endTime: "now",
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
@@ -156,9 +160,10 @@ class ConfigHolder {
 }
 
 const ConfigConstants = {
-    GLOBAL_FILTER: "globalFilter",
     USER: "user",
-    BACKEND_URL: "backendURL"
+    LOADING_STATE: "loadingState",
+    BACKEND_URL: "backendURL",
+    GLOBAL_FILTER: "globalFilter"
 };
 
 export {ConfigHolder, ConfigConstants};

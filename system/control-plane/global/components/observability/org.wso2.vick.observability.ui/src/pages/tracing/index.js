@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import NotFound from "../common/NotFound";
 import PropTypes from "prop-types";
 import React from "react";
 import Search from "./Search";
@@ -26,7 +27,8 @@ const Tracing = ({match, location}) => (
     <Switch>
         <Route exact path={`${match.path}/search`} component={Search}/>
         <Route exact path={`${match.path}/id/:traceId`} component={View}/>
-        <Redirect from={`${match.url}/`} to={{pathname: `${match.url}/search`, state: location.state}}/>
+        <Redirect exact from={`${match.url}/`} to={{pathname: `${match.url}/search`, state: location.state}}/>
+        <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );
 

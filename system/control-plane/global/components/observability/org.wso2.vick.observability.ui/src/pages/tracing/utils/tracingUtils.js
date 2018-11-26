@@ -23,7 +23,6 @@ import Constants from "./constants";
  */
 class TracingUtils {
 
-
     /**
      * Build a tree model using a spans list.
      *
@@ -33,8 +32,8 @@ class TracingUtils {
     static buildTree(spansList) {
         // Finding the root spans candidates (There can be one root span or two sibling root spans)
         const spanIdList = spansList.map((span) => span.spanId);
-        const rootSpanCandidates = spansList.filter((span) => span.parentSpanId === span.traceId
-            || !spanIdList.includes(span.parentSpanId));
+        const rootSpanCandidates = spansList.filter((span) => span.spanId === span.traceId
+            || !spanIdList.includes(span.parentId));
 
         // Finding the root span and initializing current span
         let rootSpan;
@@ -56,6 +55,42 @@ class TracingUtils {
             rootSpanCandidates[1].sibling = rootSpanCandidates[0];
         } else {
             throw Error(`Invalid Trace: Expected 1 root span, found ${rootSpanCandidates.length} spans`);
+        }
+
+        // Fixing siblings kinds
+        for (let i = 0; i < spansList.length; i++) {
+            const span = spansList[i];
+            let siblingSpan;
+            for (let j = 0; j < spansList.length; j++) {
+                if (i !== j && span.spanId === spansList[j].spanId) {
+                    siblingSpan = spansList[j];
+                }
+            }
+            if (siblingSpan) {
+                if (!span.kind || !siblingSpan.kind) {
+                    const setSpanKind = (span, kind) => {
+                        if (!span.kind) {
+                            span.kind = kind;
+                            span.tags["span.kind"] = kind;
+                        }
+                    };
+                    if (span.kind === Constants.Span.Kind.CLIENT
+                        || siblingSpan.kind === Constants.Span.Kind.SERVER
+                        || span.startTime < siblingSpan.startTime) {
+                        setSpanKind(span, Constants.Span.Kind.CLIENT);
+                        setSpanKind(siblingSpan, Constants.Span.Kind.SERVER);
+                    } else {
+                        setSpanKind(span, Constants.Span.Kind.SERVER);
+                        setSpanKind(siblingSpan, Constants.Span.Kind.CLIENT);
+                    }
+                }
+            } else {
+                const unsetSpanKind = (span) => {
+                    span.kind = null;
+                    Reflect.deleteProperty(span.tags, "span.kind");
+                };
+                unsetSpanKind(span);
+            }
         }
 
         // Adding references to the connected nodes
@@ -83,16 +118,16 @@ class TracingUtils {
      */
     static labelSpanTree(tree) {
         tree.walk((span, data) => {
-            if (TracingUtils.isFromIstioSystemComponent(span)) {
+            if (span.isFromIstioSystemComponent()) {
                 span.componentType = Constants.Span.ComponentType.ISTIO;
-            } else if (TracingUtils.isFromVICKSystemComponent(span)) {
+            } else if (span.isFromVICKSystemComponent()) {
                 span.componentType = Constants.Span.ComponentType.VICK;
             } else {
                 span.componentType = Constants.Span.ComponentType.MICROSERVICE;
             }
 
-            if (TracingUtils.isFromCellGateway(span)) {
-                span.cell = this.getCell(span);
+            if (span.isFromCellGateway()) {
+                span.cell = span.getCell();
                 span.serviceName = `${span.cell.name}-cell-gateway`;
             } else if (span.componentType !== Constants.Span.ComponentType.ISTIO) {
                 span.cell = data;
@@ -114,59 +149,6 @@ class TracingUtils {
             spanList.push(span);
         });
         return spanList;
-    }
-
-    /**
-     * Get the cell name from cell gateway span.
-     *
-     * @param {Span} cellGatewaySpan A span belonging to the cell gateway
-     * @returns {Object} Cell details
-     */
-    static getCell(cellGatewaySpan) {
-        let cell = null;
-        if (cellGatewaySpan) {
-            const matches = cellGatewaySpan.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1].replace(/_/g, "-"),
-                    version: matches[2].replace(/_/g, ".")
-                };
-            } else {
-                throw Error(`Invalid cell gateway name: ${cellGatewaySpan.serviceName}`);
-            }
-        }
-        return cell;
-    }
-
-    /**
-     * Check whether a span belongs to the cell gateway.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a cell gateway
-     */
-    static isFromCellGateway(span) {
-        return Boolean(span) && Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(span.serviceName);
-    }
-
-    /**
-     * Check whether a span belongs to the VICK System.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a system component
-     */
-    static isFromVICKSystemComponent(span) {
-        return Boolean(span) && (this.isFromCellGateway(span)
-            || span.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
-    }
-
-    /**
-     * Check whether a span belongs to the Istio System.
-     *
-     * @param {Span} span The span which should be checked
-     * @returns {boolean} True if the component to which the span belongs to is a system component
-     */
-    static isFromIstioSystemComponent(span) {
-        return Boolean(span) && span.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
     }
 
     /**

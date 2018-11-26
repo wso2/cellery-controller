@@ -17,6 +17,7 @@
  */
 
 import AuthUtils from "./authUtils";
+import {ConfigConstants} from "../config";
 import axios from "axios";
 
 class HttpUtils {
@@ -53,7 +54,7 @@ class HttpUtils {
     }
 
     /**
-     * Call the backend API.
+     * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
      * @param {ConfigHolder} globalConfig The global configuration provided to the current component
@@ -67,11 +68,22 @@ class HttpUtils {
             if (!config.headers.Accept) {
                 config.headers.Accept = "application/json";
             }
+            if (!config.headers["Content-Type"]) {
+                config.headers["Content-Type"] = "application/json";
+            }
+            if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
+                config.data = {};
+            }
+            config.url = `${globalConfig.get(ConfigConstants.BACKEND_URL)}${config.url}`;
 
             axios(config)
                 .then((response) => {
                     if (response.status >= 200 && response.status < 400) {
-                        resolve(response.data);
+                        if (response.data.map) {
+                            resolve(response.data.map((dataItem) => dataItem.event));
+                        } else {
+                            resolve(response.data);
+                        }
                     } else {
                         reject(response.data);
                     }

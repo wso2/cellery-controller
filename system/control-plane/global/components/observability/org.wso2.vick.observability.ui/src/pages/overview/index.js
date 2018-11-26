@@ -76,28 +76,21 @@ const graphConfig = {
 
 const styles = {
     card: {
-        minWidth: 275
+        minWidth: 275,
+        width: 300,
+        height: 500,
+        position: "fixed",
+        bottom: 0,
+        right: 0,
+        top: 70
     },
     title: {
         fontSize: 14
     },
-    pos: {
-        marginBottom: 12
+    moreDetailsButton: {
+        left: 170,
+        bottom: 0
     }
-};
-
-const cardCssStyle = {
-    width: 300,
-    height: 500,
-    position: "fixed",
-    bottom: 0,
-    right: 0,
-    top: 70
-};
-
-const buttonStyle = {
-    left: 170,
-    bottom: 0
 };
 
 class Overview extends Component {
@@ -250,7 +243,7 @@ class Overview extends Component {
                     onClickNode={this.onClickCell}
                     onClickGraph={this.onClickGraph}
                 />
-                <Card className={classes.card} style={cardCssStyle} transformOrigin={{
+                <Card className={classes.card} transformOrigin={{
                     vertical: "top",
                     horizontal: "right"
                 }}>
@@ -277,8 +270,10 @@ class Overview extends Component {
                     </CardContent>
                     {(!this.state.isOverallSummary) && (
                         <CardActions>
-                            <Button size="small" variant="contained" color="primary" style={buttonStyle}>More
-                                Details</Button>
+                            <Button size="small" variant="contained" color="primary"
+                                    className={classes.moreDetailsButton}>
+                                More Details
+                            </Button>
                         </CardActions>
                     )}
                 </Card>

@@ -30,25 +30,21 @@ class Span {
      * @param {Object} spanData Span data object
      */
     constructor(spanData) {
-        if (!(spanData && spanData.traceId && spanData.spanId)) {
-            throw Error("Invalid span: Expected Trace Id and Span Id but not found");
-        }
-
         this.traceId = spanData.traceId;
         this.spanId = spanData.spanId;
-        this.parentSpanId = spanData.parentSpanId;
+        this.parentId = spanData.parentId;
         this.serviceName = spanData.serviceName;
         this.operationName = spanData.operationName;
         this.kind = (spanData.kind ? spanData.kind.toUpperCase() : null);
         this.startTime = spanData.startTime ? spanData.startTime : 0;
         this.duration = spanData.duration ? spanData.duration : 0;
-        this.tags = spanData.tags ? spanData.tags : {};
+        this.tags = spanData.tags ? JSON.parse(spanData.tags) : {};
 
         /** @type {string} **/
         this.componentType = "";
 
         /** @type {{name: string, version: string}} **/
-        this.cell = null;
+        this.cell = (spanData.cellName ? {name: spanData.cellName, version: null} : null);
 
         /** @type {Span} **/
         this.parent = null;
@@ -86,7 +82,7 @@ class Span {
             if (this.spanId === span.spanId && this.kind === Constants.Span.Kind.CLIENT
                     && span.kind === Constants.Span.Kind.SERVER) { // Siblings
                 isParentOfSpan = true;
-            } else if (this.spanId === span.parentSpanId) {
+            } else if (this.spanId === span.parentId) {
                 isParentOfSpan = true;
                 if (this.hasSibling()) {
                     isParentOfSpan = isParentOfSpan && this.kind === Constants.Span.Kind.SERVER;
@@ -187,6 +183,66 @@ class Span {
     }
 
     /**
+     * Check whether a span belongs to the cell gateway.
+     *
+     * @returns {boolean} True if the component to which the span belongs to is a cell gateway
+     */
+    isFromCellGateway() {
+        return Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
+    }
+
+    /**
+     * Check whether a span belongs to the Istio System.
+     *
+     * @returns {boolean} True if the component to which the span belongs to is a system component
+     */
+    isFromIstioSystemComponent() {
+        return this.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
+    }
+
+    /**
+     * Check whether a span belongs to the VICK System.
+     *
+     * @returns {boolean} True if the component to which the span belongs to is a system component
+     */
+    isFromVICKSystemComponent() {
+        return (this.isFromCellGateway() || this.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
+    }
+
+    /**
+     * Get the cell name from cell gateway span.
+     *
+     * @returns {Object} Cell details
+     */
+    getCell() {
+        let cell = null;
+        if (this.cell) {
+            cell = this.cell;
+        } else if (Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
+            if (Boolean(matches) && matches.length === 3) {
+                cell = {
+                    name: matches[1].replace(/_/g, "-"),
+                    version: matches[2].replace(/_/g, ".")
+                };
+                this.cell = cell;
+                this.serviceName = `${cell.name}-cell-gateway`;
+            }
+        } else if (Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN);
+            if (Boolean(matches) && matches.length === 3) {
+                cell = {
+                    name: matches[1],
+                    version: null
+                };
+                this.cell = cell;
+                this.serviceName = matches[2];
+            }
+        }
+        return cell;
+    }
+
+    /**
      * Create a shallow clone.
      * This will create a clone without the span references.
      *
@@ -196,14 +252,14 @@ class Span {
         const span = new Span({
             traceId: this.traceId,
             spanId: this.spanId,
-            parentSpanId: this.parentSpanId,
+            parentId: this.parentId,
             serviceName: this.serviceName,
             operationName: this.operationName,
             kind: this.kind,
             startTime: this.startTime,
-            duration: this.duration,
-            tags: {...this.tags}
+            duration: this.duration
         });
+        span.tags = {...this.tags};
         span.componentType = this.componentType;
         span.cell = {...this.cell};
         return span;

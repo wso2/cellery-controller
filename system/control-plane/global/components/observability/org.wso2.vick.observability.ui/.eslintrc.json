@@ -9,7 +9,8 @@
     },
     "env": {
         "browser": true,
-        "es6": true
+        "es6": true,
+        "jest/globals": true
     },
     "extends": [
         "react-app",
@@ -172,7 +173,7 @@
         ],
         "max-lines": [
             "error",
-            500
+            600
         ],
         "max-nested-callbacks": "error",
         "max-params": "off",

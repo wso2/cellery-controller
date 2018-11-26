@@ -1,0 +1,26 @@
+@App:name("tracing-app")
+@App:description("VICK Tracing Siddhi App which stores the received Zipkin spans")
+
+@source(type="tracing-receiver", host="0.0.0.0", port="9411", api.context="/api/v1/spans",
+        @map(type="keyvalue", fail.on.missing.attribute="false"))
+define stream ZipkinStreamIn (traceId string, id string, parentId string, name string, serviceName string,
+                              kind string, timestamp long, duration long, tags string);
+
+@Store(type="rdbms", datasource="Message_Tracing_DB", field.length="tags:8000")
+@PrimaryKey("traceId", "spanId", "kind")
+define table SpanTable (traceId string, spanId string, parentId string, cellName string, serviceName string,
+                        operationName string, kind string, startTime long, duration long, tags string);
+
+from ZipkinStreamIn
+select
+    traceId,
+    id as spanId,
+    parentId,
+    ifThenElse(str:contains(serviceName, "--"), str:split(serviceName, "--", 0), "") as cellName,
+    ifThenElse(str:contains(serviceName, "--"), str:split(serviceName, "--", 1), serviceName) as serviceName,
+    name as operationName,
+    kind,
+    timestamp as startTime,
+    duration,
+    tags
+insert into SpanTable;

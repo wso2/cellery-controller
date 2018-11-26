@@ -178,7 +178,7 @@ class TopToolbar extends React.Component {
      */
     refreshManually() {
         this.stopRefreshTask();
-        this.refresh();
+        this.refresh(true);
         this.startRefreshTask();
     }
 
@@ -191,7 +191,7 @@ class TopToolbar extends React.Component {
 
         this.stopRefreshTask(); // Stop any existing refresh tasks
         if (refreshInterval && refreshInterval > 0) {
-            this.refreshIntervalID = setInterval(() => self.refresh(), refreshInterval);
+            this.refreshIntervalID = setInterval(() => self.refresh(false), refreshInterval);
         }
     }
 
@@ -207,13 +207,16 @@ class TopToolbar extends React.Component {
 
     /**
      * Refresh the components by calling the on Update.
+     *
+     * @param {boolean} isUserAction True if the refresh was initiated by user
      */
-    refresh() {
+    refresh(isUserAction) {
         const {onUpdate} = this.props;
         const {startTime, endTime} = this.state;
 
         if (onUpdate) {
             onUpdate(
+                isUserAction,
                 QueryUtils.parseTime(startTime),
                 QueryUtils.parseTime(endTime)
             );

@@ -37,6 +37,8 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
+import java.util.UUID;
 
 /**
  * Tracing Handler to work with tracing headers and publish tracing data.
@@ -44,6 +46,8 @@ import java.util.Map;
 public class TracingSynapseHandler extends AbstractSynapseHandler {
 
     private static final Logger logger = Logger.getLogger(TracingSynapseHandler.class.getName());
+
+    private static final Map<String, Stack<Span>> spansMap = new HashMap<>();
 
     private Tracer tracer;
 
@@ -84,19 +88,36 @@ public class TracingSynapseHandler extends AbstractSynapseHandler {
                 new TextMapExtractAdapter(headersMap)
         );
 
-        // Building the request in span
+        // Getting the span stack
+        String correlationID = headersMap.get(Constants.B3_GLOBAL_GATEWAY_CORRELATION_ID_HEADER);
+        if (correlationID == null) {
+            correlationID = UUID.randomUUID().toString();
+        }
+        messageContext.setProperty(Constants.TRACING_CORRELATION_ID, correlationID);
+        Stack<Span> spanStack = spansMap.computeIfAbsent(correlationID, key -> new Stack<>());
+
+        // Building the request-in span
         String spanName = messageContext.getTo().getAddress();
-        Span span = tracer.buildSpan(spanName)
-                .asChildOf(parentSpanContext)
-                .start();
+        Span span;
+        if (!spanStack.empty()) {
+            span = tracer.buildSpan(spanName)
+                    .asChildOf(spanStack.peek())
+                    .start();
+        } else {
+            span = tracer.buildSpan(spanName)
+                    .asChildOf(parentSpanContext)
+                    .withTag(Constants.TAG_KEY_SPAN_KIND, Constants.SPAN_KIND_SERVER)
+                    .start();
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("Started span: " + spanName);
         }
-        messageContext.setProperty(Constants.REQUEST_IN_SPAN, span);
+
+        // Storing the span in the stack to be accessed later
+        spanStack.push(span);
 
         // Settings tags
         org.apache.axis2.context.MessageContext axis2MessageContext = getAxis2MessageContext(messageContext);
-        addTag(span, Constants.TAG_KEY_SPAN_KIND, Constants.SPAN_KIND_SERVER);
         addTag(span, Constants.TAG_KEY_HTTP_METHOD,
                 axis2MessageContext.getProperty(Constants.AXIS2_MESSAGE_CONTEXT_PROPERTY_HTTP_METHOD));
         addTag(span, Constants.TAG_KEY_PEER_ADDRESS,
@@ -108,19 +129,17 @@ public class TracingSynapseHandler extends AbstractSynapseHandler {
 
     @Override
     public boolean handleRequestOutFlow(MessageContext messageContext) {
-        Object requestInSpan = messageContext.getProperty(Constants.REQUEST_IN_SPAN);
-        if (requestInSpan instanceof Span) {
-            Span parentSpan = (Span) requestInSpan;
-
+        String correlationID = (String) messageContext.getProperty(Constants.TRACING_CORRELATION_ID);
+        Stack<Span> spanStack = spansMap.get(correlationID);
+        if (!spanStack.empty()) {
             // Building the request out span
             String spanName = messageContext.getTo().getAddress();
             Span span = tracer.buildSpan(spanName)
-                    .asChildOf(parentSpan)
+                    .asChildOf(spanStack.peek())
                     .start();
             if (logger.isDebugEnabled()) {
                 logger.debug("Started span: " + spanName);
             }
-            messageContext.setProperty(Constants.REQUEST_OUT_SPAN, span);
 
             // Settings tags
             addTag(span, Constants.TAG_KEY_SPAN_KIND, Constants.SPAN_KIND_CLIENT);
@@ -140,30 +159,35 @@ public class TracingSynapseHandler extends AbstractSynapseHandler {
                     Format.Builtin.HTTP_HEADERS,
                     new TextMapInjectAdapter(headersMap)
             );
+            headersMap.put(Constants.B3_GLOBAL_GATEWAY_CORRELATION_ID_HEADER, correlationID);
+
+            // Storing the span in the stack to be accessed later
+            spanStack.push(span);
         }
         return true;
     }
 
     @Override
     public boolean handleResponseInFlow(MessageContext messageContext) {
-        return finishSpan(messageContext, Constants.REQUEST_OUT_SPAN);
+        return finishSpan(messageContext);
     }
 
     @Override
     public boolean handleResponseOutFlow(MessageContext messageContext) {
-        return finishSpan(messageContext, Constants.REQUEST_IN_SPAN);
+        return finishSpan(messageContext);
     }
 
     /**
      * Finish the stored in message context.
      *
      * @param messageContext The synapse message context
-     * @param type           The type of span to finish
      * @return True if sequence should continue
      */
-    private boolean finishSpan(MessageContext messageContext, String type) {
-        Span span = (Span) messageContext.getProperty(type);
-        if (span != null) {
+    private boolean finishSpan(MessageContext messageContext) {
+        String correlationID = (String) messageContext.getProperty(Constants.TRACING_CORRELATION_ID);
+        Stack<Span> spanStack = spansMap.get(correlationID);
+        if (!spanStack.empty()) {
+            Span span = spanStack.pop();
             org.apache.axis2.context.MessageContext axis2MessageContext = getAxis2MessageContext(messageContext);
 
             if (axis2MessageContext != null) {
