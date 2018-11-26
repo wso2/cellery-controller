@@ -68,7 +68,8 @@
                 "exceptMethods": [
                     "render",
                     "constructor",
-                    "componentDidMount"
+                    "componentDidMount",
+                    "shouldComponentUpdate"
                 ]
             }
         ],
@@ -172,7 +173,7 @@
         ],
         "max-lines": [
             "error",
-            500
+            600
         ],
         "max-nested-callbacks": "error",
         "max-params": "off",

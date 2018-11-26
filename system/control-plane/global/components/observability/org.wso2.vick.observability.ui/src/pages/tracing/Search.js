@@ -25,6 +25,7 @@ import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import NotificationUtils from "../common/utils/notificationUtils";
+import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
@@ -39,6 +40,9 @@ import withStyles from "@material-ui/core/styles/withStyles";
 import {ConfigConstants, ConfigHolder} from "../common/config/configHolder";
 
 const styles = (theme) => ({
+    container: {
+        padding: theme.spacing.unit * 3
+    },
     subheading: {
         marginBottom: theme.spacing.unit * 2
     },
@@ -121,7 +125,7 @@ class Search extends React.Component {
         );
 
         return (
-            <React.Fragment>
+            <Paper className={classes.container}>
                 <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
                 <Typography variant="h6" color="inherit" className={classes.subheading}>
                     Search Traces
@@ -232,7 +236,7 @@ class Search extends React.Component {
                 <div className={classes.resultContainer}>
                     <SearchResult data={searchResults}/>
                 </div>
-            </React.Fragment>
+            </Paper>
         );
     }
 

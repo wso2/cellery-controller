@@ -21,6 +21,7 @@ import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
+import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./SequenceDiagram";
@@ -31,6 +32,13 @@ import Timeline from "./timeline";
 import TopToolbar from "../../common/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
 import {withConfig} from "../../common/config";
+import withStyles from "@material-ui/core/styles/withStyles";
+
+const styles = (theme) => ({
+    container: {
+        padding: theme.spacing.unit * 3
+    }
+});
 
 class View extends React.Component {
 
@@ -96,7 +104,7 @@ class View extends React.Component {
     }
 
     render() {
-        const {match} = this.props;
+        const {classes, match} = this.props;
         const {isLoading, spans, selectedTabIndex} = this.state;
 
         const traceId = match.params.traceId;
@@ -110,7 +118,7 @@ class View extends React.Component {
             isLoading
                 ? null
                 : (
-                    <React.Fragment>
+                    <Paper className={classes.container}>
                         {
                             spans && spans.length === 0
                                 ? (
@@ -129,7 +137,7 @@ class View extends React.Component {
                                     </React.Fragment>
                                 )
                         }
-                    </React.Fragment>
+                    </Paper>
                 )
         );
     }
@@ -137,6 +145,7 @@ class View extends React.Component {
 }
 
 View.propTypes = {
+    classes: PropTypes.object.isRequired,
     config: PropTypes.instanceOf(ConfigHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
@@ -148,4 +157,4 @@ View.propTypes = {
     }).isRequired
 };
 
-export default withConfig(View);
+export default withStyles(styles)(withConfig(View));

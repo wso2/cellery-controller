@@ -21,7 +21,7 @@ import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
 import {ConfigHolder} from "./pages/common/config/configHolder";
 import NotFound from "./pages/common/NotFound";
-import Overview from "./pages/Overview";
+import Overview from "./pages/overview";
 import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
