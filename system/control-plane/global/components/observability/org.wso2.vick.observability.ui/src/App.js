@@ -20,7 +20,7 @@ import AppLayout from "./AppLayout";
 import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
 import {ConfigHolder} from "./pages/common/config/configHolder";
-import Overview from "./pages/Overview";
+import Overview from "./pages/overview/Overview";
 import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
