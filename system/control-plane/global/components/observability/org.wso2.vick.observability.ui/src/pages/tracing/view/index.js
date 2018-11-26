@@ -19,6 +19,7 @@
 import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
+import NotFound from "../../common/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import React from "react";
@@ -47,7 +48,8 @@ class View extends React.Component {
 
         this.state = {
             spans: [],
-            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
+            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
+            isLoading: true
         };
 
         this.handleTabChange = this.handleTabChange.bind(this);
@@ -80,6 +82,9 @@ class View extends React.Component {
             });
             NotificationUtils.hideLoadingOverlay(config);
         }).catch(() => {
+            self.setState({
+                isLoading: false
+            });
             NotificationUtils.hideLoadingOverlay(config);
         });
     }
@@ -91,7 +96,10 @@ class View extends React.Component {
     }
 
     render() {
-        const {spans, selectedTabIndex} = this.state;
+        const {match} = this.props;
+        const {isLoading, spans, selectedTabIndex} = this.state;
+
+        const traceId = match.params.traceId;
 
         const timeline = <Timeline spans={spans}/>;
         const sequenceDiagram = <SequenceDiagram/>;
@@ -99,18 +107,28 @@ class View extends React.Component {
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
         return (
-            spans.length === 0
+            isLoading
                 ? null
                 : (
                     <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"}/>
-                        <Tabs value={selectedTabIndex} indicatorColor="primary"
-                            onChange={this.handleTabChange}>
-                            <Tab label="Timeline"/>
-                            <Tab label="Sequence Diagram"/>
-                            <Tab label="Dependency Diagram"/>
-                        </Tabs>
-                        {tabContent[selectedTabIndex]}
+                        {
+                            spans && spans.length === 0
+                                ? (
+                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
+                                )
+                                : (
+                                    <React.Fragment>
+                                        <TopToolbar title={"Distributed Tracing"}/>
+                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
+                                            onChange={this.handleTabChange}>
+                                            <Tab label="Timeline"/>
+                                            <Tab label="Sequence Diagram"/>
+                                            <Tab label="Dependency Diagram"/>
+                                        </Tabs>
+                                        {tabContent[selectedTabIndex]}
+                                    </React.Fragment>
+                                )
+                        }
                     </React.Fragment>
                 )
         );

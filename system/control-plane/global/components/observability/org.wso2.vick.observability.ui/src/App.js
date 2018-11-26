@@ -20,13 +20,14 @@ import AppLayout from "./AppLayout";
 import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
 import {ConfigHolder} from "./pages/common/config/configHolder";
+import NotFound from "./pages/common/NotFound";
 import Overview from "./pages/Overview";
 import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
 import SystemMetrics from "./pages/systemMetrics";
 import Tracing from "./pages/tracing";
-import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import {BrowserRouter, Route, Switch} from "react-router-dom";
 import {ConfigConstants, ConfigProvider, withConfig} from "./pages/common/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
 
@@ -66,7 +67,7 @@ class UnConfiguredProtectedPortal extends React.Component {
                         <Route path="/cells" component={Cells}/>
                         <Route path="/tracing" component={Tracing}/>
                         <Route path="/system-metrics" component={SystemMetrics}/>
-                        <Redirect from="/*" to="/"/>
+                        <Route path="/*" component={NotFound}/>
                     </Switch>
                 </AppLayout>
             )

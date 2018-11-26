@@ -19,16 +19,17 @@
 import Cell from "./Cell";
 import List from "./List";
 import MicroService from "./MicroService";
+import NotFound from "../common/NotFound";
 import PropTypes from "prop-types";
 import React from "react";
-import {Redirect, Route, Switch, withRouter} from "react-router-dom";
+import {Route, Switch, withRouter} from "react-router-dom";
 
-const Cells = ({match, location}) => (
+const Cells = ({match}) => (
     <Switch>
         <Route exact path={`${match.path}/`} component={List}/>
         <Route exact path={`${match.path}/:cellId`} component={Cell}/>
         <Route exact path={`${match.path}/:cellId/microservice/:microserviceId`} component={MicroService}/>
-        <Redirect from={`${match.url}/`} to={{pathname: `${match.url}/`, state: location.state}}/>
+        <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );
 

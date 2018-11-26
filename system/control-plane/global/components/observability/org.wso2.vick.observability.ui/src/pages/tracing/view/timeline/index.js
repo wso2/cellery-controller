@@ -114,16 +114,7 @@ class Timeline extends React.Component {
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}
                                 input={<Input id="select-multiple-checkbox"/>}
-                                renderValue={(selected) => selected.join(", ")}
-                                MenuProps={{
-                                    PaperProps: {
-                                        style: {
-                                            maxHeight: 48 * 4.5 + 8,
-                                            width: 250
-                                        }
-                                    }
-                                }}
-                            >
+                                renderValue={(selected) => ["Microservices"].concat(selected).join(", ")}>
                                 {
                                     serviceTypes.map((serviceType) => {
                                         const checked = this.state.selectedServiceTypes.indexOf(serviceType) > -1;

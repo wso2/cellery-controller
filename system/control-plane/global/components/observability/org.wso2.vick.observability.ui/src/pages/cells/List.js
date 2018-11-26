@@ -47,8 +47,9 @@ class List extends React.Component {
             selectableRows: false,
             print: false
         };
-        const columns = ["Cell", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count "
-        + "(requests/s)"];
+        const columns = [
+            "Cell", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count (requests/s)"
+        ];
         const data = [
             [" ", " ", " ", " ", " "]
         ];

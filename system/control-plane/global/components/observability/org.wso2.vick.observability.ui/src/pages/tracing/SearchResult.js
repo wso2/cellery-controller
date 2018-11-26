@@ -159,7 +159,7 @@ class SearchResult extends React.Component {
                 ? (
                     <React.Fragment>
                         <Typography variant="h6" color="inherit" className={classes.subheading}>
-                            Search Traces
+                            Traces
                         </Typography>
                         {
                             data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

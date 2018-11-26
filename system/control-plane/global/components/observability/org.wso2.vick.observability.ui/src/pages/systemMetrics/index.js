@@ -18,6 +18,7 @@
 
 import ControlPlane from "./ControlPlane";
 import Node from "./Node";
+import NotFound from "../common/NotFound";
 import Pod from "./Pod";
 import PropTypes from "prop-types";
 import React from "react";
@@ -28,7 +29,8 @@ const SystemMetrics = ({match, location}) => (
         <Route exact path={`${match.path}/control-plane`} component={ControlPlane}/>
         <Route exact path={`${match.path}/node-usage`} component={Node}/>
         <Route exact path={`${match.path}/pod-usage`} component={Pod}/>
-        <Redirect from={`${match.url}/`} to={{pathname: `${match.url}/`, state: location.state}}/>
+        <Redirect exact from={`${match.url}/`} to={{pathname: `${match.url}/`, state: location.state}}/>
+        <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );
 
