@@ -125,118 +125,120 @@ class Search extends React.Component {
         );
 
         return (
-            <Paper className={classes.container}>
+            <React.Fragment>
                 <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
-                <Typography variant="h6" color="inherit" className={classes.subheading}>
-                    Search Traces
-                </Typography>
-                <Grid container justify={"flex-start"} className={classes.searchForm}>
-                    <Grid container justify={"flex-start"} spacing={24}>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
-                                <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
-                                    inputProps={{name: "cell", id: "cell"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(data.cells)}
-                                </Select>
-                            </FormControl>
+                <Paper className={classes.container}>
+                    <Typography variant="h6" color="inherit" className={classes.subheading}>
+                        Search Traces
+                    </Typography>
+                    <Grid container justify={"flex-start"} className={classes.searchForm}>
+                        <Grid container justify={"flex-start"} spacing={24}>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
+                                    <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
+                                        inputProps={{name: "cell", id: "cell"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(data.cells)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
+                                    <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
+                                        inputProps={{name: "microservice", id: "microservice"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(metaData.availableMicroservices)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
+                                    <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
+                                        inputProps={{name: "operation", id: "operation"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(metaData.availableOperations)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                         </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
-                                <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
-                                    inputProps={{name: "microservice", id: "microservice"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(metaData.availableMicroservices)}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
-                                <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
-                                    inputProps={{name: "operation", id: "operation"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(metaData.availableOperations)}
-                                </Select>
-                            </FormControl>
+                        <Grid container justify={"flex-start"} spacing={24}>
+                            <Grid item xs={6}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <TextField label="Tags" id="tags" value={filter.tags} InputLabelProps={{shrink: true}}
+                                        onChange={this.getChangeHandler("tags")} placeholder={"Eg: http.status_code=200"}/>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
+                                    <TextField id="min-duration" value={filter.minDuration}
+                                        className={classes.durationTextField}
+                                        onChange={this.getChangeHandler("minDuration")} type="number"
+                                        placeholder={"Eg: 10"}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment className={classes.startInputAdornment}
+                                                    variant="filled" position="start">Min</InputAdornment>
+                                            ),
+                                            endAdornment: (
+                                                <InputAdornment variant="filled" position="end">
+                                                    <Select value={filter.minDurationMultiplier}
+                                                        onChange={this.getChangeHandler("minDurationMultiplier")}
+                                                        inputProps={{
+                                                            name: "min-duration-multiplier",
+                                                            id: "min-duration-multiplier"
+                                                        }}>
+                                                        <MenuItem value={1}>ms</MenuItem>
+                                                        <MenuItem value={1000}>s</MenuItem>
+                                                    </Select></InputAdornment>
+                                            )
+                                        }}/>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <TextField id="max-duration" value={filter.maxDuration}
+                                        className={classes.durationTextField}
+                                        onChange={this.getChangeHandler("maxDuration")} type="number"
+                                        placeholder={"Eg: 1,000"}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment className={classes.startInputAdornment}
+                                                    variant="filled" position="start">Max</InputAdornment>
+                                            ),
+                                            endAdornment: (
+                                                <InputAdornment variant="filled" position="end">
+                                                    <Select value={filter.maxDurationMultiplier}
+                                                        onChange={this.getChangeHandler("maxDurationMultiplier")}
+                                                        inputProps={{
+                                                            name: "max-duration-multiplier",
+                                                            id: "max-duration-multiplier"
+                                                        }}>
+                                                        <MenuItem value={1}>ms</MenuItem>
+                                                        <MenuItem value={1000}>s</MenuItem>
+                                                    </Select>
+                                                </InputAdornment>
+                                            )
+                                        }}/>
+                                </FormControl>
+                            </Grid>
                         </Grid>
                     </Grid>
-                    <Grid container justify={"flex-start"} spacing={24}>
-                        <Grid item xs={6}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <TextField label="Tags" id="tags" value={filter.tags} InputLabelProps={{shrink: true}}
-                                    onChange={this.getChangeHandler("tags")} placeholder={"Eg: http.status_code=200"}/>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
-                                <TextField id="min-duration" value={filter.minDuration}
-                                    className={classes.durationTextField}
-                                    onChange={this.getChangeHandler("minDuration")} type="number"
-                                    placeholder={"Eg: 10"}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment}
-                                                variant="filled" position="start">Min</InputAdornment>
-                                        ),
-                                        endAdornment: (
-                                            <InputAdornment variant="filled" position="end">
-                                                <Select value={filter.minDurationMultiplier}
-                                                    onChange={this.getChangeHandler("minDurationMultiplier")}
-                                                    inputProps={{
-                                                        name: "min-duration-multiplier",
-                                                        id: "min-duration-multiplier"
-                                                    }}>
-                                                    <MenuItem value={1}>ms</MenuItem>
-                                                    <MenuItem value={1000}>s</MenuItem>
-                                                </Select></InputAdornment>
-                                        )
-                                    }}/>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <TextField id="max-duration" value={filter.maxDuration}
-                                    className={classes.durationTextField}
-                                    onChange={this.getChangeHandler("maxDuration")} type="number"
-                                    placeholder={"Eg: 1,000"}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment}
-                                                variant="filled" position="start">Max</InputAdornment>
-                                        ),
-                                        endAdornment: (
-                                            <InputAdornment variant="filled" position="end">
-                                                <Select value={filter.maxDurationMultiplier}
-                                                    onChange={this.getChangeHandler("maxDurationMultiplier")}
-                                                    inputProps={{
-                                                        name: "max-duration-multiplier",
-                                                        id: "max-duration-multiplier"
-                                                    }}>
-                                                    <MenuItem value={1}>ms</MenuItem>
-                                                    <MenuItem value={1000}>s</MenuItem>
-                                                </Select>
-                                            </InputAdornment>
-                                        )
-                                    }}/>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-                </Grid>
-                <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
-                <div className={classes.resultContainer}>
-                    <SearchResult data={searchResults}/>
-                </div>
-            </Paper>
+                    <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
+                    <div className={classes.resultContainer}>
+                        <SearchResult data={searchResults}/>
+                    </div>
+                </Paper>
+            </React.Fragment>
         );
     }
 

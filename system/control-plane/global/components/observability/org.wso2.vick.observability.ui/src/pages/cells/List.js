@@ -55,12 +55,14 @@ class List extends React.Component {
         ];
 
         return (
-            <Paper className={classes.root}>
+            <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellData}/>
-                <div className={classes.tableWrapper}>
-                    <MUIDataTable data={data} columns={columns} options={options}/>
-                </div>
-            </Paper>
+                <Paper className={classes.root}>
+                    <div className={classes.tableWrapper}>
+                        <MUIDataTable data={data} columns={columns} options={options}/>
+                    </div>
+                </Paper>
+            </React.Fragment>
         );
     }
 

@@ -35,16 +35,17 @@ import {withStyles} from "@material-ui/core";
 import {ConfigConstants, withConfig} from "./config";
 
 const styles = (theme) => ({
-    subToolbar: {
-        paddingLeft: theme.spacing.unit,
-        paddingRight: theme.spacing.unit
-    },
     container: {
-        marginBottom: theme.spacing.unit * 3
+        position: "sticky",
+        top: 64,
+        backgroundColor: "#fafafa",
+        marginBottom: theme.spacing.unit * 6,
+        zIndex: 999,
+        minHeight: 70
     },
     title: {
         flexGrow: 1,
-        marginLeft: theme.spacing.unit * 2
+        marginTop: 10
     },
     startInputAdornment: {
         marginBottom: theme.spacing.unit * 2
@@ -104,7 +105,7 @@ class TopToolbar extends React.Component {
 
         return (
             <div className={classes.container}>
-                <Toolbar disableGutters={true} className={classes.subToolbar}>
+                <Toolbar disableGutters={true}>
                     {
                         location.state && location.state.hideBackButton
                             ? null
@@ -136,7 +137,6 @@ class TopToolbar extends React.Component {
                         <Refresh/>
                     </IconButton>
                 </Toolbar>
-                <Divider/>
             </div>
         );
     }
