@@ -16,6 +16,10 @@
  * under the License.
  */
 
+/**
+ * Overrides for the vis-timeline library
+ */
+
 div.vis-group {
     cursor: pointer;
 }

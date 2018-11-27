@@ -180,7 +180,7 @@ class TimelineView extends React.Component {
     }
 
     calculateTrace() {
-        const {spans, colorGenerator} = this.props;
+        const {spans} = this.props;
         this.trace.tree = TracingUtils.buildTree(spans);
         this.trace.spans = TracingUtils.getOrderedList(this.trace.tree);
 
@@ -206,7 +206,6 @@ class TimelineView extends React.Component {
         this.trace.treeHeight += 1;
         this.trace.minTime = minLimit;
         this.trace.maxTime = maxLimit;
-        colorGenerator.addKeys(cellNames);
     }
 
     drawTimeline() {
