@@ -32,7 +32,6 @@ import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
-import Tooltip from "@material-ui/core/Tooltip";
 import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
@@ -56,9 +55,6 @@ const styles = (theme) => ({
     operationName: {
         color: "#7c7c7c",
         fontSize: "small"
-    },
-    spanTooltipTable: {
-        textAlign: "left"
     },
     kindBadge: {
         borderRadius: "8px",
@@ -255,48 +251,22 @@ class TimelineView extends React.Component {
                 if (item && item.span.serviceName) {
                     const kindData = kindsData[item.span.kind];
                     const isLeaf = item.span.children.size;
-                    const tooltipContent = (
-                        <table className={classes.spanTooltipTable}>
-                            <tbody>
-                                {
-                                    item.span.cell.name
-                                        ? (
-                                            <tr>
-                                                <th>Cell:</th>
-                                                <td>{item.span.cell.name}</td>
-                                            </tr>
-                                        )
-                                        : null
-                                }
-                                <tr>
-                                    <th>Service:</th>
-                                    <td>{item.span.serviceName}</td>
-                                </tr>
-                                <tr>
-                                    <th>Operation:</th>
-                                    <td>{item.span.operationName}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    );
                     ReactDOM.render((
-                        <Tooltip title={tooltipContent} enterDelay={200}>
-                            <div>
-                                <div style={{
-                                    paddingLeft: `${(item.span.treeDepth + (isLeaf === 0 ? 1 : 0)) * 15}px`,
-                                    minWidth: `${(this.trace.treeHeight + 1) * 15 + 100}px`,
-                                    width: `${(self.spanLabelWidth > 0 ? self.spanLabelWidth : null)}px`
-                                }} className={classes.spanLabelContainer}>
-                                    <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
-                                    <span className={classes.operationName}>{item.span.operationName}</span>
-                                </div>
-                                {(kindData
-                                    ? <div className={classes.kindBadge}
-                                        style={{backgroundColor: kindData.color}}>{kindData.name}</div>
-                                    : null
-                                )}
+                        <div>
+                            <div style={{
+                                paddingLeft: `${(item.span.treeDepth + (isLeaf === 0 ? 1 : 0)) * 15}px`,
+                                minWidth: `${(this.trace.treeHeight + 1) * 15 + 100}px`,
+                                width: `${(self.spanLabelWidth > 0 ? self.spanLabelWidth : null)}px`
+                            }} className={classes.spanLabelContainer}>
+                                <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
+                                <span className={classes.operationName}>{item.span.operationName}</span>
                             </div>
-                        </Tooltip>
+                            {(kindData
+                                ? <div className={classes.kindBadge}
+                                    style={{backgroundColor: kindData.color}}>{kindData.name}</div>
+                                : null
+                            )}
+                        </div>
                     ), newElement);
                 }
                 return newElement;

@@ -111,7 +111,7 @@ class View extends React.Component {
 
         const timeline = <Timeline spans={spans}/>;
         const sequenceDiagram = <SequenceDiagram/>;
-        const dependencyDiagram = <DependencyDiagram/>;
+        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
         return (

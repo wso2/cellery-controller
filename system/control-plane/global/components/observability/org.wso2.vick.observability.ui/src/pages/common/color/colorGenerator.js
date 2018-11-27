@@ -30,6 +30,7 @@ class ColorGenerator {
             ColorGeneratorConstants.VICK,
             ColorGeneratorConstants.ISTIO
         ]);
+        this.colorMap[ColorGeneratorConstants.ERROR] = "#ff282a";
     }
 
     /**
@@ -96,7 +97,8 @@ class ColorGenerator {
 
 const ColorGeneratorConstants = {
     VICK: "VICK",
-    ISTIO: "Istio"
+    ISTIO: "Istio",
+    ERROR: "ERROR"
 };
 
 export {ColorGenerator, ColorGeneratorConstants};
