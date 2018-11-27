@@ -406,7 +406,7 @@ class Search extends React.Component {
                         result.rootStartTime = info.rootStartTime;
                         result.rootDuration = info.rootDuration;
                         result.services.push({
-                            cellName: cellNameKey,
+                            cellNameKey: cellNameKey,
                             serviceName: span.serviceName,
                             count: info.count
                         });

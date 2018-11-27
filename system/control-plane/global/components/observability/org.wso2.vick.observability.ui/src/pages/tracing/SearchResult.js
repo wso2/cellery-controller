@@ -130,7 +130,7 @@ class SearchResult extends React.Component {
         this.props.history.push({
             pathname: `./id/${traceId}`,
             state: {
-                highlightedMicroservice: {
+                selectedMicroservice: {
                     cellName: cellName,
                     serviceName: microservice
                 }
@@ -146,8 +146,8 @@ class SearchResult extends React.Component {
         data.forEach(
             (result) => result.services.forEach(
                 (service) => {
-                    if (!cellNames.includes(service.cellName)) {
-                        cellNames.push(service.cellName);
+                    if (!cellNames.includes(service.cellNameKey)) {
+                        cellNames.push(service.cellNameKey);
                     }
                 }
             )
@@ -196,9 +196,10 @@ class SearchResult extends React.Component {
                                                 result.services.map((service) => (
                                                     <div key={service.serviceName} className={classes.serviceTag}
                                                         onClick={(event) => this.loadTracePage(event, result.traceId,
-                                                            service.cellName, service.serviceName)}>
+                                                            service.cellNameKey, service.serviceName)}>
                                                         <div className={classes.serviceTagColor} style={{
-                                                            backgroundColor: colorGenerator.getColor(service.cellName)
+                                                            backgroundColor: colorGenerator
+                                                                .getColor(service.cellNameKey)
                                                         }}/>
                                                         <div className={classes.serviceTagContent}>
                                                             {service.serviceName} ({service.count})
@@ -241,7 +242,7 @@ SearchResult.propTypes = {
         rootStartTime: PropTypes.number.isRequired,
         rootDuration: PropTypes.number.isRequired,
         services: PropTypes.arrayOf(PropTypes.shape({
-            cellName: PropTypes.string.isRequired,
+            cellNameKey: PropTypes.string.isRequired,
             serviceName: PropTypes.string.isRequired,
             count: PropTypes.number.isRequired
         })).isRequired

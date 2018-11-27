@@ -36,6 +36,7 @@ import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import vis from "vis";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import {ColorGeneratorConstants, withColor} from "../../../common/color";
 
@@ -205,8 +206,9 @@ class TimelineView extends React.Component {
     }
 
     drawTimeline() {
-        const {classes, colorGenerator} = this.props;
+        const {location, classes, colorGenerator} = this.props;
         const self = this;
+        const selectedMicroservice = location.state.selectedMicroservice;
 
         // Un-selecting the spans
         this.selectedSpan = null;
@@ -233,6 +235,12 @@ class TimelineView extends React.Component {
         const duration = (this.trace.maxTime - this.trace.minTime);
         const minLimit = this.trace.minTime - duration * 0.05;
         const maxLimit = this.trace.maxTime + duration * 0.12;
+        const addSelectedSpanClass = (element, span) => {
+            if ((!span.cell.name || span.cell.name === selectedMicroservice.cellName)
+                && span.serviceName === selectedMicroservice.serviceName) {
+                element.classList.add(TimelineView.Constants.Classes.SELECTED_SPAN);
+            }
+        };
 
         const options = {
             orientation: "top",
@@ -261,13 +269,15 @@ class TimelineView extends React.Component {
                                 <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
                                 <span className={classes.operationName}>{item.span.operationName}</span>
                             </div>
-                            {(kindData
-                                ? <div className={classes.kindBadge}
-                                    style={{backgroundColor: kindData.color}}>{kindData.name}</div>
-                                : null
+                            {(
+                                kindData
+                                    ? <div className={classes.kindBadge}
+                                        style={{backgroundColor: kindData.color}}>{kindData.name}</div>
+                                    : null
                             )}
                         </div>
                     ), newElement);
+                    addSelectedSpanClass(newElement, item.span);
                 }
                 return newElement;
             },
@@ -332,6 +342,7 @@ class TimelineView extends React.Component {
                 }
                 ReactDOM.render(content, newElement);
                 element.setAttribute(TimelineView.Constants.SPAN_ID_ATTRIBUTE_KEY, item.span.getUniqueId());
+                addSelectedSpanClass(element, item.span);
                 return newElement;
             }
         };
@@ -355,24 +366,25 @@ class TimelineView extends React.Component {
             this.timeline = new vis.Timeline(this.timelineNode.current);
             this.addTimelineEventListener("changed", () => {
                 // Adjust span description
-                const timelineWindowWidth = document.querySelector(".vis-foreground").offsetWidth;
+                const timelineWindowWidth = document
+                    .querySelector(`div.${TimelineView.Constants.Classes.VIS_FOREGROUND}`).offsetWidth;
                 const fitDescriptionToTimelineWindow = (node) => {
                     node.style.left = "0px";
                     node.style.width = `${timelineWindowWidth}px`;
                 };
-                document.querySelectorAll("div.vis-item-span-description")
+                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION}`)
                     .forEach(fitDescriptionToTimelineWindow);
-                document.querySelectorAll(".vis-item-content")
+                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_CONTENT}`)
                     .forEach(fitDescriptionToTimelineWindow);
 
                 // Adjust span duration labels
-                document.querySelectorAll("div.vis-item-span").forEach((node) => {
-                    node.querySelector("div.vis-item-overflow").style.transform
+                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`).forEach((node) => {
+                    node.querySelector(`div.${TimelineView.Constants.Classes.VIS_ITEM_OVERFLOW}`).style.transform
                         = `translateX(${node.offsetWidth + 7}px)`;
                 });
 
                 // Adjust item vertical location
-                const spanItems = document.querySelectorAll("div.vis-item-span");
+                const spanItems = document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`);
                 const minHeight = Reflect.apply([].slice, spanItems, [])
                     .map((node) => node.parentElement.offsetHeight)
                     .reduce(
@@ -381,6 +393,14 @@ class TimelineView extends React.Component {
                     );
                 spanItems.forEach((node) => {
                     node.style.top = `${(minHeight - node.offsetHeight) / 2}px`;
+                });
+
+                // Adding the selected microservice highlights
+                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_LABEL}, `
+                    + `div.${TimelineView.Constants.Classes.VIS_GROUP}`).forEach((node) => {
+                    if (node.querySelector(`div.${TimelineView.Constants.Classes.SELECTED_SPAN}`)) {
+                        node.classList.add(TimelineView.Constants.Classes.HIGHLIGHTED_SPAN);
+                    }
                 });
             });
         }
@@ -432,7 +452,7 @@ class TimelineView extends React.Component {
                 start: new Date(span.startTime),
                 end: new Date(span.startTime + span.duration),
                 group: span.getUniqueId(),
-                className: "vis-item-span",
+                className: TimelineView.Constants.Classes.VIS_ITEM_SPAN,
                 span: span
             });
             if (this.selectedSpan && this.selectedSpan === span.getUniqueId()) {
@@ -443,7 +463,7 @@ class TimelineView extends React.Component {
                     start: new Date(limits.min),
                     end: new Date(limits.max),
                     group: span.getUniqueId(),
-                    className: "vis-item-span-description",
+                    className: TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION,
                     span: span
                 });
             }
@@ -553,15 +573,27 @@ TimelineView.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
+    location: PropTypes.any.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
 TimelineView.Constants = {
     SPAN_ID_ATTRIBUTE_KEY: "spanId",
+    Classes: {
+        VIS_FOREGROUND: "vis-foreground",
+        VIS_LABEL: "vis-label",
+        VIS_GROUP: "vis-group",
+        VIS_ITEM_CONTENT: "vis-item-content",
+        VIS_ITEM_OVERFLOW: "vis-item-overflow",
+        VIS_ITEM_SPAN: "vis-item-span",
+        VIS_ITEM_SPAN_DESCRIPTION: "vis-item-span-description",
+        SELECTED_SPAN: "selected-span",
+        HIGHLIGHTED_SPAN: "highlighted-span"
+    },
     ItemType: {
         SPAN: "span",
         SPAN_DESCRIPTION: "description"
     }
 };
 
-export default withStyles(styles, {withTheme: true})(withColor(TimelineView));
+export default withStyles(styles, {withTheme: true})(withRouter(withColor(TimelineView)));

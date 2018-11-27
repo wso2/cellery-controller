@@ -17,15 +17,15 @@
  */
 
 import "./DependencyDiagram.css";
-import PropTypes from "prop-types";
-import React from "react";
-import {Graph} from "react-d3-graph";
-import {ColorGeneratorConstants, withColor} from "../../common/color/index";
 import {ColorGenerator} from "../../common/color/colorGenerator";
 import Constants from "../utils/constants";
+import {Graph} from "react-d3-graph";
+import PropTypes from "prop-types";
+import React from "react";
 import Span from "../utils/span";
 import TracingUtils from "../utils/tracingUtils";
 import {withStyles} from "@material-ui/core";
+import {ColorGeneratorConstants, withColor} from "../../common/color/index";
 
 const styles = () => ({
     graph: {
