@@ -193,19 +193,30 @@ class SearchResult extends React.Component {
                                         <div className={classes.traceSubHeader}>{result.rootDuration / 1000} s</div>
                                         <div className={classes.traceContent}>
                                             {
-                                                result.services.map((service) => (
-                                                    <div key={service.serviceName} className={classes.serviceTag}
-                                                        onClick={(event) => this.loadTracePage(event, result.traceId,
-                                                            service.cellNameKey, service.serviceName)}>
-                                                        <div className={classes.serviceTagColor} style={{
-                                                            backgroundColor: colorGenerator
-                                                                .getColor(service.cellNameKey)
-                                                        }}/>
-                                                        <div className={classes.serviceTagContent}>
-                                                            {service.serviceName} ({service.count})
+                                                result.services
+                                                    .sort((a, b) => {
+                                                        if (a.serviceName < b.serviceName) {
+                                                            return -1;
+                                                        }
+                                                        if (a.serviceName > b.serviceName) {
+                                                            return 1;
+                                                        }
+                                                        return 0;
+                                                    })
+                                                    .map((service) => (
+                                                        <div key={service.serviceName} className={classes.serviceTag}
+                                                            onClick={
+                                                                (event) => this.loadTracePage(event, result.traceId,
+                                                                    service.cellNameKey, service.serviceName)}>
+                                                            <div className={classes.serviceTagColor} style={{
+                                                                backgroundColor: colorGenerator
+                                                                    .getColor(service.cellNameKey)
+                                                            }}/>
+                                                            <div className={classes.serviceTagContent}>
+                                                                {service.serviceName} ({service.count})
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))
+                                                    ))
                                             }
                                         </div>
                                     </Paper>

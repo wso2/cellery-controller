@@ -215,7 +215,7 @@ class Span {
      * @returns {boolean} True if an error had occurred in this span
      */
     hasError() {
-        return this.serviceName === "global-gateway";
+        return this.tags.error === "true";
     }
 
     /**
