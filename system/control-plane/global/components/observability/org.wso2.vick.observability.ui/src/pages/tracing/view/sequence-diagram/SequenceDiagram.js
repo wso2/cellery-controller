@@ -22,6 +22,7 @@ import  ReactDOM from "react-dom";
 import mermaid, {mermaidAPI} from 'mermaid';
 import $ from 'jquery';
 import TracingUtils from "../../utils/tracingUtils";
+import Span from "../../utils/span";
 
 class SequenceDiagram extends Component {
     constructor(props){
@@ -32,6 +33,7 @@ class SequenceDiagram extends Component {
         this.testFoo2 = this.testFoo2.bind(this);
         this.seperateCells = this.seperateCells.bind(this);
         this.drawCells = this.drawCells.bind(this);
+        this.checkDraw = this.checkDraw.bind(this);
 
     }
     render() {
@@ -64,12 +66,17 @@ class SequenceDiagram extends Component {
             }
         }
         console.log(this.props.spans);
+        console.log(this.checkDraw());
+
     }
 
      seperateCells(spanArray){
         var cellArray =[];
         for(let i=0;i<spanArray.length;i++){
             let  cellname = spanArray[i].serviceName.split("-")[0];
+            if(cellname === "stock"){
+                cellname = "stock options";
+            }
             if(!cellArray.includes(cellname)){
                 cellArray.push(cellname);
             }
@@ -85,8 +92,41 @@ class SequenceDiagram extends Component {
             mText+= "participant "+ array[i] + "\n";
         }
 
-        return mText;
+        return mText + this.checkDraw();
+    }
+
+    checkDraw(){
+        let tree = TracingUtils.buildTree(this.props.spans);
+        console.log(tree);
+        var tmp = "";
+        tree.walk((span,data)=>{
+            if (span.parentId !== "undefined") {
+                if (span.parent.cell!==null){
+                    if (span.parent.cell.name.includes("-")){
+                        span.parent.cell.name = span.parent.cell.name.replace("-"," ");
+                    }
+                    if (span.cell.name.includes("-")){
+                        span.cell.name = span.cell.name.replace("-"," ");
+                    }
+                    tmp += span.parent.cell.name + " ->> " + span.cell.name+ ": "+ span.operationName + "\n";
+                }
+            }
+        }, undefined, () => {
+
+        });
+
+        return tmp;
     }
 }
+
+function checkDraw(span, data) {
+    if (span.parentId !== "undefined") {
+        if (!span.parent.cell){
+            data += span.parent.cell.name + " ->> " + span.cell.name;
+        }
+    }
+}
+
+
 
 export default SequenceDiagram;
