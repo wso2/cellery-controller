@@ -18,7 +18,6 @@
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
 import {ConfigHolder} from "./config/configHolder";
-import Divider from "@material-ui/core/Divider/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
@@ -49,6 +48,9 @@ const styles = (theme) => ({
     },
     startInputAdornment: {
         marginBottom: theme.spacing.unit * 2
+    },
+    menuButton: {
+        marginTop: 10
     }
 });
 

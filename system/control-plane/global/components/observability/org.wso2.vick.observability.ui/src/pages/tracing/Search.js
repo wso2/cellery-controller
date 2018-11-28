@@ -173,8 +173,9 @@ class Search extends React.Component {
                         <Grid container justify={"flex-start"} spacing={24}>
                             <Grid item xs={6}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
-                                    <TextField label="Tags" id="tags" value={filter.tags} InputLabelProps={{shrink: true}}
-                                        onChange={this.getChangeHandler("tags")} placeholder={"Eg: http.status_code=200"}/>
+                                    <TextField label="Tags" id="tags" value={filter.tags}
+                                        InputLabelProps={{shrink: true}} onChange={this.getChangeHandler("tags")}
+                                        placeholder={"Eg: http.status_code=200"}/>
                                 </FormControl>
                             </Grid>
                             <Grid item xs={3}>
