@@ -344,7 +344,6 @@ class AppLayout extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className={classes.toolbar}/>
                     {children}
                 </main>
             </div>

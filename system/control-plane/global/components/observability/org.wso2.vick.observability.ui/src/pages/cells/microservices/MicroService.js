@@ -17,15 +17,16 @@
  */
 
 import Details from "./Details";
+import K8sObjects from "./K8sObjects";
 import Metrics from "./Metrics";
-import Microservices from "./microservices/List";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import TopToolbar from "../common/TopToolbar";
+import TopToolbar from "../../common/TopToolbar";
 import {withStyles} from "@material-ui/core/styles";
+
 
 const styles = (theme) => ({
     root: {
@@ -41,7 +42,7 @@ const styles = (theme) => ({
     }
 });
 
-class Cell extends React.Component {
+class MicroService extends React.Component {
 
     state = {
         value: 0
@@ -54,13 +55,13 @@ class Cell extends React.Component {
     render() {
         const {classes} = this.props;
         const details = <Details></Details>;
-        const microservices = <Microservices></Microservices>;
+        const k8sObjects = <K8sObjects></K8sObjects>;
         const metrics = <Metrics></Metrics>;
-        const tabContent = [details, microservices, metrics];
+        const tabContent = [details, k8sObjects, metrics];
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Cell Name"} onUpdate={this.loadCellData}/>
+                <TopToolbar title={"Microservice Name"} onUpdate={this.loadMicroserviceData}/>
                 <Paper className={classes.root}>
 
                     <Tabs
@@ -71,7 +72,7 @@ class Cell extends React.Component {
                         className={classes.tabs}
                     >
                         <Tab label="DETAILS"/>
-                        <Tab label="MICROSERVICES"/>
+                        <Tab label="K8S OBJECTS"/>
                         <Tab label="METRICS"/>
                     </Tabs>
                     {tabContent[this.state.value]}
@@ -83,8 +84,8 @@ class Cell extends React.Component {
 }
 
 
-Cell.propTypes = {
+MicroService.propTypes = {
     classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(Cell);
+export default withStyles(styles)(MicroService);

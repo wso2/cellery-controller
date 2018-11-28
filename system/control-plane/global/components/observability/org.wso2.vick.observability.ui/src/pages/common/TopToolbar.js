@@ -18,7 +18,6 @@
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
 import {ConfigHolder} from "./config/configHolder";
-import Divider from "@material-ui/core/Divider/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
@@ -35,19 +34,23 @@ import {withStyles} from "@material-ui/core";
 import {ConfigConstants, withConfig} from "./config";
 
 const styles = (theme) => ({
-    subToolbar: {
-        paddingLeft: theme.spacing.unit,
-        paddingRight: theme.spacing.unit
-    },
     container: {
-        marginBottom: theme.spacing.unit * 3
+        position: "sticky",
+        top: 64,
+        backgroundColor: "#fafafa",
+        marginBottom: theme.spacing.unit * 6,
+        zIndex: 999,
+        minHeight: 70
     },
     title: {
         flexGrow: 1,
-        marginLeft: theme.spacing.unit * 2
+        marginTop: 10
     },
     startInputAdornment: {
         marginBottom: theme.spacing.unit * 2
+    },
+    menuButton: {
+        marginTop: 10
     }
 });
 
@@ -104,7 +107,7 @@ class TopToolbar extends React.Component {
 
         return (
             <div className={classes.container}>
-                <Toolbar disableGutters={true} className={classes.subToolbar}>
+                <Toolbar disableGutters={true}>
                     {
                         location.state && location.state.hideBackButton
                             ? null
@@ -136,7 +139,6 @@ class TopToolbar extends React.Component {
                         <Refresh/>
                     </IconButton>
                 </Toolbar>
-                <Divider/>
             </div>
         );
     }
