@@ -41,10 +41,12 @@ define function filterByTags[javascript] return bool {
     var isSelected;
     if (queryTags && Object.keys(queryTags).length > 0) {
         isSelected = false;
-        for (var tagKey in queryTags) {
-            if (queryTags.hasOwnProperty(tagKey) && queryTags[tagKey] === tags[tagKey]) {
-                isSelected = true;
-                break;
+        if (tags) {
+            for (var tagKey in queryTags) {
+                if (queryTags.hasOwnProperty(tagKey) && queryTags[tagKey] === tags[tagKey]) {
+                    isSelected = true;
+                    break;
+                }
             }
         }
     } else {

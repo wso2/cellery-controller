@@ -70,7 +70,8 @@ class HttpUtils {
                     if (typeof queryParamKey !== "string") {
                         throw Error(`Query param key need to be a string, instead found ${typeof queryParamKey}`);
                     }
-                    if (typeof queryParamValue !== "string") {
+                    if (typeof queryParamValue !== "string" && typeof queryParamValue !== "number"
+                            && typeof queryParamValue !== "boolean") {
                         throw Error(`Query param value need to be a string, instead found ${typeof queryParamValue}`);
                     }
 

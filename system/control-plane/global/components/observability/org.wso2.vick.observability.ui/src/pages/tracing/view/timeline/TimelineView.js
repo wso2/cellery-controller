@@ -372,19 +372,23 @@ class TimelineView extends React.Component {
                     node.style.left = "0px";
                     node.style.width = `${timelineWindowWidth}px`;
                 };
-                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION}`)
+                this.timelineNode.current
+                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION}`)
                     .forEach(fitDescriptionToTimelineWindow);
-                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_CONTENT}`)
+                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_CONTENT}`)
                     .forEach(fitDescriptionToTimelineWindow);
 
                 // Adjust span duration labels
-                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`).forEach((node) => {
-                    node.querySelector(`div.${TimelineView.Constants.Classes.VIS_ITEM_OVERFLOW}`).style.transform
-                        = `translateX(${node.offsetWidth + 7}px)`;
-                });
+                this.timelineNode.current
+                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`)
+                    .forEach((node) => {
+                        node.querySelector(`div.${TimelineView.Constants.Classes.VIS_ITEM_OVERFLOW}`).style.transform
+                            = `translateX(${node.offsetWidth + 7}px)`;
+                    });
 
                 // Adjust item vertical location
-                const spanItems = document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`);
+                const spanItems = this.timelineNode.current
+                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`);
                 const minHeight = Reflect.apply([].slice, spanItems, [])
                     .map((node) => node.parentElement.offsetHeight)
                     .reduce(
@@ -396,7 +400,7 @@ class TimelineView extends React.Component {
                 });
 
                 // Adding the selected microservice highlights
-                document.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_LABEL}, `
+                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_LABEL}, `
                     + `div.${TimelineView.Constants.Classes.VIS_GROUP}`).forEach((node) => {
                     if (node.querySelector(`div.${TimelineView.Constants.Classes.SELECTED_SPAN}`)) {
                         node.classList.add(TimelineView.Constants.Classes.HIGHLIGHTED_SPAN);
@@ -436,7 +440,7 @@ class TimelineView extends React.Component {
         for (let i = 0; i < spans.length; i++) {
             const span = spans[i];
 
-            // Fetching all the children and grand-chilren of this node
+            // Fetching all the children and grand-children of this node
             const nestedGroups = [];
             span.walk((currentSpan) => {
                 if (currentSpan !== span) {
@@ -492,7 +496,7 @@ class TimelineView extends React.Component {
         // Add the horizontal resize handle
         const newNode = document.createElement("div");
         newNode.classList.add(classes.resizeHandle);
-        const parent = document.querySelector(".vis-panel.vis-top");
+        const parent = this.timelineNode.current.querySelector(".vis-panel.vis-top");
         parent.insertBefore(newNode, parent.childNodes[0]);
 
         // Handling the resizing
@@ -521,31 +525,38 @@ class TimelineView extends React.Component {
                     edges: edges
                 },
                 interact(selector),
-                document.querySelectorAll(selector)
+                this.timelineNode.current.querySelectorAll(selector)
             );
         });
     }
 
-    addTimelineEventListener(name, callBack) {
-        this.timeline.on(name, callBack);
+    /**
+     * Add event listener to the timeline.
+     *
+     * @param {string} type The name of the event listener that should be added to the timeline
+     * @param {function} callBack The callback function to be called when the event fires
+     */
+    addTimelineEventListener(type, callBack) {
+        this.timeline.on(type, callBack);
         this.timelineEventListeners.push({
-            name: name,
+            type: type,
             callBack: callBack
         });
     }
 
     /**
      * Clear the event listeners that were added to the timeline.
+     * Can be cleared based on a type or all the event listeners.
      *
-     * @param {string} name The name of the event for which the event listeners should be cleared (All cleared if null)
+     * @param {string} type The name of the event for which the event listeners should be cleared (All cleared if null)
      */
-    clearTimelineEventListeners(name) {
+    clearTimelineEventListeners(type) {
         let timelineEventListeners;
-        if (name) {
+        if (type) {
             timelineEventListeners = this.timelineEventListeners
-                .filter((eventListener) => eventListener.name === name);
+                .filter((eventListener) => eventListener.type === type);
             this.timelineEventListeners = this.timelineEventListeners
-                .filter((eventListener) => eventListener.name !== name);
+                .filter((eventListener) => eventListener.type !== type);
         } else {
             timelineEventListeners = this.timelineEventListeners;
             this.timelineEventListeners = [];
@@ -553,7 +564,7 @@ class TimelineView extends React.Component {
 
         for (let i = 0; i < timelineEventListeners.length; i++) {
             const eventListener = timelineEventListeners[i];
-            this.timeline.off(eventListener.name, eventListener.callBack);
+            this.timeline.off(eventListener.type, eventListener.callBack);
         }
     }
 

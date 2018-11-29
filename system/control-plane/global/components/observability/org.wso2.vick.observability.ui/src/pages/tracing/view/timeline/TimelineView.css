@@ -70,7 +70,7 @@ div.vis-item-span-description {
 
 @keyframes selected-microservice-highlight {
     from {
-        background-color: rgba(0, 0, 0, 1);
+        background-color: rgba(0, 0, 0, 0.7);
     }
     to {
         background-color: rgba(0, 0, 0, 0);

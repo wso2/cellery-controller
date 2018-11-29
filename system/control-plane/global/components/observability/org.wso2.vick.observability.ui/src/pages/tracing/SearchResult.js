@@ -234,7 +234,9 @@ class SearchResult extends React.Component {
                             onChangeRowsPerPage={this.handleChangeRowsPerPage}/>
                     </React.Fragment>
                 )
-                : null
+                : (
+                    <div>No Results</div>
+                )
         );
     }
 
