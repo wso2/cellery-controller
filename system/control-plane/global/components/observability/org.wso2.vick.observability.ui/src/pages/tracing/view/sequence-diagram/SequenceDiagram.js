@@ -92,29 +92,31 @@ class SequenceDiagram extends Component {
             mText+= "participant "+ array[i] + "\n";
         }
 
-        return mText + this.checkDraw();
+        return mText + this.checkDraw() ;
     }
 
-    checkDraw(){
+    checkDraw() {
         let tree = TracingUtils.buildTree(this.props.spans);
-        console.log(tree);
         var tmp = "";
-        tree.walk((span,data)=>{
+        tree.walk((span, data) => {
+            let parentCellName;
             if (span.parentId !== "undefined") {
-                if (span.parent.cell!==null){
-                    if (span.parent.cell.name.includes("-")){
-                        span.parent.cell.name = span.parent.cell.name.replace("-"," ");
+                if (span.parent.cell === null) {
+                    parentCellName = "global";
+                }
+                else {
+                    parentCellName = span.parent.cell.name;
+                }
+                if (Boolean(span.cell)) {
+                    parentCellName = removeDash(parentCellName);
+                    span.cell.name = removeDash(span.cell.name);
+                    if (parentCellName !== span.cell.name) {
+                        tmp += parentCellName + "->>" + span.cell.name + ": Cell "+span.cell.name+" call \n";
                     }
-                    if (span.cell.name.includes("-")){
-                        span.cell.name = span.cell.name.replace("-"," ");
-                    }
-                    tmp += span.parent.cell.name + " ->> " + span.cell.name+ ": "+ span.operationName + "\n";
                 }
             }
         }, undefined, () => {
-
         });
-
         return tmp;
     }
 }
@@ -124,6 +126,15 @@ function checkDraw(span, data) {
         if (!span.parent.cell){
             data += span.parent.cell.name + " ->> " + span.cell.name;
         }
+    }
+}
+
+function removeDash(cellName){
+    if(cellName.includes("-")){
+        return cellName.replace("-"," ");
+    }
+    else {
+        return cellName;
     }
 }
 
