@@ -111,11 +111,24 @@ class SequenceDiagram extends Component {
                     parentCellName = removeDash(parentCellName);
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
+                        console.log(span.children.values());
                         tmp += parentCellName + "->>" + span.cell.name + ": Cell "+span.cell.name+" call \n";
                     }
                 }
             }
-        }, undefined, () => {
+        }, undefined, (span) => {
+            if(Boolean(span.cell)){
+                let parentCellName = "";
+                if (span.parent.cell === null) {
+                    parentCellName = "global";
+                }
+                else {
+                    parentCellName = span.parent.cell.name;
+                }
+                if (span.cell.name !== parentCellName){
+                    tmp += span.cell.name + "-->>"+ parentCellName + ": Return \n";
+                }
+            }
         });
         return tmp;
     }
@@ -138,6 +151,9 @@ function removeDash(cellName){
     }
 }
 
+function checkChild(span){
+     return span.childrenCheck();
+}
 
 
 export default SequenceDiagram;
