@@ -18,16 +18,16 @@
 
 import React, {Component} from "react";
 
-class MicroService extends Component {
+class MetricsGraphs extends Component {
 
     render() {
         return (
-            <div>
-                Hello World Micro Service!
-            </div>
+            <React.Fragment>
+                Metrics Graphs
+            </React.Fragment>
         );
     }
 
 }
 
-export default MicroService;
+export default MetricsGraphs;

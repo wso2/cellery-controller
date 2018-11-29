@@ -119,26 +119,28 @@ class View extends React.Component {
             isLoading
                 ? null
                 : (
-                    <Paper className={classes.container}>
-                        {
-                            spans && spans.length === 0
-                                ? (
-                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
-                                )
-                                : (
-                                    <React.Fragment>
-                                        <TopToolbar title={"Distributed Tracing"}/>
-                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
-                                            onChange={this.handleTabChange}>
-                                            <Tab label="Timeline"/>
-                                            <Tab label="Sequence Diagram"/>
-                                            <Tab label="Dependency Diagram"/>
-                                        </Tabs>
-                                        {tabContent[selectedTabIndex]}
-                                    </React.Fragment>
-                                )
-                        }
-                    </Paper>
+                    <React.Fragment>
+                        <TopToolbar title={"Distributed Tracing"}/>
+                        <Paper className={classes.container}>
+                            {
+                                spans && spans.length === 0
+                                    ? (
+                                        <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
+                                    )
+                                    : (
+                                        <React.Fragment>
+                                            <Tabs value={selectedTabIndex} indicatorColor="primary"
+                                                onChange={this.handleTabChange}>
+                                                <Tab label="Timeline"/>
+                                                <Tab label="Sequence Diagram"/>
+                                                <Tab label="Dependency Diagram"/>
+                                            </Tabs>
+                                            {tabContent[selectedTabIndex]}
+                                        </React.Fragment>
+                                    )
+                            }
+                        </Paper>
+                    </React.Fragment>
                 )
         );
     }

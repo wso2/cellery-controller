@@ -18,7 +18,7 @@
 
 import Cell from "./Cell";
 import List from "./List";
-import MicroService from "./MicroService";
+import MicroService from "./microservices/MicroService";
 import NotFound from "../common/NotFound";
 import PropTypes from "prop-types";
 import React from "react";
