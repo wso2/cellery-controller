@@ -144,6 +144,13 @@ const styles = (theme) => ({
     },
     nested: {
         paddingLeft: theme.spacing.unit * 3
+    },
+    active: {
+        color: theme.palette.primary.main,
+        fontWeight: 500
+    },
+    list: {
+        paddingTop: 0
     }
 });
 
@@ -157,6 +164,16 @@ class AppLayout extends React.Component {
         this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
         this.handleDrawerClose = this.handleDrawerClose.bind(this);
         this.handleLoadingStateChange = this.handleLoadingStateChange.bind(this);
+        this.handleListItemClick = this.handleListItemClick.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+
+        const pages = ["/", "/cells", "/tracing", "/system-metrics"];
+        let selectedIndex = 0;
+        for (let i = 0; i < pages.length; i++) {
+            if (props.location.pathname.startsWith(pages[i])) {
+                selectedIndex = i;
+            }
+        }
 
         props.config.addListener(ConfigConstants.LOADING_STATE, this.handleLoadingStateChange);
         const loadingState = props.config.get(ConfigConstants.LOADING_STATE);
@@ -167,7 +184,8 @@ class AppLayout extends React.Component {
             loadingState: {
                 isLoading: loadingState.isLoading,
                 message: loadingState.message
-            }
+            },
+            selectedIndex: selectedIndex
         };
     }
 
@@ -191,6 +209,16 @@ class AppLayout extends React.Component {
         this.setState((state) => ({subMenuOpen: !state.subMenuOpen}));
     };
 
+    handleListItemClick = (history, nav, event) => {
+        this.setState({
+            selectedIndex: Number(event.currentTarget.attributes.index.value)
+        });
+        const navigationState = {
+            hideBackButton: true
+        };
+        history.push(nav, navigationState);
+    }
+
     handleLoadingStateChange(loadingStateKey, oldState, newState) {
         this.setState({
             loadingState: {
@@ -202,12 +230,8 @@ class AppLayout extends React.Component {
 
     render() {
         const {classes, history, children, theme, config} = this.props;
-        const {open, userInfo, loadingState} = this.state;
+        const {open, userInfo, loadingState, selectedIndex} = this.state;
         const userInfoOpen = Boolean(userInfo);
-
-        const navigationState = {
-            hideBackButton: true
-        };
         return (
             <div className={classes.root}>
                 <CssBaseline/>
@@ -285,19 +309,39 @@ class AppLayout extends React.Component {
                         </IconButton>
                     </div>
                     <Divider/>
-                    <List>
-                        <ListItem button key="Overview" onClick={() => history.push("/", navigationState)}>
-                            <ListItemIcon><DesktopWindows/></ListItemIcon>
-                            <ListItemText primary="Overview"/>
+                    <List className={classes.list}>
+                        <ListItem index={0} button key="Overview"
+                            className={classNames({[classes.active]: selectedIndex === 0})}
+                            onClick={(event) => {
+                                this.handleListItemClick(history, "/", event);
+                            }}>
+                            <ListItemIcon>
+                                <DesktopWindows className={classNames({[classes.active]: selectedIndex === 0})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Overview"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 0})}}/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={() => history.push("/cells", navigationState)}>
-                            <ListItemIcon><Grain/></ListItemIcon>
-                            <ListItemText primary="Cells"/>
+                        <ListItem index={1} button key="Cells"
+                            className={classNames({[classes.active]: selectedIndex === 1})}
+                            onClick={(event) => {
+                                this.handleListItemClick(history, "/cells", event);
+                            }}>
+                            <ListItemIcon>
+                                <Grain className={classNames({[classes.active]: selectedIndex === 1})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Cells"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 1})}}/>
                         </ListItem>
-                        <ListItem button key="Distributed Tracing"
-                            onClick={() => history.push("/tracing", navigationState)}>
-                            <ListItemIcon><Timeline/></ListItemIcon>
-                            <ListItemText primary="Distributed Tracing"/>
+                        <ListItem index={2} button key="Distributed Tracing"
+                            className={classNames({[classes.active]: selectedIndex === 2})}
+                            onClick={(event) => {
+                                this.handleListItemClick(history, "/tracing", event);
+                            }}>
+                            <ListItemIcon>
+                                <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Distributed Tracing"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 2})}}/>
                         </ListItem>
                         <ListItem button onClick={this.handleClick}>
                             <ListItemIcon>
@@ -308,26 +352,38 @@ class AppLayout extends React.Component {
                         </ListItem>
                         <Collapse in={this.state.subMenuOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <ListItem button className={classes.nested} key="ControlPlane"
-                                    onClick={() => history.push("/system-metrics/control-plane", navigationState)}>
+                                <ListItem index={3} button key="ControlPlane"
+                                    className={classNames({[classes.active]: selectedIndex === 3}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleListItemClick(history, "/system-metrics/control-plane", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 3})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Global Control Plane"/>
+                                    <ListItemText inset primary="Global Control Plane"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 3})}}/>
                                 </ListItem>
-                                <ListItem button className={classes.nested} key="PodUsage"
-                                    onClick={() => history.push("/system-metrics/pod-usage", navigationState)}>
+                                <ListItem index={4} button key="PodUsage"
+                                    className={classNames({[classes.active]: selectedIndex === 4}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleListItemClick(history, "/system-metrics/pod-usage", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 4})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Pod Usage"/>
+                                    <ListItemText inset primary="Pod Usage"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 4})}}/>
                                 </ListItem>
-                                <ListItem button className={classes.nested} key="NodeUsage"
-                                    onClick={() => history.push("/system-metrics/node-usage", navigationState)}>
+                                <ListItem index={5} button key="NodeUsage"
+                                    className={classNames({[classes.active]: selectedIndex === 5}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleListItemClick(history, "/system-metrics/node-usage", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 5})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Node Usage"/>
+                                    <ListItemText inset primary="Node Usage"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 5})}}/>
                                 </ListItem>
                             </List>
                         </Collapse>
@@ -357,7 +413,10 @@ AppLayout.propTypes = {
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
     config: PropTypes.instanceOf(ConfigHolder).isRequired,
-    history: PropTypes.any.isRequired
+    history: PropTypes.any.isRequired,
+    location: PropTypes.shape({
+        pathname: PropTypes.string.isRequired
+    })
 };
 
 export default withStyles(styles, {withTheme: true})(withRouter(withConfig(AppLayout)));
