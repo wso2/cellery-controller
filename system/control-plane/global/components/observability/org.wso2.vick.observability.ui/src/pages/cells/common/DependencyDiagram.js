@@ -18,16 +18,16 @@
 
 import React, {Component} from "react";
 
-class MetricsGraphs extends Component {
+class DependencyDiagram extends Component {
 
     render() {
         return (
             <React.Fragment>
-                Metrics Graphs
+                Dependency Diagram
             </React.Fragment>
         );
     }
 
 }
 
-export default MetricsGraphs;
+export default DependencyDiagram;

@@ -16,9 +16,10 @@
  * under the License.
  */
 
-import Details from "./Details";
+import Details from "./../common/Details";
+import Grey from "@material-ui/core/colors/grey";
 import K8sObjects from "./K8sObjects";
-import Metrics from "./Metrics";
+import Metrics from "./../common/Metrics";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
@@ -27,18 +28,19 @@ import Tabs from "@material-ui/core/Tabs";
 import TopToolbar from "../../common/TopToolbar";
 import {withStyles} from "@material-ui/core/styles";
 
-
 const styles = (theme) => ({
     root: {
         flexGrow: 1,
-        width: "100%",
         backgroundColor: theme.palette.background.paper,
-        paddingLeft: theme.spacing.unit * 3,
-        paddingRight: theme.spacing.unit * 3,
-        paddingBottom: theme.spacing.unit * 3
+        padding: theme.spacing.unit * 3,
+        paddingTop: 0,
+        margin: theme.spacing.unit
     },
     tabs: {
-        paddingBottom: theme.spacing.unit * 3
+        marginBottom: theme.spacing.unit * 2,
+        borderBottomWidth: 1,
+        borderBottomStyle: "solid",
+        borderBottomColor: Grey[200]
     }
 });
 
