@@ -20,7 +20,7 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "./common/Table";
-import TopToolbar from "./../common/TopToolbar";
+import TopToolbar from "../common/TopToolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({

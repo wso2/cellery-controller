@@ -37,7 +37,7 @@ const Constants = {};
         Query.TIME_UNIT
             = `${Query.YEARS}|${Query.MONTHS}|${Query.DAYS}|${Query.HOURS}|${Query.MINUTES}|${Query.SECONDS}`;
         Query.TIME = `([0-9]+)\\s*(${Query.TIME_UNIT})`;
-        Query.RELATIVE_TIME = `^\\s*now\\s*(?:-\\s*(?:${Query.TIME}\\s*)*)?$`;
+        Query.RELATIVE_TIME = `^\\s*now\\s*(?:-\\s*(?:${Query.TIME}\\s*)+)?$`;
 
         Pattern.Query = Query;
     }

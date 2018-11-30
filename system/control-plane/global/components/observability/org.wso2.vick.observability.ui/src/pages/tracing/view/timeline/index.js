@@ -58,8 +58,9 @@ class Timeline extends React.Component {
     }
 
     handleServiceTypeChange(event) {
+        const serviceType = event.target.value;
         this.setState({
-            selectedServiceTypes: event.target.value
+            selectedServiceTypes: serviceType
         });
     }
 

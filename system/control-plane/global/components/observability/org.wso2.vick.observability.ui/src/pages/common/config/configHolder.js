@@ -138,8 +138,9 @@ class ConfigHolder {
                 },
                 backendURL: "http://localhost:8080/api",
                 globalFilter: {
-                    startTime: "now - 1 year",
+                    startTime: "now - 24 hours",
                     endTime: "now",
+                    dateRangeNickname: "Last 24 hours",
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
             };

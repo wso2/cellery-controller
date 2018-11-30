@@ -16,10 +16,10 @@
  * under the License.
  */
 
-import Details from "./../common/Details";
+import Details from "../common/Details";
 import Grey from "@material-ui/core/colors/grey";
 import K8sObjects from "./K8sObjects";
-import Metrics from "./../common/Metrics";
+import Metrics from "../common/Metrics";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";

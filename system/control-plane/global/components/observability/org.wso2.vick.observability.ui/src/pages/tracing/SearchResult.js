@@ -106,8 +106,9 @@ class SearchResult extends React.Component {
     }
 
     handleChangeRowsPerPage(event) {
+        const rowsPerPage = event.target.value;
         this.setState({
-            rowsPerPage: event.target.value
+            rowsPerPage: rowsPerPage
         });
     }
 

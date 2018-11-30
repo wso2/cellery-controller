@@ -17,11 +17,16 @@
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
+import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
+import Button from "@material-ui/core/Button";
+import CalendarToday from "@material-ui/icons/CalendarToday";
 import {ConfigHolder} from "./config/configHolder";
+import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
+import Popover from "@material-ui/core/Popover";
 import PropTypes from "prop-types";
 import QueryUtils from "./utils/queryUtils";
 import React from "react";
@@ -44,14 +49,22 @@ const styles = (theme) => ({
     },
     title: {
         flexGrow: 1,
-        marginTop: 10,
-        marginLeft: theme.spacing.unit
+        marginLeft: theme.spacing.unit,
+        marginTop: theme.spacing.unit
+    },
+    dateRangeButton: {
+        marginRight: theme.spacing.unit * 3
     },
     startInputAdornment: {
+        marginRight: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
     },
     menuButton: {
-        marginTop: 10
+        marginTop: theme.spacing.unit
+    },
+    dateRangeNicknameSelectedTime: {
+        marginLeft: theme.spacing.unit,
+        marginRight: theme.spacing.unit
     }
 });
 
@@ -69,13 +82,17 @@ class TopToolbar extends React.Component {
             this.state = {
                 startTime: globalFilter.startTime,
                 endTime: globalFilter.endTime,
-                refreshInterval: globalFilter.refreshInterval
+                dateRangeNickname: globalFilter.dateRangeNickname,
+                refreshInterval: globalFilter.refreshInterval,
+                dateRangeSelectorAnchorElement: undefined
             };
         } else {
             this.state = {
                 startTime: "now - 24 hours",
                 endTime: "now",
-                refreshInterval: 30 * 1000
+                dateRangeNickname: globalFilter.dateRangeNickname,
+                refreshInterval: 30 * 1000,
+                dateRangeSelectorAnchorElement: undefined
             };
             config.set(ConfigConstants.GLOBAL_FILTER, {...this.state});
         }
@@ -88,6 +105,8 @@ class TopToolbar extends React.Component {
         this.startRefreshTask = this.startRefreshTask.bind(this);
         this.stopRefreshTask = this.stopRefreshTask.bind(this);
         this.refresh = this.refresh.bind(this);
+        this.openDateRangeSelector = this.openDateRangeSelector.bind(this);
+        this.closeDateRangeSelector = this.closeDateRangeSelector.bind(this);
     }
 
     componentDidMount() {
@@ -104,8 +123,9 @@ class TopToolbar extends React.Component {
 
     render() {
         const {classes, title, location, history} = this.props;
-        const {refreshInterval} = this.state;
+        const {startTime, endTime, dateRangeNickname, refreshInterval, dateRangeSelectorAnchorElement} = this.state;
 
+        const isDateRangeSelectorOpen = Boolean(dateRangeSelectorAnchorElement);
         return (
             <div className={classes.container}>
                 <Toolbar disableGutters={true}>
@@ -122,6 +142,40 @@ class TopToolbar extends React.Component {
                     <Typography variant="h5" color="inherit" className={classes.title}>
                         {title}
                     </Typography>
+                    <Button aria-owns={isDateRangeSelectorOpen ? "date-range-picker-popper" : undefined}
+                        className={classes.dateRangeButton} aria-haspopup="true" size="small" variant="text"
+                        onClick={(event) => this.openDateRangeSelector(event.currentTarget)}>
+                        {dateRangeNickname
+                            ? dateRangeNickname
+                            : (
+                                <React.Fragment>
+                                    <Typography color={"textSecondary"}>From</Typography>
+                                    <Typography className={classes.dateRangeNicknameSelectedTime}>
+                                        {startTime}
+                                    </Typography>
+                                    <Typography color={"textSecondary"}>To</Typography>
+                                    <Typography className={classes.dateRangeNicknameSelectedTime}>
+                                        {endTime}
+                                    </Typography>
+                                </React.Fragment>
+                            )
+                        }<ArrowDropDown/><CalendarToday/>
+                    </Button>
+                    <Popover id="date-range-picker-popper"
+                        open={isDateRangeSelectorOpen}
+                        anchorEl={dateRangeSelectorAnchorElement}
+                        onClose={this.closeDateRangeSelector}
+                        anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right"
+                        }}
+                        transformOrigin={{
+                            vertical: "top",
+                            horizontal: "right"
+                        }}>
+                        <DateRangePicker startTime={startTime} endTime={endTime} dateRangeNickname={dateRangeNickname}
+                            onRangeChange={this.setTimePeriod}/>
+                    </Popover>
                     <FormControl>
                         <Select value={refreshInterval} onChange={this.setRefreshInterval}
                             inputProps={{name: "refresh-interval", id: "refresh-interval"}}
@@ -145,22 +199,57 @@ class TopToolbar extends React.Component {
         );
     }
 
-    setTimePeriod() {
+    /**
+     * Open the date range selector with the provided element as the anchor.
+     *
+     * @param {HTMLElement} element The element which should act as the anchor of the date range popover
+     */
+    openDateRangeSelector(element) {
+        this.setState({
+            dateRangeSelectorAnchorElement: element
+        });
+    }
+
+    /**
+     * Close the date range selector currently open.
+     */
+    closeDateRangeSelector() {
+        this.setState({
+            dateRangeSelectorAnchorElement: undefined
+        });
+    }
+
+    /**
+     * Set the time period which should be considered for fetching data for the application.
+     *
+     * @param {string} startTime The new start time to be set
+     * @param {string} endTime The new end time to be set
+     * @param {string} dateRangeNickname The new date range nickname to be set
+     */
+    setTimePeriod(startTime, endTime, dateRangeNickname) {
         const {config} = this.props;
 
         config.set(ConfigConstants.GLOBAL_FILTER, {
             ...config.get(ConfigConstants.GLOBAL_FILTER),
-            startTime: "now - 24 hours",
-            endTime: "now"
+            startTime: startTime,
+            endTime: endTime,
+            dateRangeNickname: dateRangeNickname
         });
 
         this.stopRefreshTask(); // Stop any existing refresh tasks (Will be restarted when the component is updated)
         this.setState({
-            startTime: config.globalFilter.startTime,
-            endTime: config.globalFilter.endTime
+            startTime: startTime,
+            endTime: endTime,
+            dateRangeNickname: dateRangeNickname
         });
+        this.closeDateRangeSelector();
     }
 
+    /**
+     * Set the refresh interval to be used by the application.
+     *
+     * @param {Event} event The change event of the select input for the refresh interval
+     */
     setRefreshInterval(event) {
         const {config} = this.props;
         const newRefreshInterval = event.target.value;
@@ -172,7 +261,7 @@ class TopToolbar extends React.Component {
 
         this.stopRefreshTask(); // Stop any existing refresh tasks (Will be restarted when the component is updated)
         this.setState({
-            refreshInterval: config.get(ConfigConstants.GLOBAL_FILTER).refreshInterval
+            refreshInterval: newRefreshInterval
         });
     }
 

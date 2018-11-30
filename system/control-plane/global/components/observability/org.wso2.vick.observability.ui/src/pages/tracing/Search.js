@@ -353,11 +353,12 @@ class Search extends React.Component {
     getChangeHandler(name) {
         const self = this;
         return (event) => {
+            const newValue = event.target.value;
             self.setState(Search.generateValidState({
                 ...this.state,
                 filter: {
                     ...this.state.filter,
-                    [name]: event.target.value
+                    [name]: newValue
                 }
             }));
         };
