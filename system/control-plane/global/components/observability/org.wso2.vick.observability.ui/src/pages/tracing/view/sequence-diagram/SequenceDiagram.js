@@ -16,7 +16,7 @@
  * under the License.
  */
 
-
+import interact from "interactjs";
 import React, { Component } from 'react';
 import  ReactDOM from "react-dom";
 import mermaid, {mermaidAPI} from 'mermaid';
@@ -28,19 +28,25 @@ class SequenceDiagram extends Component {
     constructor(props){
         super(props);
         this.state = {
-            config :""
+            config :"",
+            heading: "Cell - level Sequence"
         }
         this.testFoo2 = this.testFoo2.bind(this);
+        this.testFoo3 = this.testFoo3.bind(this);
         this.seperateCells = this.seperateCells.bind(this);
         this.drawCells = this.drawCells.bind(this);
         this.checkDraw = this.checkDraw.bind(this);
+
 
     }
     render() {
 
         return (
+            <div>
+                <h3> {this.state.heading} </h3>
             <div className="mermaid" id="mems">
                 {this.state.config}
+            </div>
             </div>
         );
     }
@@ -49,10 +55,29 @@ class SequenceDiagram extends Component {
         let _this = this;
         _this.testFoo2();
 
+        interact('.messageText').on('tap', function (event) {
+            _this.testFoo3(event.srcElement.innerHTML);
+        });
+        console.log(this.props.spans);
     }
     componentDidUpdate(){
-        mermaid.init(undefined, $("#mems"));
+        setTimeout(()=>{
+            $('#mems').removeAttr("data-processed");
+        },1000);
+        mermaid.init($("#mems"));
     }
+
+    testFoo3(spanData){
+        let index = findSpanIndex(this.props.spans,spanData);
+        let _this = this;
+        console.log(index);
+        console.log(this.props.spans[index]);
+        this.setState({
+           config: drawSpan(this.props.spans[5]),
+            heading : "Span - level Sequence"
+        });
+    }
+
     testFoo2() {
         let _this =this;
         this.setState({
@@ -65,20 +90,24 @@ class SequenceDiagram extends Component {
                 cellArray.push(this.props.spans[i]);
             }
         }
-        console.log(this.props.spans);
-        console.log(this.checkDraw());
+      this.checkDraw();
 
     }
 
      seperateCells(spanArray){
         var cellArray =[];
         for(let i=0;i<spanArray.length;i++){
-            let  cellname = spanArray[i].serviceName.split("-")[0];
-            if(cellname === "stock"){
-                cellname = "stock options";
+            if((spanArray[i].serviceName.includes("global"))){
+                cellArray.push("global") ;
             }
-            if(!cellArray.includes(cellname)){
-                cellArray.push(cellname);
+            if(Boolean(spanArray[i].cell)) {
+                let cellname = spanArray[i].cell.name;
+                if (cellname === "stock-options") {
+                    cellname = "stock options";
+                }
+                if (!cellArray.includes(cellname)) {
+                    cellArray.push(cellname);
+                }
             }
         }
 
@@ -91,8 +120,11 @@ class SequenceDiagram extends Component {
         for (let i=0;i<array.length;i++){
             mText+= "participant "+ array[i] + "\n";
         }
+        mText += "activate global\n";
 
-        return mText + this.checkDraw() ;
+
+        return   mText + this.checkDraw();
+
     }
 
     checkDraw() {
@@ -111,8 +143,7 @@ class SequenceDiagram extends Component {
                     parentCellName = removeDash(parentCellName);
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
-                        console.log(span.children.values());
-                        tmp += parentCellName + "->>" + span.cell.name + ": Cell "+span.cell.name+" call \n";
+                        tmp += parentCellName + "->>+" + span.cell.name + ":"+ span.getUniqueId2()  + "\n";
                     }
                 }
             }
@@ -126,13 +157,17 @@ class SequenceDiagram extends Component {
                     parentCellName = span.parent.cell.name;
                 }
                 if (span.cell.name !== parentCellName){
-                    tmp += span.cell.name + "-->>"+ parentCellName + ": Return \n";
+                    tmp += span.cell.name + "-->>-"+ parentCellName + ": Return \n";
                 }
             }
         });
+        tmp += "deactivate global" ;
         return tmp;
     }
+
 }
+
+var spanData ="sequenceDiagram \n";
 
 function checkDraw(span, data) {
     if (span.parentId !== "undefined") {
@@ -151,9 +186,51 @@ function removeDash(cellName){
     }
 }
 
-function checkChild(span){
-     return span.childrenCheck();
-}
+function drawSpan(span){
+        console.log(span);
+        if(!Boolean(span.children)){
 
+        }
+        else {
+            const children = [];
+            const childrenIterator = span.children.values();
+            let currentChild = childrenIterator.next();
+            while (!currentChild.done) {
+                children.push(currentChild.value);
+                currentChild = childrenIterator.next();
+            }
+            iterateChildSpan(children);
+        }
+    return spanData;
+}
+function iterateChildSpan(childrenArr) {
+    for(let i=0;i<childrenArr.length;i++){
+        let parentCellName;
+        if (Boolean(childrenArr[i].cell)) {
+            if (childrenArr[i].parent.cell === null) {
+                parentCellName = "global";
+            }
+            else {
+                parentCellName = childrenArr[i].parent.cell.name;
+            }
+            if (childrenArr[i].cell.name !== parentCellName) {
+
+                console.log("hit here");
+                break;
+            }
+            else {
+                spanData += "participant " + childrenArr[i].spanId + "\n";
+            }
+        }
+
+        drawSpan(childrenArr[i]);
+    }
+}
+function findSpanIndex(data,val){
+    var index = data.findIndex(function(item){
+        return item.getUniqueId2() === val
+    });
+    return index;
+}
 
 export default SequenceDiagram;
