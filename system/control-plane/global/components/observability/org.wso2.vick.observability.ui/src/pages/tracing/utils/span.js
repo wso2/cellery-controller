@@ -182,6 +182,10 @@ class Span {
         return `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
     }
 
+    getUniqueId2() {
+        return `${this.traceId}--${this.spanId}`;
+    }
+
     /**
      * Check whether a span belongs to the cell gateway.
      *
