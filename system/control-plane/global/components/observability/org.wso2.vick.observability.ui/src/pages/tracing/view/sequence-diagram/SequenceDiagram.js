@@ -70,10 +70,8 @@ class SequenceDiagram extends Component {
     testFoo3(spanData){
         let index = findSpanIndex(this.props.spans,spanData);
         let _this = this;
-        console.log(index);
-        console.log(this.props.spans[index]);
         this.setState({
-           config: drawSpan(this.props.spans[5]),
+           config: drawSpan(this.props.spans[index]),
             heading : "Span - level Sequence"
         });
     }
@@ -143,7 +141,7 @@ class SequenceDiagram extends Component {
                     parentCellName = removeDash(parentCellName);
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
-                        tmp += parentCellName + "->>+" + span.cell.name + ":"+ span.getUniqueId2()  + "\n";
+                        tmp += parentCellName + "->>+" + span.cell.name + ":"+ span.getUniqueId()  + "\n";
                     }
                 }
             }
@@ -187,12 +185,12 @@ function removeDash(cellName){
 }
 
 function drawSpan(span){
-        console.log(span);
         if(!Boolean(span.children)){
-
+            alert("No further drill downs");
         }
         else {
             const children = [];
+            console.log(span);
             const childrenIterator = span.children.values();
             let currentChild = childrenIterator.next();
             while (!currentChild.done) {
@@ -201,25 +199,25 @@ function drawSpan(span){
             }
             iterateChildSpan(children);
         }
+        console.log(spanData);
     return spanData;
 }
 function iterateChildSpan(childrenArr) {
     for(let i=0;i<childrenArr.length;i++){
+
         let parentCellName;
         if (Boolean(childrenArr[i].cell)) {
             if (childrenArr[i].parent.cell === null) {
                 parentCellName = "global";
-            }
-            else {
+            } else {
                 parentCellName = childrenArr[i].parent.cell.name;
             }
             if (childrenArr[i].cell.name !== parentCellName) {
-
                 console.log("hit here");
                 break;
             }
             else {
-                spanData += "participant " + childrenArr[i].spanId + "\n";
+                spanData += childrenArr[i].parent.spanId+" ->> " + childrenArr[i].spanId+": "+ childrenArr[i].serviceName + "\n";
             }
         }
 
@@ -228,7 +226,7 @@ function iterateChildSpan(childrenArr) {
 }
 function findSpanIndex(data,val){
     var index = data.findIndex(function(item){
-        return item.getUniqueId2() === val
+        return item.getUniqueId() === val
     });
     return index;
 }
