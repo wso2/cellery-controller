@@ -106,8 +106,9 @@ class SearchResult extends React.Component {
     }
 
     handleChangeRowsPerPage(event) {
+        const rowsPerPage = event.target.value;
         this.setState({
-            rowsPerPage: event.target.value
+            rowsPerPage: rowsPerPage
         });
     }
 
@@ -130,7 +131,7 @@ class SearchResult extends React.Component {
         this.props.history.push({
             pathname: `./id/${traceId}`,
             state: {
-                highlightedMicroservice: {
+                selectedMicroservice: {
                     cellName: cellName,
                     serviceName: microservice
                 }
@@ -146,8 +147,8 @@ class SearchResult extends React.Component {
         data.forEach(
             (result) => result.services.forEach(
                 (service) => {
-                    if (!cellNames.includes(service.cellName)) {
-                        cellNames.push(service.cellName);
+                    if (!cellNames.includes(service.cellNameKey)) {
+                        cellNames.push(service.cellNameKey);
                     }
                 }
             )
@@ -193,18 +194,30 @@ class SearchResult extends React.Component {
                                         <div className={classes.traceSubHeader}>{result.rootDuration / 1000} s</div>
                                         <div className={classes.traceContent}>
                                             {
-                                                result.services.map((service) => (
-                                                    <div key={service.serviceName} className={classes.serviceTag}
-                                                        onClick={(event) => this.loadTracePage(event, result.traceId,
-                                                            service.cellName, service.serviceName)}>
-                                                        <div className={classes.serviceTagColor} style={{
-                                                            backgroundColor: colorGenerator.getColor(service.cellName)
-                                                        }}/>
-                                                        <div className={classes.serviceTagContent}>
-                                                            {service.serviceName} ({service.count})
+                                                result.services
+                                                    .sort((a, b) => {
+                                                        if (a.serviceName < b.serviceName) {
+                                                            return -1;
+                                                        }
+                                                        if (a.serviceName > b.serviceName) {
+                                                            return 1;
+                                                        }
+                                                        return 0;
+                                                    })
+                                                    .map((service) => (
+                                                        <div key={service.serviceName} className={classes.serviceTag}
+                                                            onClick={
+                                                                (event) => this.loadTracePage(event, result.traceId,
+                                                                    service.cellNameKey, service.serviceName)}>
+                                                            <div className={classes.serviceTagColor} style={{
+                                                                backgroundColor: colorGenerator
+                                                                    .getColor(service.cellNameKey)
+                                                            }}/>
+                                                            <div className={classes.serviceTagContent}>
+                                                                {service.serviceName} ({service.count})
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))
+                                                    ))
                                             }
                                         </div>
                                     </Paper>
@@ -222,7 +235,9 @@ class SearchResult extends React.Component {
                             onChangeRowsPerPage={this.handleChangeRowsPerPage}/>
                     </React.Fragment>
                 )
-                : null
+                : (
+                    <div>No Results</div>
+                )
         );
     }
 
@@ -241,7 +256,7 @@ SearchResult.propTypes = {
         rootStartTime: PropTypes.number.isRequired,
         rootDuration: PropTypes.number.isRequired,
         services: PropTypes.arrayOf(PropTypes.shape({
-            cellName: PropTypes.string.isRequired,
+            cellNameKey: PropTypes.string.isRequired,
             serviceName: PropTypes.string.isRequired,
             count: PropTypes.number.isRequired
         })).isRequired

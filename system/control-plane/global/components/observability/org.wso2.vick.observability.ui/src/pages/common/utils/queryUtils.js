@@ -25,7 +25,7 @@ class QueryUtils {
      * Parse a time query string.
      *
      * @param {string} query Query string
-     * @returns {moment} The time referred to by the time query
+     * @returns {moment.Moment} The time referred to by the time query
      */
     static parseTime(query) {
         let time = moment(query, Constants.Pattern.DATE_TIME, true);

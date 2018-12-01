@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {Graph} from "./components/dependency-graph/index";
+import {Graph} from "./components/dependency-graph";
 import PropTypes from "prop-types";
 import React, {Component} from "react";
 

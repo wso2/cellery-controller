@@ -35,6 +35,9 @@ import withStyles from "@material-ui/core/styles/withStyles";
 const styles = (theme) => ({
     formControl: {
         margin: theme.spacing.unit
+    },
+    microserviceTypeMenuItem: {
+        pointerEvents: "none"
     }
 });
 
@@ -45,6 +48,7 @@ class Timeline extends React.Component {
 
         this.state = {
             selectedServiceTypes: [
+                Constants.Span.ComponentType.MICROSERVICE,
                 Constants.Span.ComponentType.VICK,
                 Constants.Span.ComponentType.ISTIO
             ]
@@ -53,10 +57,10 @@ class Timeline extends React.Component {
         this.handleServiceTypeChange = this.handleServiceTypeChange.bind(this);
     }
 
-
     handleServiceTypeChange(event) {
+        const serviceType = event.target.value;
         this.setState({
-            selectedServiceTypes: event.target.value
+            selectedServiceTypes: serviceType
         });
     }
 
@@ -75,11 +79,9 @@ class Timeline extends React.Component {
         const filteredSpans = [];
         for (let i = 0; i < spans.length; i++) {
             const span = spans[i];
-            let isSelected = this.state.selectedServiceTypes.length === 0;
 
             // Apply service type filter
-            isSelected = this.state.selectedServiceTypes.includes(span.componentType)
-                || span.componentType === Constants.Span.ComponentType.MICROSERVICE;
+            const isSelected = this.state.selectedServiceTypes.includes(span.componentType);
 
             if (isSelected) {
                 filteredSpans.push(span);
@@ -114,10 +116,12 @@ class Timeline extends React.Component {
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}
                                 input={<Input id="select-multiple-checkbox"/>}
-                                renderValue={(selected) => ["Microservices"].concat(selected).join(", ")}>
+                                renderValue={(selected) => selected.join(", ")}>
                                 {
                                     serviceTypes.map((serviceType) => {
-                                        const checked = this.state.selectedServiceTypes.indexOf(serviceType) > -1;
+                                        const checked = this.state.selectedServiceTypes
+                                            .filter((type) => type !== Constants.Span.ComponentType.MICROSERVICE)
+                                            .indexOf(serviceType) > -1;
                                         return (
                                             <MenuItem key={serviceType} value={serviceType}>
                                                 <Checkbox checked={checked}/>
@@ -127,8 +131,9 @@ class Timeline extends React.Component {
                                     })
                                 }
                                 <MenuItem key={Constants.Span.ComponentType.MICROSERVICE}
-                                    value={Constants.Span.ComponentType.MICROSERVICE} style={{pointerEvents: "none"}}>
-                                    <Checkbox checked={true} disabled={true}/>
+                                    value={Constants.Span.ComponentType.MICROSERVICE}
+                                    className={classes.microserviceTypeMenuItem}>
+                                    <Checkbox checked={true}/>
                                     <ListItemText primary={Constants.Span.ComponentType.MICROSERVICE}/>
                                 </MenuItem>
                             </Select>

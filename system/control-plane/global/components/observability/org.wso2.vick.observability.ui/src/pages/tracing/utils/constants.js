@@ -30,7 +30,7 @@ const Constants = {
         ComponentType: {
             VICK: "VICK",
             ISTIO: "Istio",
-            MICROSERVICE: "Mirco-service"
+            MICROSERVICE: "Microservice"
         }
     },
     VICK: {

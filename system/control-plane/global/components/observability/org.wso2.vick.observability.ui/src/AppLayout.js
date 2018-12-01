@@ -261,7 +261,7 @@ class AppLayout extends React.Component {
                                             color="inherit">
                                             <AccountCircle/>
                                         </IconButton>
-                                        <Menu id="user-info-appbar" anchorEl={this.state.userInfo}
+                                        <Menu id="user-info-appbar" anchorEl={userInfo}
                                             anchorOrigin={{
                                                 vertical: "top",
                                                 horizontal: "right"

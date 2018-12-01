@@ -210,6 +210,15 @@ class Span {
     }
 
     /**
+     * Check whether an error occurred during this span.
+     *
+     * @returns {boolean} True if an error had occurred in this span
+     */
+    hasError() {
+        return this.tags.error === "true";
+    }
+
+    /**
      * Get the cell name from cell gateway span.
      *
      * @returns {Object} Cell details

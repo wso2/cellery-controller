@@ -24,7 +24,7 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select";
-import TopToolbar from "./../common/TopToolbar";
+import TopToolbar from "../common/TopToolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({

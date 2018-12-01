@@ -23,8 +23,10 @@ describe("ColorGenerator", () => {
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(3);
             expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ERROR]).not.toBeUndefined();
         });
     });
 
@@ -40,8 +42,10 @@ describe("ColorGenerator", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
 
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(8);
             expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ERROR]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
@@ -54,8 +58,10 @@ describe("ColorGenerator", () => {
             colorGenerator.addKeys(keyList);
             colorGenerator.addKeys([KEY_2, KEY_5]);
 
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(8);
             expect(colorGenerator.colorMap[ColorGeneratorConstants.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGeneratorConstants.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGeneratorConstants.ERROR]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
@@ -72,6 +78,7 @@ describe("ColorGenerator", () => {
             keyList = [];
             keyList.push(ColorGeneratorConstants.VICK);
             keyList.push(ColorGeneratorConstants.ISTIO);
+            keyList.push(ColorGeneratorConstants.ERROR);
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }
@@ -135,6 +142,7 @@ describe("ColorGenerator", () => {
             keyList = [];
             keyList.push(ColorGeneratorConstants.VICK);
             keyList.push(ColorGeneratorConstants.ISTIO);
+            keyList.push(ColorGeneratorConstants.ERROR);
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }

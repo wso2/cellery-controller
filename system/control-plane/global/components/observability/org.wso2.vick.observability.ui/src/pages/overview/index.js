@@ -174,7 +174,7 @@ class Overview extends Component {
     onClickCell(nodeId) {
         const outbound = new Set();
         const inbound = new Set();
-        this.state.data.links.map((element) => {
+        this.state.data.links.forEach((element) => {
             if (element.source === nodeId) {
                 outbound.add(element.target);
             } else if (element.target === nodeId) {
@@ -182,9 +182,9 @@ class Overview extends Component {
             }
         });
         const services = new Set();
-        this.state.data.nodes.map((element) => {
+        this.state.data.nodes.forEach((element) => {
             if (element.id === nodeId) {
-                element.services.map((service) => {
+                element.services.forEach((service) => {
                     services.add(service);
                 });
             }

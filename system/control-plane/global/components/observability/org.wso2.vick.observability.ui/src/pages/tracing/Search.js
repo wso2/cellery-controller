@@ -17,6 +17,7 @@
  */
 
 import Button from "@material-ui/core/Button";
+import ChipInput from "material-ui-chip-input";
 import {ColorGeneratorConstants} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
@@ -84,22 +85,25 @@ class Search extends React.Component {
                 cell: queryParams.cell ? queryParams.cell : Search.Constants.ALL_VALUE,
                 microservice: queryParams.microservice ? queryParams.microservice : Search.Constants.ALL_VALUE,
                 operation: queryParams.operation ? queryParams.operation : Search.Constants.ALL_VALUE,
-                tags: queryParams.tags ? queryParams.operation : "",
-                minDuration: queryParams.minDuration ? queryParams.operation : "",
-                minDurationMultiplier: 1,
-                maxDuration: queryParams.maxDuration ? queryParams.operation : "",
-                maxDurationMultiplier: 1
+                tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
+                minDuration: queryParams.minDuration ? queryParams.minDuration : "",
+                minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
+                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : "",
+                maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
             },
             metaData: {
                 availableMicroservices: [],
                 availableOperations: []
             },
+            hasSearchCompleted: false,
             searchResults: []
         });
 
         this.loadCellData = this.loadCellData.bind(this);
         this.getChangeHandler = this.getChangeHandler.bind(this);
+        this.handleTagsChange = this.handleTagsChange.bind(this);
         this.search = this.search.bind(this);
+        this.onSearchButtonClick = this.onSearchButtonClick.bind(this);
     }
 
     componentDidMount() {
@@ -111,6 +115,7 @@ class Search extends React.Component {
                 isQueryParamsEmpty = false;
             }
         }
+
         if (!isQueryParamsEmpty) {
             this.search();
         }
@@ -118,11 +123,18 @@ class Search extends React.Component {
 
     render() {
         const {classes} = this.props;
-        const {data, filter, metaData, searchResults} = this.state;
+        const {data, filter, metaData, hasSearchCompleted, searchResults} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
         );
+
+        const tagChips = [];
+        for (const tagKey in filter.tags) {
+            if (filter.tags.hasOwnProperty(tagKey)) {
+                tagChips.push(`${tagKey}=${filter.tags[tagKey]}`);
+            }
+        }
 
         return (
             <React.Fragment>
@@ -170,77 +182,100 @@ class Search extends React.Component {
                                 </FormControl>
                             </Grid>
                         </Grid>
-                        <Grid container justify={"flex-start"} spacing={24}>
-                            <Grid item xs={6}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <TextField label="Tags" id="tags" value={filter.tags}
-                                        InputLabelProps={{shrink: true}} onChange={this.getChangeHandler("tags")}
-                                        placeholder={"Eg: http.status_code=200"}/>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
-                                    <TextField id="min-duration" value={filter.minDuration}
-                                        className={classes.durationTextField}
-                                        onChange={this.getChangeHandler("minDuration")} type="number"
-                                        placeholder={"Eg: 10"}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment className={classes.startInputAdornment}
-                                                    variant="filled" position="start">Min</InputAdornment>
-                                            ),
-                                            endAdornment: (
-                                                <InputAdornment variant="filled" position="end">
-                                                    <Select value={filter.minDurationMultiplier}
-                                                        onChange={this.getChangeHandler("minDurationMultiplier")}
-                                                        inputProps={{
-                                                            name: "min-duration-multiplier",
-                                                            id: "min-duration-multiplier"
-                                                        }}>
-                                                        <MenuItem value={1}>ms</MenuItem>
-                                                        <MenuItem value={1000}>s</MenuItem>
-                                                    </Select></InputAdornment>
-                                            )
-                                        }}/>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <TextField id="max-duration" value={filter.maxDuration}
-                                        className={classes.durationTextField}
-                                        onChange={this.getChangeHandler("maxDuration")} type="number"
-                                        placeholder={"Eg: 1,000"}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment className={classes.startInputAdornment}
-                                                    variant="filled" position="start">Max</InputAdornment>
-                                            ),
-                                            endAdornment: (
-                                                <InputAdornment variant="filled" position="end">
-                                                    <Select value={filter.maxDurationMultiplier}
-                                                        onChange={this.getChangeHandler("maxDurationMultiplier")}
-                                                        inputProps={{
-                                                            name: "max-duration-multiplier",
-                                                            id: "max-duration-multiplier"
-                                                        }}>
-                                                        <MenuItem value={1}>ms</MenuItem>
-                                                        <MenuItem value={1000}>s</MenuItem>
-                                                    </Select>
-                                                </InputAdornment>
-                                            )
-                                        }}/>
-                                </FormControl>
-                            </Grid>
+                    </Grid>
+                    <Grid container justify={"flex-start"} spacing={24}>
+                        <Grid item xs={6}>
+                            <FormControl className={classes.formControl} fullWidth={true}>
+                                <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
+                                    onChange={this.handleTagsChange} onDelete={this.handleTagsChange}
+                                    placeholder={"Eg: http.status_code=200"}
+                                />
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <FormControl className={classes.formControl} fullWidth={true}>
+                                <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
+                                <TextField id="min-duration" value={filter.minDuration}
+                                    className={classes.durationTextField}
+                                    onChange={this.getChangeHandler("minDuration")} type="number"
+                                    placeholder={"Eg: 10"}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment className={classes.startInputAdornment}
+                                                variant="filled" position="start">Min</InputAdornment>
+                                        ),
+                                        endAdornment: (
+                                            <InputAdornment variant="filled" position="end">
+                                                <Select value={filter.minDurationMultiplier}
+                                                    onChange={this.getChangeHandler("minDurationMultiplier")}
+                                                    inputProps={{
+                                                        name: "min-duration-multiplier",
+                                                        id: "min-duration-multiplier"
+                                                    }}>
+                                                    <MenuItem value={1}>ms</MenuItem>
+                                                    <MenuItem value={1000}>s</MenuItem>
+                                                </Select></InputAdornment>
+                                        )
+                                    }}/>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <FormControl className={classes.formControl} fullWidth={true}>
+                                <TextField id="max-duration" value={filter.maxDuration}
+                                    className={classes.durationTextField}
+                                    onChange={this.getChangeHandler("maxDuration")} type="number"
+                                    placeholder={"Eg: 1,000"}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment className={classes.startInputAdornment}
+                                                variant="filled" position="start">Max</InputAdornment>
+                                        ),
+                                        endAdornment: (
+                                            <InputAdornment variant="filled" position="end">
+                                                <Select value={filter.maxDurationMultiplier}
+                                                    onChange={this.getChangeHandler("maxDurationMultiplier")}
+                                                    inputProps={{
+                                                        name: "max-duration-multiplier",
+                                                        id: "max-duration-multiplier"
+                                                    }}>
+                                                    <MenuItem value={1}>ms</MenuItem>
+                                                    <MenuItem value={1000}>s</MenuItem>
+                                                </Select>
+                                            </InputAdornment>
+                                        )
+                                    }}/>
+                            </FormControl>
                         </Grid>
                     </Grid>
-                    <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
-                    <div className={classes.resultContainer}>
-                        <SearchResult data={searchResults}/>
-                    </div>
+                    <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}>Search</Button>
+                    {
+                        hasSearchCompleted
+                            ? (
+                                <div className={classes.resultContainer}>
+                                    <SearchResult data={searchResults}/>
+                                </div>
+                            )
+                            : null
+                    }
                 </Paper>
             </React.Fragment>
         );
+    }
+
+    onSearchButtonClick() {
+        const {history, match, location} = this.props;
+        const {filter} = this.state;
+
+        // Updating the URL to ensure that the user can come back to this page
+        const searchString = HttpUtils.generateQueryParamString({
+            ...filter,
+            tags: JSON.stringify(filter.tags)
+        });
+        history.replace(match.url + searchString, {
+            ...location.state
+        });
+
+        this.search();
     }
 
     /**
@@ -295,8 +330,8 @@ class Search extends React.Component {
                 }
             }
 
-            self.setState(Search.generateValidState({
-                ...self.state,
+            self.setState((prevState) => Search.generateValidState({
+                ...prevState,
                 data: {
                     cells: cells,
                     microservices: microservices,
@@ -318,14 +353,52 @@ class Search extends React.Component {
     getChangeHandler(name) {
         const self = this;
         return (event) => {
+            const newValue = event.target.value;
             self.setState(Search.generateValidState({
                 ...this.state,
                 filter: {
                     ...this.state.filter,
-                    [name]: event.target.value
+                    [name]: newValue
                 }
             }));
         };
+    }
+
+    /**
+     * Handle the tags changing in the search.
+     *
+     * @param {Array.<string>} chips The chips in the tag search input
+     */
+    handleTagsChange(chips) {
+        const parseChip = (chip) => {
+            const chipContent = chip.split("=");
+            return {
+                key: chipContent[0].trim(),
+                value: chipContent[1].trim()
+            };
+        };
+
+        // Generating tags object
+        let tags;
+        if (typeof chips === "string") { // Delete tag
+            tags = {...this.state.filter.tags};
+            const tag = parseChip(chips);
+            Reflect.deleteProperty(tags, tag.key);
+        } else { // Tag change
+            tags = {};
+            for (let i = 0; i < chips.length; i++) {
+                const tag = parseChip(chips[i]);
+                tags[tag.key] = tag.value;
+            }
+        }
+
+        this.setState((prevState) => Search.generateValidState({
+            ...prevState,
+            filter: {
+                ...prevState.filter,
+                tags: tags
+            }
+        }));
     }
 
     search() {
@@ -345,7 +418,7 @@ class Search extends React.Component {
         addSearchParam("cellName", cell);
         addSearchParam("serviceName", microservice);
         addSearchParam("operationName", operation);
-        addSearchParam("tags", tags);
+        addSearchParam("tags", JSON.stringify(Object.keys(tags).length > 0 ? tags : {}));
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
         addSearchParam("queryStartTime",
@@ -406,7 +479,7 @@ class Search extends React.Component {
                         result.rootStartTime = info.rootStartTime;
                         result.rootDuration = info.rootDuration;
                         result.services.push({
-                            cellName: cellNameKey,
+                            cellNameKey: cellNameKey,
                             serviceName: span.serviceName,
                             count: info.count
                         });
@@ -430,8 +503,9 @@ class Search extends React.Component {
                     searchResults.push(result);
                 }
             }
-            self.setState(Search.generateValidState({
-                ...self.state,
+            self.setState((prevState) => Search.generateValidState({
+                ...prevState,
+                hasSearchCompleted: true,
                 searchResults: searchResults
             }));
             NotificationUtils.hideLoadingOverlay(config);
@@ -494,6 +568,9 @@ Search.Constants = {
 
 Search.propTypes = {
     classes: PropTypes.object.isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired,

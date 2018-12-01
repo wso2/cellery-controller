@@ -54,6 +54,37 @@ class HttpUtils {
     }
 
     /**
+     * Generate a query param string from a query params object.
+     *
+     * @param {Object} queryParams Query params as an flat object
+     * @returns {string} Query string
+     */
+    static generateQueryParamString(queryParams) {
+        let queryString = "";
+        if (queryParams) {
+            for (const queryParamKey in queryParams) {
+                if (queryParams.hasOwnProperty(queryParamKey)) {
+                    const queryParamValue = queryParams[queryParamKey];
+
+                    // Validating
+                    if (typeof queryParamKey !== "string") {
+                        throw Error(`Query param key need to be a string, instead found ${typeof queryParamKey}`);
+                    }
+                    if (typeof queryParamValue !== "string" && typeof queryParamValue !== "number"
+                            && typeof queryParamValue !== "boolean") {
+                        throw Error(`Query param value need to be a string, instead found ${typeof queryParamValue}`);
+                    }
+
+                    // Generating query string
+                    queryString += queryString ? "&" : "?";
+                    queryString += `${encodeURIComponent(queryParamKey)}=${encodeURIComponent(queryParamValue)}`;
+                }
+            }
+        }
+        return queryString;
+    }
+
+    /**
      * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
