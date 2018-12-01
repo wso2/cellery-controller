@@ -16,18 +16,20 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import React from "react";
 
-class Details extends Component {
+class Metrics extends React.Component {
 
     render() {
         return (
             <React.Fragment>
-                Microservice Details
+                <div>
+                    Usage Graphs
+                </div>
             </React.Fragment>
         );
     }
 
 }
 
-export default Details;
+export default (Metrics);

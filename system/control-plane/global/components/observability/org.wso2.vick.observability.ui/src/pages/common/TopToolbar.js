@@ -44,7 +44,8 @@ const styles = (theme) => ({
     },
     title: {
         flexGrow: 1,
-        marginTop: 10
+        marginTop: 10,
+        marginLeft: theme.spacing.unit
     },
     startInputAdornment: {
         marginBottom: theme.spacing.unit * 2
@@ -125,7 +126,8 @@ class TopToolbar extends React.Component {
                         <Select value={refreshInterval} onChange={this.setRefreshInterval}
                             inputProps={{name: "refresh-interval", id: "refresh-interval"}}
                             startAdornment={(<InputAdornment className={classes.startInputAdornment}
-                                variant="filled" position="start">Refresh</InputAdornment>)}>
+                                variant="filled"
+                                position="start">Refresh</InputAdornment>)}>
                             <MenuItem value={-1}>Off</MenuItem>
                             <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
                             <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
