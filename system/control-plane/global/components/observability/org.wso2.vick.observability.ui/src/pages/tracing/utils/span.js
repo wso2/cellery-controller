@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Constants from "./constants";
+import Constants from "../../common/constants";
 
 /**
  * Single span in a Trace.
@@ -188,7 +188,7 @@ class Span {
      * @returns {boolean} True if the component to which the span belongs to is a cell gateway
      */
     isFromCellGateway() {
-        return Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
+        return Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
     }
 
     /**
@@ -197,7 +197,7 @@ class Span {
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
     isFromIstioSystemComponent() {
-        return this.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
+        return this.serviceName === Constants.System.ISTIO_MIXER_NAME;
     }
 
     /**
@@ -206,7 +206,7 @@ class Span {
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
     isFromVICKSystemComponent() {
-        return (this.isFromCellGateway() || this.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
+        return (this.isFromCellGateway() || this.serviceName === Constants.System.GLOBAL_GATEWAY_NAME);
     }
 
     /**
@@ -227,8 +227,8 @@ class Span {
         let cell = null;
         if (this.cell) {
             cell = this.cell;
-        } else if (Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
+        } else if (Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.Cell.GATEWAY_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1].replace(/_/g, "-"),
@@ -237,8 +237,8 @@ class Span {
                 this.cell = cell;
                 this.serviceName = `${cell.name}-cell-gateway`;
             }
-        } else if (Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN);
+        } else if (Constants.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.Cell.MICROSERVICE_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1],

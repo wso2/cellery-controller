@@ -17,15 +17,14 @@
  */
 
 import "./DependencyDiagram.css";
-import {ColorGenerator} from "../../common/color/colorGenerator";
-import Constants from "../utils/constants";
+import Constants from "../../common/constants";
 import {Graph} from "react-d3-graph";
 import PropTypes from "prop-types";
 import React from "react";
 import Span from "../utils/span";
 import TracingUtils from "../utils/tracingUtils";
 import {withStyles} from "@material-ui/core";
-import {ColorGeneratorConstants, withColor} from "../../common/color/index";
+import withColor, {ColorGenerator} from "../../common/color";
 
 const styles = () => ({
     graph: {
@@ -48,10 +47,10 @@ class DependencyDiagram extends React.Component {
                 // Finding the proper color for this item
                 let colorKey = span.cell ? span.cell.name : null;
                 if (!colorKey) {
-                    if (span.componentType === Constants.Span.ComponentType.VICK) {
-                        colorKey = ColorGeneratorConstants.VICK;
-                    } else if (span.componentType === Constants.Span.ComponentType.ISTIO) {
-                        colorKey = ColorGeneratorConstants.ISTIO;
+                    if (span.componentType === Constants.ComponentType.VICK) {
+                        colorKey = ColorGenerator.VICK;
+                    } else if (span.componentType === Constants.ComponentType.ISTIO) {
+                        colorKey = ColorGenerator.ISTIO;
                     } else {
                         colorKey = span.componentType;
                     }
@@ -72,7 +71,7 @@ class DependencyDiagram extends React.Component {
                 target: destinationSpan.serviceName
             };
             if (sourceSpan.hasError() || destinationSpan.hasError()) {
-                link.color = colorGenerator.getColor(ColorGeneratorConstants.ERROR);
+                link.color = colorGenerator.getColor(ColorGenerator.ERROR);
             }
             links.push(link);
         };

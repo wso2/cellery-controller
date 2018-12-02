@@ -18,7 +18,7 @@
 
 import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
-import {ColorGeneratorConstants} from "../common/color";
+import {ColorGenerator} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -36,9 +36,8 @@ import Span from "./utils/span";
 import TextField from "@material-ui/core/TextField/TextField";
 import TopToolbar from "../common/TopToolbar";
 import Typography from "@material-ui/core/Typography/Typography";
-import {withConfig} from "../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {ConfigConstants, ConfigHolder} from "../common/config/configHolder";
+import withConfig, {ConfigHolder} from "../common/config";
 
 const styles = (theme) => ({
     container: {
@@ -86,9 +85,9 @@ class Search extends React.Component {
                 microservice: queryParams.microservice ? queryParams.microservice : Search.Constants.ALL_VALUE,
                 operation: queryParams.operation ? queryParams.operation : Search.Constants.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
-                minDuration: queryParams.minDuration ? queryParams.minDuration : "",
+                minDuration: queryParams.minDuration ? queryParams.minDuration : undefined,
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
-                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : "",
+                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : undefined,
                 maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
             },
             metaData: {
@@ -422,9 +421,9 @@ class Search extends React.Component {
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
         addSearchParam("queryStartTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).startTime).valueOf());
+            QueryUtils.parseTime(config.get(ConfigHolder.GLOBAL_FILTER).startTime).valueOf());
         addSearchParam("queryEndTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).endTime).valueOf());
+            QueryUtils.parseTime(config.get(ConfigHolder.GLOBAL_FILTER).endTime).valueOf());
 
         NotificationUtils.showLoadingOverlay("Searching for Traces", config);
         HttpUtils.callBackendAPI(
@@ -467,9 +466,9 @@ class Search extends React.Component {
 
                         let cellNameKey;
                         if (span.isFromVICKSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.VICK;
+                            cellNameKey = ColorGenerator.VICK;
                         } else if (span.isFromIstioSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.ISTIO;
+                            cellNameKey = ColorGenerator.ISTIO;
                         } else {
                             cellNameKey = cell.name;
                         }

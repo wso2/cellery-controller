@@ -23,6 +23,11 @@ import AuthUtils from "../utils/authUtils";
  */
 class ConfigHolder {
 
+    static USER = "user";
+    static LOADING_STATE = "loadingState";
+    static BACKEND_URL = "backendURL";
+    static GLOBAL_FILTER = "globalFilter";
+
     /**
      * @type {Object}
      * @private
@@ -138,9 +143,9 @@ class ConfigHolder {
                 },
                 backendURL: "http://localhost:8080/api",
                 globalFilter: {
-                    startTime: "now - 24 hours",
+                    startTime: "now - 1 year",
                     endTime: "now",
-                    dateRangeNickname: "Last 24 hours",
+                    dateRangeNickname: "Last 1 year",
                     refreshInterval: 30 * 1000 // 30 milli-seconds
                 }
             };
@@ -160,11 +165,4 @@ class ConfigHolder {
 
 }
 
-const ConfigConstants = {
-    USER: "user",
-    LOADING_STATE: "loadingState",
-    BACKEND_URL: "backendURL",
-    GLOBAL_FILTER: "globalFilter"
-};
-
-export {ConfigHolder, ConfigConstants};
+export default ConfigHolder;

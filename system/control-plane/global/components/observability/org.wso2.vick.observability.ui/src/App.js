@@ -19,7 +19,6 @@
 import AppLayout from "./AppLayout";
 import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
-import {ConfigHolder} from "./pages/common/config/configHolder";
 import NotFound from "./pages/common/NotFound";
 import Overview from "./pages/overview";
 import PropTypes from "prop-types";
@@ -28,8 +27,8 @@ import SignIn from "./pages/SignIn";
 import SystemMetrics from "./pages/systemMetrics";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
-import {ConfigConstants, ConfigProvider, withConfig} from "./pages/common/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
+import withConfig, {ConfigHolder, ConfigProvider} from "./pages/common/config";
 
 /**
  * Protected Portal of the App.
@@ -43,12 +42,12 @@ class UnConfiguredProtectedPortal extends React.Component {
         super(props);
 
         this.state = {
-            isAuthenticated: Boolean(props.config.get(ConfigConstants.USER))
+            isAuthenticated: Boolean(props.config.get(ConfigHolder.USER))
         };
 
         this.handleUserChange = this.handleUserChange.bind(this);
 
-        props.config.addListener(ConfigConstants.USER, this.handleUserChange);
+        props.config.addListener(ConfigHolder.USER, this.handleUserChange);
     }
 
     handleUserChange(userKey, oldUser, newUser) {

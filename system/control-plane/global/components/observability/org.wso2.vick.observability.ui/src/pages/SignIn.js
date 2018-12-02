@@ -20,7 +20,6 @@ import AuthUtils from "./common/utils/authUtils";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
-import {ConfigHolder} from "./common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -31,8 +30,8 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Typography from "@material-ui/core/Typography";
-import {withConfig} from "./common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withConfig, {ConfigHolder} from "./common/config";
 
 const styles = (theme) => ({
     layout: {

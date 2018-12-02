@@ -20,7 +20,6 @@ import ArrowBack from "@material-ui/icons/ArrowBack";
 import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
 import Button from "@material-ui/core/Button";
 import CalendarToday from "@material-ui/icons/CalendarToday";
-import {ConfigHolder} from "./config/configHolder";
 import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
@@ -36,7 +35,7 @@ import Toolbar from "@material-ui/core/Toolbar/Toolbar";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
-import {ConfigConstants, withConfig} from "./config";
+import withConfig, {ConfigHolder} from "./config";
 
 const styles = (theme) => ({
     container: {
@@ -77,7 +76,7 @@ class TopToolbar extends React.Component {
         super(props);
         const {config} = this.props;
 
-        const globalFilter = config.get(ConfigConstants.GLOBAL_FILTER);
+        const globalFilter = config.get(ConfigHolder.GLOBAL_FILTER);
         if (globalFilter) {
             this.state = {
                 startTime: globalFilter.startTime,
@@ -94,7 +93,7 @@ class TopToolbar extends React.Component {
                 refreshInterval: 30 * 1000,
                 dateRangeSelectorAnchorElement: undefined
             };
-            config.set(ConfigConstants.GLOBAL_FILTER, {...this.state});
+            config.set(ConfigHolder.GLOBAL_FILTER, {...this.state});
         }
 
         this.refreshIntervalID = null;
@@ -229,8 +228,8 @@ class TopToolbar extends React.Component {
     setTimePeriod(startTime, endTime, dateRangeNickname) {
         const {config} = this.props;
 
-        config.set(ConfigConstants.GLOBAL_FILTER, {
-            ...config.get(ConfigConstants.GLOBAL_FILTER),
+        config.set(ConfigHolder.GLOBAL_FILTER, {
+            ...config.get(ConfigHolder.GLOBAL_FILTER),
             startTime: startTime,
             endTime: endTime,
             dateRangeNickname: dateRangeNickname
@@ -254,8 +253,8 @@ class TopToolbar extends React.Component {
         const {config} = this.props;
         const newRefreshInterval = event.target.value;
 
-        config.set(ConfigConstants.GLOBAL_FILTER, {
-            ...config.get(ConfigConstants.GLOBAL_FILTER),
+        config.set(ConfigHolder.GLOBAL_FILTER, {
+            ...config.get(ConfigHolder.GLOBAL_FILTER),
             refreshInterval: newRefreshInterval
         });
 

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Constants from "./constants";
+import Constants from "../../common/constants";
 
 /**
  * Utilities used for processing Constants related data.
@@ -119,17 +119,17 @@ class TracingUtils {
     static labelSpanTree(tree) {
         tree.walk((span, data) => {
             if (span.isFromIstioSystemComponent()) {
-                span.componentType = Constants.Span.ComponentType.ISTIO;
+                span.componentType = Constants.ComponentType.ISTIO;
             } else if (span.isFromVICKSystemComponent()) {
-                span.componentType = Constants.Span.ComponentType.VICK;
+                span.componentType = Constants.ComponentType.VICK;
             } else {
-                span.componentType = Constants.Span.ComponentType.MICROSERVICE;
+                span.componentType = Constants.ComponentType.MICROSERVICE;
             }
 
             if (span.isFromCellGateway()) {
                 span.cell = span.getCell();
                 span.serviceName = `${span.cell.name}-cell-gateway`;
-            } else if (span.componentType !== Constants.Span.ComponentType.ISTIO) {
+            } else if (span.componentType !== Constants.ComponentType.ISTIO) {
                 span.cell = data;
             }
 

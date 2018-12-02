@@ -23,14 +23,19 @@ import randomColor from "randomcolor";
  */
 class ColorGenerator {
 
+    static VICK = "VICK";
+    static ISTIO = "Istio";
+    static ERROR = "ERROR";
+    static UNKNOWN = "UNKNOWN";
+
     constructor() {
         this.colorMap = {};
 
         this.addKeys([
-            ColorGeneratorConstants.VICK,
-            ColorGeneratorConstants.ISTIO
+            ColorGenerator.VICK,
+            ColorGenerator.ISTIO
         ]);
-        this.colorMap[ColorGeneratorConstants.ERROR] = "#ff282a";
+        this.colorMap[ColorGenerator.ERROR] = "#ff282a";
     }
 
     /**
@@ -95,10 +100,4 @@ class ColorGenerator {
 
 }
 
-const ColorGeneratorConstants = {
-    VICK: "VICK",
-    ISTIO: "Istio",
-    ERROR: "ERROR"
-};
-
-export {ColorGenerator, ColorGeneratorConstants};
+export default ColorGenerator;

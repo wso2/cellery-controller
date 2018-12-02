@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {ConfigConstants} from "../config";
+import {ConfigHolder} from "../config";
 
 class NotificationUtils {
 
@@ -27,7 +27,7 @@ class NotificationUtils {
      * @param {ConfigHolder} globalConfig The global configuration provided to the current component
      */
     static showLoadingOverlay(message, globalConfig) {
-        globalConfig.set(ConfigConstants.LOADING_STATE, {
+        globalConfig.set(ConfigHolder.LOADING_STATE, {
             isLoading: true,
             message: message
         });
@@ -39,7 +39,7 @@ class NotificationUtils {
      * @param {ConfigHolder} globalConfig The global configuration provided to the current component
      */
     static hideLoadingOverlay(globalConfig) {
-        globalConfig.set(ConfigConstants.LOADING_STATE, {
+        globalConfig.set(ConfigHolder.LOADING_STATE, {
             isLoading: false,
             message: null
         });

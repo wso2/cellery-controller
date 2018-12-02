@@ -20,9 +20,9 @@
 /* eslint prefer-promise-reject-errors: ["off"] */
 
 import AuthUtils from "./authUtils";
+import {ConfigHolder} from "../config";
 import HttpUtils from "./httpUtils";
 import axios from "axios";
-import {ConfigConstants, ConfigHolder} from "../config/configHolder";
 
 jest.mock("axios");
 
@@ -79,8 +79,8 @@ describe("HttpUtils", () => {
 
         beforeEach(() => {
             config = new ConfigHolder();
-            config.set(ConfigConstants.USER, "user1");
-            config.set(ConfigConstants.BACKEND_URL, backEndURL);
+            config.set(ConfigHolder.USER, "user1");
+            config.set(ConfigHolder.BACKEND_URL, backEndURL);
         });
 
         it("should add application/json header", async () => {

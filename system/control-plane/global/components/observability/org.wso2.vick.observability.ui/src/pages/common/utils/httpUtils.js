@@ -17,7 +17,7 @@
  */
 
 import AuthUtils from "./authUtils";
-import {ConfigConstants} from "../config";
+import {ConfigHolder} from "../config";
 import axios from "axios";
 
 class HttpUtils {
@@ -66,6 +66,10 @@ class HttpUtils {
                 if (queryParams.hasOwnProperty(queryParamKey)) {
                     const queryParamValue = queryParams[queryParamKey];
 
+                    if (!queryParamValue) {
+                        continue;
+                    }
+
                     // Validating
                     if (typeof queryParamKey !== "string") {
                         throw Error(`Query param key need to be a string, instead found ${typeof queryParamKey}`);
@@ -105,7 +109,7 @@ class HttpUtils {
             if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
                 config.data = {};
             }
-            config.url = `${globalConfig.get(ConfigConstants.BACKEND_URL)}${config.url}`;
+            config.url = `${globalConfig.get(ConfigHolder.BACKEND_URL)}${config.url}`;
 
             axios(config)
                 .then((response) => {

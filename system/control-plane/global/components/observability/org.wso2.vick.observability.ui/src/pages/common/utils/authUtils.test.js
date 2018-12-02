@@ -17,11 +17,11 @@
  */
 
 import AuthUtils from "./authUtils";
-import {ConfigConstants, ConfigHolder} from "../config/configHolder";
+import {ConfigHolder} from "../config";
 
 describe("AuthUtils", () => {
     afterEach(() => {
-        localStorage.removeItem(ConfigConstants.USER);
+        localStorage.removeItem(ConfigHolder.USER);
     });
 
     describe("signIn()", () => {
@@ -31,8 +31,8 @@ describe("AuthUtils", () => {
             AuthUtils.signIn("user1", config);
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(ConfigConstants.USER, "user1");
-            expect(localStorage.getItem(ConfigConstants.USER)).toBe("user1");
+            expect(spy).toHaveBeenCalledWith(ConfigHolder.USER, "user1");
+            expect(localStorage.getItem(ConfigHolder.USER)).toBe("user1");
         });
 
         it("should not set a username and should throw and error", () => {
@@ -44,15 +44,15 @@ describe("AuthUtils", () => {
             expect(() => AuthUtils.signIn("", config)).toThrow();
             expect(spy).toHaveBeenCalledTimes(0);
             expect(spy).not.toHaveBeenCalled();
-            expect(localStorage.getItem(ConfigConstants.USER)).toBeNull();
+            expect(localStorage.getItem(ConfigHolder.USER)).toBeNull();
         });
     });
 
     describe("signOut()", () => {
         it("should unset the user in the configuration", () => {
             const config = new ConfigHolder();
-            localStorage.setItem(ConfigConstants.USER, "user1");
-            config.config[ConfigConstants.USER] = {
+            localStorage.setItem(ConfigHolder.USER, "user1");
+            config.config[ConfigHolder.USER] = {
                 value: "user1",
                 listeners: []
             };
@@ -60,13 +60,13 @@ describe("AuthUtils", () => {
             AuthUtils.signOut(config);
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(ConfigConstants.USER);
-            expect(localStorage.getItem(ConfigConstants.USER)).toBeNull();
+            expect(spy).toHaveBeenCalledWith(ConfigHolder.USER);
+            expect(localStorage.getItem(ConfigHolder.USER)).toBeNull();
         });
     });
 
     describe("getAuthenticatedUser()", () => {
-        localStorage.setItem(ConfigConstants.USER, "user1");
+        localStorage.setItem(ConfigHolder.USER, "user1");
         const user = AuthUtils.getAuthenticatedUser();
 
         expect(user).toBe("user1");

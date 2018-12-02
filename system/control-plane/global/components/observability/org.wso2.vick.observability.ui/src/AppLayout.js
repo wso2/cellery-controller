@@ -24,7 +24,6 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Collapse from "@material-ui/core/Collapse";
-import {ConfigHolder} from "./pages/common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import DesktopWindows from "@material-ui/icons/DesktopWindows";
 import Divider from "@material-ui/core/Divider";
@@ -49,7 +48,7 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import {ConfigConstants, withConfig} from "./pages/common/config";
+import withConfig, {ConfigHolder} from "./pages/common/config";
 
 const drawerWidth = 240;
 
@@ -175,8 +174,8 @@ class AppLayout extends React.Component {
             }
         }
 
-        props.config.addListener(ConfigConstants.LOADING_STATE, this.handleLoadingStateChange);
-        const loadingState = props.config.get(ConfigConstants.LOADING_STATE);
+        props.config.addListener(ConfigHolder.LOADING_STATE, this.handleLoadingStateChange);
+        const loadingState = props.config.get(ConfigHolder.LOADING_STATE);
         this.state = {
             open: false,
             userInfo: null,
@@ -251,7 +250,7 @@ class AppLayout extends React.Component {
                             WSO2 VICK Observability
                         </Typography>
                         {
-                            config.get(ConfigConstants.USER)
+                            config.get(ConfigHolder.USER)
                                 ? (
                                     <div>
                                         <IconButton
@@ -274,7 +273,7 @@ class AppLayout extends React.Component {
                                             onClose={this.handleUserInfoClose}>
                                             {/* TODO: Implement user login */}
                                             <MenuItem onClick={this.handleUserInfoClose}>
-                                                Profile - {config.get(ConfigConstants.USER)}
+                                                Profile - {config.get(ConfigHolder.USER)}
                                             </MenuItem>
                                             <MenuItem onClick={this.handleUserInfoClose}>
                                                 My account

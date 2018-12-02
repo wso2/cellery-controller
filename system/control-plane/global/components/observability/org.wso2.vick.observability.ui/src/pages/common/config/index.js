@@ -17,11 +17,11 @@
  */
 
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
+import ConfigHolder from "./configHolder";
 import Grid from "@material-ui/core/Grid/Grid";
 import PropTypes from "prop-types";
 import React from "react";
 import {withStyles} from "@material-ui/core";
-import {ConfigConstants, ConfigHolder} from "./configHolder";
 
 // Creating a context that can be accessed
 const ConfigContext = React.createContext({});
@@ -129,4 +129,5 @@ const withConfig = (Component) => class ConfigConsumer extends React.Component {
 
 };
 
-export {withConfig, ConfigProvider, ConfigConstants};
+export default withConfig;
+export {ConfigProvider, ConfigHolder};

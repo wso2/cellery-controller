@@ -16,7 +16,6 @@
  * under the License.
  */
 
-import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
@@ -31,8 +30,8 @@ import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
 import TopToolbar from "../../common/TopToolbar";
 import TracingUtils from "../utils/tracingUtils";
-import {withConfig} from "../../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withConfig, {ConfigHolder} from "../../common/config";
 
 const styles = (theme) => ({
     container: {

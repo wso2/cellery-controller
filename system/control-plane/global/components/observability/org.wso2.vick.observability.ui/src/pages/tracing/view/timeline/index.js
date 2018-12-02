@@ -17,7 +17,7 @@
  */
 
 import Checkbox from "@material-ui/core/Checkbox";
-import Constants from "../../utils/constants";
+import Constants from "../../../common/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid";
 import Input from "@material-ui/core/Input/Input";
@@ -48,9 +48,9 @@ class Timeline extends React.Component {
 
         this.state = {
             selectedServiceTypes: [
-                Constants.Span.ComponentType.MICROSERVICE,
-                Constants.Span.ComponentType.VICK,
-                Constants.Span.ComponentType.ISTIO
+                Constants.ComponentType.MICROSERVICE,
+                Constants.ComponentType.VICK,
+                Constants.ComponentType.ISTIO
             ]
         };
 
@@ -98,10 +98,10 @@ class Timeline extends React.Component {
 
         // Finding the service types to be shown in the filter
         const serviceTypes = [];
-        for (const filterName in Constants.Span.ComponentType) {
-            if (Constants.Span.ComponentType.hasOwnProperty(filterName)) {
-                const serviceType = Constants.Span.ComponentType[filterName];
-                if (serviceType !== Constants.Span.ComponentType.MICROSERVICE) {
+        for (const filterName in Constants.ComponentType) {
+            if (Constants.ComponentType.hasOwnProperty(filterName)) {
+                const serviceType = Constants.ComponentType[filterName];
+                if (serviceType !== Constants.ComponentType.MICROSERVICE) {
                     serviceTypes.push(serviceType);
                 }
             }
@@ -120,7 +120,7 @@ class Timeline extends React.Component {
                                 {
                                     serviceTypes.map((serviceType) => {
                                         const checked = this.state.selectedServiceTypes
-                                            .filter((type) => type !== Constants.Span.ComponentType.MICROSERVICE)
+                                            .filter((type) => type !== Constants.ComponentType.MICROSERVICE)
                                             .indexOf(serviceType) > -1;
                                         return (
                                             <MenuItem key={serviceType} value={serviceType}>
@@ -130,11 +130,11 @@ class Timeline extends React.Component {
                                         );
                                     })
                                 }
-                                <MenuItem key={Constants.Span.ComponentType.MICROSERVICE}
-                                    value={Constants.Span.ComponentType.MICROSERVICE}
+                                <MenuItem key={Constants.ComponentType.MICROSERVICE}
+                                    value={Constants.ComponentType.MICROSERVICE}
                                     className={classes.microserviceTypeMenuItem}>
                                     <Checkbox checked={true}/>
-                                    <ListItemText primary={Constants.Span.ComponentType.MICROSERVICE}/>
+                                    <ListItemText primary={Constants.ComponentType.MICROSERVICE}/>
                                 </MenuItem>
                             </Select>
                         </FormControl>

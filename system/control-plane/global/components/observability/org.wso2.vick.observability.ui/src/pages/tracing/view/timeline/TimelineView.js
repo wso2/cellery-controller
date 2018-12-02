@@ -22,8 +22,7 @@ import "vis/dist/vis-timeline-graph2d.min.css";
 import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import {ColorGenerator} from "../../../common/color/colorGenerator";
-import Constants from "../../utils/constants";
+import Constants from "../../../common/constants";
 import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -38,7 +37,7 @@ import interact from "interactjs";
 import vis from "vis";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
-import {ColorGeneratorConstants, withColor} from "../../../common/color";
+import withColor, {ColorGenerator} from "../../../common/color";
 
 const styles = (theme) => ({
     spanLabelContainer: {
@@ -290,10 +289,10 @@ class TimelineView extends React.Component {
                     // Finding the proper color for this item
                     let colorKey = item.span.cell.name;
                     if (!colorKey) {
-                        if (item.span.componentType === Constants.Span.ComponentType.VICK) {
-                            colorKey = ColorGeneratorConstants.VICK;
-                        } else if (item.span.componentType === Constants.Span.ComponentType.ISTIO) {
-                            colorKey = ColorGeneratorConstants.ISTIO;
+                        if (item.span.componentType === Constants.ComponentType.VICK) {
+                            colorKey = ColorGenerator.VICK;
+                        } else if (item.span.componentType === Constants.ComponentType.ISTIO) {
+                            colorKey = ColorGenerator.ISTIO;
                         } else {
                             colorKey = item.span.componentType;
                         }

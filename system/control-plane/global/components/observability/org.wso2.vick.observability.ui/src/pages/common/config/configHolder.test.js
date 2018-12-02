@@ -19,7 +19,7 @@
 
 /* eslint max-lines: ["off"] */
 
-import {ConfigHolder} from "./configHolder";
+import ConfigHolder from "./configHolder";
 
 describe("ConfigHolder", () => {
     describe("set()", () => {
