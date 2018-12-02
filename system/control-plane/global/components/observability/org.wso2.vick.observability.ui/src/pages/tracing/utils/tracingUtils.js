@@ -29,7 +29,7 @@ class TracingUtils {
      * @param {Array.<Span>} spansList The spans list from which the tree should be built
      * @returns {Span} The root span of the tree
      */
-    static buildTree(spansList) {
+    static buildTree = (spansList) => {
         // Finding the root spans candidates (There can be one root span or two sibling root spans)
         const spanIdList = spansList.map((span) => span.spanId);
         const rootSpanCandidates = spansList.filter((span) => span.spanId === span.traceId
@@ -109,14 +109,14 @@ class TracingUtils {
         }, 0);
 
         return rootSpan;
-    }
+    };
 
     /**
      * Traverse the span tree and label the nodes.
      *
      * @param {Span} tree The root span of the tree
      */
-    static labelSpanTree(tree) {
+    static labelSpanTree = (tree) => {
         tree.walk((span, data) => {
             if (span.isFromIstioSystemComponent()) {
                 span.componentType = Constants.ComponentType.ISTIO;
@@ -135,7 +135,7 @@ class TracingUtils {
 
             return span.cell;
         }, null);
-    }
+    };
 
     /**
      * Traverse the span tree and generate a list of ordered spans.
@@ -143,13 +143,13 @@ class TracingUtils {
      * @param {Span} tree The root span of the tree
      * @returns {Array.<Span>} The list of spans ordered by time and tree structure
      */
-    static getOrderedList(tree) {
+    static getOrderedList = (tree) => {
         const spanList = [];
         tree.walk((span) => {
             spanList.push(span);
         });
         return spanList;
-    }
+    };
 
     /**
      * Reset the tree references to one another resulting in the destruction of the tree structure.
@@ -157,18 +157,18 @@ class TracingUtils {
      *
      * @param {Array.<Span>} spans The list of spans to reset
      */
-    static resetTreeSpanReferences(spans) {
+    static resetTreeSpanReferences = (spans) => {
         for (let i = 0; i < spans.length; i++) {
             spans[i].resetSpanReferences();
         }
-    }
+    };
 
     /**
      * Remove a span from the tree preserving the tree structure.
      *
      * @param {Span} spanToBeRemoved The span to be removed
      */
-    static removeSpanFromTree(spanToBeRemoved) {
+    static removeSpanFromTree = (spanToBeRemoved) => {
         const parent = spanToBeRemoved.parent;
         if (parent) {
             parent.children.delete(spanToBeRemoved);
@@ -182,7 +182,7 @@ class TracingUtils {
         if (spanToBeRemoved.sibling) {
             spanToBeRemoved.sibling.sibling = null;
         }
-    }
+    };
 
 }
 

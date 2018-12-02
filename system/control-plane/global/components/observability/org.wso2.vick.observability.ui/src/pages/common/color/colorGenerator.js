@@ -43,7 +43,7 @@ class ColorGenerator {
      *
      * @param {Array.<string>} keys The array of keys to add to the current keys
      */
-    addKeys(keys = []) {
+    addKeys = (keys = []) => {
         const self = this;
         const newKeys = keys.filter((key) => !(key in self.colorMap));
         const colors = ColorGenerator.generateColors(newKeys.length);
@@ -51,7 +51,7 @@ class ColorGenerator {
         for (let i = 0; i < newKeys.length; i++) {
             self.colorMap[newKeys[i]] = colors[i];
         }
-    }
+    };
 
     /**
      * Get the color for a particular key.
@@ -60,18 +60,18 @@ class ColorGenerator {
      * @param {string} key The name of the key
      * @returns {string} Hex value for a particular color
      */
-    getColor(key) {
+    getColor = (key) => {
         if (!(key in this.colorMap)) {
             this.addKeys([key]);
         }
         return this.colorMap[key];
-    }
+    };
 
     /**
      * Regenerate a new color scheme for the existing keys.
      * This will remove all the previous colors used and generate a new set of colors.
      */
-    regenerateNewColorScheme() {
+    regenerateNewColorScheme = () => {
         const keyCount = Object.keys(this.colorMap).length;
         const colors = ColorGenerator.generateColors(keyCount);
 
@@ -82,7 +82,7 @@ class ColorGenerator {
                 i += 1;
             }
         }
-    }
+    };
 
     /**
      * Generate a set of colors.
@@ -91,12 +91,10 @@ class ColorGenerator {
      * @param {number} count The number of colors to generate
      * @returns {Array.<string>} The colors generated
      */
-    static generateColors(count) {
-        return randomColor({
-            luminosity: "light",
-            count: count
-        });
-    }
+    static generateColors = (count) => randomColor({
+        luminosity: "light",
+        count: count
+    });
 
 }
 

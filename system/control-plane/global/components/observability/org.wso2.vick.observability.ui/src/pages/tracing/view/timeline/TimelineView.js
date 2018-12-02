@@ -100,6 +100,25 @@ const styles = (theme) => ({
 
 class TimelineView extends React.Component {
 
+    static SPAN_ID_ATTRIBUTE_KEY = "spanId";
+
+    static Classes = {
+        VIS_FOREGROUND: "vis-foreground",
+        VIS_LABEL: "vis-label",
+        VIS_GROUP: "vis-group",
+        VIS_ITEM_CONTENT: "vis-item-content",
+        VIS_ITEM_OVERFLOW: "vis-item-overflow",
+        VIS_ITEM_SPAN: "vis-item-span",
+        VIS_ITEM_SPAN_DESCRIPTION: "vis-item-span-description",
+        SELECTED_SPAN: "selected-span",
+        HIGHLIGHTED_SPAN: "highlighted-span"
+    };
+
+    static ItemType = {
+        SPAN: "span",
+        SPAN_DESCRIPTION: "description"
+    };
+
     constructor(props) {
         super(props);
 
@@ -117,15 +136,15 @@ class TimelineView extends React.Component {
         };
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         this.drawTimeline();
-    }
+    };
 
-    componentDidUpdate() {
+    componentDidUpdate = () => {
         this.drawTimeline();
-    }
+    };
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         const {classes} = this.props;
 
         // Removing interactions added to the timeline
@@ -136,9 +155,9 @@ class TimelineView extends React.Component {
         if (this.timeline) {
             this.timeline.destroy();
         }
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         this.calculateTrace();
 
@@ -173,9 +192,9 @@ class TimelineView extends React.Component {
                 <div ref={this.timelineNode}/>
             </React.Fragment>
         );
-    }
+    };
 
-    calculateTrace() {
+    calculateTrace = () => {
         const {spans} = this.props;
         this.trace.tree = TracingUtils.buildTree(spans);
         this.trace.spans = TracingUtils.getOrderedList(this.trace.tree);
@@ -202,9 +221,9 @@ class TimelineView extends React.Component {
         this.trace.treeHeight += 1;
         this.trace.minTime = minLimit;
         this.trace.maxTime = maxLimit;
-    }
+    };
 
-    drawTimeline() {
+    drawTimeline = () => {
         const {location, classes, colorGenerator} = this.props;
         const self = this;
         const selectedMicroservice = location.state.selectedMicroservice;
@@ -237,7 +256,7 @@ class TimelineView extends React.Component {
         const addSelectedSpanClass = (element, span) => {
             if ((!span.cell.name || span.cell.name === selectedMicroservice.cellName)
                 && span.serviceName === selectedMicroservice.serviceName) {
-                element.classList.add(TimelineView.Constants.Classes.SELECTED_SPAN);
+                element.classList.add(TimelineView.Classes.SELECTED_SPAN);
             }
         };
 
@@ -283,7 +302,7 @@ class TimelineView extends React.Component {
             template: (item, element) => {
                 const newElement = document.createElement("div");
                 let content = <span>{item.content}</span>;
-                if (item.itemType === TimelineView.Constants.ItemType.SPAN) {
+                if (item.itemType === TimelineView.ItemType.SPAN) {
                     content = <span>{item.span.duration} ms</span>;
 
                     // Finding the proper color for this item
@@ -303,7 +322,7 @@ class TimelineView extends React.Component {
                     const parent = element.parentElement.parentElement;
                     parent.style.backgroundColor = color;
                     parent.style.borderColor = color;
-                } else if (item.itemType === TimelineView.Constants.ItemType.SPAN_DESCRIPTION) {
+                } else if (item.itemType === TimelineView.ItemType.SPAN_DESCRIPTION) {
                     const rows = [];
                     for (const key in item.span.tags) {
                         if (item.span.tags.hasOwnProperty(key)) {
@@ -340,7 +359,7 @@ class TimelineView extends React.Component {
                     }
                 }
                 ReactDOM.render(content, newElement);
-                element.setAttribute(TimelineView.Constants.SPAN_ID_ATTRIBUTE_KEY, item.span.getUniqueId());
+                element.setAttribute(TimelineView.SPAN_ID_ATTRIBUTE_KEY, item.span.getUniqueId());
                 addSelectedSpanClass(element, item.span);
                 return newElement;
             }
@@ -366,28 +385,28 @@ class TimelineView extends React.Component {
             this.addTimelineEventListener("changed", () => {
                 // Adjust span description
                 const timelineWindowWidth = document
-                    .querySelector(`div.${TimelineView.Constants.Classes.VIS_FOREGROUND}`).offsetWidth;
+                    .querySelector(`div.${TimelineView.Classes.VIS_FOREGROUND}`).offsetWidth;
                 const fitDescriptionToTimelineWindow = (node) => {
                     node.style.left = "0px";
                     node.style.width = `${timelineWindowWidth}px`;
                 };
                 this.timelineNode.current
-                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION}`)
+                    .querySelectorAll(`div.${TimelineView.Classes.VIS_ITEM_SPAN_DESCRIPTION}`)
                     .forEach(fitDescriptionToTimelineWindow);
-                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_CONTENT}`)
+                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Classes.VIS_ITEM_CONTENT}`)
                     .forEach(fitDescriptionToTimelineWindow);
 
                 // Adjust span duration labels
                 this.timelineNode.current
-                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`)
+                    .querySelectorAll(`div.${TimelineView.Classes.VIS_ITEM_SPAN}`)
                     .forEach((node) => {
-                        node.querySelector(`div.${TimelineView.Constants.Classes.VIS_ITEM_OVERFLOW}`).style.transform
+                        node.querySelector(`div.${TimelineView.Classes.VIS_ITEM_OVERFLOW}`).style.transform
                             = `translateX(${node.offsetWidth + 7}px)`;
                     });
 
                 // Adjust item vertical location
                 const spanItems = this.timelineNode.current
-                    .querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_ITEM_SPAN}`);
+                    .querySelectorAll(`div.${TimelineView.Classes.VIS_ITEM_SPAN}`);
                 const minHeight = Reflect.apply([].slice, spanItems, [])
                     .map((node) => node.parentElement.offsetHeight)
                     .reduce(
@@ -399,10 +418,10 @@ class TimelineView extends React.Component {
                 });
 
                 // Adding the selected microservice highlights
-                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Constants.Classes.VIS_LABEL}, `
-                    + `div.${TimelineView.Constants.Classes.VIS_GROUP}`).forEach((node) => {
-                    if (node.querySelector(`div.${TimelineView.Constants.Classes.SELECTED_SPAN}`)) {
-                        node.classList.add(TimelineView.Constants.Classes.HIGHLIGHTED_SPAN);
+                this.timelineNode.current.querySelectorAll(`div.${TimelineView.Classes.VIS_LABEL}, `
+                    + `div.${TimelineView.Classes.VIS_GROUP}`).forEach((node) => {
+                    if (node.querySelector(`div.${TimelineView.Classes.SELECTED_SPAN}`)) {
+                        node.classList.add(TimelineView.Classes.HIGHLIGHTED_SPAN);
                     }
                 });
             });
@@ -424,7 +443,7 @@ class TimelineView extends React.Component {
 
         // Add resizable functionality
         this.addHorizontalResizability(selector);
-    }
+    };
 
     /**
      * Update the items in the timeline.
@@ -432,7 +451,7 @@ class TimelineView extends React.Component {
      * @param {Array.<Span>} spans The spans which should be displayed in the timeline
      * @param {{min: number, max: number}} limits of the timeline
      */
-    updateTimelineItems(spans, limits) {
+    updateTimelineItems = (spans, limits) => {
         // Populating timeline items and groups
         const groups = [];
         const items = [];
@@ -450,23 +469,23 @@ class TimelineView extends React.Component {
             // Adding span
             items.push({
                 id: `${span.getUniqueId()}-span`,
-                itemType: TimelineView.Constants.ItemType.SPAN,
+                itemType: TimelineView.ItemType.SPAN,
                 order: 1,
                 start: new Date(span.startTime),
                 end: new Date(span.startTime + span.duration),
                 group: span.getUniqueId(),
-                className: TimelineView.Constants.Classes.VIS_ITEM_SPAN,
+                className: TimelineView.Classes.VIS_ITEM_SPAN,
                 span: span
             });
             if (this.selectedSpan && this.selectedSpan === span.getUniqueId()) {
                 items.push({
                     id: `${span.getUniqueId()}-span-description`,
-                    itemType: TimelineView.Constants.ItemType.SPAN_DESCRIPTION,
+                    itemType: TimelineView.ItemType.SPAN_DESCRIPTION,
                     order: 2,
                     start: new Date(limits.min),
                     end: new Date(limits.max),
                     group: span.getUniqueId(),
-                    className: TimelineView.Constants.Classes.VIS_ITEM_SPAN_DESCRIPTION,
+                    className: TimelineView.Classes.VIS_ITEM_SPAN_DESCRIPTION,
                     span: span
                 });
             }
@@ -480,14 +499,14 @@ class TimelineView extends React.Component {
 
         this.timeline.setGroups(new vis.DataSet(groups));
         this.timeline.setItems(new vis.DataSet(items));
-    }
+    };
 
     /**
      * Add resizability to a set of items in the timeline.
      *
      * @param {string} selector The CSS selector of the items to which the resizability should be added
      */
-    addHorizontalResizability(selector) {
+    addHorizontalResizability = (selector) => {
         const self = this;
         const edges = {right: true};
         const {classes} = this.props;
@@ -527,7 +546,7 @@ class TimelineView extends React.Component {
                 this.timelineNode.current.querySelectorAll(selector)
             );
         });
-    }
+    };
 
     /**
      * Add event listener to the timeline.
@@ -535,13 +554,13 @@ class TimelineView extends React.Component {
      * @param {string} type The name of the event listener that should be added to the timeline
      * @param {function} callBack The callback function to be called when the event fires
      */
-    addTimelineEventListener(type, callBack) {
+    addTimelineEventListener = (type, callBack) => {
         this.timeline.on(type, callBack);
         this.timelineEventListeners.push({
             type: type,
             callBack: callBack
         });
-    }
+    };
 
     /**
      * Clear the event listeners that were added to the timeline.
@@ -549,7 +568,7 @@ class TimelineView extends React.Component {
      *
      * @param {string} type The name of the event for which the event listeners should be cleared (All cleared if null)
      */
-    clearTimelineEventListeners(type) {
+    clearTimelineEventListeners = (type) => {
         let timelineEventListeners;
         if (type) {
             timelineEventListeners = this.timelineEventListeners
@@ -565,16 +584,16 @@ class TimelineView extends React.Component {
             const eventListener = timelineEventListeners[i];
             this.timeline.off(eventListener.type, eventListener.callBack);
         }
-    }
+    };
 
     /**
      * Clear interactions added to the timeline.
      *
      * @param {string} selector The CSS selector of the items from which the interactions should be cleared
      */
-    static clearInteractions(selector) {
+    static clearInteractions = (selector) => {
         interact(selector).unset();
-    }
+    };
 
 }
 
@@ -585,25 +604,6 @@ TimelineView.propTypes = {
     ).isRequired,
     location: PropTypes.any.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
-};
-
-TimelineView.Constants = {
-    SPAN_ID_ATTRIBUTE_KEY: "spanId",
-    Classes: {
-        VIS_FOREGROUND: "vis-foreground",
-        VIS_LABEL: "vis-label",
-        VIS_GROUP: "vis-group",
-        VIS_ITEM_CONTENT: "vis-item-content",
-        VIS_ITEM_OVERFLOW: "vis-item-overflow",
-        VIS_ITEM_SPAN: "vis-item-span",
-        VIS_ITEM_SPAN_DESCRIPTION: "vis-item-span-description",
-        SELECTED_SPAN: "selected-span",
-        HIGHLIGHTED_SPAN: "highlighted-span"
-    },
-    ItemType: {
-        SPAN: "span",
-        SPAN_DESCRIPTION: "description"
-    }
 };
 
 export default withStyles(styles, {withTheme: true})(withRouter(withColor(TimelineView)));

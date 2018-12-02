@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {ConfigHolder} from "../config";
+import {StateHolder} from "../state";
 
 /**
  * Common utilities.
@@ -27,36 +27,34 @@ class AuthUtils {
      * Sign in the user.
      *
      * @param {string} username The user to be signed in
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static signIn(username, globalConfig) {
+    static signIn = (username, globalState) => {
         if (username) {
-            localStorage.setItem(ConfigHolder.USER, username);
-            globalConfig.set(ConfigHolder.USER, username);
+            localStorage.setItem(StateHolder.USER, username);
+            globalState.set(StateHolder.USER, username);
         } else {
             throw Error(`Username provided cannot be "${username}"`);
         }
-    }
+    };
 
     /**
      * Sign out the current user.
-     * The provided global configuration will be updated accordingly as well.
+     * The provided global state will be updated accordingly as well.
      *
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static signOut(globalConfig) {
-        localStorage.removeItem(ConfigHolder.USER);
-        globalConfig.unset(ConfigHolder.USER);
-    }
+    static signOut = (globalState) => {
+        localStorage.removeItem(StateHolder.USER);
+        globalState.unset(StateHolder.USER);
+    };
 
     /**
      * Get the currently authenticated user.
      *
      * @returns {string} The current user
      */
-    static getAuthenticatedUser() {
-        return localStorage.getItem(ConfigHolder.USER);
-    }
+    static getAuthenticatedUser = () => localStorage.getItem(StateHolder.USER);
 
 }
 

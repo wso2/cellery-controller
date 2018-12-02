@@ -28,10 +28,10 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
-import TopToolbar from "../../common/TopToolbar";
+import TopToolbar from "../../common/toptoolbar";
 import TracingUtils from "../utils/tracingUtils";
 import withStyles from "@material-ui/core/styles/withStyles";
-import withConfig, {ConfigHolder} from "../../common/config";
+import withGlobalState, {StateHolder} from "../../common/state";
 
 const styles = (theme) => ({
     container: {
@@ -58,16 +58,14 @@ class View extends React.Component {
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
             isLoading: true
         };
-
-        this.handleTabChange = this.handleTabChange.bind(this);
     }
 
-    componentDidMount() {
-        const {config, match} = this.props;
+    componentDidMount = () => {
+        const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        NotificationUtils.showLoadingOverlay("Loading trace", config);
+        NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing",
@@ -76,7 +74,7 @@ class View extends React.Component {
                     traceId: traceId
                 }
             },
-            config
+            globalState
         ).then((data) => {
             const spans = data.map((dataItem) => new Span(dataItem));
             const rootSpan = TracingUtils.buildTree(spans);
@@ -87,22 +85,22 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            NotificationUtils.hideLoadingOverlay(globalState);
         }).catch(() => {
             self.setState({
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            NotificationUtils.hideLoadingOverlay(globalState);
         });
-    }
+    };
 
-    handleTabChange(event, value) {
+    handleTabChange = (event, value) => {
         this.setState({
             selectedTabIndex: value
         });
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes, match} = this.props;
         const {isLoading, spans, selectedTabIndex} = this.state;
 
@@ -141,13 +139,13 @@ class View extends React.Component {
                     </React.Fragment>
                 )
         );
-    }
+    };
 
 }
 
 View.propTypes = {
     classes: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
@@ -158,4 +156,4 @@ View.propTypes = {
     }).isRequired
 };
 
-export default withStyles(styles)(withConfig(View));
+export default withStyles(styles)(withGlobalState(View));

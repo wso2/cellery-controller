@@ -31,7 +31,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
-import withConfig, {ConfigHolder} from "./common/config";
+import withGlobalState, {StateHolder} from "./common/state";
 
 const styles = (theme) => ({
     layout: {
@@ -67,17 +67,11 @@ const styles = (theme) => ({
 
 class SignIn extends React.Component {
 
-    constructor(props) {
-        super(props);
-        this.handleLogin = this.handleLogin.bind(this);
-        this.handleKeyPress = this.handleKeyPress.bind(this);
-    }
-
     handleLogin = () => {
-        const {config} = this.props;
+        const {globalState} = this.props;
 
         const username = document.getElementById("username").value;
-        AuthUtils.signIn(username, config);
+        AuthUtils.signIn(username, globalState);
     };
 
     handleKeyPress = (event) => {
@@ -133,7 +127,7 @@ class SignIn extends React.Component {
 
 SignIn.propTypes = {
     classes: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(withConfig(SignIn));
+export default withStyles(styles)(withGlobalState(SignIn));

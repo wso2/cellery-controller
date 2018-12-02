@@ -20,13 +20,13 @@ import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import DependencyDiagram from "./DependencyDiagram";
 import Green from "@material-ui/core/colors/green";
 import PropTypes from "prop-types";
+import React from "react";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withStyles} from "@material-ui/core/styles";
-import React, {Component} from "react";
 
 const styles = (theme) => ({
     table: {
@@ -50,9 +50,9 @@ const styles = (theme) => ({
     }
 });
 
-class Details extends Component {
+class Details extends React.Component {
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         return (
             <React.Fragment>
@@ -92,7 +92,7 @@ class Details extends Component {
                 </div>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

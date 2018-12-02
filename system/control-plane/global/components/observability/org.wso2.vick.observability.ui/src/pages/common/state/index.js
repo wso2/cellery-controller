@@ -17,14 +17,14 @@
  */
 
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import ConfigHolder from "./configHolder";
 import Grid from "@material-ui/core/Grid/Grid";
 import PropTypes from "prop-types";
 import React from "react";
+import StateHolder from "./stateHolder";
 import {withStyles} from "@material-ui/core";
 
 // Creating a context that can be accessed
-const ConfigContext = React.createContext({});
+const StateContext = React.createContext({});
 
 const styles = () => ({
     container: {
@@ -33,14 +33,7 @@ const styles = () => ({
     }
 });
 
-/**
- * Config Provider to provide the configuration.
- *
- * @param {Object} props Props passed into the config provider
- * @returns {React.Component} Color Provider React Component
- * @constructor
- */
-class UnStyledConfigProvider extends React.Component {
+class UnStyledStateProvider extends React.Component {
 
     constructor(props) {
         super(props);
@@ -51,13 +44,13 @@ class UnStyledConfigProvider extends React.Component {
         };
 
         this.mounted = false;
-        this.config = new ConfigHolder();
+        this.stateHolder = new StateHolder();
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         const self = this;
         self.mounted = true;
-        self.config.loadConfig()
+        self.stateHolder.loadConfig()
             .then(() => {
                 if (self.mounted) {
                     self.setState({
@@ -73,19 +66,19 @@ class UnStyledConfigProvider extends React.Component {
                     });
                 }
             });
-    }
+    };
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         this.mounted = false;
-    }
+    };
 
-    render() {
+    render = () => {
         const {children, classes} = this.props;
         const {isLoading, isConfigAvailable} = this.state;
 
         const content = (isConfigAvailable ? children : <div>Error</div>);
         return (
-            <ConfigContext.Provider value={this.config}>
+            <StateContext.Provider value={this.stateHolder}>
                 {
                     isLoading
                         ? (
@@ -98,36 +91,36 @@ class UnStyledConfigProvider extends React.Component {
                         )
                         : content
                 }
-            </ConfigContext.Provider>
+            </StateContext.Provider>
         );
-    }
+    };
 
 }
 
-UnStyledConfigProvider.propTypes = {
+UnStyledStateProvider.propTypes = {
     children: PropTypes.any.isRequired,
     classes: PropTypes.any.isRequired
 };
 
-const ConfigProvider = withStyles(styles, {withTheme: true})(UnStyledConfigProvider);
+const StateProvider = withStyles(styles, {withTheme: true})(UnStyledStateProvider);
 
 /**
  * Higher Order Component for accessing the Color Generator.
  *
- * @param {React.Component | Function} Component component which needs access to the configuration.
- * @returns {React.Component | Function} The new HOC with access to the configuration.
+ * @param {React.Component | Function} Component component which needs access to the state.
+ * @returns {React.Component | Function} The new HOC with access to the state.
  */
-const withConfig = (Component) => class ConfigConsumer extends React.Component {
+const withGlobalState = (Component) => class ConfigConsumer extends React.Component {
 
     render() {
         return (
-            <ConfigContext.Consumer>
-                {(config) => <Component config={config} {...this.props}/>}
-            </ConfigContext.Consumer>
+            <StateContext.Consumer>
+                {(state) => <Component globalState={state} {...this.props}/>}
+            </StateContext.Consumer>
         );
     }
 
 };
 
-export default withConfig;
-export {ConfigProvider, ConfigHolder};
+export default withGlobalState;
+export {StateProvider, StateHolder};

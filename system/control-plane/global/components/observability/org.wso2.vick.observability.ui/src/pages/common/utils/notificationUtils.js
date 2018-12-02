@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {ConfigHolder} from "../config";
+import {StateHolder} from "../state";
 
 class NotificationUtils {
 
@@ -24,26 +24,26 @@ class NotificationUtils {
      * Show the loading overlay.
      *
      * @param {string} message The message to be shown in the loading overlay
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static showLoadingOverlay(message, globalConfig) {
-        globalConfig.set(ConfigHolder.LOADING_STATE, {
+    static showLoadingOverlay = (message, globalState) => {
+        globalState.set(StateHolder.LOADING_STATE, {
             isLoading: true,
             message: message
         });
-    }
+    };
 
     /**
      * Hide the loading overlay.
      *
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static hideLoadingOverlay(globalConfig) {
-        globalConfig.set(ConfigHolder.LOADING_STATE, {
+    static hideLoadingOverlay = (globalState) => {
+        globalState.set(StateHolder.LOADING_STATE, {
             isLoading: false,
             message: null
         });
-    }
+    };
 
 }
 

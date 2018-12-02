@@ -18,12 +18,7 @@
 
 // Configuration loaded into the React App
 const configuration = {
-    backendURL: process.env.BACKEND_URL || "http://wso2sp-worker.vick-system:9000",
-    globalFilter: {
-        startTime: "now - 24 hours",
-        endTime: "now",
-        refreshInterval: 30 * 1000
-    }
+    backendURL: process.env.BACKEND_URL || "http://wso2sp-worker.vick-system:9000"
 };
 
 module.exports = configuration;

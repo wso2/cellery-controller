@@ -25,7 +25,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import TopToolbar from "../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -46,19 +46,27 @@ const styles = (theme) => ({
 
 class Cell extends React.Component {
 
-    state = {
-        value: 0
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedCell: 0
+        };
+    }
 
     handleChange = (event, value) => {
-        this.setState({value: value});
+        this.setState({
+            selectedCell: value
+        });
     };
 
-    render() {
+    render = () => {
         const {classes} = this.props;
-        const details = <Details></Details>;
-        const microservices = <Microservices></Microservices>;
-        const metrics = <Metrics isHidden={true}></Metrics>;
+        const {selectedCell} = this.state;
+
+        const details = <Details/>;
+        const microservices = <Microservices/>;
+        const metrics = <Metrics isHidden={true}/>;
         const tabContent = [details, microservices, metrics];
 
         return (
@@ -66,21 +74,21 @@ class Cell extends React.Component {
                 <TopToolbar title={"Cell Name"} onUpdate={this.loadCellData}/>
                 <Paper className={classes.root}>
                     <Tabs
-                        value={this.state.value}
+                        value={selectedCell}
                         onChange={this.handleChange}
                         indicatorColor="primary"
-                        textColor="primary"
+                        textColor="primary"selectedCell
                         className={classes.tabs}
                     >
-                        <Tab label="DETAILS"/>
-                        <Tab label="MICROSERVICES"/>
-                        <Tab label="METRICS"/>
+                        <Tab label="Details"/>
+                        <Tab label="Microservices"/>
+                        <Tab label="Metrics"/>
                     </Tabs>
-                    {tabContent[this.state.value]}
+                    {tabContent[selectedCell]}
                 </Paper>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

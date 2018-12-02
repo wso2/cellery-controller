@@ -53,23 +53,21 @@ class Timeline extends React.Component {
                 Constants.ComponentType.ISTIO
             ]
         };
-
-        this.handleServiceTypeChange = this.handleServiceTypeChange.bind(this);
     }
 
-    handleServiceTypeChange(event) {
+    handleServiceTypeChange = (event) => {
         const serviceType = event.target.value;
         this.setState({
             selectedServiceTypes: serviceType
         });
-    }
+    };
 
     /**
      * Get the filtered spans from the available spans.
      *
      * @returns {Array.<Span>} The filtered list of spans
      */
-    getFilteredSpans() {
+    getFilteredSpans = () => {
         const spans = [];
         for (let i = 0; i < this.props.spans.length; i++) {
             spans.push(this.props.spans[i].shallowClone());
@@ -91,9 +89,9 @@ class Timeline extends React.Component {
             }
         }
         return filteredSpans;
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes} = this.props;
 
         // Finding the service types to be shown in the filter
@@ -143,7 +141,7 @@ class Timeline extends React.Component {
                 <TimelineView spans={this.getFilteredSpans()}/>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

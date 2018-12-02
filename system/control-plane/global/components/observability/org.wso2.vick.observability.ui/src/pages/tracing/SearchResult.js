@@ -98,24 +98,20 @@ class SearchResult extends React.Component {
             rowsPerPage: 5,
             page: 0
         };
-
-        this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this);
-        this.handleChangePage = this.handleChangePage.bind(this);
-        this.loadTracePage = this.loadTracePage.bind(this);
     }
 
-    handleChangeRowsPerPage(event) {
+    handleChangeRowsPerPage = (event) => {
         const rowsPerPage = event.target.value;
         this.setState({
             rowsPerPage: rowsPerPage
         });
-    }
+    };
 
-    handleChangePage(event, page) {
+    handleChangePage = (event, page) => {
         this.setState({
             page: page
         });
-    }
+    };
 
     /**
      * Load the trace page.
@@ -125,7 +121,7 @@ class SearchResult extends React.Component {
      * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
      * @param {string} microservice The microservice name if a microservice was selected
      */
-    loadTracePage(event, traceId, cellName = "", microservice = "") {
+    loadTracePage = (event, traceId, cellName = "", microservice = "") => {
         event.stopPropagation();
         this.props.history.push({
             pathname: `./id/${traceId}`,
@@ -136,9 +132,9 @@ class SearchResult extends React.Component {
                 }
             }
         });
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes, data, colorGenerator} = this.props;
         const {rowsPerPage, page} = this.state;
 
@@ -238,7 +234,7 @@ class SearchResult extends React.Component {
                     <div>No Results</div>
                 )
         );
-    }
+    };
 
 }
 

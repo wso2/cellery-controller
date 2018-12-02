@@ -21,6 +21,7 @@ import Green from "@material-ui/core/colors/green";
 import IconButton from "@material-ui/core/IconButton";
 import {Link} from "react-router-dom";
 import PropTypes from "prop-types";
+import React from "react";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -28,7 +29,6 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withStyles} from "@material-ui/core/styles";
-import React, {Component} from "react";
 
 const styles = (theme) => ({
     container: {
@@ -56,9 +56,9 @@ const styles = (theme) => ({
     }
 });
 
-class K8sObjects extends Component {
+class K8sObjects extends React.Component {
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         return (
             <React.Fragment>
@@ -73,16 +73,16 @@ class K8sObjects extends Component {
                                 <TableCell>Type</TableCell>
                                 <TableCell className={classes.cellWidth20}>Creation Time</TableCell>
                                 <TableCell className={classes.cellWidth20}>Age</TableCell>
-                                <TableCell className={classes.cellWidth10}></TableCell>
+                                <TableCell className={classes.cellWidth10}/>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             <TableRow key="">
-                                <TableCell className={classes.tableCell} component="th" scope="row"></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
+                                <TableCell className={classes.tableCell} component="th" scope="row"/>
+                                <TableCell className={classes.tableCell}/>
+                                <TableCell className={classes.tableCell}/>
+                                <TableCell className={classes.tableCell}/>
+                                <TableCell className={classes.tableCell}/>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -96,15 +96,15 @@ class K8sObjects extends Component {
                                 <TableCell>Workload</TableCell>
                                 <TableCell className={classes.cellWidth20}>Creation Time</TableCell>
                                 <TableCell className={classes.cellWidth20}>Age</TableCell>
-                                <TableCell className={classes.cellWidth10}></TableCell>
+                                <TableCell className={classes.cellWidth10}/>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             <TableRow key="">
-                                <TableCell className={classes.tableCell} component="th" scope="row"></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
-                                <TableCell className={classes.tableCell}></TableCell>
+                                <TableCell className={classes.tableCell} component="th" scope="row"/>
+                                <TableCell className={classes.tableCell}/>
+                                <TableCell className={classes.tableCell}/>
+                                <TableCell className={classes.tableCell}/>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -122,9 +122,9 @@ class K8sObjects extends Component {
                         </TableHead>
                         <TableBody>
                             <TableRow key="">
-                                <TableCell component="th" scope="row"></TableCell>
-                                <TableCell className={classes.cellWidth20}></TableCell>
-                                <TableCell className={classes.cellWidth20}></TableCell>
+                                <TableCell component="th" scope="row"/>
+                                <TableCell className={classes.cellWidth20}/>
+                                <TableCell className={classes.cellWidth20}/>
                                 <TableCell className={classes.cellWidth10}>
                                     <IconButton className={classes.button} size="small" color="action" component={Link}
                                         to="/system-metrics/pod-usage">
@@ -137,7 +137,7 @@ class K8sObjects extends Component {
                 </div>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

@@ -38,7 +38,7 @@ class ColorProvider extends React.Component {
         this.colorGenerator = new ColorGenerator();
     }
 
-    render() {
+    render = () => {
         const {children} = this.props;
 
         return (
@@ -46,7 +46,7 @@ class ColorProvider extends React.Component {
                 {children}
             </ColorContext.Provider>
         );
-    }
+    };
 
 }
 

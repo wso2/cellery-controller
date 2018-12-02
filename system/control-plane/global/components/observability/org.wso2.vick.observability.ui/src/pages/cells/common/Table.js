@@ -34,7 +34,7 @@ const styles = (theme) => ({
 
 class List extends React.Component {
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         const options = {
             download: false,
@@ -55,7 +55,7 @@ class List extends React.Component {
                 </div>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

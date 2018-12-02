@@ -21,9 +21,9 @@ import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import DependencyGraph from "./DependencyGraph";
 import PropTypes from "prop-types";
+import React from "react";
 import Typography from "@material-ui/core/Typography";
 import {withStyles} from "@material-ui/core/styles";
-import React, {Component} from "react";
 import axios from 'axios';
 
 const graphConfig = {
@@ -93,7 +93,7 @@ const styles = {
     }
 };
 
-class Overview extends Component {
+class Overview extends React.Component {
 
     constructor(props) {
         super(props);
@@ -166,12 +166,9 @@ class Overview extends Component {
         }).catch((error) => {
             this.setState({error: error});
         });
-        this.onClickCell = this.onClickCell.bind(this);
-        this.onClickGraph = this.onClickGraph.bind(this);
-        this.populateArray = this.populateArray.bind(this);
     }
 
-    onClickCell(nodeId) {
+    onClickCell = (nodeId) => {
         const outbound = new Set();
         const inbound = new Set();
         this.state.data.links.forEach((element) => {
@@ -212,26 +209,26 @@ class Overview extends Component {
             reloadGraph: false,
             isOverallSummary: false
         }));
-    }
+    };
 
-    populateArray(setElements) {
+    populateArray = (setElements) => {
         const arrayElements = [];
         setElements.forEach((setElement) => {
             arrayElements.push(setElement);
         });
         return arrayElements;
-    }
+    };
 
-    onClickGraph() {
+    onClickGraph = () => {
         this.setState({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
             reloadGraph: true,
             isOverallSummary: true
         });
-    }
+    };
 
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         return (
             <div>
@@ -279,7 +276,7 @@ class Overview extends Component {
                 </Card>
             </div>
         );
-    }
+    };
 
 }
 

@@ -16,17 +16,15 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import React from "react";
 
-class DependencyDiagram extends Component {
+class DependencyDiagram extends React.Component {
 
-    render() {
-        return (
-            <React.Fragment>
+    render = () => (
+        <React.Fragment>
                 Dependency Diagram
-            </React.Fragment>
-        );
-    }
+        </React.Fragment>
+    );
 
 }
 

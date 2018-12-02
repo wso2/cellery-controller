@@ -35,7 +35,7 @@ const styles = () => ({
 
 class DependencyDiagram extends React.Component {
 
-    render() {
+    render = () => {
         const {classes, spans, colorGenerator} = this.props;
         const rootSpan = TracingUtils.buildTree(spans);
 

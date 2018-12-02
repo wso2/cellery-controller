@@ -48,7 +48,7 @@ import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import withConfig, {ConfigHolder} from "./pages/common/config";
+import withGlobalState, {StateHolder} from "./pages/common/state";
 
 const drawerWidth = 240;
 
@@ -158,14 +158,6 @@ class AppLayout extends React.Component {
     constructor(props) {
         super(props);
 
-        this.handleUserInfoMenuOpen = this.handleUserInfoMenuOpen.bind(this);
-        this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
-        this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
-        this.handleDrawerClose = this.handleDrawerClose.bind(this);
-        this.handleLoadingStateChange = this.handleLoadingStateChange.bind(this);
-        this.handleListItemClick = this.handleListItemClick.bind(this);
-        this.handleClick = this.handleClick.bind(this);
-
         const pages = ["/", "/cells", "/tracing", "/system-metrics"];
         let selectedIndex = 0;
         for (let i = 0; i < pages.length; i++) {
@@ -174,8 +166,8 @@ class AppLayout extends React.Component {
             }
         }
 
-        props.config.addListener(ConfigHolder.LOADING_STATE, this.handleLoadingStateChange);
-        const loadingState = props.config.get(ConfigHolder.LOADING_STATE);
+        props.globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+        const loadingState = props.globalState.get(StateHolder.LOADING_STATE);
         this.state = {
             open: false,
             userInfo: null,
@@ -205,7 +197,7 @@ class AppLayout extends React.Component {
     };
 
     handleClick = () => {
-        this.setState((state) => ({subMenuOpen: !state.subMenuOpen}));
+        this.setState((prevState) => ({subMenuOpen: !prevState.subMenuOpen}));
     };
 
     handleListItemClick = (history, nav, event) => {
@@ -216,19 +208,19 @@ class AppLayout extends React.Component {
             hideBackButton: true
         };
         history.push(nav, navigationState);
-    }
+    };
 
-    handleLoadingStateChange(loadingStateKey, oldState, newState) {
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
         this.setState({
             loadingState: {
                 isLoading: newState.isLoading,
                 message: newState.message
             }
         });
-    }
+    };
 
-    render() {
-        const {classes, history, children, theme, config} = this.props;
+    render = () => {
+        const {classes, history, children, theme, globalState} = this.props;
         const {open, userInfo, loadingState, selectedIndex} = this.state;
         const userInfoOpen = Boolean(userInfo);
         return (
@@ -250,7 +242,7 @@ class AppLayout extends React.Component {
                             WSO2 VICK Observability
                         </Typography>
                         {
-                            config.get(ConfigHolder.USER)
+                            globalState.get(StateHolder.USER)
                                 ? (
                                     <div>
                                         <IconButton
@@ -273,13 +265,13 @@ class AppLayout extends React.Component {
                                             onClose={this.handleUserInfoClose}>
                                             {/* TODO: Implement user login */}
                                             <MenuItem onClick={this.handleUserInfoClose}>
-                                                Profile - {config.get(ConfigHolder.USER)}
+                                                Profile - {globalState.get(StateHolder.USER)}
                                             </MenuItem>
                                             <MenuItem onClick={this.handleUserInfoClose}>
                                                 My account
                                             </MenuItem>
                                             <MenuItem onClick={() => {
-                                                AuthUtils.signOut(config);
+                                                AuthUtils.signOut(globalState);
                                             }}>
                                                 Logout
                                             </MenuItem>
@@ -403,7 +395,7 @@ class AppLayout extends React.Component {
                 </main>
             </div>
         );
-    }
+    };
 
 }
 
@@ -411,11 +403,11 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     history: PropTypes.any.isRequired,
     location: PropTypes.shape({
         pathname: PropTypes.string.isRequired
     })
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withConfig(AppLayout)));
+export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(AppLayout)));
