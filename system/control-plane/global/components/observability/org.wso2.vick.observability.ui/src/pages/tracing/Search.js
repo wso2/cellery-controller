@@ -288,7 +288,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/cells",
                 method: "POST"
@@ -431,7 +431,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/tracing/search",
                 method: "POST",

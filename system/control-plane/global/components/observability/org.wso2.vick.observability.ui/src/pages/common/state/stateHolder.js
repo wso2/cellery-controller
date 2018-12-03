@@ -177,7 +177,8 @@ class StateHolder {
         return new Promise((resolve) => {
             // TODO : Load configuration from server
             const loadedConfiguration = {
-                backendURL: "http://localhost:8080/api"
+                siddhiAppEndpointURL: "http://localhost:8080/api",
+                siddhiStoreAPIURL: "http://localhost:7370/stores/query"
             };
             self.state.config = {
                 value: loadedConfiguration,

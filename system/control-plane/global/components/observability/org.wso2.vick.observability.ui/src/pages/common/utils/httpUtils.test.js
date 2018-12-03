@@ -73,23 +73,20 @@ describe("HttpUtils", () => {
         });
     });
 
-    describe("callBackendAPI()", () => {
-        const backendURL = "http://www.example.com";
+    describe("callAPI()", () => {
+        const backendURL = "http://www.example.com/test";
         let stateHolder;
 
         beforeEach(() => {
             stateHolder = new StateHolder();
             stateHolder.set(StateHolder.USER, "user1");
-            stateHolder.set(StateHolder.CONFIG, {
-                backendURL: backendURL
-            });
         });
 
         it("should add application/json header", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backendURL}/test`);
+                expect(config.url).toBe(backendURL);
                 expect(Object.keys(config.headers)).toHaveLength(3);
                 expect(config.headers["X-Key"]).toBe("value");
                 expect(config.headers.Accept).toBe("application/json");
@@ -109,9 +106,9 @@ describe("HttpUtils", () => {
                 });
             });
 
-            await HttpUtils.callBackendAPI({
+            await HttpUtils.callAPI({
                 method: "GET",
-                url: "/test",
+                url: backendURL,
                 headers: {
                     "X-Key": "value"
                 }
@@ -122,7 +119,7 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backendURL}/test`);
+                expect(config.url).toBe(backendURL);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -141,9 +138,9 @@ describe("HttpUtils", () => {
                 });
             });
 
-            await HttpUtils.callBackendAPI({
+            await HttpUtils.callAPI({
                 method: "GET",
-                url: "/test"
+                url: backendURL
             }, stateHolder);
         });
 
@@ -151,7 +148,7 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backendURL}/test`);
+                expect(config.url).toBe(backendURL);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/xml");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -170,9 +167,9 @@ describe("HttpUtils", () => {
                 });
             });
 
-            await HttpUtils.callBackendAPI({
+            await HttpUtils.callAPI({
                 method: "GET",
-                url: "/test",
+                url: backendURL,
                 headers: {
                     Accept: "application/xml"
                 }
@@ -183,7 +180,7 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backendURL}/test`);
+                expect(config.url).toBe(backendURL);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -202,9 +199,9 @@ describe("HttpUtils", () => {
                 });
             });
 
-            await HttpUtils.callBackendAPI({
+            await HttpUtils.callAPI({
                 method: "GET",
-                url: "/test"
+                url: backendURL
             }, stateHolder);
         });
 
@@ -212,7 +209,7 @@ describe("HttpUtils", () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backendURL}/test`);
+                expect(config.url).toBe(backendURL);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/xml");
@@ -231,9 +228,9 @@ describe("HttpUtils", () => {
                 });
             });
 
-            await HttpUtils.callBackendAPI({
+            await HttpUtils.callAPI({
                 method: "GET",
-                url: "/test",
+                url: backendURL,
                 headers: {
                     "Content-Type": "application/xml"
                 }
@@ -267,9 +264,9 @@ describe("HttpUtils", () => {
                 });
             }));
 
-            return HttpUtils.callBackendAPI({
+            return HttpUtils.callAPI({
                 method: "GET",
-                url: "/test",
+                url: backendURL,
                 headers: {
                     Accept: "application/xml"
                 }
@@ -285,9 +282,9 @@ describe("HttpUtils", () => {
                 });
             }));
 
-            return HttpUtils.callBackendAPI({
+            return HttpUtils.callAPI({
                 method: "GET",
-                url: "/test",
+                url: backendURL,
                 headers: {
                     Accept: "application/xml"
                 }

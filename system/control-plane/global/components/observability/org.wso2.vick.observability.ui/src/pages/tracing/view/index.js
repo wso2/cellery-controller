@@ -72,7 +72,7 @@ class View extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/tracing",
                 method: "POST",
@@ -130,10 +130,8 @@ class View extends React.Component {
 
         const traceId = match.params.traceId;
 
-        const timeline = <Timeline spans={spans}/>;
-        const sequenceDiagram = <SequenceDiagram/>;
-        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
-        const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
+        const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
+        const SelectedTabContent = tabContent[selectedTabIndex];
 
         return (
             isLoading
@@ -154,7 +152,7 @@ class View extends React.Component {
                                             <Tab label="Sequence Diagram"/>
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
-                                        {tabContent[selectedTabIndex]}
+                                        <SelectedTabContent spans={spans}/>
                                     </Paper>
                                 )
                         }
