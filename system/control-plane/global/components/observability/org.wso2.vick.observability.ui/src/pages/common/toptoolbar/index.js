@@ -213,6 +213,7 @@ class TopToolbar extends React.Component {
         });
 
         this.stopRefreshTask(); // Stop any existing refresh tasks (Will be restarted when the component is updated)
+        this.refresh(true, startTime, endTime);
         this.setState({
             startTime: startTime,
             endTime: endTime,
@@ -278,16 +279,18 @@ class TopToolbar extends React.Component {
      * Refresh the components by calling the on Update.
      *
      * @param {boolean} isUserAction True if the refresh was initiated by user
+     * @param {string} startTimeOverride Override for the start time in the state
+     * @param {string} endTimeOverride Override for the end time in the state
      */
-    refresh = (isUserAction) => {
+    refresh = (isUserAction, startTimeOverride = undefined, endTimeOverride = undefined) => {
         const {onUpdate} = this.props;
         const {startTime, endTime} = this.state;
 
         if (onUpdate) {
             onUpdate(
                 isUserAction,
-                QueryUtils.parseTime(startTime),
-                QueryUtils.parseTime(endTime)
+                QueryUtils.parseTime(startTimeOverride ? startTimeOverride : startTime),
+                QueryUtils.parseTime(endTimeOverride ? endTimeOverride : endTime)
             );
         }
     };

@@ -128,7 +128,7 @@ class Search extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
+                <TopToolbar title={"Distributed Tracing"} onUpdate={this.onGlobalRefresh}/>
                 <Paper className={classes.container}>
                     <Typography variant="h6" color="inherit" className={classes.subheading}>
                         Search Traces
@@ -268,6 +268,13 @@ class Search extends React.Component {
         this.search();
     };
 
+    onGlobalRefresh = (showOverlay) => {
+        if (this.state.hasSearchCompleted) {
+            this.search(showOverlay);
+        }
+        this.loadCellData(!this.state.hasSearchCompleted);
+    };
+
     /**
      * Search for traces.
      * Call the backend and search for traces.
@@ -328,9 +335,13 @@ class Search extends React.Component {
                     operations: operations
                 }
             }));
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         });
     };
 
@@ -387,7 +398,7 @@ class Search extends React.Component {
         }));
     };
 
-    search = () => {
+    search = (showOverlay) => {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = this.state.filter;
@@ -412,7 +423,9 @@ class Search extends React.Component {
         addSearchParam("queryEndTime",
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
 
-        NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        if (showOverlay) {
+            NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing/search",
@@ -494,9 +507,13 @@ class Search extends React.Component {
                 hasSearchCompleted: true,
                 searchResults: searchResults
             }));
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         });
     };
 

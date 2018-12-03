@@ -61,11 +61,17 @@ class View extends React.Component {
     }
 
     componentDidMount = () => {
+        this.loadTrace(true);
+    };
+
+    loadTrace = (showOverlay) => {
         const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        NotificationUtils.showLoadingOverlay("Loading trace", globalState);
+        if (showOverlay) {
+            NotificationUtils.showLoadingOverlay("Loading trace", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing",
@@ -85,18 +91,31 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
             self.setState({
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(globalState);
+            if (showOverlay) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         });
     };
 
     handleTabChange = (event, value) => {
+        const {history, location, match} = this.props;
+
         this.setState({
             selectedTabIndex: value
+        });
+
+        const queryParams = HttpUtils.generateQueryParamString({
+            tab: this.tabs[value]
+        });
+        history.replace(match.url + queryParams, {
+            ...location.state
         });
     };
 
@@ -116,7 +135,7 @@ class View extends React.Component {
                 ? null
                 : (
                     <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"}/>
+                        <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
                         <Paper className={classes.container}>
                             {
                                 spans && spans.length === 0
@@ -151,6 +170,9 @@ View.propTypes = {
             traceId: PropTypes.string.isRequired
         }).isRequired
     }).isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired
