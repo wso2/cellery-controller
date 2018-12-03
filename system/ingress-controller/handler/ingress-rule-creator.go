@@ -1,18 +1,35 @@
+/*
+ * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http:www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package handler
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/golang/glog"
-	"io/ioutil"
+	"github.com/wso2/product-vick/system/ingress-controller/config"
 	vickingressv1 "github.com/wso2/product-vick/system/ingress-controller/pkg/apis/vick/ingress/v1alpha1"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-	"github.com/wso2/product-vick/system/ingress-controller/config"
 )
 
 const (
@@ -81,82 +98,19 @@ type version struct {
 
 type IngressRuleCreator struct {
 	IngressConfig *config.IngressConfig
-	HttpClient *http.Client
 }
-
-// TODO bring an abstraction for the HTTP client so that unit test writing is simplified
-//type HttpCaller interface {
-//	DoHttpCall () (*http.Response, error)
-//}
-//
-//type DefaultHttpCaller struct {
-//	client *http.Client
-//	headers *map[string]string
-//	req *http.Request
-//}
-//
-//func (caller *DefaultHttpCaller) DoHttpCall () (*http.Response, error)  {
-//	for name, val := range *caller.headers {
-//		caller.req.Header.Set(name, val)
-//	}
-//	return caller.client.Do(caller.req)
-//}
-//
-//func NewDefaultHttpCallerWithHttpClient () *DefaultHttpCaller {
-//	transport := &http.Transport{
-//		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-//	}
-//	client := &http.Client{Transport: transport}
-//	return &DefaultHttpCaller{client:client}
-//}
 
 func NewIngressRuleCreator (ingressConfig *config.IngressConfig) *IngressRuleCreator {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: transport}
-	return &IngressRuleCreator{IngressConfig:ingressConfig, HttpClient:client}
+	return &IngressRuleCreator{IngressConfig:ingressConfig}
 }
 
-//func RegisterClientHelper (ingRuleCreator *IngressRuleCreator) (*map[string]string, *http.Request, error) {
-//	// create headers
-//	authHeader := getBasicAuthHeader(ingRuleCreator.IngressConfig.Username, ingRuleCreator.IngressConfig.Password)
-//	var headers map[string]string
-//	headers["Authorization"] = authHeader
-//	headers["Content-Type"] = "application/json"
-//	headers["Accept"] = "application/json"
-//	// create request
-//	requestBody, err := json.Marshal(ingRuleCreator.IngressConfig.RegisterPayload)
-//	if err != nil {
-//		return nil, nil, err
-//	}
-//	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + clientRegistrationPath +
-//		ingRuleCreator.IngressConfig.ApiVersion + clientRegisterPath, bytes.NewBuffer(requestBody))
-//	if err != nil {
-//		return nil, nil, err
-//	}
-//	return &headers, request, nil
-//}
-
-func (ingRuleCreator *IngressRuleCreator) RegisterClient() (string, string, error)  {
-	// create basic auth header
-	authHeader := getBasicAuthHeader(ingRuleCreator.IngressConfig.Username, ingRuleCreator.IngressConfig.Password)
-	requestBody, err := json.Marshal(ingRuleCreator.IngressConfig.RegisterPayload)
+func (ingRuleCreator *IngressRuleCreator) RegisterClient(httpCaller HttpCaller) (string, string, error)  {
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", "", err
 	}
-	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + clientRegistrationPath +
-		ingRuleCreator.IngressConfig.ApiVersion + clientRegisterPath, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return "", "", err
-	}
-	request.Header.Set("Authorization", "Basic " + authHeader)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return "", "", err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return "", "", errors.New("response is not of type *http.Response")
 	}
 	defer response.Body.Close()
 	// read response
@@ -175,26 +129,15 @@ func (ingRuleCreator *IngressRuleCreator) RegisterClient() (string, string, erro
 	return regResponse.ClientId, regResponse.ClientSecret, nil
 }
 
-func (ingRuleCreator *IngressRuleCreator) GenerateAccessToken(clientId string, clientSecret string) (string, error) {
-	// get basic auth header for registered client, with clientId and clientSecret
-	authHeader := getBasicAuthHeader(clientId, clientSecret)
-	payload := "grant_type=password&username=" + ingRuleCreator.IngressConfig.Username + "&password=" +
-		ingRuleCreator.IngressConfig.Password + "&scope=" + tokenScopes
-	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.TokenEp,
-		bytes.NewBuffer([]byte(payload)))
+func (ingRuleCreator *IngressRuleCreator) GenerateAccessToken(httpCaller HttpCaller) (string, error) {
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", err
 	}
-	request.Header.Set("Authorization", "Basic " + authHeader)
-	request.Header.Set("Content-Type","application/x-www-form-urlencoded")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return "", err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return "", errors.New("response is not of type *http.Response")
 	}
 	defer response.Body.Close()
-	// read response
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
@@ -220,42 +163,14 @@ func getBasicAuthHeader (username string, password string) (string) {
 	return base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 }
 
-func (ingRuleCreator *IngressRuleCreator) CreateApi (token string, ingSpec *vickingressv1.IngressSpec) error {
-	err := validateAndSetDefaults(ingSpec)
-	if err != nil {
-		return err
-	}
-	// create
-	apiId, err := createApi(ingressRuleCreator, token, ingSpec)
-	if err != nil {
-		return err
-	}
-	// publish
-	err = publishApi(ingressRuleCreator, apiId, token)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createApi (ingRuleCreator *IngressRuleCreator, token string, ingSpec *vickingressv1.IngressSpec) (string, error) {
-	createApiPayload, err := createApiCreationPayload(ingSpec)
+func (ingRuleCreator *IngressRuleCreator) CreateApi (httpCaller HttpCaller,
+														ingSpec *vickingressv1.IngressSpec) (string, error) {
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", err
 	}
-
-	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
-		ingRuleCreator.IngressConfig.ApiVersion + apisPath, bytes.NewBuffer([]byte(createApiPayload)))
-	if err != nil {
-		return "", err
-	}
-	request.Header.Set("Authorization", "Bearer " + token)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return "", err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return "", errors.New("response is not of type *http.Response")
 	}
 	defer response.Body.Close()
 	// read response
@@ -292,51 +207,14 @@ func createApi (ingRuleCreator *IngressRuleCreator, token string, ingSpec *vicki
 	}
 }
 
-func (ingRuleCreator *IngressRuleCreator) UpdateApi (token string, ingSpec *vickingressv1.IngressSpec) error {
-	err, apiId := getApiId(ingressRuleCreator, ingSpec.Context, ingSpec.Version, token)
-	if err != nil {
-		return err
-	}
-	if isEmpty(apiId) {
-		glog.Infof("API with context %s and version %s" , ingSpec.Context, ingSpec.Version +
-			" not found, unable to update")
-		return nil
-	}
-
-	err = validateAndSetDefaults(ingSpec)
-	if err != nil {
-		return err
-	}
-	// update
-	apiId, err = updateApi(ingressRuleCreator, token, ingSpec, apiId)
-	if err != nil {
-		return err
-	}
-	// publish
-	err = publishApi(ingressRuleCreator, apiId, token)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func updateApi (ingRuleCreator *IngressRuleCreator, token string, ingSpec *vickingressv1.IngressSpec, apiId string) (string, error) {
-	createApiPayload, err := createApiCreationPayload(ingSpec)
+func (ingRuleCreator *IngressRuleCreator) UpdateApi (httpCaller HttpCaller,
+												ingSpec *vickingressv1.IngressSpec) (string, error) {
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", err
 	}
-	request, err := http.NewRequest("PUT", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
-		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "/" + apiId, bytes.NewBuffer([]byte(createApiPayload)))
-	if err != nil {
-		return "", err
-	}
-	request.Header.Set("Authorization", "Bearer " + token)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return "", err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return "", errors.New("response is not of type *http.Response")
 	}
 	defer response.Body.Close()
 	// read response
@@ -344,7 +222,6 @@ func updateApi (ingRuleCreator *IngressRuleCreator, token string, ingSpec *vicki
 	if err != nil {
 		return "", err
 	}
-
 	if response.StatusCode == 200 {
 		// api created successfully
 		glog.Infof("Api with name: %s, context: %s, version: %s updated successfully", ingSpec.Name,
@@ -372,11 +249,26 @@ func updateApi (ingRuleCreator *IngressRuleCreator, token string, ingSpec *vicki
 	}
 }
 
-func getApiId (ingRuleCreator *IngressRuleCreator, context string, version string, token string) (error,string) {
+func (ingRuleCreator *IngressRuleCreator) GetApiId (httpCaller HttpCaller, context string,
+																			version string) (string,error) {
 
-	searchApiRes, err := searchApis(ingRuleCreator, context, token)
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
-		return err, ""
+		return "", err
+	}
+	response, ok := resp.(*http.Response) ; if !ok {
+		return "", errors.New("response is not of type *http.Response")
+	}
+	defer response.Body.Close()
+	// read response
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+	var searchApiRes searchApiResult
+	err = json.Unmarshal(body, &searchApiRes)
+	if err != nil {
+		return "", err
 	}
 
 	for _, result := range searchApiRes.List {
@@ -384,91 +276,35 @@ func getApiId (ingRuleCreator *IngressRuleCreator, context string, version strin
 			// api with this particular context and version exists
 			glog.Infof("API found with id %s, context %s, and version %s , " + "starting to delete",
 				result.Id, context, version)
-			return nil, result.Id
+			return result.Id, nil
 		}
 	}
 	glog.Infof("API with context %s and version %s" , context, version + " not found, unable to delete")
-	return nil, ""
+	return "", nil
 }
 
-func (ingRuleCreator *IngressRuleCreator) DeleteApi (token string, ingSpec *vickingressv1.IngressSpec) error {
-	err, apiId := getApiId(ingressRuleCreator, ingSpec.Context, ingSpec.Version, token)
+func (ingRuleCreator *IngressRuleCreator) DeleteApi (httpCaller HttpCaller, apiId string) error {
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return err
 	}
-	if isEmpty(apiId) {
-		glog.Infof("API with context %s and version %s" , ingSpec.Context, ingSpec.Version +
-			" not found, unable to delete")
-		return nil
-	}
-	return deleteApi(ingressRuleCreator, apiId, token)
-}
-
-func deleteApi (ingRuleCreator *IngressRuleCreator, apiId string, token string) error {
-	request, err := http.NewRequest("DELETE", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
-		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "/" + apiId, nil)
-	if err != nil {
-		return err
-	}
-	request.Header.Set("Authorization", "Bearer " + token)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return errors.New("response is not of type *http.Response")
 	}
 	response.Body.Close()
 	glog.Infof("Api with id %s deleted", apiId)
 	return nil
 }
 
-func searchApis (ingRuleCreator *IngressRuleCreator, context string, token string) (searchApiResult, error) {
-
-	var searchApiRes searchApiResult
-	request, err := http.NewRequest("GET", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
-		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "?query=context:" + context, nil)
-	if err != nil {
-		return searchApiRes, err
-	}
-	request.Header.Set("Authorization", "Bearer " + token)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return searchApiRes, err
-	}
-	defer response.Body.Close()
-	// read response
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return searchApiRes, err
-	}
-	err = json.Unmarshal(body, &searchApiRes)
-	if err != nil {
-		return searchApiRes, err
-	}
-
-	return searchApiRes, nil
-}
-
-func publishApi (ingRuleCreator *IngressRuleCreator, apiId string, token string) error {
-
+func (ingRuleCreator *IngressRuleCreator) PublishApi (httpCaller HttpCaller, apiId string) error {
 
 	glog.Infof("Going to publish the API: %s", apiId)
-	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
-		ingRuleCreator.IngressConfig.ApiVersion + lifecylePath + "?apiId=" + apiId + "&action=Publish", nil)
+	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return err
 	}
-	request.Header.Set("Authorization", "Bearer " + token)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	// perform the http request
-	response, err := ingRuleCreator.HttpClient.Do(request)
-	if err != nil {
-		return err
+	response, ok := resp.(*http.Response) ; if !ok {
+		return errors.New("response is not of type *http.Response")
 	}
 	defer response.Body.Close()
 
