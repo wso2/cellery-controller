@@ -29,22 +29,14 @@ const styles = (theme) => ({
     }
 });
 
-class ControlPlane extends React.Component {
-
-    render() {
-        const {classes} = this.props;
-
-        return (
-            <React.Fragment>
-                <TopToolbar title={"Control Plane Metrics"}/>
-                <Paper className={classes.root}>
-                    Graphs
-                </Paper>
-            </React.Fragment>
-        );
-    }
-
-}
+const ControlPlane = (props) => (
+    <React.Fragment>
+        <TopToolbar title={"Control Plane Metrics"}/>
+        <Paper className={props.classes.root}>
+            Graphs
+        </Paper>
+    </React.Fragment>
+);
 
 ControlPlane.propTypes = {
     classes: PropTypes.object.isRequired

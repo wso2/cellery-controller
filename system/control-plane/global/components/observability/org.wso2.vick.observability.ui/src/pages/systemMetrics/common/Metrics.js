@@ -18,18 +18,12 @@
 
 import React from "react";
 
-class Metrics extends React.Component {
-
-    render() {
-        return (
-            <React.Fragment>
-                <div>
-                    Usage Graphs
-                </div>
-            </React.Fragment>
-        );
-    }
-
-}
+const Metrics = () => (
+    <React.Fragment>
+        <div>
+            Usage Graphs
+        </div>
+    </React.Fragment>
+);
 
 export default (Metrics);

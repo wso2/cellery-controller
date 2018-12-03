@@ -50,51 +50,47 @@ const styles = (theme) => ({
     }
 });
 
-class Details extends React.Component {
-
-    render = () => {
-        const {classes} = this.props;
-        return (
-            <React.Fragment>
-                <Table className={classes.table}>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Namespace
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <Typography>
-                                    Default
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Health
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <CheckCircleOutline className={classes.successIcon}/>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-                <div className={classes.dependencies}>
-                    <Typography color="textSecondary" className={classes.subtitle}>
-                        Dependencies
-                    </Typography>
-                    <div className={classes.diagram}>
-                        <DependencyDiagram></DependencyDiagram>
-                    </div>
+const Details = (props) => {
+    const {classes} = props;
+    return (
+        <React.Fragment>
+            <Table className={classes.table}>
+                <TableBody>
+                    <TableRow>
+                        <TableCell className={classes.tableCell}>
+                            <Typography color="textSecondary">
+                                Namespace
+                            </Typography>
+                        </TableCell>
+                        <TableCell className={classes.tableCell}>
+                            <Typography>
+                                Default
+                            </Typography>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className={classes.tableCell}>
+                            <Typography color="textSecondary">
+                                Health
+                            </Typography>
+                        </TableCell>
+                        <TableCell className={classes.tableCell}>
+                            <CheckCircleOutline className={classes.successIcon}/>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+            <div className={classes.dependencies}>
+                <Typography color="textSecondary" className={classes.subtitle}>
+                    Dependencies
+                </Typography>
+                <div className={classes.diagram}>
+                    <DependencyDiagram></DependencyDiagram>
                 </div>
-            </React.Fragment>
-        );
-    };
-
-}
+            </div>
+        </React.Fragment>
+    );
+};
 
 Details.propTypes = {
     classes: PropTypes.object.isRequired

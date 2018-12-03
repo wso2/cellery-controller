@@ -492,7 +492,7 @@
         "react/no-direct-mutation-state": "error",
         "react/no-unsafe": "error",
         "react/prefer-es6-class": "error",
-        "react/prefer-stateless-function": "off",
+        "react/prefer-stateless-function": "error",
         "react/require-render-return": "error",
         "react/style-prop-object": "error",
         "react/sort-comp": [

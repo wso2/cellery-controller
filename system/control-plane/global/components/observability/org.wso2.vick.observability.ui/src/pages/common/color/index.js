@@ -16,6 +16,8 @@
  * under the License.
  */
 
+/* eslint react/prefer-stateless-function: ["off"] */
+
 import ColorGenerator from "./colorGenerator";
 import PropTypes from "prop-types";
 import React from "react";

@@ -16,6 +16,8 @@
  * under the License.
  */
 
+/* eslint react/prefer-stateless-function: ["off"] */
+
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
 import Grid from "@material-ui/core/Grid/Grid";
 import PropTypes from "prop-types";
