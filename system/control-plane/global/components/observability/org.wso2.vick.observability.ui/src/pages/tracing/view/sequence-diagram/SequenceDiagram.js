@@ -23,6 +23,7 @@ import mermaid, {mermaidAPI} from 'mermaid';
 import $ from 'jquery';
 import TracingUtils from "../../utils/tracingUtils";
 import Span from "../../utils/span";
+import Constants from "../../utils/constants";
 
 class SequenceDiagram extends Component {
     constructor(props){
@@ -56,9 +57,13 @@ class SequenceDiagram extends Component {
         _this.testFoo2();
 
         interact('.messageText').on('tap', function (event) {
-            _this.testFoo3(event.srcElement.innerHTML);
+            if (event.srcElement.innerHTML !== "Return"){
+                _this.testFoo3(event.srcElement.innerHTML);
+            }
+
         });
         console.log(this.props.spans);
+        console.log
     }
     componentDidUpdate(){
         setTimeout(()=>{
@@ -67,13 +72,23 @@ class SequenceDiagram extends Component {
         mermaid.init($("#mems"));
     }
 
-    testFoo3(spanData){
-        let index = findSpanIndex(this.props.spans,spanData);
+    testFoo3(span){
+        let index = findSpanIndex(this.props.spans,span);
         let _this = this;
+        let data2 = drawSpan(this.props.spans[index]);
+
+            copyArr = copyArr.reverse();
+            for (let k = 0; k < copyArr.length; k++) {
+                data2 += copyArr[k].from +  " -->>- "+ copyArr[k].to + ": Finish Span \n";
+            }
+            console.log(data2);
+
+
         this.setState({
-           config: drawSpan(this.props.spans[index]),
+           config: data2,
             heading : "Span - level Sequence"
         });
+
     }
 
     testFoo2() {
@@ -174,6 +189,7 @@ function checkDraw(span, data) {
         }
     }
 }
+var copyArr =[];
 
 function removeDash(cellName){
     if(cellName.includes("-")){
@@ -185,8 +201,8 @@ function removeDash(cellName){
 }
 
 function drawSpan(span){
-        if(!Boolean(span.children)){
-            alert("No further drill downs");
+        if(span.children === null){
+          console.log("dsdsfdsf")
         }
         else {
             const children = [];
@@ -199,7 +215,7 @@ function drawSpan(span){
             }
             iterateChildSpan(children);
         }
-        console.log(spanData);
+
     return spanData;
 }
 function iterateChildSpan(childrenArr) {
@@ -217,18 +233,33 @@ function iterateChildSpan(childrenArr) {
                 break;
             }
             else {
-                spanData += childrenArr[i].parent.spanId+" ->> " + childrenArr[i].spanId+": "+ childrenArr[i].serviceName + "\n";
+                if (childrenArr[i].parent.kind !== Constants.Span.Kind.CLIENT) {
+                    spanData += childrenArr[i].parent.spanId + " ->>+ " + childrenArr[i].spanId + ": " + childrenArr[i].serviceName + "\n";
+                    var jsonObj = {
+                        "from": childrenArr[i].spanId,
+                        "to": childrenArr[i].parent.spanId
+                    };
+                    copyArr.push(jsonObj);
+                }
             }
         }
 
         drawSpan(childrenArr[i]);
     }
+
 }
 function findSpanIndex(data,val){
     var index = data.findIndex(function(item){
         return item.getUniqueId() === val
     });
     return index;
+}
+
+function returnPath() {
+    copyArr = copyArr.reverse();
+    for (let k = 1; k < copyArr.length; k++) {
+            spanData += copyArr[k].from + "-->>"+ copyArr[k].to + ": Finish Span ";
+    }
 }
 
 export default SequenceDiagram;
