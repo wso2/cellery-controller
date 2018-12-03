@@ -292,7 +292,12 @@ func (ingRuleCreator *IngressRuleCreator) DeleteApi (httpCaller HttpCaller, apiI
 		return errors.New("response is not of type *http.Response")
 	}
 	response.Body.Close()
-	glog.Infof("Api with id %s deleted", apiId)
+	if response.StatusCode == 200 {
+		glog.Infof("Api with id %s deleted", apiId)
+	} else {
+		return errors.New("Api deletion failed for id: " + apiId + ", status code: " +
+			strconv.Itoa(response.StatusCode))
+	}
 	return nil
 }
 

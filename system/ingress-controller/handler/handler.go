@@ -24,7 +24,7 @@ type IngressHandler struct{}
 
 // Init handles any handler initialization
 func (t *IngressHandler) Init() error {
-	ingressConfig, err := config.GetIngressConfigs("/home/isuru/go/src/izza.org/vick-ingress/gw.json")
+	ingressConfig, err := config.GetIngressConfigs("/etc/gw.json")
 	if err != nil {
 		return err
 	}
