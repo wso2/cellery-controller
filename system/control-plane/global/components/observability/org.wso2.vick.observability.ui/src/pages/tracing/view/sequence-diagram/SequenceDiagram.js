@@ -77,12 +77,13 @@ class SequenceDiagram extends Component {
         console.log(this.props.spans);
         console.log(this.props.clicked);
     }
-    componentDidUpdate() {
-        setTimeout(()=>{
-            $('#mems').removeAttr("data-processed");
-        },1000);
+    componentDidUpdate(prevProps, prevState) {
 
-        mermaid.init($("#mems"));
+      if (this.state.config !== prevState.config) {
+              $('#mems').removeAttr("data-processed");
+          mermaid.init($("#mems"));
+      }
+
     }
 
     testFoo3(span){
