@@ -20,7 +20,7 @@ import "react-datetime/css/react-datetime.css";
 import Button from "@material-ui/core/Button/Button";
 import Checkbox from "@material-ui/core/Checkbox/Checkbox";
 import Collapse from "@material-ui/core/Collapse";
-import Constants from "./constants";
+import Constants from "../constants";
 import Datetime from "react-datetime";
 import Divider from "@material-ui/core/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
@@ -28,7 +28,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel/FormControlLabe
 import Grid from "@material-ui/core/Grid/Grid";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import PropTypes from "prop-types";
-import QueryUtils from "./utils/queryUtils";
+import QueryUtils from "../utils/queryUtils";
 import React from "react";
 import TextField from "@material-ui/core/TextField/TextField";
 import Typography from "@material-ui/core/Typography/Typography";
@@ -139,18 +139,9 @@ class DateRangePicker extends React.Component {
             dateRangeNickname: props.dateRangeNickname,
             lastFocussedDateRangeInput: undefined
         };
-
-        this.getCustomDateRangeInputChangeHandler = this.getCustomDateRangeInputChangeHandler.bind(this);
-        this.getCustomCalendarChangeHandler = this.getCustomCalendarChangeHandler.bind(this);
-        this.getDefaultRangeClickEventHandler = this.getDefaultRangeClickEventHandler.bind(this);
-        this.applyDateRange = this.applyDateRange.bind(this);
-        this.onCustomRangeApply = this.onCustomRangeApply.bind(this);
-        this.onIsRangeToNowCheckBoxClick = this.onIsRangeToNowCheckBoxClick.bind(this);
-        this.onFromDateRangeInputFocus = this.onFromDateRangeInputFocus.bind(this);
-        this.onToDateRangeInputFocus = this.onToDateRangeInputFocus.bind(this);
     }
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         const {
             isRangeFromCalendarOpen, isRangeToCalendarOpen, isRangeToNow, startTime, endTime, dateRangeNickname,
@@ -279,7 +270,7 @@ class DateRangePicker extends React.Component {
                 </Grid>
             </div>
         );
-    }
+    };
 
     /**
      * Get a change handler for a date range input.
@@ -287,7 +278,7 @@ class DateRangePicker extends React.Component {
      * @param {string} type One of startTime or endTime
      * @returns {Function} The range change handler
      */
-    getCustomDateRangeInputChangeHandler(type) {
+    getCustomDateRangeInputChangeHandler = (type) => {
         const self = this;
         return (event) => {
             const newDate = event.target.value;
@@ -296,7 +287,7 @@ class DateRangePicker extends React.Component {
                 isRangeToNow: type === "endTime" ? newDate.trim() === "now" : prevState.isRangeToNow
             }));
         };
-    }
+    };
 
     /**
      * Get a change handler for a calendar.
@@ -304,7 +295,7 @@ class DateRangePicker extends React.Component {
      * @param {string} type One of startTime or endTime
      * @returns {Function} The calendar date change handler
      */
-    getCustomCalendarChangeHandler(type) {
+    getCustomCalendarChangeHandler = (type) => {
         const self = this;
         return (date) => {
             self.setState((prevState) => ({
@@ -312,7 +303,7 @@ class DateRangePicker extends React.Component {
                 isRangeToNow: type === "endTime" ? false : prevState.isRangeToNow
             }));
         };
-    }
+    };
 
     /**
      * Get an event handler for default range select.
@@ -320,7 +311,7 @@ class DateRangePicker extends React.Component {
      * @param {string} defaultRange The selected default range
      * @returns {Function} The event handler for the default range select
      */
-    getDefaultRangeClickEventHandler(defaultRange) {
+    getDefaultRangeClickEventHandler = (defaultRange) => {
         const self = this;
         return () => {
             const startTime = this.DEFAULT_RANGES[defaultRange].from;
@@ -338,49 +329,49 @@ class DateRangePicker extends React.Component {
             });
             this.applyDateRange(startTime, endTime, dateRangeNickname);
         };
-    }
+    };
 
     /**
      * Handle the custom range apply button click.
      */
-    onCustomRangeApply() {
+    onCustomRangeApply = () => {
         this.applyDateRange();
-    }
+    };
 
     /**
      * Handle the user clicking on the range is to now checkbox.
      *
      * @param {SyntheticEvent} event The checkbox click event
      */
-    onIsRangeToNowCheckBoxClick(event) {
+    onIsRangeToNowCheckBoxClick = (event) => {
         const isChecked = event.target.checked;
         this.setState((prevState) => ({
             isRangeToNow: isChecked,
             endTime: isChecked ? "now" : prevState.endTime
         }));
-    }
+    };
 
     /**
      * Open the date range from calendar.
      */
-    onFromDateRangeInputFocus() {
+    onFromDateRangeInputFocus = () => {
         this.setState({
             isRangeFromCalendarOpen: true,
             isRangeToCalendarOpen: false,
             lastFocussedDateRangeInput: this.DATE_RANGE_FROM
         });
-    }
+    };
 
     /**
      * Open the date range to calendar.
      */
-    onToDateRangeInputFocus() {
+    onToDateRangeInputFocus = () => {
         this.setState({
             isRangeFromCalendarOpen: false,
             isRangeToCalendarOpen: true,
             lastFocussedDateRangeInput: this.DATE_RANGE_TO
         });
-    }
+    };
 
     /**
      * Handle on date range apply event.
@@ -389,7 +380,7 @@ class DateRangePicker extends React.Component {
      * @param {string} newEndTime The new end time to be applied
      * @param {string} newDateRangeNickname The new date range nickname to be applied
      */
-    applyDateRange(newStartTime = "", newEndTime = "", newDateRangeNickname = "") {
+    applyDateRange = (newStartTime = "", newEndTime = "", newDateRangeNickname = "") => {
         const {onRangeChange} = this.props;
         const {startTime, endTime} = this.state;
 
@@ -398,7 +389,7 @@ class DateRangePicker extends React.Component {
             newEndTime ? newEndTime : endTime,
             newDateRangeNickname ? newDateRangeNickname : null
         );
-    }
+    };
 
 }
 

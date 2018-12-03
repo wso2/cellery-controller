@@ -18,7 +18,7 @@
 
 import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
-import {ColorGeneratorConstants} from "../common/color";
+import {ColorGenerator} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -34,11 +34,10 @@ import SearchResult from "./SearchResult";
 import Select from "@material-ui/core/Select/Select";
 import Span from "./utils/span";
 import TextField from "@material-ui/core/TextField/TextField";
-import TopToolbar from "../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography/Typography";
-import {withConfig} from "../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {ConfigConstants, ConfigHolder} from "../common/config/configHolder";
+import withGlobalState, {StateHolder} from "../common/state";
 
 const styles = (theme) => ({
     container: {
@@ -65,9 +64,6 @@ const styles = (theme) => ({
     }
 });
 
-/**
- * Trace Search.
- */
 class Search extends React.Component {
 
     constructor(props) {
@@ -86,9 +82,9 @@ class Search extends React.Component {
                 microservice: queryParams.microservice ? queryParams.microservice : Search.Constants.ALL_VALUE,
                 operation: queryParams.operation ? queryParams.operation : Search.Constants.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
-                minDuration: queryParams.minDuration ? queryParams.minDuration : "",
+                minDuration: queryParams.minDuration ? queryParams.minDuration : undefined,
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
-                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : "",
+                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : undefined,
                 maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
             },
             metaData: {
@@ -98,15 +94,9 @@ class Search extends React.Component {
             hasSearchCompleted: false,
             searchResults: []
         });
-
-        this.loadCellData = this.loadCellData.bind(this);
-        this.getChangeHandler = this.getChangeHandler.bind(this);
-        this.handleTagsChange = this.handleTagsChange.bind(this);
-        this.search = this.search.bind(this);
-        this.onSearchButtonClick = this.onSearchButtonClick.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         const {location} = this.props;
         const queryParams = HttpUtils.parseQueryParams(location.search);
         let isQueryParamsEmpty = true;
@@ -117,11 +107,11 @@ class Search extends React.Component {
         }
 
         if (!isQueryParamsEmpty) {
-            this.search();
+            this.search(true);
         }
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes} = this.props;
         const {data, filter, metaData, hasSearchCompleted, searchResults} = this.state;
 
@@ -138,7 +128,7 @@ class Search extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
+                <TopToolbar title={"Distributed Tracing"} onUpdate={this.onGlobalRefresh}/>
                 <Paper className={classes.container}>
                     <Typography variant="h6" color="inherit" className={classes.subheading}>
                         Search Traces
@@ -260,9 +250,9 @@ class Search extends React.Component {
                 </Paper>
             </React.Fragment>
         );
-    }
+    };
 
-    onSearchButtonClick() {
+    onSearchButtonClick = () => {
         const {history, match, location} = this.props;
         const {filter} = this.state;
 
@@ -275,28 +265,35 @@ class Search extends React.Component {
             ...location.state
         });
 
-        this.search();
-    }
+        this.search(true);
+    };
+
+    onGlobalRefresh = (isUserAction) => {
+        if (this.state.hasSearchCompleted) {
+            this.search(isUserAction);
+        }
+        this.loadCellData(isUserAction && !this.state.hasSearchCompleted);
+    };
 
     /**
      * Search for traces.
      * Call the backend and search for traces.
      *
-     * @param {boolean} showOverlay Show the overlay while loading
+     * @param {boolean} isUserAction Show the overlay while loading
      */
-    loadCellData(showOverlay) {
-        const {config} = this.props;
+    loadCellData = (isUserAction) => {
+        const {globalState} = this.props;
         const self = this;
 
-        if (showOverlay) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Information", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
         HttpUtils.callBackendAPI(
             {
                 url: "/cells",
                 method: "POST"
             },
-            config
+            globalState
         ).then((data) => {
             const cells = [];
             const microservices = [];
@@ -338,11 +335,20 @@ class Search extends React.Component {
                     operations: operations
                 }
             }));
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load Cell Data",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
     /**
      * Get the on change handler for a particular state filter attribute.
@@ -350,26 +356,22 @@ class Search extends React.Component {
      * @param {string} name The name of the filter
      * @returns {Function} The on change handler
      */
-    getChangeHandler(name) {
-        const self = this;
-        return (event) => {
-            const newValue = event.target.value;
-            self.setState(Search.generateValidState({
-                ...this.state,
-                filter: {
-                    ...this.state.filter,
-                    [name]: newValue
-                }
-            }));
-        };
-    }
+    getChangeHandler = (name) => (event) => {
+        this.setState((prevState) => Search.generateValidState({
+            ...prevState,
+            filter: {
+                ...prevState.filter,
+                [name]: event.target.value
+            }
+        }));
+    };
 
     /**
      * Handle the tags changing in the search.
      *
      * @param {Array.<string>} chips The chips in the tag search input
      */
-    handleTagsChange(chips) {
+    handleTagsChange = (chips) => {
         const parseChip = (chip) => {
             const chipContent = chip.split("=");
             return {
@@ -399,13 +401,13 @@ class Search extends React.Component {
                 tags: tags
             }
         }));
-    }
+    };
 
-    search() {
+    search = (isUserAction) => {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = this.state.filter;
-        const {config} = this.props;
+        const {globalState} = this.props;
         const self = this;
 
         // Build search object
@@ -422,18 +424,20 @@ class Search extends React.Component {
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
         addSearchParam("queryStartTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).startTime).valueOf());
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
         addSearchParam("queryEndTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).endTime).valueOf());
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
 
-        NotificationUtils.showLoadingOverlay("Searching for Traces", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing/search",
                 method: "POST",
                 data: search
             },
-            config
+            globalState
         ).then((data) => {
             const traces = {};
             for (let i = 0; i < data.length; i++) {
@@ -467,9 +471,9 @@ class Search extends React.Component {
 
                         let cellNameKey;
                         if (span.isFromVICKSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.VICK;
+                            cellNameKey = ColorGenerator.VICK;
                         } else if (span.isFromIstioSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.ISTIO;
+                            cellNameKey = ColorGenerator.ISTIO;
                         } else {
                             cellNameKey = cell.name;
                         }
@@ -508,11 +512,20 @@ class Search extends React.Component {
                 hasSearchCompleted: true,
                 searchResults: searchResults
             }));
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to search for Traces",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
     /**
      * Current state from which the new valid state should be generated.
@@ -520,7 +533,7 @@ class Search extends React.Component {
      * @param {Object} state The current state
      * @returns {Object} The new valid state
      */
-    static generateValidState(state) {
+    static generateValidState = (state) => {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
@@ -558,7 +571,7 @@ class Search extends React.Component {
                 availableOperations: availableOperations
             }
         };
-    }
+    };
 
 }
 
@@ -577,7 +590,7 @@ Search.propTypes = {
     match: PropTypes.shape({
         url: PropTypes.string.isRequired
     }).isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(withConfig(Search));
+export default withStyles(styles)(withGlobalState(Search));

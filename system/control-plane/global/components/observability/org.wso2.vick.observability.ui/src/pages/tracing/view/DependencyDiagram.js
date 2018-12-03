@@ -17,15 +17,14 @@
  */
 
 import "./DependencyDiagram.css";
-import {ColorGenerator} from "../../common/color/colorGenerator";
-import Constants from "../utils/constants";
+import Constants from "../../common/constants";
 import {Graph} from "react-d3-graph";
 import PropTypes from "prop-types";
 import React from "react";
 import Span from "../utils/span";
 import TracingUtils from "../utils/tracingUtils";
 import {withStyles} from "@material-ui/core";
-import {ColorGeneratorConstants, withColor} from "../../common/color/index";
+import withColor, {ColorGenerator} from "../../common/color";
 
 const styles = () => ({
     graph: {
@@ -34,92 +33,88 @@ const styles = () => ({
     }
 });
 
-class DependencyDiagram extends React.Component {
+const DependencyDiagram = (props) => {
+    const {classes, spans, colorGenerator} = props;
+    const rootSpan = TracingUtils.buildTree(spans);
 
-    render() {
-        const {classes, spans, colorGenerator} = this.props;
-        const rootSpan = TracingUtils.buildTree(spans);
-
-        const nodeIdList = [];
-        const nodes = [];
-        const links = [];
-        const addNodeIfNotPresent = (span) => {
-            if (!nodeIdList.includes(span.serviceName)) {
-                // Finding the proper color for this item
-                let colorKey = span.cell ? span.cell.name : null;
-                if (!colorKey) {
-                    if (span.componentType === Constants.Span.ComponentType.VICK) {
-                        colorKey = ColorGeneratorConstants.VICK;
-                    } else if (span.componentType === Constants.Span.ComponentType.ISTIO) {
-                        colorKey = ColorGeneratorConstants.ISTIO;
-                    } else {
-                        colorKey = span.componentType;
-                    }
+    const nodeIdList = [];
+    const nodes = [];
+    const links = [];
+    const addNodeIfNotPresent = (span) => {
+        if (!nodeIdList.includes(span.serviceName)) {
+            // Finding the proper color for this item
+            let colorKey = span.cell ? span.cell.name : null;
+            if (!colorKey) {
+                if (span.componentType === Constants.ComponentType.VICK) {
+                    colorKey = ColorGenerator.VICK;
+                } else if (span.componentType === Constants.ComponentType.ISTIO) {
+                    colorKey = ColorGenerator.ISTIO;
+                } else {
+                    colorKey = span.componentType;
                 }
-                const color = colorGenerator.getColor(colorKey);
-
-                nodeIdList.push(span.serviceName);
-                nodes.push({
-                    id: span.serviceName,
-                    color: color,
-                    size: span.duration
-                });
             }
+            const color = colorGenerator.getColor(colorKey);
+
+            nodeIdList.push(span.serviceName);
+            nodes.push({
+                id: span.serviceName,
+                color: color,
+                size: span.duration
+            });
+        }
+    };
+    const addLink = (sourceSpan, destinationSpan) => {
+        const link = {
+            source: sourceSpan.serviceName,
+            target: destinationSpan.serviceName
         };
-        const addLink = (sourceSpan, destinationSpan) => {
-            const link = {
-                source: sourceSpan.serviceName,
-                target: destinationSpan.serviceName
-            };
-            if (sourceSpan.hasError() || destinationSpan.hasError()) {
-                link.color = colorGenerator.getColor(ColorGeneratorConstants.ERROR);
-            }
-            links.push(link);
-        };
-        rootSpan.walk((span, data) => {
-            let linkSource = data;
-            if (linkSource && span.kind === Constants.Span.Kind.SERVER) { // Ending link traversing
-                addNodeIfNotPresent(span);
-                addLink(linkSource, span);
-                linkSource = null;
-            } else if (!linkSource && span.kind === Constants.Span.Kind.CLIENT) { // Starting link traversing
-                addNodeIfNotPresent(span);
-                linkSource = span;
-            }
-            return linkSource;
-        }, null);
+        if (sourceSpan.hasError() || destinationSpan.hasError()) {
+            link.color = colorGenerator.getColor(ColorGenerator.ERROR);
+        }
+        links.push(link);
+    };
+    rootSpan.walk((span, data) => {
+        let linkSource = data;
+        if (linkSource && span.kind === Constants.Span.Kind.SERVER) { // Ending link traversing
+            addNodeIfNotPresent(span);
+            addLink(linkSource, span);
+            linkSource = null;
+        } else if (!linkSource && span.kind === Constants.Span.Kind.CLIENT) { // Starting link traversing
+            addNodeIfNotPresent(span);
+            linkSource = span;
+        }
+        return linkSource;
+    }, null);
 
-        return (
-            nodes.length > 0 && links.length > 0
-                ? (
-                    <Graph id={"trace-dependency-graph"} className={classes.graph}
-                        data={{
-                            nodes: nodes,
-                            links: links
-                        }}
-                        config={{
-                            directed: true,
-                            nodeHighlightBehavior: true,
-                            highlightOpacity: 0.2,
-                            node: {
-                                fontSize: 15,
-                                highlightFontSize: 15
-                            },
-                            link: {
-                                strokeWidth: 3,
-                                highlightColor: "#444"
-                            },
-                            d3: {
-                                gravity: -200
-                            }
-                        }}
-                    />
-                )
-                : null
-        );
-    }
-
-}
+    return (
+        nodes.length > 0 && links.length > 0
+            ? (
+                <Graph id={"trace-dependency-graph"} className={classes.graph}
+                    data={{
+                        nodes: nodes,
+                        links: links
+                    }}
+                    config={{
+                        directed: true,
+                        nodeHighlightBehavior: true,
+                        highlightOpacity: 0.2,
+                        node: {
+                            fontSize: 15,
+                            highlightFontSize: 15
+                        },
+                        link: {
+                            strokeWidth: 3,
+                            highlightColor: "#444"
+                        },
+                        d3: {
+                            gravity: -200
+                        }
+                    }}
+                />
+            )
+            : null
+    );
+};
 
 DependencyDiagram.propTypes = {
     classes: PropTypes.object.isRequired,

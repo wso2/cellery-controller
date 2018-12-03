@@ -16,18 +16,12 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import React from "react";
 
-class DependencyDiagram extends Component {
-
-    render() {
-        return (
-            <React.Fragment>
-                Dependency Diagram
-            </React.Fragment>
-        );
-    }
-
-}
+const DependencyDiagram = () => (
+    <React.Fragment>
+        Dependency Diagram
+    </React.Fragment>
+);
 
 export default DependencyDiagram;

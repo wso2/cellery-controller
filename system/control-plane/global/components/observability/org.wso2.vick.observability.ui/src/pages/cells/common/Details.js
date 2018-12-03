@@ -20,13 +20,13 @@ import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import DependencyDiagram from "./DependencyDiagram";
 import Green from "@material-ui/core/colors/green";
 import PropTypes from "prop-types";
+import React from "react";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withStyles} from "@material-ui/core/styles";
-import React, {Component} from "react";
 
 const styles = (theme) => ({
     table: {
@@ -50,51 +50,47 @@ const styles = (theme) => ({
     }
 });
 
-class Details extends Component {
-
-    render() {
-        const {classes} = this.props;
-        return (
-            <React.Fragment>
-                <Table className={classes.table}>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Namespace
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <Typography>
-                                    Default
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Health
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <CheckCircleOutline className={classes.successIcon}/>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-                <div className={classes.dependencies}>
-                    <Typography color="textSecondary" className={classes.subtitle}>
-                        Dependencies
-                    </Typography>
-                    <div className={classes.diagram}>
-                        <DependencyDiagram></DependencyDiagram>
-                    </div>
+const Details = (props) => {
+    const {classes} = props;
+    return (
+        <React.Fragment>
+            <Table className={classes.table}>
+                <TableBody>
+                    <TableRow>
+                        <TableCell className={classes.tableCell}>
+                            <Typography color="textSecondary">
+                                Namespace
+                            </Typography>
+                        </TableCell>
+                        <TableCell className={classes.tableCell}>
+                            <Typography>
+                                Default
+                            </Typography>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className={classes.tableCell}>
+                            <Typography color="textSecondary">
+                                Health
+                            </Typography>
+                        </TableCell>
+                        <TableCell className={classes.tableCell}>
+                            <CheckCircleOutline className={classes.successIcon}/>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+            <div className={classes.dependencies}>
+                <Typography color="textSecondary" className={classes.subtitle}>
+                    Dependencies
+                </Typography>
+                <div className={classes.diagram}>
+                    <DependencyDiagram></DependencyDiagram>
                 </div>
-            </React.Fragment>
-        );
-    }
-
-}
+            </div>
+        </React.Fragment>
+    );
+};
 
 Details.propTypes = {
     classes: PropTypes.object.isRequired

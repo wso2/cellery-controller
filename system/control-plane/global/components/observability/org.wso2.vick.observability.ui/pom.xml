@@ -41,15 +41,16 @@
                 <version>${maven.exec.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>npm install (initialize)</id>
+                        <id>npm install rimraf</id> <!-- To ensure that clean doesn't fail on newly cloned projects -->
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <phase>initialize</phase>
+                        <phase>pre-clean</phase>
                         <configuration>
                             <executable>${npm.executable}</executable>
                             <arguments>
                                 <argument>install</argument>
+                                <argument>rimraf</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -63,7 +64,20 @@
                             <executable>${npm.executable}</executable>
                             <arguments>
                                 <argument>run</argument>
-                                <argument>clean</argument>npm
+                                <argument>clean</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm install (initialize)</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <executable>${npm.executable}</executable>
+                            <arguments>
+                                <argument>install</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -72,7 +86,7 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <phase>validate</phase>
+                        <phase>process-sources</phase>
                         <configuration>
                             <executable>${npm.executable}</executable>
                             <arguments>
@@ -86,7 +100,7 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <phase>generate-resources</phase>
+                        <phase>compile</phase>
                         <configuration>
                             <executable>${npm.executable}</executable>
                             <arguments>

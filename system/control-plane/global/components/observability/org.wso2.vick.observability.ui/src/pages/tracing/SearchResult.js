@@ -16,7 +16,6 @@
  * under the License.
  */
 
-import {ColorGenerator} from "../common/color/colorGenerator";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
@@ -25,9 +24,9 @@ import React from "react";
 import TablePagination from "@material-ui/core/TablePagination/TablePagination";
 import Typography from "@material-ui/core/Typography/Typography";
 import moment from "moment";
-import {withColor} from "../common/color";
 import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withColor, {ColorGenerator} from "../common/color";
 
 const styles = (theme) => ({
     trace: {
@@ -99,24 +98,20 @@ class SearchResult extends React.Component {
             rowsPerPage: 5,
             page: 0
         };
-
-        this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this);
-        this.handleChangePage = this.handleChangePage.bind(this);
-        this.loadTracePage = this.loadTracePage.bind(this);
     }
 
-    handleChangeRowsPerPage(event) {
+    handleChangeRowsPerPage = (event) => {
         const rowsPerPage = event.target.value;
         this.setState({
             rowsPerPage: rowsPerPage
         });
-    }
+    };
 
-    handleChangePage(event, page) {
+    handleChangePage = (event, page) => {
         this.setState({
             page: page
         });
-    }
+    };
 
     /**
      * Load the trace page.
@@ -126,7 +121,7 @@ class SearchResult extends React.Component {
      * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
      * @param {string} microservice The microservice name if a microservice was selected
      */
-    loadTracePage(event, traceId, cellName = "", microservice = "") {
+    loadTracePage = (event, traceId, cellName = "", microservice = "") => {
         event.stopPropagation();
         this.props.history.push({
             pathname: `./id/${traceId}`,
@@ -137,9 +132,9 @@ class SearchResult extends React.Component {
                 }
             }
         });
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes, data, colorGenerator} = this.props;
         const {rowsPerPage, page} = this.state;
 
@@ -239,7 +234,7 @@ class SearchResult extends React.Component {
                     <div>No Results</div>
                 )
         );
-    }
+    };
 
 }
 
