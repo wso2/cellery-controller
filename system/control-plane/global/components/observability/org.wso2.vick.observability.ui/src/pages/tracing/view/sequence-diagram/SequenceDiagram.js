@@ -89,14 +89,34 @@ class SequenceDiagram extends Component {
     testFoo3(span){
         let index = findSpanIndex(this.props.spans,span);
        // let _this = this;
-        let data2 = this.combine(this.props.spans[index]);
+       //  let data2 = this.combine(this.props.spans[index]);
+       //
+       //
+       //      console.log(data2);
 
 
-            console.log(data2);
+       let spanArray = getServices(span,this.props.spans);
+        console.log(spanArray);
 
+        var cellArray =[];
+        for(let i=0;i<spanArray.length;i++){
+                let cellname = removeDash(spanArray[i].serviceName);
+                if (!cellArray.includes(cellname)) {
+                    cellArray.push(cellname);
+                }
+
+        }
+
+
+        let data2 ="sequenceDiagram \n";
+        for (let i=1;i<spanArray.length;i++){
+            data2+= removeDash(spanArray[i-1].serviceName) +" ->> "+ removeDash(spanArray[i].serviceName)+ ": Calls \n";
+        }
+        console.log(data2);
+        //data2 += "activate global\n";
 
         this.setState({
-           config: data2,
+            config: data2,
             heading : "Span - level Sequence"
         });
 
@@ -129,10 +149,7 @@ class SequenceDiagram extends Component {
                 cellArray.push("global") ;
             }
             if(Boolean(spanArray[i].cell)) {
-                let cellname = spanArray[i].cell.name;
-                if (cellname === "stock-options") {
-                    cellname = "stock options";
-                }
+                let cellname = removeDash(spanArray[i].cell.name);
                 if (!cellArray.includes(cellname)) {
                     cellArray.push(cellname);
                 }
@@ -141,6 +158,7 @@ class SequenceDiagram extends Component {
 
         return cellArray;
     }
+
 
     drawCells(){
         let array = this.seperateCells(this.props.spans);
@@ -156,6 +174,7 @@ class SequenceDiagram extends Component {
     }
 
     drawCells2() {
+        let serviceListArr = []
         let tree = TracingUtils.buildTree(this.props.spans);
         var tmp = "";
         tree.walk((span, data) => {
@@ -172,6 +191,10 @@ class SequenceDiagram extends Component {
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
                         tmp += parentCellName + "->>+" + span.cell.name + ":"+ span.getUniqueId()  + "\n";
+
+                    }
+                    else {
+                        serviceListArr.push(span);
                     }
                 }
             }
@@ -190,6 +213,7 @@ class SequenceDiagram extends Component {
             }
         });
         tmp += "deactivate global" ;
+        console.log(serviceListArr);
         return tmp;
     }
 
@@ -274,7 +298,7 @@ function checkDraw(span, data) {
 
 function removeDash(cellName){
     if(cellName.includes("-")){
-        return cellName.replace("-"," ");
+        return cellName.replace(/-/g," ");
     }
     else {
         return cellName;
@@ -334,6 +358,26 @@ function findSpanIndex(data,val){
         return item.getUniqueId() === val
     });
     return index;
+}
+
+function getServices(spanId,arr){
+    let sListarr =[];
+    let span  = arr[findSpanIndex(arr,spanId)];
+    console.log(findSpanIndex(arr,spanId));
+    console.log(span);
+    let cellName = span.getCell().name;
+    console.log(cellName);
+    for (let i = findSpanIndex(arr,spanId);i<arr.length;i++){
+        if (cellName === arr[i].getCell().name){
+            sListarr.push(arr[i]);
+            console.log(i);
+        }
+        else {
+            break;
+        }
+    }
+
+    return sListarr;
 }
 
 export default SequenceDiagram;
