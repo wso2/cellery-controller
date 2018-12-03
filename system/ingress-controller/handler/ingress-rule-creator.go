@@ -164,7 +164,7 @@ func getBasicAuthHeader (username string, password string) (string) {
 }
 
 func (ingRuleCreator *IngressRuleCreator) CreateApi (httpCaller HttpCaller,
-														ingSpec *vickingressv1.IngressSpec) (string, error) {
+	ingSpec *vickingressv1.IngressSpec) (string, error) {
 	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", err
@@ -208,7 +208,7 @@ func (ingRuleCreator *IngressRuleCreator) CreateApi (httpCaller HttpCaller,
 }
 
 func (ingRuleCreator *IngressRuleCreator) UpdateApi (httpCaller HttpCaller,
-												ingSpec *vickingressv1.IngressSpec) (string, error) {
+	ingSpec *vickingressv1.IngressSpec) (string, error) {
 	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
 		return "", err
@@ -250,7 +250,7 @@ func (ingRuleCreator *IngressRuleCreator) UpdateApi (httpCaller HttpCaller,
 }
 
 func (ingRuleCreator *IngressRuleCreator) GetApiId (httpCaller HttpCaller, context string,
-																			version string) (string,error) {
+	version string) (string,error) {
 
 	resp, err := httpCaller.DoHttpCall()
 	if err != nil {
@@ -292,7 +292,12 @@ func (ingRuleCreator *IngressRuleCreator) DeleteApi (httpCaller HttpCaller, apiI
 		return errors.New("response is not of type *http.Response")
 	}
 	response.Body.Close()
-	glog.Infof("Api with id %s deleted", apiId)
+	if response.StatusCode == 200 {
+		glog.Infof("Api with id %s deleted", apiId)
+	} else {
+		return errors.New("Api deletion failed for id: " + apiId + ", status code: " +
+			strconv.Itoa(response.StatusCode))
+	}
 	return nil
 }
 
@@ -477,26 +482,26 @@ func createApiDefinitionPayload(ingSpec *vickingressv1.IngressSpec) (string, err
 	for _, path := range ingSpec.Paths {
 		switch path.Operation {
 		case "POST", "post", "PUT", "put" :
-				apiDefPayloadPaths[path.Context] = map[string]interface{}{
-					path.Operation: map[string]interface{}{
-						"x-auth-type":       path.AuthType,
-						"x-throttling-Tier": path.Tiers,
-						"parameters": []interface{}{
-							map[string]string{
-								"name":     "body",
-								"required": "true",
-								"in":       "body",
-							},
+			apiDefPayloadPaths[path.Context] = map[string]interface{}{
+				path.Operation: map[string]interface{}{
+					"x-auth-type":       path.AuthType,
+					"x-throttling-Tier": path.Tiers,
+					"parameters": []interface{}{
+						map[string]string{
+							"name":     "body",
+							"required": "true",
+							"in":       "body",
 						},
 					},
-				}
+				},
+			}
 		default:
 			apiDefPayloadPaths[path.Context] = map[string]interface{}{
-					path.Operation: map[string]interface{}{
-						"x-auth-type":       path.AuthType,
-						"x-throttling-defaultTier": path.Tiers,
-					},
-				}
+				path.Operation: map[string]interface{}{
+					"x-auth-type":       path.AuthType,
+					"x-throttling-defaultTier": path.Tiers,
+				},
+			}
 		}
 	}
 	buf := new(bytes.Buffer)
@@ -560,4 +565,3 @@ func handleParamNotSpecified (param string) error {
 func handleConfigError (msg string) error {
 	return errors.New(msg)
 }
-
