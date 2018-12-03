@@ -16,21 +16,14 @@
  * under the License.
  */
 
-import MetricsGraphs from "./../MetricsGraphs";
-import React, {Component} from "react";
+import React from "react";
 
-class Metrics extends Component {
+const Metrics = () => (
+    <React.Fragment>
+        <div>
+            Usage Graphs
+        </div>
+    </React.Fragment>
+);
 
-    render() {
-        return (
-            <React.Fragment>
-                <div>Microservice Metrics - filters</div>
-                <MetricsGraphs></MetricsGraphs>
-            </React.Fragment>
-
-        );
-    }
-
-}
-
-export default Metrics;
+export default (Metrics);

@@ -16,7 +16,6 @@
  * under the License.
  */
 
-import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
@@ -29,10 +28,10 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
-import TopToolbar from "../../common/TopToolbar";
+import TopToolbar from "../../common/toptoolbar";
 import TracingUtils from "../utils/tracingUtils";
-import {withConfig} from "../../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withGlobalState, {StateHolder} from "../../common/state";
 
 const styles = (theme) => ({
     container: {
@@ -59,16 +58,20 @@ class View extends React.Component {
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
             isLoading: true
         };
-
-        this.handleTabChange = this.handleTabChange.bind(this);
     }
 
-    componentDidMount() {
-        const {config, match} = this.props;
+    componentDidMount = () => {
+        this.loadTrace(true);
+    };
+
+    loadTrace = (isUserAction) => {
+        const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        NotificationUtils.showLoadingOverlay("Loading trace", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading trace", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing",
@@ -77,7 +80,7 @@ class View extends React.Component {
                     traceId: traceId
                 }
             },
-            config
+            globalState
         ).then((data) => {
             const spans = data.map((dataItem) => new Span(dataItem));
             const rootSpan = TracingUtils.buildTree(spans);
@@ -88,22 +91,40 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
             self.setState({
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    `Failed to fetch Trace with ID ${traceId}`,
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
-    handleTabChange(event, value) {
+    handleTabChange = (event, value) => {
+        const {history, location, match} = this.props;
+
         this.setState({
             selectedTabIndex: value
         });
-    }
 
-    render() {
+        const queryParams = HttpUtils.generateQueryParamString({
+            tab: this.tabs[value]
+        });
+        history.replace(match.url + queryParams, {
+            ...location.state
+        });
+    };
+
+    render = () => {
         const {classes, match} = this.props;
         const {isLoading, spans, selectedTabIndex} = this.state;
 
@@ -111,7 +132,7 @@ class View extends React.Component {
 
         const timeline = <Timeline spans={spans}/>;
         const sequenceDiagram = <SequenceDiagram/>;
-        const dependencyDiagram = <DependencyDiagram/>;
+        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
         return (
@@ -119,44 +140,45 @@ class View extends React.Component {
                 ? null
                 : (
                     <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"}/>
-                        <Paper className={classes.container}>
-                            {
-                                spans && spans.length === 0
-                                    ? (
-                                        <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
-                                    )
-                                    : (
-                                        <React.Fragment>
-                                            <Tabs value={selectedTabIndex} indicatorColor="primary"
-                                                onChange={this.handleTabChange}>
-                                                <Tab label="Timeline"/>
-                                                <Tab label="Sequence Diagram"/>
-                                                <Tab label="Dependency Diagram"/>
-                                            </Tabs>
-                                            {tabContent[selectedTabIndex]}
-                                        </React.Fragment>
-                                    )
-                            }
-                        </Paper>
+                        <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
+                        {
+                            spans && spans.length === 0
+                                ? (
+                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
+                                )
+                                : (
+                                    <Paper className={classes.container}>
+                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
+                                            onChange={this.handleTabChange}>
+                                            <Tab label="Timeline"/>
+                                            <Tab label="Sequence Diagram"/>
+                                            <Tab label="Dependency Diagram"/>
+                                        </Tabs>
+                                        {tabContent[selectedTabIndex]}
+                                    </Paper>
+                                )
+                        }
                     </React.Fragment>
                 )
         );
-    }
+    };
 
 }
 
 View.propTypes = {
     classes: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
         }).isRequired
     }).isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired
 };
 
-export default withStyles(styles)(withConfig(View));
+export default withStyles(styles)(withGlobalState(View));

@@ -16,33 +16,45 @@
  * under the License.
  */
 
-const Constants = {};
-
-// Pattern Constants
-{
-    const Pattern = {
-        DATE_TIME: "YYYY-MM-DD HH:mm:ss"
-    };
-
-    // Query Pattern Constants
-    {
-        const Query = {
+const Constants = {
+    Pattern: {
+        DATE_TIME: "YYYY-MM-DD HH:mm:ss",
+        Query: {
             SECONDS: "second(?:s)?",
             MINUTES: "minute(?:s)?",
             HOURS: "hour(?:s)?",
             DAYS: "day(?:s)?",
             MONTHS: "month(?:s)?",
             YEARS: "year(?:s)?"
-        };
-        Query.TIME_UNIT
-            = `${Query.YEARS}|${Query.MONTHS}|${Query.DAYS}|${Query.HOURS}|${Query.MINUTES}|${Query.SECONDS}`;
-        Query.TIME = `([0-9]+)\\s*(${Query.TIME_UNIT})`;
-        Query.RELATIVE_TIME = `^\\s*now\\s*(?:-\\s*(?:${Query.TIME}\\s*)*)?$`;
-
-        Pattern.Query = Query;
+        }
+    },
+    Span: {
+        Kind: {
+            CLIENT: "CLIENT",
+            SERVER: "SERVER",
+            PRODUCER: "PRODUCER",
+            CONSUMER: "CONSUMER"
+        }
+    },
+    Cell: {
+        GATEWAY_NAME_PATTERN: /^src:\d+\.\d+\.\d+\.(.+)_(\d+_\d+_\d+)_.+$/,
+        MICROSERVICE_NAME_PATTERN: /(.+)--(.+)/
+    },
+    System: {
+        ISTIO_MIXER_NAME: "istio-mixer",
+        GLOBAL_GATEWAY_NAME: "global-gateway"
+    },
+    ComponentType: {
+        VICK: "VICK",
+        ISTIO: "Istio",
+        MICROSERVICE: "Microservice"
     }
+};
 
-    Constants.Pattern = Pattern;
-}
+Constants.Pattern.Query.TIME_UNIT = `${Constants.Pattern.Query.YEARS}|${Constants.Pattern.Query.MONTHS}|`
+    + `${Constants.Pattern.Query.DAYS}|${Constants.Pattern.Query.HOURS}|${Constants.Pattern.Query.MINUTES}|`
+    + `${Constants.Pattern.Query.SECONDS}`;
+Constants.Pattern.Query.TIME = `([0-9]+)\\s*(${Constants.Pattern.Query.TIME_UNIT})`;
+Constants.Pattern.Query.RELATIVE_TIME = `^\\s*now\\s*(?:-\\s*(?:${Constants.Pattern.Query.TIME}\\s*)+)?$`;
 
 export default Constants;

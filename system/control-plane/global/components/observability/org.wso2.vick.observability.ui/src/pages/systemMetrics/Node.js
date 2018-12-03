@@ -16,18 +16,93 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import Button from "@material-ui/core/Button";
+import FormControl from "@material-ui/core/FormControl";
+import InputLabel from "@material-ui/core/InputLabel";
+import Metrics from "./common/Metrics";
+import Paper from "@material-ui/core/Paper";
+import PropTypes from "prop-types";
+import React from "react";
+import Select from "@material-ui/core/Select";
+import TopToolbar from "../common/toptoolbar";
+import {withStyles} from "@material-ui/core/styles";
 
-class Node extends Component {
+const styles = (theme) => ({
+    root: {
+        padding: theme.spacing.unit * 3,
+        margin: theme.spacing.unit
+    },
+    filters: {
+        marginBottom: theme.spacing.unit * 4
+    },
+    formControl: {
+        marginRight: theme.spacing.unit * 4,
+        minWidth: 150
+    },
+    graphs: {
+        marginBottom: theme.spacing.unit * 4
+    },
+    button: {
+        marginTop: theme.spacing.unit * 2
+    }
+});
+
+class Node extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedNode: "all"
+        };
+    }
+
+    handleChange = (name) => (event) => {
+        this.setState({
+            [name]: event.target.value
+        });
+    };
 
     render() {
+        const {classes} = this.props;
+        const {selectedNode} = this.state;
+
         return (
-            <div>
-                Node Usage Metrics
-            </div>
+            <React.Fragment>
+                <TopToolbar title={"Node Usage Metrics"}/>
+                <Paper className={classes.root}>
+
+                    <div className={classes.filters}>
+                        <FormControl className={classes.formControl}>
+                            <InputLabel htmlFor="node">Node</InputLabel>
+                            <Select
+                                native
+                                value={selectedNode}
+                                onChange={this.handleChange("node")}
+                                inputProps={{
+                                    name: "node",
+                                    id: "node"
+                                }}
+                            >
+                                <option value="all">All</option>
+                            </Select>
+                        </FormControl>
+                        <Button variant="outlined" size="small" color="primary" className={classes.button}>
+                            Update
+                        </Button>
+                    </div>
+                    <div className={classes.graphs}>
+                        <Metrics/>
+                    </div>
+                </Paper>
+            </React.Fragment>
         );
     }
 
 }
 
-export default Node;
+Node.propTypes = {
+    classes: PropTypes.object.isRequired
+};
+
+export default withStyles(styles)(Node);

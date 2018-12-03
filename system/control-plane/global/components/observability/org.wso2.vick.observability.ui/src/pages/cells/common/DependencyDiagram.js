@@ -16,18 +16,12 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import React from "react";
 
-class MetricsGraphs extends Component {
+const DependencyDiagram = () => (
+    <React.Fragment>
+        Dependency Diagram
+    </React.Fragment>
+);
 
-    render() {
-        return (
-            <React.Fragment>
-                Metrics Graphs
-            </React.Fragment>
-        );
-    }
-
-}
-
-export default MetricsGraphs;
+export default DependencyDiagram;

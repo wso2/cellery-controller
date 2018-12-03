@@ -162,7 +162,10 @@
         "lines-around-directive": "error",
         "lines-between-class-members": [
             "error",
-            "always"
+            "always",
+            {
+                "exceptAfterSingleLine": true
+            }
         ],
         "max-depth": "error",
         "max-len": [
@@ -204,7 +207,6 @@
                 "allowParens": true
             }
         ],
-        "no-continue": "error",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",
         "no-else-return": "error",
@@ -462,18 +464,50 @@
                 "peerDependencies": false
             }
         ],
-        "import/no-unresolved": "off",
+        "import/no-unresolved": "error",
         "import/extensions": ["error", "never"],
         "import/no-named-as-default": "error",
         "import/no-named-as-default-member": "error",
+        "import/default": "error",
+        "import/named": "error",
+        "import/no-webpack-loader-syntax": "error",
+        "import/no-self-import": "error",
+        "import/no-cycle": "error",
+        "import/no-dynamic-require": "error",
+        "import/no-absolute-path": "error",
+        "import/no-useless-path-segments": "error",
         "jsx-a11y/no-static-element-interactions": "off",
         "jsx-a11y/no-noninteractive-element-interactions": "off",
-        "jsx-a11y/anchor-is-valid": "off",      // Due to using React-Router Link components
+        "jsx-a11y/anchor-is-valid": "error",
         "react/jsx-indent": ["error", 4],
         "react/jsx-indent-props": ["error", 4],
-        "jest/prefer-to-be-null": ["error"],
-        "jest/prefer-to-be-undefined": ["error"],
-        "jest/prefer-to-contain": ["error"],
-        "jest/prefer-to-have-length": ["error"]
+        "react/destructuring-assignment": "off",
+        "react/boolean-prop-naming": "error",
+        "react/button-has-type": "error",
+        "react/default-props-match-prop-types": "error",
+        "react/display-name": "error",
+        "react/no-did-mount-set-state": "error",
+        "react/no-did-update-set-state": "error",
+        "react/no-access-state-in-setstate": "error",
+        "react/no-direct-mutation-state": "error",
+        "react/no-unsafe": "error",
+        "react/prefer-es6-class": "error",
+        "react/prefer-stateless-function": "error",
+        "react/require-render-return": "error",
+        "react/style-prop-object": "error",
+        "react/sort-comp": [
+          "off", {
+            "order": [
+              "lifecycle",
+              "render",
+              "everything-else",
+              "static-methods"
+            ]
+          }
+        ],
+        "jest/prefer-to-be-null": "error",
+        "jest/prefer-to-be-undefined": "error",
+        "jest/prefer-to-contain": "error",
+        "jest/prefer-to-have-length": "error"
     }
 }

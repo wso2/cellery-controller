@@ -16,69 +16,79 @@
  * under the License.
  */
 
-import Details from "./Details";
-import Metrics from "./Metrics";
-import Microservices from "./microservices/List";
+import Details from "./common/Details";
+import Grey from "@material-ui/core/colors/grey";
+import Metrics from "./common/Metrics";
+import Microservices from "./common/Table";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import TopToolbar from "../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
     root: {
         flexGrow: 1,
-        width: "100%",
         backgroundColor: theme.palette.background.paper,
-        paddingLeft: theme.spacing.unit * 3,
-        paddingRight: theme.spacing.unit * 3,
-        paddingBottom: theme.spacing.unit * 3
+        padding: theme.spacing.unit * 3,
+        paddingTop: 0,
+        margin: Number(theme.spacing.unit)
     },
     tabs: {
-        paddingBottom: theme.spacing.unit * 3
+        marginBottom: theme.spacing.unit * 2,
+        borderBottomWidth: 1,
+        borderBottomStyle: "solid",
+        borderBottomColor: Grey[200]
     }
 });
 
 class Cell extends React.Component {
 
-    state = {
-        value: 0
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedCell: 0
+        };
+    }
 
     handleChange = (event, value) => {
-        this.setState({value: value});
+        this.setState({
+            selectedCell: value
+        });
     };
 
-    render() {
+    render = () => {
         const {classes} = this.props;
-        const details = <Details></Details>;
-        const microservices = <Microservices></Microservices>;
-        const metrics = <Metrics></Metrics>;
+        const {selectedCell} = this.state;
+
+        const details = <Details/>;
+        const microservices = <Microservices/>;
+        const metrics = <Metrics isHidden={true}/>;
         const tabContent = [details, microservices, metrics];
 
         return (
             <React.Fragment>
                 <TopToolbar title={"Cell Name"} onUpdate={this.loadCellData}/>
                 <Paper className={classes.root}>
-
                     <Tabs
-                        value={this.state.value}
+                        value={selectedCell}
                         onChange={this.handleChange}
                         indicatorColor="primary"
                         textColor="primary"
                         className={classes.tabs}
                     >
-                        <Tab label="DETAILS"/>
-                        <Tab label="MICROSERVICES"/>
-                        <Tab label="METRICS"/>
+                        <Tab label="Details"/>
+                        <Tab label="Microservices"/>
+                        <Tab label="Metrics"/>
                     </Tabs>
-                    {tabContent[this.state.value]}
+                    {tabContent[selectedCell]}
                 </Paper>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

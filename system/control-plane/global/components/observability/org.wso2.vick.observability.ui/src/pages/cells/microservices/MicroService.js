@@ -16,56 +16,66 @@
  * under the License.
  */
 
-import Details from "./Details";
+import Details from "../common/Details";
+import Grey from "@material-ui/core/colors/grey";
 import K8sObjects from "./K8sObjects";
-import Metrics from "./Metrics";
+import Metrics from "../common/Metrics";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import TopToolbar from "../../common/TopToolbar";
+import TopToolbar from "../../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
-
 
 const styles = (theme) => ({
     root: {
         flexGrow: 1,
-        width: "100%",
         backgroundColor: theme.palette.background.paper,
-        paddingLeft: theme.spacing.unit * 3,
-        paddingRight: theme.spacing.unit * 3,
-        paddingBottom: theme.spacing.unit * 3
+        padding: theme.spacing.unit * 3,
+        paddingTop: 0,
+        margin: theme.spacing.unit
     },
     tabs: {
-        paddingBottom: theme.spacing.unit * 3
+        marginBottom: theme.spacing.unit * 2,
+        borderBottomWidth: 1,
+        borderBottomStyle: "solid",
+        borderBottomColor: Grey[200]
     }
 });
 
 class MicroService extends React.Component {
 
-    state = {
-        value: 0
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedMicroservice: 0
+        };
+    }
 
     handleChange = (event, value) => {
-        this.setState({value: value});
+        this.setState({
+            selectedMicroservice: value
+        });
     };
 
     render() {
         const {classes} = this.props;
-        const details = <Details></Details>;
-        const k8sObjects = <K8sObjects></K8sObjects>;
-        const metrics = <Metrics></Metrics>;
+        const {selectedMicroservice} = this.state;
+
+        const details = <Details/>;
+        const k8sObjects = <K8sObjects/>;
+        const metrics = <Metrics/>;
         const tabContent = [details, k8sObjects, metrics];
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Microservice Name"} onUpdate={this.loadMicroserviceData}/>
+                <TopToolbar title={"Microservice Name"}/>
                 <Paper className={classes.root}>
 
                     <Tabs
-                        value={this.state.value}
+                        value={selectedMicroservice}
                         onChange={this.handleChange}
                         indicatorColor="primary"
                         textColor="primary"
@@ -75,7 +85,7 @@ class MicroService extends React.Component {
                         <Tab label="K8S OBJECTS"/>
                         <Tab label="METRICS"/>
                     </Tabs>
-                    {tabContent[this.state.value]}
+                    {tabContent[selectedMicroservice]}
                 </Paper>
             </React.Fragment>
         );

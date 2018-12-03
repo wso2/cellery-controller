@@ -16,18 +16,30 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+import Paper from "@material-ui/core/Paper";
+import PropTypes from "prop-types";
+import React from "react";
+import TopToolbar from "../common/toptoolbar";
+import {withStyles} from "@material-ui/core/styles";
 
-class ControlPlane extends Component {
-
-    render() {
-        return (
-            <div>
-                Control Plane Metrics
-            </div>
-        );
+const styles = (theme) => ({
+    root: {
+        padding: theme.spacing.unit * 3,
+        margin: theme.spacing.unit
     }
+});
 
-}
+const ControlPlane = (props) => (
+    <React.Fragment>
+        <TopToolbar title={"Control Plane Metrics"}/>
+        <Paper className={props.classes.root}>
+            Graphs
+        </Paper>
+    </React.Fragment>
+);
 
-export default ControlPlane;
+ControlPlane.propTypes = {
+    classes: PropTypes.object.isRequired
+};
+
+export default withStyles(styles)(ControlPlane);

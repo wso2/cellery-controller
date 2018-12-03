@@ -28,4 +28,4 @@ spec:
     operation: post
   -
     context: putTest
-    operation: post
+    operation: put

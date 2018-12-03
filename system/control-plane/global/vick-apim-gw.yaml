@@ -56,6 +56,8 @@ spec:
           initialDelaySeconds: 150
           periodSeconds: 10
         imagePullPolicy: Always
+        securityContext:
+          runAsUser: 802
         env:
         - name: ZIPKIN_HOST
           value: "wso2sp-worker.vick-system"

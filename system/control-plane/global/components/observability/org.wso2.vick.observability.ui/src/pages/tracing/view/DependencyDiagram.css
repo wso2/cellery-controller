@@ -16,18 +16,12 @@
  * under the License.
  */
 
-import React, {Component} from "react";
+/**
+ * Overrides for the react-d3-graph library
+ */
 
-class List extends Component {
-
-    render() {
-        return (
-            <React.Fragment>
-                Cell - Microservices
-            </React.Fragment>
-        );
-    }
-
+#trace-dependency-graph-graph-wrapper > svg {
+    position: relative;
+    width: 100% !important;
+    height: 65vh !important;
 }
-
-export default List;
