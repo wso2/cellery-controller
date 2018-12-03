@@ -50,6 +50,16 @@ describe("ConfigHolder", () => {
             expect(loadingState.listeners).toEqual([]);
         }
         {
+            const notificationState = stateHolder.state[StateHolder.NOTIFICATION_STATE];
+            expect(notificationState).not.toBeUndefined();
+            expect(Object.keys(notificationState)).toHaveLength(2);
+            expect(notificationState.value).not.toBeUndefined();
+            expect(notificationState.value.isOpen).not.toBeUndefined();
+            expect(notificationState.value.message).not.toBeUndefined();
+            expect(notificationState.value.notificationLevel).not.toBeUndefined();
+            expect(notificationState.listeners).toEqual([]);
+        }
+        {
             const user = stateHolder.state[StateHolder.USER];
             expect(user).not.toBeUndefined();
             expect(Object.keys(user)).toHaveLength(2);
@@ -71,7 +81,7 @@ describe("ConfigHolder", () => {
             stateHolder.set("key4", null);
             stateHolder.set("key5", undefined);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(9);
+            expect(Object.keys(stateHolder.state)).toHaveLength(10);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -110,7 +120,7 @@ describe("ConfigHolder", () => {
             stateHolder.set("", null);
             stateHolder.set("", undefined);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(5);
+            expect(Object.keys(stateHolder.state)).toHaveLength(6);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -143,7 +153,7 @@ describe("ConfigHolder", () => {
             stateHolder.set("key1", "new-value1");
             stateHolder.set("key2", "new-value2");
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("new-value1");
@@ -197,7 +207,7 @@ describe("ConfigHolder", () => {
             };
             stateHolder.set("key2", "value2");
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -249,7 +259,7 @@ describe("ConfigHolder", () => {
             };
             stateHolder.unset("key1");
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBeNull();
@@ -291,7 +301,7 @@ describe("ConfigHolder", () => {
             stateHolder.unset(null);
             stateHolder.unset(undefined);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(5);
+            expect(Object.keys(stateHolder.state)).toHaveLength(6);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -314,7 +324,7 @@ describe("ConfigHolder", () => {
             stateHolder.unset("key1");
             stateHolder.unset("non-existent-key1");
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(5);
+            expect(Object.keys(stateHolder.state)).toHaveLength(6);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBeNull();
@@ -435,7 +445,7 @@ describe("ConfigHolder", () => {
             };
             stateHolder.addListener("key2", newCallback);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -468,7 +478,7 @@ describe("ConfigHolder", () => {
             };
             stateHolder.addListener("key2", newCallback);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(6);
+            expect(Object.keys(stateHolder.state)).toHaveLength(7);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -506,7 +516,7 @@ describe("ConfigHolder", () => {
             };
             stateHolder.removeListener("key2", key2Callback2);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -551,7 +561,7 @@ describe("ConfigHolder", () => {
             stateHolder.removeListener("non-existent-key2", key2Callback2);
             stateHolder.removeListener("non-existent-key3", key2Callback2);
 
-            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            expect(Object.keys(stateHolder.state)).toHaveLength(8);
             validateInitialState(stateHolder);
             expect(stateHolder.state.key1).not.toBeUndefined();
             expect(stateHolder.state.key1.value).toBe("value1");
@@ -571,15 +581,6 @@ describe("ConfigHolder", () => {
             expect(stateHolder.state.key3.listeners).toHaveLength(2);
             expect(stateHolder.state.key3.listeners[0]).toBe(key3Callback1);
             expect(stateHolder.state.key3.listeners[1]).toBe(key3Callback2);
-        });
-    });
-
-    describe("loadConfig()", () => {
-        it("should return null if the provided key was does not exist and default value was not provided", async () => {
-            const stateHolder = new StateHolder();
-
-            await expect(stateHolder.loadConfig()).resolves.toBeUndefined();
-            expect(Object.keys(stateHolder.state).length > 0).toBe(true);
         });
     });
 });

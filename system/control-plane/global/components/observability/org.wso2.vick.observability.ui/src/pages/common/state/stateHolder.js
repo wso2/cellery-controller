@@ -25,8 +25,15 @@ class StateHolder {
 
     static USER = "user";
     static LOADING_STATE = "loadingState";
+    static NOTIFICATION_STATE = "notificationState";
     static CONFIG = "config";
     static GLOBAL_FILTER = "globalFilter";
+
+    static NotificationLevels = {
+        INFO: "INFO",
+        WARNING: "WARNING",
+        ERROR: "ERROR"
+    };
 
     /**
      * @type {Object}
@@ -40,6 +47,11 @@ class StateHolder {
             loadingState: {
                 isLoading: false,
                 message: null
+            },
+            notificationState: {
+                isOpen: false,
+                message: null,
+                notificationLevel: null
             },
             config: {},
             globalFilter: {

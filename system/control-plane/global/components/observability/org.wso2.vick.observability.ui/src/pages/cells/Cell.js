@@ -77,7 +77,7 @@ class Cell extends React.Component {
                         value={selectedCell}
                         onChange={this.handleChange}
                         indicatorColor="primary"
-                        textColor="primary"selectedCell
+                        textColor="primary"
                         className={classes.tabs}
                     >
                         <Tab label="Details"/>

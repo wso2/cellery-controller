@@ -107,7 +107,7 @@ class Search extends React.Component {
         }
 
         if (!isQueryParamsEmpty) {
-            this.search();
+            this.search(true);
         }
     };
 
@@ -265,27 +265,27 @@ class Search extends React.Component {
             ...location.state
         });
 
-        this.search();
+        this.search(true);
     };
 
-    onGlobalRefresh = (showOverlay) => {
+    onGlobalRefresh = (isUserAction) => {
         if (this.state.hasSearchCompleted) {
-            this.search(showOverlay);
+            this.search(isUserAction);
         }
-        this.loadCellData(!this.state.hasSearchCompleted);
+        this.loadCellData(isUserAction && !this.state.hasSearchCompleted);
     };
 
     /**
      * Search for traces.
      * Call the backend and search for traces.
      *
-     * @param {boolean} showOverlay Show the overlay while loading
+     * @param {boolean} isUserAction Show the overlay while loading
      */
-    loadCellData = (showOverlay) => {
+    loadCellData = (isUserAction) => {
         const {globalState} = this.props;
         const self = this;
 
-        if (showOverlay) {
+        if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
         HttpUtils.callBackendAPI(
@@ -335,12 +335,17 @@ class Search extends React.Component {
                     operations: operations
                 }
             }));
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }).catch(() => {
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load Cell Data",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
             }
         });
     };
@@ -398,7 +403,7 @@ class Search extends React.Component {
         }));
     };
 
-    search = (showOverlay) => {
+    search = (isUserAction) => {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = this.state.filter;
@@ -423,7 +428,7 @@ class Search extends React.Component {
         addSearchParam("queryEndTime",
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
 
-        if (showOverlay) {
+        if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
         }
         HttpUtils.callBackendAPI(
@@ -507,12 +512,17 @@ class Search extends React.Component {
                 hasSearchCompleted: true,
                 searchResults: searchResults
             }));
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }).catch(() => {
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to search for Traces",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
             }
         });
     };

@@ -64,12 +64,12 @@ class View extends React.Component {
         this.loadTrace(true);
     };
 
-    loadTrace = (showOverlay) => {
+    loadTrace = (isUserAction) => {
         const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        if (showOverlay) {
+        if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
         HttpUtils.callBackendAPI(
@@ -91,15 +91,20 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }).catch(() => {
             self.setState({
                 isLoading: false
             });
-            if (showOverlay) {
+            if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    `Failed to fetch Trace with ID ${traceId}`,
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
             }
         });
     };
@@ -136,25 +141,23 @@ class View extends React.Component {
                 : (
                     <React.Fragment>
                         <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
-                        <Paper className={classes.container}>
-                            {
-                                spans && spans.length === 0
-                                    ? (
-                                        <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
-                                    )
-                                    : (
-                                        <React.Fragment>
-                                            <Tabs value={selectedTabIndex} indicatorColor="primary"
-                                                onChange={this.handleTabChange}>
-                                                <Tab label="Timeline"/>
-                                                <Tab label="Sequence Diagram"/>
-                                                <Tab label="Dependency Diagram"/>
-                                            </Tabs>
-                                            {tabContent[selectedTabIndex]}
-                                        </React.Fragment>
-                                    )
-                            }
-                        </Paper>
+                        {
+                            spans && spans.length === 0
+                                ? (
+                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
+                                )
+                                : (
+                                    <Paper className={classes.container}>
+                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
+                                            onChange={this.handleTabChange}>
+                                            <Tab label="Timeline"/>
+                                            <Tab label="Sequence Diagram"/>
+                                            <Tab label="Dependency Diagram"/>
+                                        </Tabs>
+                                        {tabContent[selectedTabIndex]}
+                                    </Paper>
+                                )
+                        }
                     </React.Fragment>
                 )
         );

@@ -45,6 +45,34 @@ class NotificationUtils {
         });
     };
 
+    /**
+     * Show a notification to the user.
+     *
+     * @param {string} message The message to be shown in the notification
+     * @param {string} level The notification level
+     * @param {StateHolder} globalState The global state provided to the current component
+     */
+    static showNotification = (message, level, globalState) => {
+        globalState.set(StateHolder.NOTIFICATION_STATE, {
+            isOpen: true,
+            message: message,
+            notificationLevel: level
+        });
+    };
+
+    /**
+     * Close the notification shown to the user.
+     *
+     * @param {StateHolder} globalState The global state provided to the current component
+     */
+    static closeNotification = (globalState) => {
+        globalState.set(StateHolder.NOTIFICATION_STATE, {
+            isOpen: false,
+            message: null,
+            notificationLevel: null
+        });
+    };
+
 }
 
 export default NotificationUtils;
