@@ -16,12 +16,11 @@
  * under the License.
  */
 
+import DataTable from "../../common/DataTable";
 import React from "react";
 
-const DependencyDiagram = () => (
-    <React.Fragment>
-        Dependency Diagram
-    </React.Fragment>
+const MicroserviceList = () => (
+    <DataTable/>
 );
 
-export default DependencyDiagram;
+export default MicroserviceList;

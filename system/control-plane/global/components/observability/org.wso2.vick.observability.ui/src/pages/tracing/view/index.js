@@ -43,14 +43,13 @@ class View extends React.Component {
 
     constructor(props) {
         super(props);
-        const {location} = props;
 
         this.tabs = [
             "timeline",
             "sequence-diagram",
             "dependency-diagram"
         ];
-        const queryParams = HttpUtils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(props.location.search);
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {

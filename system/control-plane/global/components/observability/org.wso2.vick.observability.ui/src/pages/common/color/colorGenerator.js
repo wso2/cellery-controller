@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import {StateHolder} from "../state";
 import randomColor from "randomcolor";
 
 /**
@@ -25,17 +26,20 @@ class ColorGenerator {
 
     static VICK = "VICK";
     static ISTIO = "Istio";
-    static ERROR = "ERROR";
     static UNKNOWN = "UNKNOWN";
+    static SUCCESS = "SUCCESS";
+    static WARNING = "WARNING";
+    static ERROR = "ERROR";
 
     constructor() {
-        this.colorMap = {};
-
-        this.addKeys([
-            ColorGenerator.VICK,
-            ColorGenerator.ISTIO
-        ]);
-        this.colorMap[ColorGenerator.ERROR] = "#ff282a";
+        this.colorMap = {
+            [ColorGenerator.VICK]: "#a53288",
+            [ColorGenerator.ISTIO]: "#434da1",
+            [ColorGenerator.UNKNOWN]: "#71736f",
+            [ColorGenerator.SUCCESS]: "#2ed637",
+            [ColorGenerator.WARNING]: "#ff934f",
+            [ColorGenerator.ERROR]: "#ff282a"
+        };
     }
 
     /**
@@ -65,6 +69,24 @@ class ColorGenerator {
             this.addKeys([key]);
         }
         return this.colorMap[key];
+    };
+
+    /**
+     * Get the colors for percentage.
+     *
+     * @param {number} percentage The percentage for which the color is required
+     * @param {StateHolder} globalState The global state
+     * @returns {string} The color for the percentage
+     */
+    getColorForPercentage = (percentage, globalState) => {
+        let colorKey = ColorGenerator.SUCCESS;
+        if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
+            colorKey = ColorGenerator.ERROR;
+        }
+        if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.warningThreshold) {
+            colorKey = ColorGenerator.WARNING;
+        }
+        return this.colorMap[colorKey];
     };
 
     /**

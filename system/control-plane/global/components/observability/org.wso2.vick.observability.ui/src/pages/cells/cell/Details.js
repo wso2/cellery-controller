@@ -17,7 +17,6 @@
  */
 
 import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
-import DependencyDiagram from "./DependencyDiagram";
 import Green from "@material-ui/core/colors/green";
 import PropTypes from "prop-types";
 import React from "react";
@@ -85,7 +84,7 @@ const Details = (props) => {
                     Dependencies
                 </Typography>
                 <div className={classes.diagram}>
-                    <DependencyDiagram></DependencyDiagram>
+                    Dependency Diagram
                 </div>
             </div>
         </React.Fragment>

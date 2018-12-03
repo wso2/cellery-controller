@@ -16,16 +16,17 @@
  * under the License.
  */
 
-import Details from "./common/Details";
+import Details from "./Details";
 import Grey from "@material-ui/core/colors/grey";
-import Metrics from "./common/Metrics";
-import Microservices from "./common/Table";
-import Paper from "@material-ui/core/Paper";
+import HttpUtils from "../../common/utils/httpUtils";
+import Metrics from "./Metrics";
+import MicroserviceList from "./MicroserviceList";
+import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import TopToolbar from "../common/toptoolbar";
+import TopToolbar from "../../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -49,42 +50,56 @@ class Cell extends React.Component {
     constructor(props) {
         super(props);
 
+        this.tabs = [
+            "details",
+            "microservices",
+            "metrics"
+        ];
+        const queryParams = HttpUtils.parseQueryParams(props.location.search);
+        const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
+
         this.state = {
-            selectedCell: 0
+            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
         };
     }
 
-    handleChange = (event, value) => {
+    handleTabChange = (event, value) => {
+        const {history, location, match} = this.props;
+
         this.setState({
-            selectedCell: value
+            selectedTabIndex: value
+        });
+
+        const queryParams = HttpUtils.generateQueryParamString({
+            tab: this.tabs[value]
+        });
+        history.replace(match.url + queryParams, {
+            ...location.state
         });
     };
 
     render = () => {
-        const {classes} = this.props;
-        const {selectedCell} = this.state;
+        const {classes, match} = this.props;
+        const {selectedTabIndex} = this.state;
+
+        const cellName = match.params.cellName;
 
         const details = <Details/>;
-        const microservices = <Microservices/>;
-        const metrics = <Metrics isHidden={true}/>;
+        const microservices = <MicroserviceList/>;
+        const metrics = <Metrics/>;
         const tabContent = [details, microservices, metrics];
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Cell Name"} onUpdate={this.loadCellData}/>
+                <TopToolbar title={`Cell: ${cellName}`} onUpdate={this.loadCellData}/>
                 <Paper className={classes.root}>
-                    <Tabs
-                        value={selectedCell}
-                        onChange={this.handleChange}
-                        indicatorColor="primary"
-                        textColor="primary"
-                        className={classes.tabs}
-                    >
+                    <Tabs value={selectedTabIndex} indicatorColor="primary"
+                        onChange={this.handleTabChange} className={classes.tabs}>
                         <Tab label="Details"/>
                         <Tab label="Microservices"/>
                         <Tab label="Metrics"/>
                     </Tabs>
-                    {tabContent[selectedCell]}
+                    {tabContent[selectedTabIndex]}
                 </Paper>
             </React.Fragment>
         );
@@ -92,9 +107,19 @@ class Cell extends React.Component {
 
 }
 
-
 Cell.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    match: PropTypes.shape({
+        params: PropTypes.shape({
+            cellName: PropTypes.string.isRequired
+        }).isRequired
+    }).isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
+    location: PropTypes.shape({
+        search: PropTypes.string.isRequired
+    }).isRequired
 };
 
 export default withStyles(styles)(Cell);

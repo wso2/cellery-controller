@@ -82,7 +82,6 @@ const K8sObjects = (props) => (
                     </TableRow>
                 </TableBody>
             </Table>
-
             <Typography color="inherit" className={props.classes.subtitle}>
                 Workload
             </Typography>

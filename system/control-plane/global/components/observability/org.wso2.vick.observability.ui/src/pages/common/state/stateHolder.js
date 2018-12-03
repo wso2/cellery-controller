@@ -178,7 +178,11 @@ class StateHolder {
             // TODO : Load configuration from server
             const loadedConfiguration = {
                 siddhiAppEndpointURL: "http://localhost:8080/api",
-                siddhiStoreAPIURL: "http://localhost:7370/stores/query"
+                siddhiStoreAPIURL: "http://localhost:7370/stores/query",
+                percentageRangeMinValue: {
+                    errorThreshold: 0.5,
+                    warningThreshold: 0.7
+                }
             };
             self.state.config = {
                 value: loadedConfiguration,
