@@ -146,7 +146,8 @@ Timeline.propTypes = {
     classes: PropTypes.object.isRequired,
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
-    ).isRequired
+    ).isRequired,
+    clicked:PropTypes.bool
 };
 
 export default withStyles(styles)(Timeline);
