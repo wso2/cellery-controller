@@ -125,7 +125,8 @@ class SequenceDiagram extends Component {
             }
         }
         _this.setState({
-            clicked:false
+            clicked:false,
+            heading: "Cell - level Sequence"
         });
     }
 
