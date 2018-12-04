@@ -16,20 +16,20 @@
  * under the License.
  */
 
-import {Graph} from "./components/dependency-graph/index";
+import {Graph} from "./components/dependency-graph";
 import PropTypes from "prop-types";
-import React, {Component} from "react";
+import React from "react";
 
 
-class DependencyGraph extends Component {
+class DependencyGraph extends React.Component {
 
-    shouldComponentUpdate(nextProps, nextState) {
+    shouldComponentUpdate = (nextProps, nextState) => {
         console.log(nextProps);
         console.log(nextState);
         return nextProps.reloadGraph;
-    }
+    };
 
-    render() {
+    render = () => {
         if (this.props.data.nodes) {
             return (
                 <Graph
@@ -49,7 +49,7 @@ class DependencyGraph extends Component {
             );
         }
         return (<div>Nothing to show</div>);
-    }
+    };
 
 }
 

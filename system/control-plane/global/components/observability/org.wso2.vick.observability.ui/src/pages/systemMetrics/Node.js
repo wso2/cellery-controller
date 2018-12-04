@@ -24,7 +24,7 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select";
-import TopToolbar from "./../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -49,9 +49,13 @@ const styles = (theme) => ({
 
 class Node extends React.Component {
 
-    state = {
-        node: "all"
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedNode: "all"
+        };
+    }
 
     handleChange = (name) => (event) => {
         this.setState({
@@ -61,6 +65,7 @@ class Node extends React.Component {
 
     render() {
         const {classes} = this.props;
+        const {selectedNode} = this.state;
 
         return (
             <React.Fragment>
@@ -72,7 +77,7 @@ class Node extends React.Component {
                             <InputLabel htmlFor="node">Node</InputLabel>
                             <Select
                                 native
-                                value={this.state.type}
+                                value={selectedNode}
                                 onChange={this.handleChange("node")}
                                 inputProps={{
                                     name: "node",
@@ -87,7 +92,7 @@ class Node extends React.Component {
                         </Button>
                     </div>
                     <div className={classes.graphs}>
-                        <Metrics></Metrics>
+                        <Metrics/>
                     </div>
                 </Paper>
             </React.Fragment>

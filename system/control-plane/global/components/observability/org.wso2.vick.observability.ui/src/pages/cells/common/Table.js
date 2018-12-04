@@ -32,32 +32,28 @@ const styles = (theme) => ({
     }
 });
 
-class List extends React.Component {
+const List = (props) => {
+    const {classes} = props;
+    const options = {
+        download: false,
+        selectableRows: false,
+        print: false
+    };
+    const columns = [
+        "Name", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count (requests/s)"
+    ];
+    const data = [
+        [" ", " ", " ", " ", " "]
+    ];
 
-    render() {
-        const {classes} = this.props;
-        const options = {
-            download: false,
-            selectableRows: false,
-            print: false
-        };
-        const columns = [
-            "Name", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count (requests/s)"
-        ];
-        const data = [
-            [" ", " ", " ", " ", " "]
-        ];
-
-        return (
-            <React.Fragment>
-                <div className={classes.tableWrapper}>
-                    <MUIDataTable data={data} columns={columns} options={options}/>
-                </div>
-            </React.Fragment>
-        );
-    }
-
-}
+    return (
+        <React.Fragment>
+            <div className={classes.tableWrapper}>
+                <MUIDataTable data={data} columns={columns} options={options}/>
+            </div>
+        </React.Fragment>
+    );
+};
 
 List.propTypes = {
     classes: PropTypes.object.isRequired

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"crypto/tls"
 	log "github.com/golang/glog"
 	"github.com/wso2/product-vick/system/ingress-controller/pkg/apis/vick/ingress/v1alpha1"
 	"github.com/wso2/product-vick/system/ingress-controller/config"
+	"net/http"
 )
 
 // Handler interface contains the methods that are required
@@ -15,6 +17,7 @@ type Handler interface {
 }
 
 var ingressRuleCreator *IngressRuleCreator
+var httpClient *http.Client
 
 // IngressHandler is a sample implementation of Handler
 type IngressHandler struct{}
@@ -26,48 +29,104 @@ func (t *IngressHandler) Init() error {
 		return err
 	}
 	ingressRuleCreator = NewIngressRuleCreator(ingressConfig)
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	httpClient = &http.Client{Transport: transport}
 	log.Infof("IngressHandler Initialized")
 	return nil
 }
 
 // ObjectCreated is called when an object is created
 func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
-	clientId, clientSecret, err := ingressRuleCreator.RegisterClient()
+	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	token, err := ingressRuleCreator.GenerateAccessToken(clientId, clientSecret)
+	clientId, clientSecret, err := ingressRuleCreator.RegisterClient(regCaller)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	err = ingressRuleCreator.CreateApi(token, &obj.Spec)
+	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
-		// log and continue
 		log.Error(err)
+		return
 	}
-	log.Infof("Ingress Created %+v\n", obj)
+	token, err := ingressRuleCreator.GenerateAccessToken(tokCaller)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	createApiCaller, err := CreateApiHttpCaller(ingressRuleCreator, httpClient, &obj.Spec, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	apiId, err := ingressRuleCreator.CreateApi(createApiCaller, &obj.Spec)
+	if err != nil {
+		// log and continu
+		log.Error(err)
+		return
+	}
+	log.Infof("Ingress successfully created %+v\n", obj)
+	publishApiCaller, err := PublishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	err = ingressRuleCreator.PublishApi(publishApiCaller, apiId)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Infof("Ingress successfully published %+v\n", obj)
 }
 
 // ObjectDeleted is called when an object is deleted
 func (t *IngressHandler) ObjectDeleted(obj *v1alpha1.Ingress) {
-	clientId, clientSecret, err := ingressRuleCreator.RegisterClient()
+	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	token, err := ingressRuleCreator.GenerateAccessToken(clientId, clientSecret)
+	clientId, clientSecret, err := ingressRuleCreator.RegisterClient(regCaller)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	err = ingressRuleCreator.DeleteApi(token, &obj.Spec)
+	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
-		// log and continue
 		log.Error(err)
+		return
 	}
-	log.Infof("Ingress Deleted %+v\n", obj)
+	token, err := ingressRuleCreator.GenerateAccessToken(tokCaller)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	getApiIdCaller, err := GetApiIdHttpCaller(ingressRuleCreator, obj.Spec.Context, httpClient, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	apiId, err := ingressRuleCreator.GetApiId(getApiIdCaller, obj.Spec.Context, obj.Spec.Version)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	deleteApiCaller, err :=  DeleteApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	err = ingressRuleCreator.DeleteApi(deleteApiCaller, apiId)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Infof("Ingress successfully deleted %+v\n", obj)
 }
 
 // ObjectUpdated is called when an object is updated
@@ -75,55 +134,64 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 	// the old and new objects can't differ in name, context and version.
 	// Those are not allowed to change in an update.
 	// if they need to be changed, that is a new API version
+	// TODO: handle this validation in a K8s admission validation controller
 	if (objOld.Spec.Name != objNew.Spec.Name) || (objOld.Spec.Context != objNew.Spec.Context) ||
 		(objOld.Spec.Version != objNew.Spec.Version) {
 		log.Error("Modifying either name, context or version in an existing Ingress rule is not permitted")
 		return
 	}
 
-	log.Infof("Ingress Updated %+v\n", objNew)
-	//newIngRules := getNewIngressRules(*objOld, *objNew)
-	//updatedIngRules := getUpdatedIngressRules(*objOld, *objNew)
-	//deletedIngRules := getDeletedIngressRules(*objOld, *objNew)
-
-	clientId, clientSecret, err := ingressRuleCreator.RegisterClient()
+	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	token, err := ingressRuleCreator.GenerateAccessToken(clientId, clientSecret)
+	clientId, clientSecret, err := ingressRuleCreator.RegisterClient(regCaller)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	//// create new ones
-	//if newIngRules != nil {
-	//	for _, ingRule := range newIngRules {
-	//		err := ingressRuleCreator.CreateApi(objNew.Spec.Name, objNew.Spec.Context, objNew.Spec.Version, token, &ingRule)
-	//		if err != nil {
-	//			// log and continue
-	//			log.Error(err)
-	//		}
-	//	}
-	//}
-
-	// update existing ones which changed
-	err = ingressRuleCreator.UpdateApi(token, &objNew.Spec)
+	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
-		// log and continue
 		log.Error(err)
+		return
 	}
-
-	//// delete non-existing ones
-	//if deletedIngRules != nil {
-	//	for _, ingRule := range deletedIngRules {
-	//		err := ingressRuleCreator.DeleteApi(objNew.Spec.Name, objNew.Spec.Context, objNew.Spec.Version, token, &ingRule)
-	//		if err != nil {
-	//			// log and continue
-	//			log.Error(err)
-	//		}
-	//	}
-	//}
+	token, err := ingressRuleCreator.GenerateAccessToken(tokCaller)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	getApiIdCaller, err := GetApiIdHttpCaller(ingressRuleCreator, objNew.Spec.Context, httpClient, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	apiId, err := ingressRuleCreator.GetApiId(getApiIdCaller, objNew.Spec.Context, objNew.Spec.Version)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	updateCaller, err := UpdateApiHttpCaller(ingressRuleCreator, &objNew.Spec, httpClient, apiId, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	apiId, err = ingressRuleCreator.UpdateApi(updateCaller, &objNew.Spec)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	publishApiCaller, err := PublishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	err = ingressRuleCreator.PublishApi(publishApiCaller, apiId)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Infof("Ingress successfully updated %+v\n", objNew)
 }
 
 //func getNewIngressRules (objOld, objNew v1.Ingress) ([]v1.IngressRule) {

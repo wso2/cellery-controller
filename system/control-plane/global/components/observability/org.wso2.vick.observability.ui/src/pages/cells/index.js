@@ -28,7 +28,7 @@ const Cells = ({match}) => (
     <Switch>
         <Route exact path={`${match.path}/`} component={List}/>
         <Route exact path={`${match.path}/:cellId`} component={Cell}/>
-        <Route exact path={`${match.path}/:cellId/microservice/:microserviceId`} component={MicroService}/>
+        <Route exact path={`${match.path}/:cellId/microservices/:microserviceId`} component={MicroService}/>
         <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );

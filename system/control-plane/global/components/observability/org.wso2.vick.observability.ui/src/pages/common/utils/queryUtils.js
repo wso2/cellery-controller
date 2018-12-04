@@ -25,9 +25,9 @@ class QueryUtils {
      * Parse a time query string.
      *
      * @param {string} query Query string
-     * @returns {moment} The time referred to by the time query
+     * @returns {moment.Moment} The time referred to by the time query
      */
-    static parseTime(query) {
+    static parseTime = (query) => {
         let time = moment(query, Constants.Pattern.DATE_TIME, true);
         if (new RegExp(Constants.Pattern.Query.RELATIVE_TIME, "i").test(query)) {
             const timeRegex = new RegExp(Constants.Pattern.Query.TIME, "gi");
@@ -56,7 +56,7 @@ class QueryUtils {
             throw Error("Invalid time");
         }
         return time;
-    }
+    };
 
 }
 

@@ -22,14 +22,13 @@ import NotFound from "../common/NotFound";
 import Pod from "./Pod";
 import PropTypes from "prop-types";
 import React from "react";
-import {Redirect, Route, Switch, withRouter} from "react-router-dom";
+import {Route, Switch, withRouter} from "react-router-dom";
 
-const SystemMetrics = ({match, location}) => (
+const SystemMetrics = ({match}) => (
     <Switch>
         <Route exact path={`${match.path}/control-plane`} component={ControlPlane}/>
         <Route exact path={`${match.path}/node-usage`} component={Node}/>
         <Route exact path={`${match.path}/pod-usage`} component={Pod}/>
-        <Redirect exact from={`${match.url}/`} to={{pathname: `${match.url}/`, state: location.state}}/>
         <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );

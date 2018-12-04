@@ -18,7 +18,7 @@
 
 /* eslint max-lines: ["off"] */
 
-import Constants from "./constants";
+import Constants from "../../common/constants";
 import Span from "./span";
 
 describe("Span", () => {
@@ -874,7 +874,7 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-a-id",
         parentId: "trace-x-id",
-        serviceName: Constants.VICK.System.GLOBAL_GATEWAY_NAME,
+        serviceName: Constants.System.GLOBAL_GATEWAY_NAME,
         operationName: "get-hr-info",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10000000,
@@ -907,7 +907,7 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-d-id",
         parentId: "span-c-id",
-        serviceName: Constants.VICK.System.ISTIO_MIXER_NAME,
+        serviceName: Constants.System.ISTIO_MIXER_NAME,
         operationName: "is-authorized",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10060000,
@@ -1065,7 +1065,7 @@ describe("Span", () => {
             span.addSpanReference(parentSpan);
             span.addSpanReference(childSpanA);
             span.addSpanReference(childSpanB);
-            span.componentType = Constants.Span.ComponentType.VICK;
+            span.componentType = Constants.ComponentType.VICK;
             span.cell = {
                 name: "cell-a",
                 version: "1.0.0"

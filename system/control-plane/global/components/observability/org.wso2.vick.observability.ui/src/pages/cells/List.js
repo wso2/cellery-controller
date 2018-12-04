@@ -20,7 +20,7 @@ import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "./common/Table";
-import TopToolbar from "./../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -31,18 +31,18 @@ const styles = (theme) => ({
 
 class List extends React.Component {
 
-    render() {
+    render = () => {
         const {classes} = this.props;
 
         return (
             <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellData}/>
                 <Paper className={classes.root}>
-                    <Table></Table>
+                    <Table/>
                 </Paper>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

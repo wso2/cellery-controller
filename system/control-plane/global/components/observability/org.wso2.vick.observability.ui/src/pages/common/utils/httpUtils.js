@@ -17,7 +17,7 @@
  */
 
 import AuthUtils from "./authUtils";
-import {ConfigConstants} from "../config";
+import {StateHolder} from "../state";
 import axios from "axios";
 
 class HttpUtils {
@@ -28,7 +28,7 @@ class HttpUtils {
      * @param {string} queryParamString Query param string
      * @returns {Object} Query param object
      */
-    static parseQueryParams(queryParamString) {
+    static parseQueryParams = (queryParamString) => {
         const queryParameters = {};
         if (queryParamString) {
             let query = queryParamString;
@@ -51,57 +51,90 @@ class HttpUtils {
             }
         }
         return queryParameters;
-    }
+    };
+
+    /**
+     * Generate a query param string from a query params object.
+     *
+     * @param {Object} queryParams Query params as an flat object
+     * @returns {string} Query string
+     */
+    static generateQueryParamString = (queryParams) => {
+        let queryString = "";
+        if (queryParams) {
+            for (const queryParamKey in queryParams) {
+                if (queryParams.hasOwnProperty(queryParamKey)) {
+                    const queryParamValue = queryParams[queryParamKey];
+
+                    if (!queryParamValue) {
+                        continue;
+                    }
+
+                    // Validating
+                    if (typeof queryParamKey !== "string") {
+                        throw Error(`Query param key need to be a string, instead found ${typeof queryParamKey}`);
+                    }
+                    if (typeof queryParamValue !== "string" && typeof queryParamValue !== "number"
+                            && typeof queryParamValue !== "boolean") {
+                        throw Error(`Query param value need to be a string, instead found ${typeof queryParamValue}`);
+                    }
+
+                    // Generating query string
+                    queryString += queryString ? "&" : "?";
+                    queryString += `${encodeURIComponent(queryParamKey)}=${encodeURIComponent(queryParamValue)}`;
+                }
+            }
+        }
+        return queryString;
+    };
 
     /**
      * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      * @returns {Promise} A promise for the API call
      */
-    static callBackendAPI(config, globalConfig) {
-        return new Promise((resolve, reject) => {
-            if (!config.headers) {
-                config.headers = {};
-            }
-            if (!config.headers.Accept) {
-                config.headers.Accept = "application/json";
-            }
-            if (!config.headers["Content-Type"]) {
-                config.headers["Content-Type"] = "application/json";
-            }
-            if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
-                config.data = {};
-            }
-            config.url = `${globalConfig.get(ConfigConstants.BACKEND_URL)}${config.url}`;
+    static callBackendAPI = (config, globalState) => new Promise((resolve, reject) => {
+        if (!config.headers) {
+            config.headers = {};
+        }
+        if (!config.headers.Accept) {
+            config.headers.Accept = "application/json";
+        }
+        if (!config.headers["Content-Type"]) {
+            config.headers["Content-Type"] = "application/json";
+        }
+        if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
+            config.data = {};
+        }
+        config.url = `${globalState.get(StateHolder.CONFIG).backendURL}${config.url}`;
 
-            axios(config)
-                .then((response) => {
-                    if (response.status >= 200 && response.status < 400) {
-                        if (response.data.map) {
-                            resolve(response.data.map((dataItem) => dataItem.event));
-                        } else {
-                            resolve(response.data);
-                        }
+        axios(config)
+            .then((response) => {
+                if (response.status >= 200 && response.status < 400) {
+                    if (response.data.map) {
+                        resolve(response.data.map((dataItem) => dataItem.event));
                     } else {
-                        reject(response.data);
+                        resolve(response.data);
                     }
-                })
-                .catch((error) => {
-                    if (error.response) {
-                        const errorResponse = error.response;
-                        if (errorResponse.status === 401) {
-                            // Redirect to home page since the user is not authorised
-                            AuthUtils.signOut(globalConfig);
-                        }
-                        reject(new Error(errorResponse.data));
-                    } else {
-                        reject(error);
+                } else {
+                    reject(response.data);
+                }
+            })
+            .catch((error) => {
+                if (error.response) {
+                    const errorResponse = error.response;
+                    if (errorResponse.status === 401) {
+                        // Redirect to home page since the user is not authorised
+                        AuthUtils.signOut(globalState);
                     }
-                });
-        });
-    }
+                    reject(new Error(errorResponse.data));
+                } else {
+                    reject(error);
+                }
+            });
+    });
 
 }
 

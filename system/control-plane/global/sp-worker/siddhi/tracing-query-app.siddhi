@@ -41,10 +41,12 @@ define function filterByTags[javascript] return bool {
     var isSelected;
     if (queryTags && Object.keys(queryTags).length > 0) {
         isSelected = false;
-        for (var tagKey in queryTags) {
-            if (queryTags.hasOwnProperty(tagKey) && queryTags[tagKey] === tags[tagKey]) {
-                isSelected = true;
-                break;
+        if (tags) {
+            for (var tagKey in queryTags) {
+                if (queryTags.hasOwnProperty(tagKey) && queryTags[tagKey] === tags[tagKey]) {
+                    isSelected = true;
+                    break;
+                }
             }
         }
     } else {
@@ -67,7 +69,7 @@ select
 insert into SanitizedTraceSearchQueryStreamIn;
 
 from SanitizedTraceSearchQueryStreamIn#window.length(1) as q left outer join SpanTable as t
-    on (q.cellName == "" or not (t.cellName is null and t.cellName == q.cellName))
+    on (q.cellName == "" or t.cellName == q.cellName)
         and (q.serviceName == "" or t.serviceName == q.serviceName)
         and (q.operationName == "" or t.operationName == q.operationName)
         and (q.minDuration == -1 or t.duration >= q.minDuration)
@@ -85,13 +87,12 @@ insert into SelectedTracesStream;
 from SelectedTracesStream#rdbms:query(
     "Message_Tracing_DB",
     str:concat(
-        "SELECT a.traceId, a.cellName, a.serviceName, COUNT(a.spanId) as count, ",
-        "ANY_VALUE(t.serviceName) as rootServiceName, ANY_VALUE(t.operationName) as rootOperationName, ",
-        "ANY_VALUE(t.startTime) as rootStartTime, ANY_VALUE(t.duration) as rootDuration ",
-        "FROM SpanTable AS a INNER JOIN SpanTable AS t ON t.traceId = t.spanId ",
-        "AND (t.kind = 'SERVER' OR t.kind IS NULL) AND a.traceId = t.traceId AND a.traceId RLIKE '^(",
-        traceIdRegex,
-        ")$' GROUP BY traceId, cellName, serviceName;"
+        "SELECT a.traceId, a.cellName, a.serviceName, a.count, t.serviceName as rootServiceName, ",
+        "t.operationName as rootOperationName, t.startTime as rootStartTime, t.duration as rootDuration FROM (",
+            "SELECT traceId, cellName, serviceName, COUNT(spanId) as count FROM SpanTable ",
+            "WHERE traceId RLIKE '^(", traceIdRegex, ")$' GROUP BY traceId, cellName, serviceName",
+        ") AS a INNER JOIN SpanTable AS t ON t.traceId = t.spanId AND (t.kind = 'SERVER' OR t.kind IS NULL) ",
+        "AND a.traceId = t.traceId ORDER BY t.startTime DESC;"
     ),
     "traceId string, cellName string, serviceName string, count long, rootServiceName string, rootOperationName string, rootStartTime long, rootDuration long"
 )

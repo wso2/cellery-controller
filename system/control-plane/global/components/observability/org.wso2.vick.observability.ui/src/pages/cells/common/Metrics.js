@@ -20,9 +20,9 @@ import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import PropTypes from "prop-types";
+import React from "react";
 import Select from "@material-ui/core/Select";
 import {withStyles} from "@material-ui/core/styles";
-import React, {Component} from "react";
 
 const styles = (theme) => ({
     filters: {
@@ -41,13 +41,17 @@ const styles = (theme) => ({
     }
 });
 
-class Metrics extends Component {
+class Metrics extends React.Component {
 
-    state = {
-        type: "inbound",
-        cell: "all",
-        microservice: "all"
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            type: "inbound",
+            cell: "all",
+            microservice: "all"
+        };
+    }
 
     handleChange = (name) => (event) => {
         this.setState({
@@ -55,7 +59,7 @@ class Metrics extends Component {
         });
     };
 
-    render() {
+    render = () => {
         const {classes, isHidden} = this.props;
         return (
             <React.Fragment>
@@ -118,7 +122,7 @@ class Metrics extends Component {
                 </div>
             </React.Fragment>
         );
-    }
+    };
 
 }
 

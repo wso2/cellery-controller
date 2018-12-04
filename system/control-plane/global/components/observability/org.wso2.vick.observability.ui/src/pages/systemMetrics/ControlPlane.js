@@ -19,7 +19,7 @@
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import TopToolbar from "./../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -29,22 +29,14 @@ const styles = (theme) => ({
     }
 });
 
-class ControlPlane extends React.Component {
-
-    render() {
-        const {classes} = this.props;
-
-        return (
-            <React.Fragment>
-                <TopToolbar title={"Control Plane Metrics"}/>
-                <Paper className={classes.root}>
-                    Graphs
-                </Paper>
-            </React.Fragment>
-        );
-    }
-
-}
+const ControlPlane = (props) => (
+    <React.Fragment>
+        <TopToolbar title={"Control Plane Metrics"}/>
+        <Paper className={props.classes.root}>
+            Graphs
+        </Paper>
+    </React.Fragment>
+);
 
 ControlPlane.propTypes = {
     classes: PropTypes.object.isRequired

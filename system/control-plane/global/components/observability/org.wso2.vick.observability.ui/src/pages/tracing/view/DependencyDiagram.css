@@ -16,9 +16,12 @@
  * under the License.
  */
 
-// Configuration loaded into the React App
-const configuration = {
-    backendURL: process.env.BACKEND_URL || "http://wso2sp-worker.vick-system:9000"
-};
+/**
+ * Overrides for the react-d3-graph library
+ */
 
-module.exports = configuration;
+#trace-dependency-graph-graph-wrapper > svg {
+    position: relative;
+    width: 100% !important;
+    height: 65vh !important;
+}

@@ -21,8 +21,8 @@
 
 import AuthUtils from "./authUtils";
 import HttpUtils from "./httpUtils";
+import {StateHolder} from "../state";
 import axios from "axios";
-import {ConfigConstants, ConfigHolder} from "../config/configHolder";
 
 jest.mock("axios");
 
@@ -74,20 +74,22 @@ describe("HttpUtils", () => {
     });
 
     describe("callBackendAPI()", () => {
-        const backEndURL = "http://www.example.com";
-        let config;
+        const backendURL = "http://www.example.com";
+        let stateHolder;
 
         beforeEach(() => {
-            config = new ConfigHolder();
-            config.set(ConfigConstants.USER, "user1");
-            config.set(ConfigConstants.BACKEND_URL, backEndURL);
+            stateHolder = new StateHolder();
+            stateHolder.set(StateHolder.USER, "user1");
+            stateHolder.set(StateHolder.CONFIG, {
+                backendURL: backendURL
+            });
         });
 
         it("should add application/json header", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(config.url).toBe(`${backendURL}/test`);
                 expect(Object.keys(config.headers)).toHaveLength(3);
                 expect(config.headers["X-Key"]).toBe("value");
                 expect(config.headers.Accept).toBe("application/json");
@@ -113,14 +115,14 @@ describe("HttpUtils", () => {
                 headers: {
                     "X-Key": "value"
                 }
-            }, config);
+            }, stateHolder);
         });
 
         it("should add application/json Accept and Content-Type headers if no headers are provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(config.url).toBe(`${backendURL}/test`);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -142,14 +144,14 @@ describe("HttpUtils", () => {
             await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "/test"
-            }, config);
+            }, stateHolder);
         });
 
         it("should not change headers if Accept header is already provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(config.url).toBe(`${backendURL}/test`);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/xml");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -174,14 +176,14 @@ describe("HttpUtils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            }, config);
+            }, stateHolder);
         });
 
         it("should add application/json header if Content-Type header is provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(config.url).toBe(`${backendURL}/test`);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/json");
@@ -203,14 +205,14 @@ describe("HttpUtils", () => {
             await HttpUtils.callBackendAPI({
                 method: "GET",
                 url: "/test"
-            }, config);
+            }, stateHolder);
         });
 
         it("should not change headers if Content-Type header is already provided", async () => {
             axios.mockImplementation((config) => {
                 expect(Object.keys(config)).toHaveLength(3);
                 expect(config.method).toBe("GET");
-                expect(config.url).toBe(`${backEndURL}/test`);
+                expect(config.url).toBe(`${backendURL}/test`);
                 expect(Object.keys(config.headers)).toHaveLength(2);
                 expect(config.headers.Accept).toBe("application/json");
                 expect(config.headers["Content-Type"]).toBe("application/xml");
@@ -235,7 +237,7 @@ describe("HttpUtils", () => {
                 headers: {
                     "Content-Type": "application/xml"
                 }
-            }, config);
+            }, stateHolder);
         });
 
         const ERROR_DATA = "testError";
@@ -271,7 +273,7 @@ describe("HttpUtils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            }, config);
+            }, stateHolder);
         };
         const mockReject = (statusCode) => {
             axios.mockResolvedValue(new Promise((resolve, reject) => {
@@ -289,7 +291,7 @@ describe("HttpUtils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            }, config);
+            }, stateHolder);
         };
 
         resolveStatusCodes.forEach((statusCode) => {

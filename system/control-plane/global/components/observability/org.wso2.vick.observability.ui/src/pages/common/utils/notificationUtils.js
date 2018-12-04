@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {ConfigConstants} from "../config";
+import {StateHolder} from "../state";
 
 class NotificationUtils {
 
@@ -24,26 +24,54 @@ class NotificationUtils {
      * Show the loading overlay.
      *
      * @param {string} message The message to be shown in the loading overlay
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static showLoadingOverlay(message, globalConfig) {
-        globalConfig.set(ConfigConstants.LOADING_STATE, {
+    static showLoadingOverlay = (message, globalState) => {
+        globalState.set(StateHolder.LOADING_STATE, {
             isLoading: true,
             message: message
         });
-    }
+    };
 
     /**
      * Hide the loading overlay.
      *
-     * @param {ConfigHolder} globalConfig The global configuration provided to the current component
+     * @param {StateHolder} globalState The global state provided to the current component
      */
-    static hideLoadingOverlay(globalConfig) {
-        globalConfig.set(ConfigConstants.LOADING_STATE, {
+    static hideLoadingOverlay = (globalState) => {
+        globalState.set(StateHolder.LOADING_STATE, {
             isLoading: false,
             message: null
         });
-    }
+    };
+
+    /**
+     * Show a notification to the user.
+     *
+     * @param {string} message The message to be shown in the notification
+     * @param {string} level The notification level
+     * @param {StateHolder} globalState The global state provided to the current component
+     */
+    static showNotification = (message, level, globalState) => {
+        globalState.set(StateHolder.NOTIFICATION_STATE, {
+            isOpen: true,
+            message: message,
+            notificationLevel: level
+        });
+    };
+
+    /**
+     * Close the notification shown to the user.
+     *
+     * @param {StateHolder} globalState The global state provided to the current component
+     */
+    static closeNotification = (globalState) => {
+        globalState.set(StateHolder.NOTIFICATION_STATE, {
+            isOpen: false,
+            message: null,
+            notificationLevel: null
+        });
+    };
 
 }
 

@@ -17,56 +17,56 @@
  */
 
 import AuthUtils from "./authUtils";
-import {ConfigConstants, ConfigHolder} from "../config/configHolder";
+import {StateHolder} from "../state";
 
 describe("AuthUtils", () => {
     afterEach(() => {
-        localStorage.removeItem(ConfigConstants.USER);
+        localStorage.removeItem(StateHolder.USER);
     });
 
     describe("signIn()", () => {
         it("should set the username provided", () => {
-            const config = new ConfigHolder();
-            const spy = jest.spyOn(config, "set");
-            AuthUtils.signIn("user1", config);
+            const stateHolder = new StateHolder();
+            const spy = jest.spyOn(stateHolder, "set");
+            AuthUtils.signIn("user1", stateHolder);
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(ConfigConstants.USER, "user1");
-            expect(localStorage.getItem(ConfigConstants.USER)).toBe("user1");
+            expect(spy).toHaveBeenCalledWith(StateHolder.USER, "user1");
+            expect(localStorage.getItem(StateHolder.USER)).toBe("user1");
         });
 
         it("should not set a username and should throw and error", () => {
-            const config = new ConfigHolder();
-            const spy = jest.spyOn(config, "set");
+            const stateHolder = new StateHolder();
+            const spy = jest.spyOn(stateHolder, "set");
 
-            expect(() => AuthUtils.signIn(null, config)).toThrow();
-            expect(() => AuthUtils.signIn(undefined, config)).toThrow();
-            expect(() => AuthUtils.signIn("", config)).toThrow();
+            expect(() => AuthUtils.signIn(null, stateHolder)).toThrow();
+            expect(() => AuthUtils.signIn(undefined, stateHolder)).toThrow();
+            expect(() => AuthUtils.signIn("", stateHolder)).toThrow();
             expect(spy).toHaveBeenCalledTimes(0);
             expect(spy).not.toHaveBeenCalled();
-            expect(localStorage.getItem(ConfigConstants.USER)).toBeNull();
+            expect(localStorage.getItem(StateHolder.USER)).toBeNull();
         });
     });
 
     describe("signOut()", () => {
-        it("should unset the user in the configuration", () => {
-            const config = new ConfigHolder();
-            localStorage.setItem(ConfigConstants.USER, "user1");
-            config.config[ConfigConstants.USER] = {
+        it("should unset the user in the state", () => {
+            const stateHolder = new StateHolder();
+            localStorage.setItem(StateHolder.USER, "user1");
+            stateHolder.state[StateHolder.USER] = {
                 value: "user1",
                 listeners: []
             };
-            const spy = jest.spyOn(config, "unset");
-            AuthUtils.signOut(config);
+            const spy = jest.spyOn(stateHolder, "unset");
+            AuthUtils.signOut(stateHolder);
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(ConfigConstants.USER);
-            expect(localStorage.getItem(ConfigConstants.USER)).toBeNull();
+            expect(spy).toHaveBeenCalledWith(StateHolder.USER);
+            expect(localStorage.getItem(StateHolder.USER)).toBeNull();
         });
     });
 
     describe("getAuthenticatedUser()", () => {
-        localStorage.setItem(ConfigConstants.USER, "user1");
+        localStorage.setItem(StateHolder.USER, "user1");
         const user = AuthUtils.getAuthenticatedUser();
 
         expect(user).toBe("user1");
