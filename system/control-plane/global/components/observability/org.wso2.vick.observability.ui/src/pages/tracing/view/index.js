@@ -111,7 +111,7 @@ class View extends React.Component {
         const traceId = match.params.traceId;
 
         const timeline = <Timeline spans={spans}/>;
-        const sequenceDiagram = <SequenceDiagram spans={spans} clicked={true}/>;
+        const sequenceDiagram = <SequenceDiagram spans={spans}/>;
         const dependencyDiagram = <DependencyDiagram/>;
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
