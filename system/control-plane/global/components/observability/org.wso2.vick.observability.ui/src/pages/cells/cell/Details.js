@@ -17,22 +17,23 @@
  */
 
 import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
-import Green from "@material-ui/core/colors/green";
+import ColorGenerator from "../../common/color/colorGenerator";
+import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import React from "react";
+import StateHolder from "../../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography/Typography";
+import withColor from "../../common/color";
+import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
     table: {
         width: "20%"
-    },
-    successIcon: {
-        color: Green[600]
     },
     tableCell: {
         borderBottom: "none"
@@ -49,51 +50,92 @@ const styles = (theme) => ({
     }
 });
 
-const Details = (props) => {
-    const {classes} = props;
-    return (
-        <React.Fragment>
-            <Table className={classes.table}>
-                <TableBody>
-                    <TableRow>
-                        <TableCell className={classes.tableCell}>
-                            <Typography color="textSecondary">
-                                Namespace
-                            </Typography>
-                        </TableCell>
-                        <TableCell className={classes.tableCell}>
-                            <Typography>
-                                Default
-                            </Typography>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className={classes.tableCell}>
-                            <Typography color="textSecondary">
-                                Health
-                            </Typography>
-                        </TableCell>
-                        <TableCell className={classes.tableCell}>
-                            <CheckCircleOutline className={classes.successIcon}/>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            <div className={classes.dependencies}>
-                <Typography color="textSecondary" className={classes.subtitle}>
-                    Dependencies
-                </Typography>
-                <div className={classes.diagram}>
-                    Dependency Diagram
+class Details extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            namespace: null,
+            health: 0,
+            dependencyGraphData: []
+        };
+    }
+
+    onUpdate = (isUserAction) => {
+        const {globalState} = this.props;
+        const self = this;
+
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+        }
+        // TODO : Fetch data from backend
+        setTimeout(() => {
+            self.setState({
+                namespace: "Default",
+                health: 0.9,
+                dependencyGraphData: []
+            });
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }, 1000);
+    };
+
+    render = () => {
+        const {classes, colorGenerator, globalState} = this.props;
+        const {namespace, health} = this.state;
+
+        const healthColor = colorGenerator.getColorForPercentage(health, globalState);
+
+        return (
+            <React.Fragment>
+                <Table className={classes.table}>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className={classes.tableCell}>
+                                <Typography color="textSecondary">
+                                    Namespace
+                                </Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <Typography>
+                                    {namespace}
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell className={classes.tableCell}>
+                                <Typography color="textSecondary">
+                                    Health
+                                </Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <CheckCircleOutline style={{color: healthColor}}/>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+                <div className={classes.dependencies}>
+                    <Typography color="textSecondary" className={classes.subtitle}>
+                        Dependencies
+                    </Typography>
+                    <div className={classes.diagram}>
+                        {/* TODO : Implement Cell Dependency Diagram */}
+                        Dependency Diagram
+                    </div>
                 </div>
-            </div>
-        </React.Fragment>
-    );
-};
+            </React.Fragment>
+        );
+    }
+
+}
 
 Details.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(Details);
+export default withStyles(styles)(withColor(withGlobalState(Details)));
 

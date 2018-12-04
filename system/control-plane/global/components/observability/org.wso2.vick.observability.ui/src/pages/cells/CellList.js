@@ -48,6 +48,7 @@ class CellList extends React.Component {
 
     loadCellInfo = (isUserAction) => {
         const {globalState} = this.props;
+        const self = this;
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
@@ -59,7 +60,7 @@ class CellList extends React.Component {
                 [0.8, "Cell B", 0.2, 0.01, 800, 10],
                 [0.6, "Cell C", 0.3, 0.2, 800, 10]
             ];
-            this.setState({
+            self.setState({
                 data: cellData
             });
             if (isUserAction) {
@@ -90,13 +91,13 @@ class CellList extends React.Component {
             {
                 name: "Inbound Error Rate",
                 option: {
-                    customBodyRender: (value) => value * 100
+                    customBodyRender: (value) => `${value * 100} %`
                 }
             },
             {
                 name: "Outbound Error Rate",
                 option: {
-                    customBodyRender: (value) => value * 100
+                    customBodyRender: (value) => `${value * 100} %`
                 }
             },
             {

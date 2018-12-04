@@ -71,6 +71,7 @@ class Microservice extends React.Component {
             selectedTabIndex: value
         });
 
+        // Updating the Browser URL
         const queryParams = HttpUtils.generateQueryParamString({
             tab: this.tabs[value]
         });

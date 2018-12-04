@@ -23,10 +23,13 @@ import Metrics from "./Metrics";
 import MicroserviceList from "./MicroserviceList";
 import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
+import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
+import StateHolder from "../../common/state/stateHolder";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import TopToolbar from "../../common/toptoolbar";
+import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
@@ -50,6 +53,9 @@ class Cell extends React.Component {
     constructor(props) {
         super(props);
 
+        this.tabContentRef = React.createRef();
+        this.mounted = false;
+
         this.tabs = [
             "details",
             "microservices",
@@ -70,6 +76,7 @@ class Cell extends React.Component {
             selectedTabIndex: value
         });
 
+        // Updating the Browser URL
         const queryParams = HttpUtils.generateQueryParamString({
             tab: this.tabs[value]
         });
@@ -78,20 +85,38 @@ class Cell extends React.Component {
         });
     };
 
+    handleOnUpdate = (isUserAction, startTime, endTime) => {
+        if (this.mounted && this.tabContentRef.current.onUpdate) {
+            this.tabContentRef.current.onUpdate(isUserAction, startTime, endTime);
+        }
+    };
+
+    componentDidMount = () => {
+        const {globalState} = this.props;
+        this.mounted = true;
+        this.handleOnUpdate(
+            true,
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
+        );
+    };
+
+    componentWillUnmount() {
+        this.mounted = false;
+    }
+
     render = () => {
         const {classes, match} = this.props;
         const {selectedTabIndex} = this.state;
 
         const cellName = match.params.cellName;
 
-        const details = <Details/>;
-        const microservices = <MicroserviceList/>;
-        const metrics = <Metrics/>;
-        const tabContent = [details, microservices, metrics];
+        const tabContent = [Details, MicroserviceList, Metrics];
+        const SelectedTabContent = tabContent[selectedTabIndex];
 
         return (
             <React.Fragment>
-                <TopToolbar title={`Cell: ${cellName}`} onUpdate={this.loadCellData}/>
+                <TopToolbar title={`Cell: ${cellName}`} onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>
@@ -99,7 +124,7 @@ class Cell extends React.Component {
                         <Tab label="Microservices"/>
                         <Tab label="Metrics"/>
                     </Tabs>
-                    {tabContent[selectedTabIndex]}
+                    <SelectedTabContent innerRef={this.tabContentRef}/>
                 </Paper>
             </React.Fragment>
         );
@@ -119,7 +144,8 @@ Cell.propTypes = {
     }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
-    }).isRequired
+    }).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(Cell);
+export default withStyles(styles)(withGlobalState(Cell));
