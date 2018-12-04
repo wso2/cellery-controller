@@ -19,6 +19,7 @@
 import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
+import MetricsGraphs from "../MetricsGraphs";
 import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select";
@@ -53,14 +54,14 @@ class Metrics extends React.Component {
         };
     }
 
-    handleChange = (name) => (event) => {
+    getFilterChangeHandler = (name) => (event) => {
         this.setState({
             [name]: event.target.value
         });
     };
 
     render = () => {
-        const {classes, isHidden} = this.props;
+        const {classes} = this.props;
         return (
             <React.Fragment>
                 <div className={classes.filters}>
@@ -69,12 +70,11 @@ class Metrics extends React.Component {
                         <Select
                             native
                             value={this.state.type}
-                            onChange={this.handleChange("type")}
+                            onChange={this.getFilterChangeHandler("type")}
                             inputProps={{
                                 name: "type",
                                 id: "metrics-type"
-                            }}
-                        >
+                            }}>
                             <option value="inbound">Inbound</option>
                             <option value="outbound">Outbound</option>
                         </Select>
@@ -84,41 +84,20 @@ class Metrics extends React.Component {
                         <Select
                             native
                             value={this.state.cell}
-                            onChange={this.handleChange("type")}
+                            onChange={this.getFilterChangeHandler("type")}
                             inputProps={{
                                 name: "cell",
                                 id: "cell"
-                            }}
-                        >
+                            }}>
                             <option value="all">All</option>
                         </Select>
                     </FormControl>
-                    {
-                        isHidden
-                            ? null
-                            : (
-                                <FormControl className={classes.formControl}>
-                                    <InputLabel htmlFor="microservice">Microservice</InputLabel>
-                                    <Select
-                                        native
-                                        value={this.state.age}
-                                        onChange={this.handleChange("microservice")}
-                                        inputProps={{
-                                            name: "microservice",
-                                            id: "microservice"
-                                        }}
-                                    >
-                                        <option value="all">All</option>
-                                    </Select>
-                                </FormControl>
-                            )
-                    }
                     <Button variant="outlined" size="small" color="primary" className={classes.button}>
                         Update
                     </Button>
                 </div>
                 <div className={classes.graphs}>
-                    Graphs
+                    <MetricsGraphs/>
                 </div>
             </React.Fragment>
         );
@@ -127,8 +106,7 @@ class Metrics extends React.Component {
 }
 
 Metrics.propTypes = {
-    classes: PropTypes.object.isRequired,
-    isHidden: PropTypes.bool.isRequired
+    classes: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(Metrics);

@@ -32,33 +32,29 @@ const styles = (theme) => ({
     }
 });
 
-const List = (props) => {
+const DataTable = (props) => {
     const {classes} = props;
     const options = {
         download: false,
         selectableRows: false,
         print: false
     };
-    const columns = [
-        "Name", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count (requests/s)"
-    ];
-    const data = [
-        [" ", " ", " ", " ", " "]
-    ];
 
     return (
-        <React.Fragment>
-            <div className={classes.tableWrapper}>
-                <MUIDataTable data={data} columns={columns} options={options}/>
-            </div>
-        </React.Fragment>
+        <div className={classes.tableWrapper}>
+            <MUIDataTable data={props.data} columns={props.columns} options={options}/>
+        </div>
     );
 };
 
-List.propTypes = {
+DataTable.propTypes = {
+    data: PropTypes.arrayOf(PropTypes.arrayOf(
+        PropTypes.any
+    )).isRequired,
+    columns: PropTypes.arrayOf(PropTypes.any).isRequired,
     classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(List);
+export default withStyles(styles)(DataTable);
 
 

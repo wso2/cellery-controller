@@ -43,14 +43,13 @@ class View extends React.Component {
 
     constructor(props) {
         super(props);
-        const {location} = props;
 
         this.tabs = [
             "timeline",
             "sequence-diagram",
             "dependency-diagram"
         ];
-        const queryParams = HttpUtils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(props.location.search);
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
@@ -72,7 +71,7 @@ class View extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/tracing",
                 method: "POST",
@@ -116,6 +115,7 @@ class View extends React.Component {
             selectedTabIndex: value
         });
 
+        // Updating the Browser URL
         const queryParams = HttpUtils.generateQueryParamString({
             tab: this.tabs[value]
         });
@@ -130,10 +130,8 @@ class View extends React.Component {
 
         const traceId = match.params.traceId;
 
-        const timeline = <Timeline spans={spans}/>;
-        const sequenceDiagram = <SequenceDiagram/>;
-        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
-        const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
+        const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
+        const SelectedTabContent = tabContent[selectedTabIndex];
 
         return (
             isLoading
@@ -154,7 +152,7 @@ class View extends React.Component {
                                             <Tab label="Sequence Diagram"/>
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
-                                        {tabContent[selectedTabIndex]}
+                                        <SelectedTabContent spans={spans}/>
                                     </Paper>
                                 )
                         }

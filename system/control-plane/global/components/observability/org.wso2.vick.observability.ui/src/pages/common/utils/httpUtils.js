@@ -89,13 +89,50 @@ class HttpUtils {
     };
 
     /**
+     * Call the Siddhi Store API to fetch data.
+     *
+     * @param {string} appName The Siddhi App Name which contains the Siddhi Store
+     * @param {string} query The siddhi query to run against the Siddhi Store
+     * @param {StateHolder} globalState The global state provided to the current component
+     * @returns {Promise} A promise for the API call
+     */
+    static callSiddhiStoreAPI = (appName, query, globalState) => {
+        const config = {
+            url: `${globalState.get(StateHolder.CONFIG).siddhiStoreAPIURL}`,
+            method: "POST",
+            data: {
+                appName: appName,
+                query: query
+            },
+            auth: {
+                username: "admin",
+                password: "admin"
+            },
+            httpsAgent: HttpUtils.httpsAgent
+        };
+        return HttpUtils.callAPI(config, globalState);
+    };
+
+    /**
+     * Call a deployed Siddhi App to fetch results.
+     *
+     * @param {Object} config Axios configuration object
+     * @param {StateHolder} globalState The global state provided to the current component
+     * @returns {Promise} A promise for the API call
+     */
+    static callSiddhiAppEndpoint = (config, globalState) => {
+        config.url = `${globalState.get(StateHolder.CONFIG).siddhiAppEndpointURL}${config.url}`;
+        return HttpUtils.callAPI(config, globalState);
+    };
+
+    /**
      * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
      * @param {StateHolder} globalState The global state provided to the current component
      * @returns {Promise} A promise for the API call
      */
-    static callBackendAPI = (config, globalState) => new Promise((resolve, reject) => {
+    static callAPI = (config, globalState) => new Promise((resolve, reject) => {
         if (!config.headers) {
             config.headers = {};
         }
@@ -108,7 +145,6 @@ class HttpUtils {
         if (!config.data && (config.method === "POST" || config.method === "PUT" || config.method === "PATCH")) {
             config.data = {};
         }
-        config.url = `${globalState.get(StateHolder.CONFIG).backendURL}${config.url}`;
 
         axios(config)
             .then((response) => {
