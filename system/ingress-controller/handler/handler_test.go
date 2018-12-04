@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"github.com/wso2/product-vick/system/ingress-controller/config"
 	"github.com/wso2/product-vick/system/ingress-controller/pkg/apis/vick/ingress/v1alpha1"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -19,7 +21,14 @@ const (
 	apiName = "TestApi1"
 	apiContext = "/test"
 	apiVersion = "1.0"
+	postOperation = "POST"
+	protocol = "https"
+	epType = "production"
+	serviceName = "testSvc"
+	port = 9090
 )
+
+// IngressRuleCreator tests
 
 var ingConfig, _ = config.GetIngressConfigs("gw.json")
 var ingRuleCreator = NewIngressRuleCreator(ingConfig)
@@ -258,5 +267,188 @@ func TestIngressRuleCreator_DeleteApiFailure(t *testing.T) {
 	t.Logf("Expected error: %+v\n", err)
 	if err == nil {
 		t.Fatal("Expected error not recieved")
+	}
+}
+
+// HttpCaller tests
+func TestRegisterClientHttpCaller(t *testing.T) {
+	authHeader := getBasicAuthHeader(ingRuleCreator.IngressConfig.Username, ingRuleCreator.IngressConfig.Password)
+	// create request
+	requestBody, err := json.Marshal(ingRuleCreator.IngressConfig.RegisterPayload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + clientRegistrationPath +
+		ingRuleCreator.IngressConfig.ApiVersion + clientRegisterPath, bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Basic " + authHeader)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	httpCaller, err := registerClientHttpCaller(ingRuleCreator, httpClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, requestBody, "registerClientHttpCaller")
+}
+
+func TestGenerateTokenHttpCaller(t *testing.T) {
+	authHeader := getBasicAuthHeader(clientId, clientSecret)
+	payload := "grant_type=password&username=" + ingRuleCreator.IngressConfig.Username + "&password=" +
+		ingRuleCreator.IngressConfig.Password + "&scope=" + tokenScopes
+	requestBody := []byte(payload)
+	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.TokenEp,
+		bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Basic " + authHeader)
+	request.Header.Set("Content-Type","application/x-www-form-urlencoded")
+	request.Header.Set("Accept", "application/json")
+
+	httpCaller, err := generateTokenHttpCaller(ingRuleCreator, httpClient, clientId, clientSecret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, requestBody, "generateTokenHttpCaller")
+}
+
+func TestCreateApiHttpCaller(t *testing.T) {
+
+	paths := []v1alpha1.Path{{Context:apiContext, Operation:postOperation}}
+	endpoints := []v1alpha1.Endpoint{{Protocol:protocol, Type:epType, ServiceName:serviceName, Port:port}}
+	ingSpec := &v1alpha1.IngressSpec{Name:apiName, Context:apiContext, Version:apiVersion, Paths:paths, Endpoints:endpoints}
+	err := validateAndSetDefaults(ingSpec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	createApiPayload, err := createApiCreationPayload(ingSpec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestBody := []byte(createApiPayload)
+	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
+		ingRuleCreator.IngressConfig.ApiVersion + apisPath, bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Bearer " + token)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+	httpCaller, err := createApiHttpCaller(ingRuleCreator, httpClient, ingSpec, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, requestBody, "createApiHttpCaller")
+}
+
+func TestPublishApiHttpCaller(t *testing.T) {
+
+	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
+		ingRuleCreator.IngressConfig.ApiVersion + lifecylePath + "?apiId=" + apiId + "&action=Publish", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Bearer " + token)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+	httpCaller, err := publishApiHttpCaller(ingRuleCreator, httpClient, apiId, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, nil, "publishApiHttpCaller")
+}
+
+func TestUpdateApiHttpCaller(t *testing.T) {
+
+	paths := []v1alpha1.Path{{Context:apiContext, Operation:postOperation}}
+	endpoints := []v1alpha1.Endpoint{{Protocol:protocol, Type:epType, ServiceName:serviceName, Port:port}}
+	ingSpec := &v1alpha1.IngressSpec{Name:apiName, Context:apiContext, Version:apiVersion, Paths:paths, Endpoints:endpoints}
+	err := validateAndSetDefaults(ingSpec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	createApiPayload, err := createApiCreationPayload(ingSpec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestBody := []byte(createApiPayload)
+	request, err := http.NewRequest("PUT", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
+		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "/" + apiId, bytes.NewBuffer(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Bearer " + token)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+	httpCaller, err := updateApiHttpCaller(ingRuleCreator, ingSpec, httpClient, apiId, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, requestBody, "updateApiHttpCaller")
+}
+
+func TestGetApiIdHttpCaller (t *testing.T) {
+
+	request, err := http.NewRequest("GET", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
+		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "?query=context:" + apiContext, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Bearer " + token)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	httpCaller, err := getApiIdHttpCaller(ingRuleCreator, apiContext, httpClient, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, nil, "getApiIdHttpCaller")
+}
+
+func TestDeleteApiHttpCaller (t *testing.T) {
+	request, err := http.NewRequest("DELETE", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
+		ingRuleCreator.IngressConfig.ApiVersion + apisPath + "/" + apiId, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Authorization", "Bearer " + token)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	httpCaller, err := deleteApiHttpCaller(ingRuleCreator, httpClient,apiId, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// verify
+	compare(t, request, httpCaller, nil, "deleteApiHttpCaller")
+}
+
+func compare (t *testing.T, request *http.Request, httpCaller *DefaultHttpCaller, requestBody []byte, method string) {
+	if diff := cmp.Diff(request.Header, httpCaller.req.Header); diff != "" {
+		t.Errorf("diff exists (-request.Header, +httpCaller.req.Header) " + method + " method \n%v", diff)
+	}
+	if requestBody != nil {
+		body, err := ioutil.ReadAll(httpCaller.req.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(requestBody, body); diff != "" {
+			t.Errorf("diff exists (-requestBody, +body) "+method+" method \n%v", diff)
+		}
+	}
+	if diff := cmp.Diff(request.Method, httpCaller.req.Method); diff != "" {
+		t.Errorf("diff exists (-request.Method, +httpCaller.req.Method) " + method + " method \n%v", diff)
+	}
+	if diff := cmp.Diff(request.URL, httpCaller.req.URL); diff != "" {
+		t.Errorf("diff exists (-request.URL, +httpCaller.req.URL) " + method + " method \n%v", diff)
 	}
 }
