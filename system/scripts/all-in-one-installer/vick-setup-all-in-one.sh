@@ -295,7 +295,7 @@ function deploy_global_gw () {
     local download_location=$1
     local iaas=$2
 
-    if [ $iaas == "kubeadm" ]; then
+    if [ $iaas == "kubeadm" ] || [ $iaas == "k8s" ]; then
         #Create folders required by the APIM GW PVC
         if [ -d /mnt/apim_repository_deployment_server ]; then
             sudo mv /mnt/apim_repository_deployment_server "/mnt/apim_repository_deployment_server.$(date +%s)"
@@ -506,7 +506,7 @@ declare -A nfs_config_params
 
 
 #Install K8s
-if [ -n $iaas ]; then
+if [[ -n ${iaas/[ ]*\n/} ]]; then
     if [ $iaas == "GCP" ]; then
         echo "GCP selected"
         if [ -n $gcp_project ]; then
@@ -571,8 +571,10 @@ if [ $install_mysql == "y" ]; then
         update_control_plance_sql $download_path
         deploy_mysql_server $download_path
     else
-        echo "Installer can not deploy MySQL server to existing K8s clusters"
+        echo "Deploy MySQL server into the existing K8s clusters"
         read_control_plane_datasources_configs
+        update_control_plance_sql $download_path
+        deploy_mysql_server $download_path
     fi
 else
     read_control_plane_datasources_configs

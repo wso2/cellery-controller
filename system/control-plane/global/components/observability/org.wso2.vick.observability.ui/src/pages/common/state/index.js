@@ -107,21 +107,27 @@ UnStyledStateProvider.propTypes = {
 const StateProvider = withStyles(styles, {withTheme: true})(UnStyledStateProvider);
 
 /**
- * Higher Order Component for accessing the Color Generator.
+ * Higher Order Component for accessing the State Holder.
  *
- * @param {React.Component | Function} Component component which needs access to the state.
- * @returns {React.Component | Function} The new HOC with access to the state.
+ * @param {React.ComponentType} Component component which needs access to the state.
+ * @returns {React.ComponentType} The new HOC with access to the state.
  */
-const withGlobalState = (Component) => class ConfigConsumer extends React.Component {
+const withGlobalState = (Component) => {
+    class StateConsumer extends React.Component {
 
-    render() {
-        return (
-            <StateContext.Consumer>
-                {(state) => <Component globalState={state} {...this.props}/>}
-            </StateContext.Consumer>
-        );
+        render = () => {
+            const {forwardedRef, ...otherProps} = this.props;
+
+            return (
+                <StateContext.Consumer>
+                    {(state) => <Component globalState={state} ref={forwardedRef} {...otherProps}/>}
+                </StateContext.Consumer>
+            );
+        };
+
     }
 
+    return React.forwardRef((props, ref) => <StateConsumer {...props} forwardedRef={ref} />);
 };
 
 export default withGlobalState;

@@ -59,19 +59,27 @@ ColorProvider.propTypes = {
 /**
  * Higher Order Component for accessing the Color Generator.
  *
- * @param {React.Component} Component component which needs access to the color generator.
- * @returns {Object} The new HOC with access to the color generator.
+ * @param {React.ComponentType} Component component which needs access to the color generator.
+ * @returns {React.ComponentType} The new HOC with access to the color generator.
  */
-const withColor = (Component) => class ColorGeneratorProvider extends React.Component {
+const withColor = (Component) => {
+    class ColorGeneratorProvider extends React.Component {
 
-    render() {
-        return (
-            <ColorContext.Consumer>
-                {(colorGenerator) => <Component colorGenerator={colorGenerator} {...this.props}/>}
-            </ColorContext.Consumer>
-        );
+        render() {
+            const {forwardedRef, ...otherProps} = this.props;
+
+            return (
+                <ColorContext.Consumer>
+                    {(colorGenerator) => (
+                        <Component colorGenerator={colorGenerator} ref={forwardedRef} {...otherProps}/>
+                    )}
+                </ColorContext.Consumer>
+            );
+        }
+
     }
 
+    return React.forwardRef((props, ref) => <ColorGeneratorProvider {...props} forwardedRef={ref} />);
 };
 
 export default withColor;

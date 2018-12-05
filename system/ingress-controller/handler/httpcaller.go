@@ -38,7 +38,7 @@ func (caller *DefaultHttpCaller) DoHttpCall() (interface{}, error)  {
 	return caller.client.Do(caller.req)
 }
 
-func RegisterClientHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client) (*DefaultHttpCaller, error) {
+func registerClientHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client) (*DefaultHttpCaller, error) {
 	// create headers
 	authHeader := getBasicAuthHeader(ingRuleCreator.IngressConfig.Username, ingRuleCreator.IngressConfig.Password)
 	// create request
@@ -58,7 +58,7 @@ func RegisterClientHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.C
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func GenerateTokenHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client,
+func generateTokenHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client,
 								clientId string, clientSecret string) (*DefaultHttpCaller, error) {
 
 	// get basic auth header for registered client, with clientId and clientSecret
@@ -77,7 +77,7 @@ func GenerateTokenHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Cl
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func CreateApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, ingSpec *v1alpha1.IngressSpec,
+func createApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, ingSpec *v1alpha1.IngressSpec,
 																token string) (*DefaultHttpCaller, error) {
 
 	err := validateAndSetDefaults(ingSpec)
@@ -100,7 +100,7 @@ func CreateApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func PublishApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, apiId string,
+func publishApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, apiId string,
 	token string) (*DefaultHttpCaller, error) {
 
 	request, err := http.NewRequest("POST", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
@@ -115,7 +115,7 @@ func PublishApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Clien
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func UpdateApiHttpCaller(ingRuleCreator *IngressRuleCreator, ingSpec *v1alpha1.IngressSpec, client *http.Client,
+func updateApiHttpCaller(ingRuleCreator *IngressRuleCreator, ingSpec *v1alpha1.IngressSpec, client *http.Client,
 										apiId string, token string) (*DefaultHttpCaller, error) {
 
 	err := validateAndSetDefaults(ingSpec)
@@ -138,7 +138,7 @@ func UpdateApiHttpCaller(ingRuleCreator *IngressRuleCreator, ingSpec *v1alpha1.I
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func GetApiIdHttpCaller(ingRuleCreator *IngressRuleCreator, context string,
+func getApiIdHttpCaller(ingRuleCreator *IngressRuleCreator, context string,
 												client *http.Client, token string) (*DefaultHttpCaller, error) {
 
 	request, err := http.NewRequest("GET", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +
@@ -153,7 +153,7 @@ func GetApiIdHttpCaller(ingRuleCreator *IngressRuleCreator, context string,
 	return &DefaultHttpCaller{client:client, req:request}, nil
 }
 
-func DeleteApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, apiId string,
+func deleteApiHttpCaller(ingRuleCreator *IngressRuleCreator, client *http.Client, apiId string,
 																token string) (*DefaultHttpCaller, error) {
 
 	request, err := http.NewRequest("DELETE", ingRuleCreator.IngressConfig.BaseUrl + publisherPath +

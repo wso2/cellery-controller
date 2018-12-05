@@ -56,6 +56,8 @@ spec:
           initialDelaySeconds: 150
           periodSeconds: 10
         imagePullPolicy: Always
+        securityContext:
+          runAsUser: 802
         env:
         - name: ZIPKIN_HOST
           value: "wso2sp-worker.vick-system"
@@ -108,11 +110,11 @@ spec:
           mountPath: /home/wso2carbon/wso2-config-volume/repository/conf/security
 #        - name: auth-ext
 #          mountPath: /home/wso2carbon/wso2-artifact-volume/repository/components/lib
-      # These containers are run during pod initialization
-      initContainers:
-      - name: chmodfs
-        image: busybox
-        command: ["chown", "-R", "802:802", "/home/wso2carbon/wso2am-2.6.0/repository/deployment/server"]
+# These containers are run during pod initialization
+#      initContainers:
+#      - name: chmodfs
+#        image: busybox
+#        command: ["chown", "-R", "802:802", "/home/wso2carbon/wso2am-2.6.0/repository/deployment/server"]
         volumeMounts:
         - name: apim-storage-volume
           mountPath: "/home/wso2carbon/wso2am-2.6.0/repository/deployment/server"
