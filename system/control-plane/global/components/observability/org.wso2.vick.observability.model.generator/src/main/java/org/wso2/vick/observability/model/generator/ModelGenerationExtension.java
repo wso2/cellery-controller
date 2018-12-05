@@ -34,6 +34,7 @@ import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,12 +94,12 @@ public class ModelGenerationExtension extends StreamProcessor {
                 SpanCacheInfo spanCacheInfo = setSpanInfo(spanId, node, serviceName, operationName, spanKind);
                 if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND) && spanCacheInfo.getClient() != null) {
 
-                    ModelManager.getInstance().moveLinks(spanCacheInfo.getClient().getNode(),
+                   ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(),
                             spanCacheInfo.getServer().getNode(),
                             serviceName + Constants.LINK_SEPARATOR + operationName);
                 }
 
-                ModelManager.getInstance().addNode(node);
+                ServiceHolder.getModelManager().addNode(node);
                 if (parentId != null) {
                     SpanCacheInfo parentSpanCacheInfo = spanIdNodeCache.getIfPresent(parentId);
                     if (parentSpanCacheInfo != null) {
@@ -137,7 +138,7 @@ public class ModelGenerationExtension extends StreamProcessor {
         }
         String linkName = parentNode.getService() + Constants.LINK_SEPARATOR + parentNode.getOperationName()
                 + Constants.LINK_SEPARATOR + serviceName + Constants.LINK_SEPARATOR + operationName;
-        ModelManager.getInstance().addLink(parentNode.getNode(), childNode, linkName);
+        ServiceHolder.getModelManager().addLink(parentNode.getNode(), childNode, linkName);
     }
 
     private Node getNode(String componentName, String tags) {

@@ -19,6 +19,7 @@ package org.wso2.vick.observability.api.internal;
 
 import org.wso2.carbon.kernel.CarbonRuntime;
 import org.wso2.msf4j.MicroservicesRunner;
+import org.wso2.vick.observability.model.generator.ModelManager;
 
 /**
  * This is a static class which holds the references of the OSGI services registered.
@@ -26,6 +27,7 @@ import org.wso2.msf4j.MicroservicesRunner;
 public class ServiceHolder {
     private static CarbonRuntime carbonRuntime;
     private static MicroservicesRunner microservicesRunner;
+    private static ModelManager modelManager;
 
     private ServiceHolder() {
     }
@@ -44,5 +46,13 @@ public class ServiceHolder {
 
     public static void setMicroservicesRunner(MicroservicesRunner microservicesRunner) {
         ServiceHolder.microservicesRunner = microservicesRunner;
+    }
+
+    public static ModelManager getModelManager() {
+        return modelManager;
+    }
+
+    public static void setModelManager(ModelManager modelManager) {
+        ServiceHolder.modelManager = modelManager;
     }
 }

@@ -17,9 +17,9 @@
  */
 package org.wso2.vick.observability.api;
 
+import org.wso2.vick.observability.api.internal.ServiceHolder;
 import org.wso2.vick.observability.api.model.Graph;
 import org.wso2.vick.observability.api.model.GraphEdge;
-import org.wso2.vick.observability.model.generator.ModelManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,8 +40,8 @@ public class DependencyModelAPI {
     public Response getCellOverview() {
         List<GraphEdge> graphEdges = new ArrayList<>();
 
-        for (String edges : ModelManager.getInstance().getLinks()) {
-            String[] edgeNameElements = ModelManager.getInstance().
+        for (String edges : ServiceHolder.getModelManager().getLinks()) {
+            String[] edgeNameElements = ServiceHolder.getModelManager().
                     edgeNameElements(edges);
             GraphEdge edge = new GraphEdge(edgeNameElements[0], edgeNameElements[1]);
             graphEdges.add(edge);
@@ -50,7 +50,7 @@ public class DependencyModelAPI {
                 .header("Access-Control-Allow-Credentials", "true")
                 .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
                 .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
-                .entity(new Graph(ModelManager.getInstance().getNodes(), graphEdges))
+                .entity(new Graph(ServiceHolder.getModelManager().getNodes(), graphEdges))
                 .build();
     }
 
