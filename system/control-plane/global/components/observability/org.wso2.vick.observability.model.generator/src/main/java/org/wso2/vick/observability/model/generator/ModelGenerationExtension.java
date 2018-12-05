@@ -79,6 +79,7 @@ public class ModelGenerationExtension extends StreamProcessor {
             StreamEvent streamEvent = complexEventChunk.next();
             String spanComponentName = (String) componentNameExecutor.execute(streamEvent);
             if (!spanComponentName.trim().startsWith("istio")) {
+                log.info(spanComponentName);
                 String[] componentServiceNameParts = spanComponentName.split("--");
                 String componentName = componentServiceNameParts[0];
                 String serviceName = componentServiceNameParts[1];
@@ -87,7 +88,6 @@ public class ModelGenerationExtension extends StreamProcessor {
                 String parentId = (String) parentIdExecutor.execute(streamEvent);
                 String operationName = (String) operationNameExecutor.execute(streamEvent);
                 String tags = (String) tagExecutor.execute(streamEvent);
-                log.info(spanId);
                 spanId = spanId.split(Constants.SPAN_ID_KIND_SEPARATOR)[0];
                 Node node = getNode(componentName, tags);
                 node.addService(serviceName);
