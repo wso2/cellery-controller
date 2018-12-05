@@ -13,13 +13,15 @@ VICK is a virtual distributed computer, that is optimised for agile development,
 * Ubuntu 16.04 OS with SWAP disabled
 
 ### Installing VICK
-Run the following command to install VICK
+Run the following command to install VICK and K8s on Ubunut Linux. This scrip uses [kubeadm](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/) tool to deploy K8s.
     
-    curl https://raw.githubusercontent.com/wso2/product-vick/master/system/scripts/kubeadm/kubeadm-setup.sh | sudo bash
+    curl https://raw.githubusercontent.com/gnudeep/product-vick/master/system/scripts/all-in-one-installer/vick-setup-all-in-one.sh | bash -s -- kubeadm
     
 ### Uninstall VICK
 
-    curl https://raw.githubusercontent.com/wso2/product-vick/master/system/scripts/kubeadm/kubeadm-cleanup.sh | sudo bash
+    curl https://raw.githubusercontent.com/gnudeep/product-vick/master/system/scripts/all-in-one-installer/vick-cleanup.sh | bash -s -- kubeadm
+
+Please refer the [scrip usage document](./system/scripts/all-in-one-installer/README.md) to fine the other K8s based platform support.
 
 ## Samples
 
