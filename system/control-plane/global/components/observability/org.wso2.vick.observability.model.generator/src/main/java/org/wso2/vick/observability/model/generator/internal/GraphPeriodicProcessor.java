@@ -27,8 +27,8 @@ import java.util.Set;
 /**
  * This is the Scheduled executor which periodically runs
  */
-public class ScheduledDependencyGraphStore implements Runnable {
-    private static final Logger log = Logger.getLogger(ScheduledDependencyGraphStore.class);
+public class GraphPeriodicProcessor implements Runnable {
+    private static final Logger log = Logger.getLogger(GraphPeriodicProcessor.class);
     private Object[] lastModel;
 
 

@@ -41,7 +41,7 @@ import javax.sql.DataSource;
  * This handles the communication between the Graph datasource, and the rest of the other components.
  */
 public class GraphStoreManager {
-    private static final Logger log = Logger.getLogger(ScheduledDependencyGraphStore.class);
+    private static final Logger log = Logger.getLogger(GraphPeriodicProcessor.class);
 
     private static final String TABLE_NAME = "DEPENDENCY_MODEL";
     private static final String DATASOURCE_NAME = "DEPENDENCY_DATASOURCE";
