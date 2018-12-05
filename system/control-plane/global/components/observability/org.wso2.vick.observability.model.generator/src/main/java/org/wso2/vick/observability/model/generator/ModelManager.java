@@ -19,30 +19,75 @@ package org.wso2.vick.observability.model.generator;
 
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
+import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
+import org.wso2.vick.observability.model.generator.exception.ModelException;
+import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
 
 import java.util.Set;
+
+import static org.wso2.vick.observability.model.generator.Constants.EDGE_NAME_CONNECTOR;
 
 /**
  * This is the Manager, singleton class which performs the operations in the in memory dependency tree.
  */
-
 public class ModelManager {
-    private static final ModelManager instance = new ModelManager();
-    private static final String EDGE_NAME_CONNECTOR = " ---> ";
-
     private MutableNetwork<Node, String> dependencyGraph;
 
-    private ModelManager() {
-        this.dependencyGraph = NetworkBuilder.directed()
-                .allowsParallelEdges(true)
-                .expectedNodeCount(100000)
-                .expectedEdgeCount(1000000)
-                .build();
+    public ModelManager() throws ModelException {
+        try {
+            Object[] graph = ServiceHolder.getGraphStoreManager().loadGraph();
+            this.dependencyGraph = NetworkBuilder.directed()
+                    .allowsParallelEdges(true)
+                    .expectedNodeCount(100000)
+                    .expectedEdgeCount(1000000)
+                    .build();
+            if (graph != null) {
+                Set<Node> nodes = (Set<Node>) graph[0];
+                Set<String> edges = (Set<String>) graph[1];
+                addNodes(nodes);
+                addEdges(edges);
+            }
+        } catch (GraphStoreException e) {
+            throw new ModelException("Unable to load already persisted model.", e);
+        }
     }
 
-    public static ModelManager getInstance() {
-        return instance;
+    private void addNodes(Set<Node> nodes) {
+        for (Node node : nodes) {
+            this.dependencyGraph.addNode(node);
+        }
     }
+
+    private void addEdges(Set<String> edges) throws ModelException {
+        for (String edge : edges) {
+            String[] elements = this.edgeNameElements(edge);
+            Node parentNode = getNode(elements[0]);
+            Node childNode = getNode(elements[1]);
+            if (parentNode != null && childNode != null) {
+                this.dependencyGraph.addEdge(parentNode, childNode, edge);
+            } else {
+                String msg = "";
+                if (parentNode == null) {
+                    msg += "Parent node doesn't exist in the graph for edgename :" + edge + ". ";
+                }
+                if (childNode == null) {
+                    msg += "Client node doesn't exist in the graph for edgename :" + edge + ". ";
+                }
+                throw new ModelException(msg);
+            }
+        }
+    }
+
+    private Node getNode(String nodeName) {
+        Set<Node> nodes = this.dependencyGraph.nodes();
+        for (Node node : nodes) {
+            if (node.getId().equalsIgnoreCase(nodeName)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
 
     public void addNode(Node node) {
         this.dependencyGraph.addNode(node);
@@ -61,6 +106,10 @@ public class ModelManager {
 
     public Set<String> getLinks() {
         return this.dependencyGraph.edges();
+    }
+
+    public MutableNetwork<Node, String> getDependencyGraph() {
+        return dependencyGraph;
     }
 
     private String generateEdgeName(String parentNodeId, String childNodeId, String serviceName) {

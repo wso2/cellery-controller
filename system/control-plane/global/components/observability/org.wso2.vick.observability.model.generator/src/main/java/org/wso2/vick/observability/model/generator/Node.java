@@ -61,6 +61,7 @@ public class Node implements Comparable {
         return object != null && object instanceof Node && id.equalsIgnoreCase(((Node) object).id);
     }
 
+
     public Set<String> getServices() {
         return services;
     }

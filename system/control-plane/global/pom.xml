@@ -60,6 +60,11 @@
                 <version>${siddhi.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.datasources</groupId>
+                <artifactId>org.wso2.carbon.datasource.core</artifactId>
+                <version>${carbon.datasource.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.siddhi</groupId>
                 <artifactId>siddhi-query-compiler</artifactId>
                 <version>${siddhi.version}</version>
@@ -293,6 +298,7 @@
         <msf4j.version>2.6.4</msf4j.version>
         <guave.version>20.0</guave.version>
         <kubernetes.client.version>3.0.0</kubernetes.client.version>
+        <carbon.datasource.version>1.1.4</carbon.datasource.version>
 
         <!-- external jars for receiver -->
         <protobuf.java.version>3.6.1</protobuf.java.version>
