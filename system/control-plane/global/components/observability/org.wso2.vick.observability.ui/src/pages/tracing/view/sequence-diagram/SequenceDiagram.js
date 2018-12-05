@@ -48,12 +48,14 @@ class SequenceDiagram extends Component {
     }
     render() {
         return (
+
             <div>
+
                 <h3> {this.state.heading} </h3>
+                <div id="hiddenDiv" style={this.state.clicked ? {} : {display:'none'}} onClick={this.addCells}> &lt;&lt; Back to Cell-level Diagram</div>
                 <div className="mermaid" id="mems">
                 {this.state.config}
             </div>
-                <div id="hiddenDiv" style={this.state.clicked ? {} : {display:'none'}} onClick={this.addCells}> &lt;&lt; Back to Cell-level Diagram</div>
             </div>
         );
     }
@@ -64,10 +66,12 @@ class SequenceDiagram extends Component {
 
         interact('.messageText').on('tap', function (event) {
             if ((event.srcElement.innerHTML !== "Return") && (_this.state.clicked !== true)){
-                _this.addServices(event.srcElement.innerHTML);
+                let numb = event.srcElement.innerHTML.match(/\d+/g).map(Number);
+                _this.addServices(numb);
                 _this.setState({
                     clicked:true
                 });
+
             }
 
         });
@@ -76,7 +80,7 @@ class SequenceDiagram extends Component {
     }
     componentDidUpdate(prevProps, prevState) {
       if (this.state.config !== prevState.config) {
-              $('#mems').removeAttr("data-processed");
+          document.getElementById("mems").removeAttribute("data-processed");
           mermaid.init($("#mems"));
       }
 
@@ -85,11 +89,11 @@ class SequenceDiagram extends Component {
     /**
      * Adds the service calls made for a particular cell to the diagram.
      *
-     * @param {string} spanUId The span's unique Id of the particular cell call.
+     * @param {number[]} callId The span's call Id of the particular cell call.
      */
 
-    addServices(spanUId){
-       let spanArray = this.getServices(spanUId,this.props.spans);
+    addServices(callId){
+       let spanArray = this.tryGetSpan(callId);
         console.log(spanArray);
         let cellArray =[];
         for(let i=0;i<spanArray.length;i++){
@@ -175,6 +179,7 @@ class SequenceDiagram extends Component {
      * @return {String} dataText The text data of string type that is converted by the mermaid library to depict the cell connections.
      */
     addCellConnections() {
+        let callId = 1;
         let serviceListArr = []
         let tree = TracingUtils.buildTree(this.props.spans);
         let dataText = "";
@@ -191,7 +196,9 @@ class SequenceDiagram extends Component {
                     parentCellName = removeDash(parentCellName);
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
-                        dataText += parentCellName + "->>+" + span.cell.name + ":" + span.getUniqueId() + "\n";
+                        span.callingId = callId;
+                        dataText += parentCellName + "->>+" + span.cell.name + ":"+ span.serviceName+" ["+ callId + "] \n";
+                        callId +=1;
                     }
                     else {
                         serviceListArr.push(span);
@@ -286,18 +293,19 @@ class SequenceDiagram extends Component {
     /**
      * Get the list of spans of the services processed inside a cell.
      *
-     * @param {String} spanId The unique Id of the span which made the call to the current cell.
+     * @param {number[]} spanId The unique Id of the span which made the call to the current cell.
      * @param {Array} arr Iterate through this array to get the spans.
      * @return {Array} spanList The array containing all the spans of the services processed inside a cell.
      */
     getServices(spanId,arr){
         let spanList =[];
-        let span  = arr[findSpanIndex(arr,spanId)];
-        console.log(findSpanIndex(arr,spanId));
+        console.log(spanId);
+        let span  = arr[findSpanIndexCall(arr,spanId)];
+        console.log(findSpanIndexCall(arr,spanId));
         console.log(span);
         let cellName = span.getCell().name;
         console.log(cellName);
-        for (let i = findSpanIndex(arr,spanId);i<arr.length;i++){
+        for (let i = findSpanIndexCall(arr,spanId);i<arr.length;i++){
             if(!arr[i].isFromIstioSystemComponent() && !arr[i].isFromVICKSystemComponent()) {
                 if (cellName === arr[i].getCell().name) {
                     spanList.push(arr[i]);
@@ -308,6 +316,25 @@ class SequenceDiagram extends Component {
             }
         }
         return spanList;
+    }
+
+
+    tryGetSpan(spanCallId){
+        let serviceListArr = [];
+        let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,spanCallId)];
+        let parentName = treeRoot.cell.name;
+        treeRoot.walk(
+            (span) => {
+                if(!Boolean(span.callingId) && parentName === span.parent.cell.name){
+                    console.log(span.cell.name);
+                    serviceListArr.push(span);
+                }
+            }, null,
+            null,
+            (span) => (!Boolean(span.callingId) && parentName !== span.parent.cell.name)
+        );
+
+        return serviceListArr;
     }
 
 }
@@ -339,6 +366,16 @@ function findSpanIndex(data,value){
     let index = data.findIndex(function(item){
         return item.getUniqueId() === value
     });
+    return index;
+}
+
+function findSpanIndexCall(data,value){
+    let index = data.findIndex(function(item){
+        if (Boolean(item.callingId)) {
+            return item.callingId === value[0]
+        }
+    });
+
     return index;
 }
 

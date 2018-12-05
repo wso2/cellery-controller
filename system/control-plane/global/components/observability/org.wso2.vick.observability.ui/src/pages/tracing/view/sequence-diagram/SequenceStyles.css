@@ -1,7 +1,7 @@
 .showing { display:none; }
 #hiddenDiv {
     cursor: pointer;
-
+    width: fit-content;
 }
 
 #hiddenDiv:hover {
@@ -16,4 +16,11 @@
 
 .messageText {
     cursor: pointer;
+}
+
+text .actor {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 500px;
 }
