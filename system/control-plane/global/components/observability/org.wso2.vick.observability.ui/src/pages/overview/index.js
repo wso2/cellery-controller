@@ -15,6 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
@@ -23,8 +24,8 @@ import DependencyGraph from "./DependencyGraph";
 import PropTypes from "prop-types";
 import React from "react";
 import Typography from "@material-ui/core/Typography";
+import axios from "axios";
 import {withStyles} from "@material-ui/core/styles";
-import axios from 'axios';
 
 const graphConfig = {
     directed: true,
@@ -128,12 +129,12 @@ class Overview extends React.Component {
             reloadGraph: true
         };
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        //TODO: Update the url to the WSO2-sp worker node.
+        // TODO: Update the url to the WSO2-sp worker node.
         axios({
             method: "GET",
             url: "http://localhost:9123/dependency-model/cell-overview"
         }).then((response) => {
-            let result = response.data;
+            const result = response.data;
             const summaryContent = [
                 {
                     key: "Total cells",
@@ -253,22 +254,24 @@ class Overview extends React.Component {
                         </Typography>
                         <br/>
                         {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
-                                                                                 gutterBottom>
-                                {element.key} : {element.value}
-                                {(element.setValue && element.setValue.length > 0)
-                                && (<ul>
-                                    {element.setValue.map((setValueElement) => <li>{setValueElement}</li>)}
-                                </ul>)
-                                }
-                                {!(element.value || (element.setValue && element.setValue.length > 0)) ? "None" : ""}
-                            </Typography>
+                            gutterBottom>
+                            {element.key} : {element.value}
+                            {(element.setValue && element.setValue.length > 0)
+                                && (
+                                    <ul>
+                                        {element.setValue.map((setValueElement) => <li
+                                            key={setValueElement}>{setValueElement}</li>)}
+                                    </ul>)
+                            }
+                            {element.value || (element.setValue && element.setValue.length > 0) ? "" : "None"}
+                        </Typography>
                         )}
 
                     </CardContent>
                     {(!this.state.isOverallSummary) && (
                         <CardActions>
                             <Button size="small" variant="contained" color="primary"
-                                    className={classes.moreDetailsButton}>
+                                className={classes.moreDetailsButton}>
                                 More Details
                             </Button>
                         </CardActions>
