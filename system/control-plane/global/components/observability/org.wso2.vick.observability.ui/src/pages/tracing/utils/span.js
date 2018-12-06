@@ -141,8 +141,15 @@ class Span {
      *                                The function should return the data that should be passed down to the children.
      * @param {Object} data The initial data to be passed down the trace tree
      * @param {function} postTraverseCallBack The callback to be called after traversing a node.
+     * @param {function} shouldTerminate
      */
-    walk = (nodeCallBack, data = {}, postTraverseCallBack = null) => {
+
+    walk(nodeCallBack, data = {}, postTraverseCallBack = null, shouldTerminate = null) {
+        if (shouldTerminate && shouldTerminate(this)) {
+            return;
+        }
+
+
         let newData;
         if (nodeCallBack) {
             newData = nodeCallBack(this, data);
@@ -162,7 +169,7 @@ class Span {
 
         // Traversing down the tree structure
         for (let i = 0; i < children.length; i++) {
-            children[i].walk(nodeCallBack, newData, postTraverseCallBack);
+            children[i].walk(nodeCallBack, newData, postTraverseCallBack, shouldTerminate);
         }
         if (postTraverseCallBack) {
             postTraverseCallBack(this);
@@ -175,10 +182,6 @@ class Span {
      * @returns {string} the unique ID to represent this span
      */
     getUniqueId = () => `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
-
-    getUniqueId2() {
-        return `${this.traceId}--${this.spanId}`;
-    }
 
     /**
      * Check whether a span belongs to the cell gateway.
