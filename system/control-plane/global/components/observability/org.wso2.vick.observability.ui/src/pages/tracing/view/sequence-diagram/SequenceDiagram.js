@@ -23,28 +23,45 @@ import mermaid, {mermaidAPI} from 'mermaid';
 import $ from 'jquery';
 import TracingUtils from "../../utils/tracingUtils";
 import Span from "../../utils/span";
+import Constants from "../../utils/constants";
+import './SequenceStyles.css';
+import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
+
 
 class SequenceDiagram extends Component {
+
     constructor(props){
         super(props);
         this.state = {
             config :"",
-            heading: "Cell - level Sequence"
-        }
-        this.testFoo2 = this.testFoo2.bind(this);
-        this.testFoo3 = this.testFoo3.bind(this);
+            heading: "Cell - level Sequence",
+            spanData:"sequenceDiagram \n",
+            copyArr: [],
+            clicked: false,
+            cellName: null
+        };
+
+        this.addCells = this.addCells.bind(this);
+        this.addServices = this.addServices.bind(this);
         this.seperateCells = this.seperateCells.bind(this);
         this.drawCells = this.drawCells.bind(this);
-        this.checkDraw = this.checkDraw.bind(this);
-
+        this.combine = this.combine.bind(this);
+        this.drawSpan = this .drawSpan.bind(this);
+        this.iterateChildSpan = this.iterateChildSpan.bind(this);
 
     }
     render() {
-
         return (
+
             <div>
+
                 <h3> {this.state.heading} </h3>
-            <div className="mermaid" id="mems">
+                <Button color="primary" style={this.state.clicked ? {} : {display:'none'}} onClick={this.addCells}>
+                    &lt;&lt; Back to Cell-level Diagram
+                </Button>
+                <div>{this.state.cellName}</div>
+                <div className="mermaid" id="mems">
                 {this.state.config}
             </div>
             </div>
@@ -53,81 +70,163 @@ class SequenceDiagram extends Component {
 
     componentDidMount(){
         let _this = this;
-        _this.testFoo2();
+        _this.addCells();
 
         interact('.messageText').on('tap', function (event) {
-            _this.testFoo3(event.srcElement.innerHTML);
+            if ((event.srcElement.innerHTML !== "Return") && (_this.state.clicked !== true)){
+                let numb = event.srcElement.innerHTML.match(/\d+/g).map(Number);
+                _this.addServices(numb);
+                _this.setState({
+                    clicked:true
+                });
+
+            }
+
         });
         console.log(this.props.spans);
+        console.log(this.props.clicked);
     }
-    componentDidUpdate(){
-        setTimeout(()=>{
-            $('#mems').removeAttr("data-processed");
-        },1000);
-        mermaid.init($("#mems"));
+    componentDidUpdate(prevProps, prevState) {
+      if (this.state.config !== prevState.config) {
+          document.getElementById("mems").removeAttribute("data-processed");
+          mermaid.init($("#mems"));
+      }
+
     }
 
-    testFoo3(spanData){
-        let index = findSpanIndex(this.props.spans,spanData);
-        let _this = this;
+    /**
+     * Adds the service calls made for a particular cell to the diagram.
+     *
+     * @param {number[]} callId The span's call Id of the particular cell call.
+     */
+
+    addServices(callId){
+       // let spanArray = this.tryGetSpan(callId);
+       //  console.log(spanArray);
+       //  let cellArray =[];
+       //  for(let i=0;i<spanArray.length;i++){
+       //          let cellname = removeDash(spanArray[i].serviceName);
+       //          if (!cellArray.includes(cellname)) {
+       //              cellArray.push(cellname);
+       //          }
+       //  }
+
+        let data2 ="sequenceDiagram \n";
+
+
+        let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,callId)]
+
+        let parentName = treeRoot.cell.name;
+        data2 += "activate "+ removeDash(treeRoot.serviceName)+"\n";
+        treeRoot.walk(
+            (span) => {
+                if(!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() ){
+                if(!Boolean(span.callingId) && parentName === span.cell.name){
+                    console.log(span);
+                    if (span.parent.serviceName !== span.serviceName) {
+                        data2 += removeDash(span.parent.serviceName) + " ->>+ " + removeDash(span.serviceName) + ": Calls \n";
+                    }
+                }
+            }
+            }, null,
+            (span)=> {
+                if(!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() ) {
+                    if (!Boolean(span.callingId) && parentName === span.cell.name) {
+                        if (span.parent.serviceName !== span.serviceName) {
+                            data2 += removeDash(span.serviceName) + "-->>-" + removeDash(span.parent.serviceName) + ": Return \n";
+                        }
+                    }
+                }
+            },
+
+            (span) => (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() &&!Boolean(span.callingId) && parentName !== span.parent.cell.name)
+        );
+        data2+= "deactivate " + removeDash(treeRoot.serviceName)+"\n";
+
+
+
+        ////////////////////
+        // for (let i=1;i<spanArray.length;i++){
+        //     data2+= removeDash(spanArray[i-1].serviceName) +" ->> "+ removeDash(spanArray[i].serviceName)+ ": Calls \n";
+        // }
+        console.log(data2);
         this.setState({
-           config: drawSpan(this.props.spans[index]),
+            config: data2,
             heading : "Span - level Sequence"
         });
+
+        console.log(data2);
     }
 
-    testFoo2() {
+    /**
+     * Adds the cell calls made for a particular trace to the diagram..
+     */
+    addCells() {
         let _this =this;
         this.setState({
             config:_this.drawCells()
         });
-
-        var cellArray = []
+        let cellArray = []
         for (let i=0;i<this.props.spans.length;i++){
             if (this.props.spans[i].componentType==="Micro-service"){
                 cellArray.push(this.props.spans[i]);
             }
         }
-      this.checkDraw();
-
+        _this.setState({
+            clicked:false,
+            heading: "Cell - level Sequence"
+        });
     }
 
+    /**
+     * Gets all the cells that has been involved in the particular trace.
+     *
+     * @param {Array} spanArray The array containing the list of all spans.
+     * @return {Array} cellArray The array containing all the cells in the trace.
+     */
+
      seperateCells(spanArray){
-        var cellArray =[];
+        let cellArray =[];
         for(let i=0;i<spanArray.length;i++){
             if((spanArray[i].serviceName.includes("global"))){
                 cellArray.push("global") ;
             }
             if(Boolean(spanArray[i].cell)) {
-                let cellname = spanArray[i].cell.name;
-                if (cellname === "stock-options") {
-                    cellname = "stock options";
-                }
+                let cellname = removeDash(spanArray[i].cell.name);
                 if (!cellArray.includes(cellname)) {
                     cellArray.push(cellname);
                 }
             }
         }
-
         return cellArray;
     }
 
+    /**
+     * Include all the cells in the trace as actors in the sequence diagram..
+     *
+     * @return {String} dataText The text data as string which is converted to the diagram by the mermaid library.
+     */
+
     drawCells(){
         let array = this.seperateCells(this.props.spans);
-        let mText ="sequenceDiagram \n";
+        let dataText ="sequenceDiagram \n";
         for (let i=0;i<array.length;i++){
-            mText+= "participant "+ array[i] + "\n";
+            dataText+= "participant "+ array[i] + "\n";
         }
-        mText += "activate global\n";
-
-
-        return   mText + this.checkDraw();
-
+        dataText += "activate global\n";
+        return   dataText + this.addCellConnections();
     }
 
-    checkDraw() {
+    /**
+     * Connects all the cell communications in the diagram.
+     *
+     * @return {String} dataText The text data of string type that is converted by the mermaid library to depict the cell connections.
+     */
+    addCellConnections() {
+        let callId = 1;
+        let serviceListArr = []
         let tree = TracingUtils.buildTree(this.props.spans);
-        var tmp = "";
+        let dataText = "";
         tree.walk((span, data) => {
             let parentCellName;
             if (span.parentId !== "undefined") {
@@ -141,12 +240,17 @@ class SequenceDiagram extends Component {
                     parentCellName = removeDash(parentCellName);
                     span.cell.name = removeDash(span.cell.name);
                     if (parentCellName !== span.cell.name) {
-                        tmp += parentCellName + "->>+" + span.cell.name + ":"+ span.getUniqueId()  + "\n";
+                        span.callingId = callId;
+                        dataText += parentCellName + "->>+" + span.cell.name + ":"+ span.serviceName+" ["+ callId + "] \n";
+                        callId +=1;
+                    }
+                    else {
+                        serviceListArr.push(span);
                     }
                 }
             }
         }, undefined, (span) => {
-            if(Boolean(span.cell)){
+            if (Boolean(span.cell)) {
                 let parentCellName = "";
                 if (span.parent.cell === null) {
                     parentCellName = "global";
@@ -154,39 +258,23 @@ class SequenceDiagram extends Component {
                 else {
                     parentCellName = span.parent.cell.name;
                 }
-                if (span.cell.name !== parentCellName){
-                    tmp += span.cell.name + "-->>-"+ parentCellName + ": Return \n";
+                if (span.cell.name !== parentCellName) {
+                    dataText += span.cell.name + "-->>-" + parentCellName + ": Return \n";
                 }
             }
         });
-        tmp += "deactivate global" ;
-        return tmp;
+        dataText += "deactivate global";
+        return dataText;
     }
 
-}
-
-var spanData ="sequenceDiagram \n";
-
-function checkDraw(span, data) {
-    if (span.parentId !== "undefined") {
-        if (!span.parent.cell){
-            data += span.parent.cell.name + " ->> " + span.cell.name;
-        }
-    }
-}
-
-function removeDash(cellName){
-    if(cellName.includes("-")){
-        return cellName.replace("-"," ");
-    }
-    else {
-        return cellName;
-    }
-}
-
-function drawSpan(span){
-        if(!Boolean(span.children)){
-            alert("No further drill downs");
+    /**
+     * Gets all the cells that has been involved in the particular trace.
+     *
+     * @param {Array} spanArray The array containing the list of all spans.
+     */
+    drawSpan(span, strData){
+        if(span.children === undefined){
+            console.log("Test");
         }
         else {
             const children = [];
@@ -197,38 +285,142 @@ function drawSpan(span){
                 children.push(currentChild.value);
                 currentChild = childrenIterator.next();
             }
-            iterateChildSpan(children);
+            this.iterateChildSpan(children, strData);
         }
-        console.log(spanData);
-    return spanData;
+
+    }
+
+    iterateChildSpan(childrenArr,str) {
+        for(let i=0;i<childrenArr.length;i++){
+
+            let parentCellName;
+            if (Boolean(childrenArr[i].cell)) {
+                if (childrenArr[i].parent.cell === null) {
+                    parentCellName = "global";
+                } else {
+                    parentCellName = childrenArr[i].parent.cell.name;
+                }
+                if (childrenArr[i].cell.name !== parentCellName) {
+                    console.log("hit here");
+                    break;
+                }
+                else {
+                    if (childrenArr[i].parent.kind !== Constants.Span.Kind.CLIENT) {
+                        str.data += childrenArr[i].parent.spanId + " ->>+ " + childrenArr[i].spanId + ": " + childrenArr[i].serviceName + "\n";
+                        let jsonObj = {
+                            "from": childrenArr[i].spanId,
+                            "to": childrenArr[i].parent.spanId
+                        };
+                        str.copyArr1.push(jsonObj);
+                    }
+                }
+            }
+
+            this.drawSpan(childrenArr[i],str);
+        }
+
+    }
+
+    combine(span){
+        let tmp = { data : "sequenceDiagram \n",copyArr1:[]};
+        this.drawSpan(span,tmp);
+        console.log(tmp);
+
+        tmp.copyArr1 = tmp.copyArr1.reverse();
+        for (let k = 0; k < tmp.copyArr1.length; k++) {
+            tmp.data += tmp.copyArr1[k].from +  " -->>- "+ tmp.copyArr1[k].to + ": Finish Span \n";
+        }
+        console.log(tmp.data);
+        return tmp.data;
+    }
+
+    /**
+     * Get the list of spans of the services processed inside a cell.
+     *
+     * @param {number[]} spanId The unique Id of the span which made the call to the current cell.
+     * @param {Array} arr Iterate through this array to get the spans.
+     * @return {Array} spanList The array containing all the spans of the services processed inside a cell.
+     */
+    getServices(spanId,arr){
+        let spanList =[];
+        console.log(spanId);
+        let span  = arr[findSpanIndexCall(arr,spanId)];
+        console.log(findSpanIndexCall(arr,spanId));
+        console.log(span);
+        let cellName = span.getCell().name;
+        console.log(cellName);
+        for (let i = findSpanIndexCall(arr,spanId);i<arr.length;i++){
+            if(!arr[i].isFromIstioSystemComponent() && !arr[i].isFromVICKSystemComponent()) {
+                if (cellName === arr[i].getCell().name) {
+                    spanList.push(arr[i]);
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        return spanList;
+    }
+
+
+    tryGetSpan(spanCallId){
+        let serviceListArr = [];
+        let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,spanCallId)];
+        serviceListArr.push(treeRoot);
+        let parentName = treeRoot.cell.name;
+        treeRoot.walk(
+            (span) => {
+                if(!Boolean(span.callingId) && parentName === span.cell.name  && !span.cell.name.includes("gateway")){
+                    console.log(span.cell.name);
+                    serviceListArr.push(span);
+                }
+            }, null,
+            null,
+            (span) => (!Boolean(span.callingId) && parentName !== span.parent.cell.name)
+        );
+
+        return serviceListArr;
+    }
+
 }
-function iterateChildSpan(childrenArr) {
-    for(let i=0;i<childrenArr.length;i++){
+export default SequenceDiagram;
 
-        let parentCellName;
-        if (Boolean(childrenArr[i].cell)) {
-            if (childrenArr[i].parent.cell === null) {
-                parentCellName = "global";
-            } else {
-                parentCellName = childrenArr[i].parent.cell.name;
-            }
-            if (childrenArr[i].cell.name !== parentCellName) {
-                console.log("hit here");
-                break;
-            }
-            else {
-                spanData += childrenArr[i].parent.spanId+" ->> " + childrenArr[i].spanId+": "+ childrenArr[i].serviceName + "\n";
-            }
-        }
-
-        drawSpan(childrenArr[i]);
+/**
+ * Removes dash symbol from cell/service names as the library doesn't support dashes in the actors name.
+ *
+ * @param {String} name The cell/service name that needs to be checked for dashes.
+ * @return {String} name The cell/service name after removing the dashes.
+ */
+function removeDash(name){
+    if(name.includes("-")){
+        return name.replace(/-/g," ");
+    }
+    else {
+        return name;
     }
 }
-function findSpanIndex(data,val){
-    var index = data.findIndex(function(item){
-        return item.getUniqueId() === val
+
+/**
+ * Gets the index of the span object from an array by checking the span's unique id.
+ *
+ * @param {Array} data The array from which the index should be found.
+ * @return {number} index The index of the span.
+ */
+
+function findSpanIndex(data,value){
+    let index = data.findIndex(function(item){
+        return item.getUniqueId() === value
     });
     return index;
 }
 
-export default SequenceDiagram;
+function findSpanIndexCall(data,value){
+    let index = data.findIndex(function(item){
+        if (Boolean(item.callingId)) {
+            return item.callingId === value[0]
+        }
+    });
+
+    return index;
+}
+
