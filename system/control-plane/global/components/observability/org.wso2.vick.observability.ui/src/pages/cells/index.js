@@ -16,9 +16,9 @@
  * under the License.
  */
 
-import Cell from "./Cell";
-import List from "./List";
-import MicroService from "./microservices/MicroService";
+import Cell from "./cell";
+import CellList from "./CellList";
+import MicroService from "./microservice";
 import NotFound from "../common/NotFound";
 import PropTypes from "prop-types";
 import React from "react";
@@ -26,9 +26,9 @@ import {Route, Switch, withRouter} from "react-router-dom";
 
 const Cells = ({match}) => (
     <Switch>
-        <Route exact path={`${match.path}/`} component={List}/>
-        <Route exact path={`${match.path}/:cellId`} component={Cell}/>
-        <Route exact path={`${match.path}/:cellId/microservices/:microserviceId`} component={MicroService}/>
+        <Route exact path={`${match.path}/`} component={CellList}/>
+        <Route exact path={`${match.path}/:cellName`} component={Cell}/>
+        <Route exact path={`${match.path}/:cellName/microservices/:microserviceName`} component={MicroService}/>
         <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );

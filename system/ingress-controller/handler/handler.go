@@ -39,7 +39,7 @@ func (t *IngressHandler) Init() error {
 
 // ObjectCreated is called when an object is created
 func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
-	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
+	regCaller, err := registerClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
@@ -49,7 +49,7 @@ func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
+	tokCaller, err := generateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
 		log.Error(err)
 		return
@@ -59,7 +59,7 @@ func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	createApiCaller, err := CreateApiHttpCaller(ingressRuleCreator, httpClient, &obj.Spec, token)
+	createApiCaller, err := createApiHttpCaller(ingressRuleCreator, httpClient, &obj.Spec, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -71,7 +71,7 @@ func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
 		return
 	}
 	log.Infof("Ingress successfully created %+v\n", obj)
-	publishApiCaller, err := PublishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	publishApiCaller, err := publishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -86,7 +86,7 @@ func (t *IngressHandler) ObjectCreated(obj *v1alpha1.Ingress) {
 
 // ObjectDeleted is called when an object is deleted
 func (t *IngressHandler) ObjectDeleted(obj *v1alpha1.Ingress) {
-	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
+	regCaller, err := registerClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
@@ -96,7 +96,7 @@ func (t *IngressHandler) ObjectDeleted(obj *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
+	tokCaller, err := generateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
 		log.Error(err)
 		return
@@ -106,7 +106,7 @@ func (t *IngressHandler) ObjectDeleted(obj *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	getApiIdCaller, err := GetApiIdHttpCaller(ingressRuleCreator, obj.Spec.Context, httpClient, token)
+	getApiIdCaller, err := getApiIdHttpCaller(ingressRuleCreator, obj.Spec.Context, httpClient, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -116,7 +116,7 @@ func (t *IngressHandler) ObjectDeleted(obj *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	deleteApiCaller, err :=  DeleteApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	deleteApiCaller, err :=  deleteApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -141,7 +141,7 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 		return
 	}
 
-	regCaller, err := RegisterClientHttpCaller(ingressRuleCreator, httpClient)
+	regCaller, err := registerClientHttpCaller(ingressRuleCreator, httpClient)
 	if err != nil {
 		log.Error(err)
 		return
@@ -151,7 +151,7 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	tokCaller, err := GenerateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
+	tokCaller, err := generateTokenHttpCaller(ingressRuleCreator, httpClient, clientId, clientSecret)
 	if err != nil {
 		log.Error(err)
 		return
@@ -161,7 +161,7 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	getApiIdCaller, err := GetApiIdHttpCaller(ingressRuleCreator, objNew.Spec.Context, httpClient, token)
+	getApiIdCaller, err := getApiIdHttpCaller(ingressRuleCreator, objNew.Spec.Context, httpClient, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -171,7 +171,7 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	updateCaller, err := UpdateApiHttpCaller(ingressRuleCreator, &objNew.Spec, httpClient, apiId, token)
+	updateCaller, err := updateApiHttpCaller(ingressRuleCreator, &objNew.Spec, httpClient, apiId, token)
 	if err != nil {
 		log.Error(err)
 		return
@@ -181,7 +181,7 @@ func (t *IngressHandler) ObjectUpdated(objOld, objNew *v1alpha1.Ingress) {
 		log.Error(err)
 		return
 	}
-	publishApiCaller, err := PublishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
+	publishApiCaller, err := publishApiHttpCaller(ingressRuleCreator, httpClient, apiId, token)
 	if err != nil {
 		log.Error(err)
 		return

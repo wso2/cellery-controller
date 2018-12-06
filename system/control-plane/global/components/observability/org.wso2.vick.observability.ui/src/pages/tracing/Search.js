@@ -66,6 +66,8 @@ const styles = (theme) => ({
 
 class Search extends React.Component {
 
+    static ALL_VALUE = "All";
+
     constructor(props) {
         super(props);
         const {location} = props;
@@ -78,9 +80,9 @@ class Search extends React.Component {
                 operations: []
             },
             filter: {
-                cell: queryParams.cell ? queryParams.cell : Search.Constants.ALL_VALUE,
-                microservice: queryParams.microservice ? queryParams.microservice : Search.Constants.ALL_VALUE,
-                operation: queryParams.operation ? queryParams.operation : Search.Constants.ALL_VALUE,
+                cell: queryParams.cell ? queryParams.cell : Search.ALL_VALUE,
+                microservice: queryParams.microservice ? queryParams.microservice : Search.ALL_VALUE,
+                operation: queryParams.operation ? queryParams.operation : Search.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
                 minDuration: queryParams.minDuration ? queryParams.minDuration : undefined,
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
@@ -140,8 +142,8 @@ class Search extends React.Component {
                                     <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
                                     <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
                                         inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                            {Search.Constants.ALL_VALUE}
+                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
+                                            {Search.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(data.cells)}
                                     </Select>
@@ -152,8 +154,8 @@ class Search extends React.Component {
                                     <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
                                     <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
                                         inputProps={{name: "microservice", id: "microservice"}}>
-                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                            {Search.Constants.ALL_VALUE}
+                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
+                                            {Search.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableMicroservices)}
                                     </Select>
@@ -164,8 +166,8 @@ class Search extends React.Component {
                                     <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
                                     <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
                                         inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                            {Search.Constants.ALL_VALUE}
+                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
+                                            {Search.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableOperations)}
                                     </Select>
@@ -288,7 +290,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/cells",
                 method: "POST"
@@ -413,7 +415,7 @@ class Search extends React.Component {
         // Build search object
         const search = {};
         const addSearchParam = (key, value) => {
-            if (value && value !== Search.Constants.ALL_VALUE) {
+            if (value && value !== Search.ALL_VALUE) {
                 search[key] = value;
             }
         };
@@ -431,7 +433,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/tracing/search",
                 method: "POST",
@@ -537,17 +539,17 @@ class Search extends React.Component {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
-        const selectedCells = (filter.cell === Search.Constants.ALL_VALUE ? data.cells : [filter.cell]);
+        const selectedCells = (filter.cell === Search.ALL_VALUE ? data.cells : [filter.cell]);
         const availableMicroservices = data.microservices
             .filter((microservice) => selectedCells.includes(microservice.cell))
             .map((microservice) => microservice.name);
 
         const selectedMicroservice = (filter.microservice && availableMicroservices.includes(filter.microservice))
             ? filter.microservice
-            : Search.Constants.ALL_VALUE;
+            : Search.ALL_VALUE;
 
         // Finding the available operations to be selected
-        const selectedMicroservices = (selectedMicroservice === Search.Constants.ALL_VALUE
+        const selectedMicroservices = (selectedMicroservice === Search.ALL_VALUE
             ? availableMicroservices
             : [selectedMicroservice]);
         const availableOperations = data.operations
@@ -556,7 +558,7 @@ class Search extends React.Component {
 
         const selectedOperation = (filter.operation && availableOperations.includes(filter.operation))
             ? filter.operation
-            : Search.Constants.ALL_VALUE;
+            : Search.ALL_VALUE;
 
         return {
             ...state,
@@ -574,10 +576,6 @@ class Search extends React.Component {
     };
 
 }
-
-Search.Constants = {
-    ALL_VALUE: "All"
-};
 
 Search.propTypes = {
     classes: PropTypes.object.isRequired,

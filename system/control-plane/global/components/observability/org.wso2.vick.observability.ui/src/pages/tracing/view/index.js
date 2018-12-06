@@ -48,14 +48,13 @@ class View extends React.Component {
 
     constructor(props) {
         super(props);
-        const {location} = props;
 
         this.tabs = [
             "timeline",
             "sequence-diagram",
             "dependency-diagram"
         ];
-        const queryParams = HttpUtils.parseQueryParams(location.search);
+        const queryParams = HttpUtils.parseQueryParams(props.location.search);
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
@@ -77,7 +76,7 @@ class View extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
-        HttpUtils.callBackendAPI(
+        HttpUtils.callSiddhiAppEndpoint(
             {
                 url: "/tracing",
                 method: "POST",
@@ -121,6 +120,7 @@ class View extends React.Component {
             selectedTabIndex: value
         });
 
+        // Updating the Browser URL
         const queryParams = HttpUtils.generateQueryParamString({
             tab: this.tabs[value]
         });
@@ -135,6 +135,7 @@ class View extends React.Component {
 
         const traceId = match.params.traceId;
 
+<<<<<<< HEAD
         const timeline = <Timeline spans={spans}/>;
 <<<<<<< HEAD
         const sequenceDiagram = <SequenceDiagram spans={spans}/>;
@@ -144,6 +145,10 @@ class View extends React.Component {
         const dependencyDiagram = <DependencyDiagram spans={spans}/>;
 >>>>>>> 8852b9016fc3dad8d7635d408eff6d4d1319301b
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
+=======
+        const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
+        const SelectedTabContent = tabContent[selectedTabIndex];
+>>>>>>> 53232a703fdbb8e95b0508a3835df9dc49adb574
 
         return (
             isLoading
@@ -164,7 +169,7 @@ class View extends React.Component {
                                             <Tab label="Sequence Diagram"/>
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
-                                        {tabContent[selectedTabIndex]}
+                                        <SelectedTabContent spans={spans}/>
                                     </Paper>
                                 )
                         }

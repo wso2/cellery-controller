@@ -34,6 +34,7 @@ import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,6 +79,7 @@ public class ModelGenerationExtension extends StreamProcessor {
             StreamEvent streamEvent = complexEventChunk.next();
             String spanComponentName = (String) componentNameExecutor.execute(streamEvent);
             if (!spanComponentName.trim().startsWith("istio")) {
+                log.info(spanComponentName);
                 String[] componentServiceNameParts = spanComponentName.split("--");
                 String componentName = componentServiceNameParts[0];
                 String serviceName = componentServiceNameParts[1];
@@ -86,19 +88,18 @@ public class ModelGenerationExtension extends StreamProcessor {
                 String parentId = (String) parentIdExecutor.execute(streamEvent);
                 String operationName = (String) operationNameExecutor.execute(streamEvent);
                 String tags = (String) tagExecutor.execute(streamEvent);
-                log.info(spanId);
                 spanId = spanId.split(Constants.SPAN_ID_KIND_SEPARATOR)[0];
                 Node node = getNode(componentName, tags);
                 node.addService(serviceName);
                 SpanCacheInfo spanCacheInfo = setSpanInfo(spanId, node, serviceName, operationName, spanKind);
                 if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND) && spanCacheInfo.getClient() != null) {
 
-                    ModelManager.getInstance().moveLinks(spanCacheInfo.getClient().getNode(),
+                   ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(),
                             spanCacheInfo.getServer().getNode(),
                             serviceName + Constants.LINK_SEPARATOR + operationName);
                 }
 
-                ModelManager.getInstance().addNode(node);
+                ServiceHolder.getModelManager().addNode(node);
                 if (parentId != null) {
                     SpanCacheInfo parentSpanCacheInfo = spanIdNodeCache.getIfPresent(parentId);
                     if (parentSpanCacheInfo != null) {
@@ -137,7 +138,7 @@ public class ModelGenerationExtension extends StreamProcessor {
         }
         String linkName = parentNode.getService() + Constants.LINK_SEPARATOR + parentNode.getOperationName()
                 + Constants.LINK_SEPARATOR + serviceName + Constants.LINK_SEPARATOR + operationName;
-        ModelManager.getInstance().addLink(parentNode.getNode(), childNode, linkName);
+        ServiceHolder.getModelManager().addLink(parentNode.getNode(), childNode, linkName);
     }
 
     private Node getNode(String componentName, String tags) {

@@ -23,9 +23,12 @@ describe("ColorGenerator", () => {
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
-            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(3);
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(6);
             expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
         });
     });
@@ -42,9 +45,12 @@ describe("ColorGenerator", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
 
-            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(8);
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(11);
             expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
@@ -58,9 +64,12 @@ describe("ColorGenerator", () => {
             colorGenerator.addKeys(keyList);
             colorGenerator.addKeys([KEY_2, KEY_5]);
 
-            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(8);
+            expect(Object.keys(colorGenerator.colorMap)).toHaveLength(11);
             expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
             expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
@@ -142,6 +151,9 @@ describe("ColorGenerator", () => {
             keyList = [];
             keyList.push(ColorGenerator.VICK);
             keyList.push(ColorGenerator.ISTIO);
+            keyList.push(ColorGenerator.UNKNOWN);
+            keyList.push(ColorGenerator.SUCCESS);
+            keyList.push(ColorGenerator.WARNING);
             keyList.push(ColorGenerator.ERROR);
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);

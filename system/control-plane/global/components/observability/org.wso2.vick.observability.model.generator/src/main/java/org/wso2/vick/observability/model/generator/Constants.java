@@ -22,6 +22,7 @@ package org.wso2.vick.observability.model.generator;
  */
 public class Constants {
     public static final String SERVER_SPAN_KIND = "SERVER";
+    public static final String EDGE_NAME_CONNECTOR = " ---> ";
     public static final String LINK_SEPARATOR = "##";
     public static final String SPAN_ID_KIND_SEPARATOR = "-";
 }

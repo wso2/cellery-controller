@@ -15,6 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
@@ -23,8 +24,10 @@ import DependencyGraph from "./DependencyGraph";
 import PropTypes from "prop-types";
 import React from "react";
 import Typography from "@material-ui/core/Typography";
+import axios from "axios";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import axios from 'axios';
+import withColor, {ColorGenerator} from "../common/color";
 
 const graphConfig = {
     directed: true,
@@ -62,8 +65,7 @@ const graphConfig = {
         renderLabel: true,
         size: 600,
         strokeColor: "green",
-        strokeWidth: 2,
-        svg: "green-cell.svg"
+        strokeWidth: 2
     },
     link: {
         color: "#d3d3d3",
@@ -97,6 +99,8 @@ class Overview extends React.Component {
 
     constructor(props) {
         super(props);
+        const colorGenerator = this.props.colorGenerator;
+        graphConfig.node.viewGenerator = this.viewGenerator;
         this.defaultState = {
             summary: {
                 topic: "VICK Deployment",
@@ -128,12 +132,12 @@ class Overview extends React.Component {
             reloadGraph: true
         };
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        //TODO: Update the url to the WSO2-sp worker node.
+        // TODO: Update the url to the WSO2-sp worker node.
         axios({
             method: "GET",
             url: "http://localhost:9123/dependency-model/cell-overview"
         }).then((response) => {
-            let result = response.data;
+            const result = response.data;
             const summaryContent = [
                 {
                     key: "Total cells",
@@ -153,6 +157,7 @@ class Overview extends React.Component {
                 }
             ];
             this.defaultState.summary.content = summaryContent;
+            colorGenerator.addKeys(result.nodes);
             this.setState((prevState) => ({
                 data: {
                     nodes: result.nodes,
@@ -167,6 +172,14 @@ class Overview extends React.Component {
             this.setState({error: error});
         });
     }
+
+    viewGenerator = (nodeProps) => {
+        const color = this.props.colorGenerator.getColor(nodeProps.id);
+        return <svg x="0px" y="0px"
+            width="50px" height="50px" viewBox="0 0 240 240">
+            <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+        </svg>;
+    };
 
     onClickCell = (nodeId) => {
         const outbound = new Set();
@@ -253,22 +266,24 @@ class Overview extends React.Component {
                         </Typography>
                         <br/>
                         {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
-                                                                                 gutterBottom>
-                                {element.key} : {element.value}
-                                {(element.setValue && element.setValue.length > 0)
-                                && (<ul>
-                                    {element.setValue.map((setValueElement) => <li>{setValueElement}</li>)}
-                                </ul>)
-                                }
-                                {!(element.value || (element.setValue && element.setValue.length > 0)) ? "None" : ""}
-                            </Typography>
+                            gutterBottom>
+                            {element.key} : {element.value}
+                            {(element.setValue && element.setValue.length > 0)
+                                && (
+                                    <ul>
+                                        {element.setValue.map((setValueElement) => <li
+                                            key={setValueElement}>{setValueElement}</li>)}
+                                    </ul>)
+                            }
+                            {element.value || (element.setValue && element.setValue.length > 0) ? "" : "None"}
+                        </Typography>
                         )}
 
                     </CardContent>
                     {(!this.state.isOverallSummary) && (
                         <CardActions>
                             <Button size="small" variant="contained" color="primary"
-                                    className={classes.moreDetailsButton}>
+                                className={classes.moreDetailsButton}>
                                 More Details
                             </Button>
                         </CardActions>
@@ -281,7 +296,8 @@ class Overview extends React.Component {
 }
 
 Overview.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles)(Overview);
+export default withStyles(styles)(withRouter(withColor(Overview)));

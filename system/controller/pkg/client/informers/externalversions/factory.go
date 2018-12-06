@@ -26,6 +26,7 @@ import (
 	time "time"
 
 	versioned "github.com/wso2/product-vick/system/controller/pkg/client/clientset/versioned"
+	authentication "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/authentication"
 	internalinterfaces "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/internalinterfaces"
 	networking "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/networking"
 	vick "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick"
@@ -175,8 +176,13 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Authentication() authentication.Interface
 	Networking() networking.Interface
 	Vick() vick.Interface
+}
+
+func (f *sharedInformerFactory) Authentication() authentication.Interface {
+	return authentication.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Networking() networking.Interface {
