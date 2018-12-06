@@ -23,8 +23,8 @@ import BarChart from "@material-ui/icons/BarChart";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import CloseIcon from "@material-ui/icons/Close";
 import Collapse from "@material-ui/core/Collapse";
-import {ConfigHolder} from "./pages/common/config/configHolder";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import DesktopWindows from "@material-ui/icons/DesktopWindows";
 import Divider from "@material-ui/core/Divider";
@@ -41,15 +41,17 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
+import NotificationUtils from "./pages/common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import React from "react";
+import Snackbar from "@material-ui/core/Snackbar/Snackbar";
 import Timeline from "@material-ui/icons/Timeline";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
-import {ConfigConstants, withConfig} from "./pages/common/config";
+import withGlobalState, {StateHolder} from "./pages/common/state";
 
 const drawerWidth = 240;
 
@@ -122,7 +124,7 @@ const styles = (theme) => ({
     },
     progressOverlay: {
         position: "absolute",
-        zIndex: 1,
+        zIndex: 9999,
         top: 0,
         left: 0,
         width: "100%",
@@ -144,6 +146,13 @@ const styles = (theme) => ({
     },
     nested: {
         paddingLeft: theme.spacing.unit * 3
+    },
+    active: {
+        color: theme.palette.primary.main,
+        fontWeight: 500
+    },
+    list: {
+        paddingTop: 0
     }
 });
 
@@ -152,22 +161,30 @@ class AppLayout extends React.Component {
     constructor(props) {
         super(props);
 
-        this.handleUserInfoMenuOpen = this.handleUserInfoMenuOpen.bind(this);
-        this.handleUserInfoClose = this.handleUserInfoClose.bind(this);
-        this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
-        this.handleDrawerClose = this.handleDrawerClose.bind(this);
-        this.handleLoadingStateChange = this.handleLoadingStateChange.bind(this);
+        const pages = ["/", "/cells", "/tracing", "/system-metrics"];
+        let selectedIndex = 0;
+        for (let i = 0; i < pages.length; i++) {
+            if (props.location.pathname.startsWith(pages[i])) {
+                selectedIndex = i;
+            }
+        }
 
-        props.config.addListener(ConfigConstants.LOADING_STATE, this.handleLoadingStateChange);
-        const loadingState = props.config.get(ConfigConstants.LOADING_STATE);
+        props.globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+        props.globalState.addListener(StateHolder.NOTIFICATION_STATE, this.handleNotificationStateChange);
+
+        const loadingState = props.globalState.get(StateHolder.LOADING_STATE);
+        const notificationState = props.globalState.get(StateHolder.NOTIFICATION_STATE);
         this.state = {
             open: false,
             userInfo: null,
             subMenuOpen: false,
             loadingState: {
-                isLoading: loadingState.isLoading,
-                message: loadingState.message
-            }
+                ...loadingState
+            },
+            notificationState: {
+                ...notificationState
+            },
+            selectedIndex: selectedIndex
         };
     }
 
@@ -175,7 +192,7 @@ class AppLayout extends React.Component {
         this.setState({userInfo: event.currentTarget});
     };
 
-    handleUserInfoClose = () => {
+    handleUserInfoMenuClose = () => {
         this.setState({userInfo: null});
     };
 
@@ -187,27 +204,48 @@ class AppLayout extends React.Component {
         this.setState({open: false});
     };
 
-    handleClick = () => {
-        this.setState((state) => ({subMenuOpen: !state.subMenuOpen}));
+    handleSystemMetricsNavSectionClick = () => {
+        this.setState((prevState) => ({subMenuOpen: !prevState.subMenuOpen}));
     };
 
-    handleLoadingStateChange(loadingStateKey, oldState, newState) {
+    handleNavItemClick = (nav, event) => {
+        const {history} = this.props;
+
+        this.setState({
+            selectedIndex: Number(event.currentTarget.attributes.index.value)
+        });
+        history.push(nav, {
+            hideBackButton: true
+        });
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
         this.setState({
             loadingState: {
                 isLoading: newState.isLoading,
                 message: newState.message
             }
         });
-    }
+    };
 
-    render() {
-        const {classes, history, children, theme, config} = this.props;
-        const {open, userInfo, loadingState} = this.state;
+    handleNotificationStateChange = (notificationStateKey, oldState, newState) => {
+        this.setState({
+            notificationState: {
+                isOpen: newState.isOpen,
+                message: newState.message,
+                notificationLevel: newState.notificationLevel
+            }
+        });
+    };
+
+    handleNotificationClose = () => {
+        NotificationUtils.closeNotification(this.props.globalState);
+    };
+
+    render = () => {
+        const {classes, children, theme, globalState} = this.props;
+        const {open, userInfo, loadingState, selectedIndex} = this.state;
         const userInfoOpen = Boolean(userInfo);
-
-        const navigationState = {
-            hideBackButton: true
-        };
         return (
             <div className={classes.root}>
                 <CssBaseline/>
@@ -227,7 +265,7 @@ class AppLayout extends React.Component {
                             WSO2 VICK Observability
                         </Typography>
                         {
-                            config.get(ConfigConstants.USER)
+                            globalState.get(StateHolder.USER)
                                 ? (
                                     <div>
                                         <IconButton
@@ -237,7 +275,7 @@ class AppLayout extends React.Component {
                                             color="inherit">
                                             <AccountCircle/>
                                         </IconButton>
-                                        <Menu id="user-info-appbar" anchorEl={this.state.userInfo}
+                                        <Menu id="user-info-appbar" anchorEl={userInfo}
                                             anchorOrigin={{
                                                 vertical: "top",
                                                 horizontal: "right"
@@ -247,16 +285,16 @@ class AppLayout extends React.Component {
                                                 horizontal: "right"
                                             }}
                                             open={userInfoOpen}
-                                            onClose={this.handleUserInfoClose}>
+                                            onClose={this.handleUserInfoMenuClose}>
                                             {/* TODO: Implement user login */}
-                                            <MenuItem onClick={this.handleUserInfoClose}>
-                                                Profile - {config.get(ConfigConstants.USER)}
+                                            <MenuItem onClick={this.handleUserInfoMenuClose}>
+                                                Profile - {globalState.get(StateHolder.USER)}
                                             </MenuItem>
-                                            <MenuItem onClick={this.handleUserInfoClose}>
+                                            <MenuItem onClick={this.handleUserInfoMenuClose}>
                                                 My account
                                             </MenuItem>
                                             <MenuItem onClick={() => {
-                                                AuthUtils.signOut(config);
+                                                AuthUtils.signOut(globalState);
                                             }}>
                                                 Logout
                                             </MenuItem>
@@ -285,21 +323,41 @@ class AppLayout extends React.Component {
                         </IconButton>
                     </div>
                     <Divider/>
-                    <List>
-                        <ListItem button key="Overview" onClick={() => history.push("/", navigationState)}>
-                            <ListItemIcon><DesktopWindows/></ListItemIcon>
-                            <ListItemText primary="Overview"/>
+                    <List className={classes.list}>
+                        <ListItem index={0} button key="Overview"
+                            className={classNames({[classes.active]: selectedIndex === 0})}
+                            onClick={(event) => {
+                                this.handleNavItemClick("/", event);
+                            }}>
+                            <ListItemIcon>
+                                <DesktopWindows className={classNames({[classes.active]: selectedIndex === 0})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Overview"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 0})}}/>
                         </ListItem>
-                        <ListItem button key="Cells" onClick={() => history.push("/cells", navigationState)}>
-                            <ListItemIcon><Grain/></ListItemIcon>
-                            <ListItemText primary="Cells"/>
+                        <ListItem index={1} button key="Cells"
+                            className={classNames({[classes.active]: selectedIndex === 1})}
+                            onClick={(event) => {
+                                this.handleNavItemClick("/cells", event);
+                            }}>
+                            <ListItemIcon>
+                                <Grain className={classNames({[classes.active]: selectedIndex === 1})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Cells"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 1})}}/>
                         </ListItem>
-                        <ListItem button key="Distributed Tracing"
-                            onClick={() => history.push("/tracing", navigationState)}>
-                            <ListItemIcon><Timeline/></ListItemIcon>
-                            <ListItemText primary="Distributed Tracing"/>
+                        <ListItem index={2} button key="Distributed Tracing"
+                            className={classNames({[classes.active]: selectedIndex === 2})}
+                            onClick={(event) => {
+                                this.handleNavItemClick("/tracing", event);
+                            }}>
+                            <ListItemIcon>
+                                <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
+                            </ListItemIcon>
+                            <ListItemText primary="Distributed Tracing"
+                                classes={{primary: classNames({[classes.active]: selectedIndex === 2})}}/>
                         </ListItem>
-                        <ListItem button onClick={this.handleClick}>
+                        <ListItem button onClick={this.handleSystemMetricsNavSectionClick}>
                             <ListItemIcon>
                                 <InsertChartOutlined/>
                             </ListItemIcon>
@@ -308,26 +366,38 @@ class AppLayout extends React.Component {
                         </ListItem>
                         <Collapse in={this.state.subMenuOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <ListItem button className={classes.nested} key="ControlPlane"
-                                    onClick={() => history.push("/system-metrics/control-plane", navigationState)}>
+                                <ListItem index={3} button key="ControlPlane"
+                                    className={classNames({[classes.active]: selectedIndex === 3}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleNavItemClick("/system-metrics/control-plane", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 3})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Global Control Plane"/>
+                                    <ListItemText inset primary="Global Control Plane"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 3})}}/>
                                 </ListItem>
-                                <ListItem button className={classes.nested} key="PodUsage"
-                                    onClick={() => history.push("/system-metrics/pod-usage", navigationState)}>
+                                <ListItem index={4} button key="PodUsage"
+                                    className={classNames({[classes.active]: selectedIndex === 4}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleNavItemClick("/system-metrics/pod-usage", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 4})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Pod Usage"/>
+                                    <ListItemText inset primary="Pod Usage"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 4})}}/>
                                 </ListItem>
-                                <ListItem button className={classes.nested} key="NodeUsage"
-                                    onClick={() => history.push("/system-metrics/node-usage", navigationState)}>
+                                <ListItem index={5} button key="NodeUsage"
+                                    className={classNames({[classes.active]: selectedIndex === 5}, classes.nested)}
+                                    onClick={(event) => {
+                                        this.handleNavItemClick("/system-metrics/node-usage", event);
+                                    }}>
                                     <ListItemIcon>
-                                        <BarChart/>
+                                        <BarChart className={classNames({[classes.active]: selectedIndex === 5})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Node Usage"/>
+                                    <ListItemText inset primary="Node Usage"
+                                        classes={{primary: classNames({[classes.active]: selectedIndex === 5})}}/>
                                 </ListItem>
                             </List>
                         </Collapse>
@@ -344,12 +414,28 @@ class AppLayout extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className={classes.toolbar}/>
                     {children}
                 </main>
+                <Snackbar
+                    anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "left"
+                    }}
+                    open={this.state.notificationState.isOpen}
+                    autoHideDuration={5000}
+                    onClose={this.handleNotificationClose}
+                    ContentProps={{"aria-describedby": "message-id"}}
+                    message={this.state.notificationState.message}
+                    action={[
+                        <IconButton key="close" aria-label="Close" color="inherit"
+                            onClick={this.handleNotificationClose}>
+                            <CloseIcon/>
+                        </IconButton>
+                    ]}
+                />
             </div>
         );
-    }
+    };
 
 }
 
@@ -357,8 +443,11 @@ AppLayout.propTypes = {
     classes: PropTypes.object.isRequired,
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired,
-    history: PropTypes.any.isRequired
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
+    history: PropTypes.any.isRequired,
+    location: PropTypes.shape({
+        pathname: PropTypes.string.isRequired
+    })
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withConfig(AppLayout)));
+export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(AppLayout)));

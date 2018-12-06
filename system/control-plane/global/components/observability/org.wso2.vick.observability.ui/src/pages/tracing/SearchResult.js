@@ -16,7 +16,6 @@
  * under the License.
  */
 
-import {ColorGenerator} from "../common/color/colorGenerator";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
@@ -25,9 +24,9 @@ import React from "react";
 import TablePagination from "@material-ui/core/TablePagination/TablePagination";
 import Typography from "@material-ui/core/Typography/Typography";
 import moment from "moment";
-import {withColor} from "../common/color";
 import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withColor, {ColorGenerator} from "../common/color";
 
 const styles = (theme) => ({
     trace: {
@@ -99,23 +98,20 @@ class SearchResult extends React.Component {
             rowsPerPage: 5,
             page: 0
         };
-
-        this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this);
-        this.handleChangePage = this.handleChangePage.bind(this);
-        this.loadTracePage = this.loadTracePage.bind(this);
     }
 
-    handleChangeRowsPerPage(event) {
+    handleChangeRowsPerPage = (event) => {
+        const rowsPerPage = event.target.value;
         this.setState({
-            rowsPerPage: event.target.value
+            rowsPerPage: rowsPerPage
         });
-    }
+    };
 
-    handleChangePage(event, page) {
+    handleChangePage = (event, page) => {
         this.setState({
             page: page
         });
-    }
+    };
 
     /**
      * Load the trace page.
@@ -125,20 +121,20 @@ class SearchResult extends React.Component {
      * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
      * @param {string} microservice The microservice name if a microservice was selected
      */
-    loadTracePage(event, traceId, cellName = "", microservice = "") {
+    loadTracePage = (event, traceId, cellName = "", microservice = "") => {
         event.stopPropagation();
         this.props.history.push({
             pathname: `./id/${traceId}`,
             state: {
-                highlightedMicroservice: {
+                selectedMicroservice: {
                     cellName: cellName,
                     serviceName: microservice
                 }
             }
         });
-    }
+    };
 
-    render() {
+    render = () => {
         const {classes, data, colorGenerator} = this.props;
         const {rowsPerPage, page} = this.state;
 
@@ -146,8 +142,8 @@ class SearchResult extends React.Component {
         data.forEach(
             (result) => result.services.forEach(
                 (service) => {
-                    if (!cellNames.includes(service.cellName)) {
-                        cellNames.push(service.cellName);
+                    if (!cellNames.includes(service.cellNameKey)) {
+                        cellNames.push(service.cellNameKey);
                     }
                 }
             )
@@ -193,18 +189,30 @@ class SearchResult extends React.Component {
                                         <div className={classes.traceSubHeader}>{result.rootDuration / 1000} s</div>
                                         <div className={classes.traceContent}>
                                             {
-                                                result.services.map((service) => (
-                                                    <div key={service.serviceName} className={classes.serviceTag}
-                                                        onClick={(event) => this.loadTracePage(event, result.traceId,
-                                                            service.cellName, service.serviceName)}>
-                                                        <div className={classes.serviceTagColor} style={{
-                                                            backgroundColor: colorGenerator.getColor(service.cellName)
-                                                        }}/>
-                                                        <div className={classes.serviceTagContent}>
-                                                            {service.serviceName} ({service.count})
+                                                result.services
+                                                    .sort((a, b) => {
+                                                        if (a.serviceName < b.serviceName) {
+                                                            return -1;
+                                                        }
+                                                        if (a.serviceName > b.serviceName) {
+                                                            return 1;
+                                                        }
+                                                        return 0;
+                                                    })
+                                                    .map((service) => (
+                                                        <div key={service.serviceName} className={classes.serviceTag}
+                                                            onClick={
+                                                                (event) => this.loadTracePage(event, result.traceId,
+                                                                    service.cellNameKey, service.serviceName)}>
+                                                            <div className={classes.serviceTagColor} style={{
+                                                                backgroundColor: colorGenerator
+                                                                    .getColor(service.cellNameKey)
+                                                            }}/>
+                                                            <div className={classes.serviceTagContent}>
+                                                                {service.serviceName} ({service.count})
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))
+                                                    ))
                                             }
                                         </div>
                                     </Paper>
@@ -222,9 +230,11 @@ class SearchResult extends React.Component {
                             onChangeRowsPerPage={this.handleChangeRowsPerPage}/>
                     </React.Fragment>
                 )
-                : null
+                : (
+                    <div>No Results</div>
+                )
         );
-    }
+    };
 
 }
 
@@ -241,7 +251,7 @@ SearchResult.propTypes = {
         rootStartTime: PropTypes.number.isRequired,
         rootDuration: PropTypes.number.isRequired,
         services: PropTypes.arrayOf(PropTypes.shape({
-            cellName: PropTypes.string.isRequired,
+            cellNameKey: PropTypes.string.isRequired,
             serviceName: PropTypes.string.isRequired,
             count: PropTypes.number.isRequired
         })).isRequired

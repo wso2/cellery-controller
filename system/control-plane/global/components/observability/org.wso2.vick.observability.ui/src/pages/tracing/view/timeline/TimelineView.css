@@ -16,6 +16,10 @@
  * under the License.
  */
 
+/**
+ * Overrides for the vis-timeline library
+ */
+
 div.vis-group {
     cursor: pointer;
 }
@@ -62,4 +66,19 @@ div.vis-item-span > div.vis-item-overflow > div.vis-item-content {
 div.vis-item-span-description {
     background-color: #f3f3f3;
     border: #f3f3f3;
+}
+
+@keyframes selected-microservice-highlight {
+    from {
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+    to {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
+
+div.highlighted-span {
+    animation-name: selected-microservice-highlight;
+    animation-duration: 3s;
+    animation-timing-function: ease-out;
 }

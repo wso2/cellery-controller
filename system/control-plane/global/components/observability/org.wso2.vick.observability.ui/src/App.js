@@ -19,7 +19,6 @@
 import AppLayout from "./AppLayout";
 import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
-import {ConfigHolder} from "./pages/common/config/configHolder";
 import NotFound from "./pages/common/NotFound";
 import Overview from "./pages/overview";
 import PropTypes from "prop-types";
@@ -28,36 +27,28 @@ import SignIn from "./pages/SignIn";
 import SystemMetrics from "./pages/systemMetrics";
 import Tracing from "./pages/tracing";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
-import {ConfigConstants, ConfigProvider, withConfig} from "./pages/common/config";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
+import withGlobalState, {StateHolder, StateProvider} from "./pages/common/state";
 
-/**
- * Protected Portal of the App.
- *
- * @param {Object} props Props passed to the component
- * @returns {React.Component} Protected portal react component
- */
-class UnConfiguredProtectedPortal extends React.Component {
+class StatelessProtectedPortal extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            isAuthenticated: Boolean(props.config.get(ConfigConstants.USER))
+            isAuthenticated: Boolean(props.globalState.get(StateHolder.USER))
         };
 
-        this.handleUserChange = this.handleUserChange.bind(this);
-
-        props.config.addListener(ConfigConstants.USER, this.handleUserChange);
+        props.globalState.addListener(StateHolder.USER, this.handleUserChange);
     }
 
-    handleUserChange(userKey, oldUser, newUser) {
+    handleUserChange = (userKey, oldUser, newUser) => {
         this.setState({
             isAuthenticated: Boolean(newUser)
         });
-    }
+    };
 
-    render() {
+    render = () => {
         const {isAuthenticated} = this.state;
         return isAuthenticated
             ? (
@@ -72,15 +63,15 @@ class UnConfiguredProtectedPortal extends React.Component {
                 </AppLayout>
             )
             : <SignIn/>;
-    }
+    };
 
 }
 
-UnConfiguredProtectedPortal.propTypes = {
-    config: PropTypes.instanceOf(ConfigHolder).isRequired
+StatelessProtectedPortal.propTypes = {
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-const ProtectedPortal = withConfig(UnConfiguredProtectedPortal);
+const ProtectedPortal = withGlobalState(StatelessProtectedPortal);
 
 // Create the main theme of the App
 const theme = createMuiTheme({
@@ -97,11 +88,11 @@ const theme = createMuiTheme({
 const App = () => (
     <MuiThemeProvider theme={theme}>
         <ColorProvider>
-            <ConfigProvider>
+            <StateProvider>
                 <BrowserRouter>
                     <ProtectedPortal/>
                 </BrowserRouter>
-            </ConfigProvider>
+            </StateProvider>
         </ColorProvider>
     </MuiThemeProvider>
 );

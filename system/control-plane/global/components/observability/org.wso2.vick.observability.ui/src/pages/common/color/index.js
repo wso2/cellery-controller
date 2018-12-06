@@ -16,9 +16,11 @@
  * under the License.
  */
 
+/* eslint react/prefer-stateless-function: ["off"] */
+
+import ColorGenerator from "./colorGenerator";
 import PropTypes from "prop-types";
 import React from "react";
-import {ColorGenerator, ColorGeneratorConstants} from "./colorGenerator";
 
 // Creating a context that can be accessed
 const ColorContext = React.createContext(null);
@@ -38,7 +40,7 @@ class ColorProvider extends React.Component {
         this.colorGenerator = new ColorGenerator();
     }
 
-    render() {
+    render = () => {
         const {children} = this.props;
 
         return (
@@ -46,7 +48,7 @@ class ColorProvider extends React.Component {
                 {children}
             </ColorContext.Provider>
         );
-    }
+    };
 
 }
 
@@ -72,4 +74,5 @@ const withColor = (Component) => class ColorGeneratorProvider extends React.Comp
 
 };
 
-export {withColor, ColorProvider, ColorGeneratorConstants};
+export default withColor;
+export {ColorProvider, ColorGenerator};

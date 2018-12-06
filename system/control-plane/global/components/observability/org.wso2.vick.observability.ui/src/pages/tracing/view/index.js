@@ -16,7 +16,6 @@
  * under the License.
  */
 
-import {ConfigHolder} from "../../common/config/configHolder";
 import DependencyDiagram from "./DependencyDiagram";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
@@ -29,11 +28,15 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
+<<<<<<< HEAD
 
 import TopToolbar from "../../common/TopToolbar";
+=======
+import TopToolbar from "../../common/toptoolbar";
+>>>>>>> 8852b9016fc3dad8d7635d408eff6d4d1319301b
 import TracingUtils from "../utils/tracingUtils";
-import {withConfig} from "../../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
+import withGlobalState, {StateHolder} from "../../common/state";
 
 const styles = (theme) => ({
     container: {
@@ -60,16 +63,20 @@ class View extends React.Component {
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
             isLoading: true
         };
-
-        this.handleTabChange = this.handleTabChange.bind(this);
     }
 
-    componentDidMount() {
-        const {config, match} = this.props;
+    componentDidMount = () => {
+        this.loadTrace(true);
+    };
+
+    loadTrace = (isUserAction) => {
+        const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        NotificationUtils.showLoadingOverlay("Loading trace", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading trace", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing",
@@ -78,7 +85,7 @@ class View extends React.Component {
                     traceId: traceId
                 }
             },
-            config
+            globalState
         ).then((data) => {
             const spans = data.map((dataItem) => new Span(dataItem));
             const rootSpan = TracingUtils.buildTree(spans);
@@ -89,45 +96,68 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan),
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
             self.setState({
                 isLoading: false
             });
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    `Failed to fetch Trace with ID ${traceId}`,
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
-    handleTabChange(event, value) {
+    handleTabChange = (event, value) => {
+        const {history, location, match} = this.props;
+
         this.setState({
             selectedTabIndex: value
         });
-    }
 
-    render() {
+        const queryParams = HttpUtils.generateQueryParamString({
+            tab: this.tabs[value]
+        });
+        history.replace(match.url + queryParams, {
+            ...location.state
+        });
+    };
+
+    render = () => {
         const {classes, match} = this.props;
         const {isLoading, spans, selectedTabIndex} = this.state;
 
         const traceId = match.params.traceId;
 
         const timeline = <Timeline spans={spans}/>;
+<<<<<<< HEAD
         const sequenceDiagram = <SequenceDiagram spans={spans}/>;
         const dependencyDiagram = <DependencyDiagram/>;
+=======
+        const sequenceDiagram = <SequenceDiagram/>;
+        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
+>>>>>>> 8852b9016fc3dad8d7635d408eff6d4d1319301b
         const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
 
         return (
             isLoading
                 ? null
                 : (
-                    <Paper className={classes.container}>
+                    <React.Fragment>
+                        <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
                         {
                             spans && spans.length === 0
                                 ? (
                                     <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
                                 )
                                 : (
-                                    <React.Fragment>
-                                        <TopToolbar title={"Distributed Tracing"}/>
+                                    <Paper className={classes.container}>
                                         <Tabs value={selectedTabIndex} indicatorColor="primary"
                                             onChange={this.handleTabChange}>
                                             <Tab label="Timeline"/>
@@ -135,27 +165,30 @@ class View extends React.Component {
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
                                         {tabContent[selectedTabIndex]}
-                                    </React.Fragment>
+                                    </Paper>
                                 )
                         }
-                    </Paper>
+                    </React.Fragment>
                 )
         );
-    }
+    };
 
 }
 
 View.propTypes = {
     classes: PropTypes.object.isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             traceId: PropTypes.string.isRequired
         }).isRequired
     }).isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired
 };
 
-export default withStyles(styles)(withConfig(View));
+export default withStyles(styles)(withGlobalState(View));

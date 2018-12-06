@@ -16,53 +16,33 @@
  * under the License.
  */
 
-import MUIDataTable from "mui-datatables";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import TopToolbar from "../common/TopToolbar";
+import Table from "./common/Table";
+import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
     root: {
-        width: "100%",
-        marginTop: theme.spacing.unit * 2
-    },
-    table: {
-        minWidth: 1020
-    },
-    tableWrapper: {
-        overflowX: "auto",
-        marginLeft: theme.spacing.unit * 3,
-        marginRight: theme.spacing.unit * 3
+        margin: theme.spacing.unit
     }
 });
 
 class List extends React.Component {
 
-    render() {
+    render = () => {
         const {classes} = this.props;
-        const options = {
-            download: false,
-            selectableRows: false,
-            print: false
-        };
-        const columns = [
-            "Cell", "Namespace", "Error Rate", "Average Response Time (s)", "Average Request Count (requests/s)"
-        ];
-        const data = [
-            [" ", " ", " ", " ", " "]
-        ];
 
         return (
-            <Paper className={classes.root}>
+            <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellData}/>
-                <div className={classes.tableWrapper}>
-                    <MUIDataTable data={data} columns={columns} options={options}/>
-                </div>
-            </Paper>
+                <Paper className={classes.root}>
+                    <Table/>
+                </Paper>
+            </React.Fragment>
         );
-    }
+    };
 
 }
 

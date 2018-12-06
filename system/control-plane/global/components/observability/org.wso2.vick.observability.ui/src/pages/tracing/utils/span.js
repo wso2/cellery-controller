@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import Constants from "./constants";
+import Constants from "../../common/constants";
 
 /**
  * Single span in a Trace.
@@ -64,11 +64,9 @@ class Span {
      * @param {Span} span The span to check if it is a sibling
      * @returns {boolean} True if this is a sibling of the other span
      */
-    isSiblingOf(span) {
-        return Boolean(span) && this.traceId === span.traceId && this.spanId === span.spanId
+    isSiblingOf = (span) => Boolean(span) && this.traceId === span.traceId && this.spanId === span.spanId
             && ((this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER)
             || (this.kind === Constants.Span.Kind.SERVER && span.kind === Constants.Span.Kind.CLIENT));
-    }
 
     /**
      * Check if this is the parent of another span.
@@ -76,7 +74,7 @@ class Span {
      * @param {Span} span The span to check if it is a child
      * @returns {boolean} True if this is the parent of the other span
      */
-    isParentOf(span) {
+    isParentOf = (span) => {
         let isParentOfSpan = false;
         if (Boolean(span) && this.traceId === span.traceId) {
             if (this.spanId === span.spanId && this.kind === Constants.Span.Kind.CLIENT
@@ -93,16 +91,14 @@ class Span {
             }
         }
         return isParentOfSpan;
-    }
+    };
 
     /**
      * Check if this span has a sibling.
      *
      * @returns {boolean} True if this span has a sibling
      */
-    hasSibling() {
-        return this.kind === Constants.Span.Kind.CLIENT || this.kind === Constants.Span.Kind.SERVER;
-    }
+    hasSibling = () => this.kind === Constants.Span.Kind.CLIENT || this.kind === Constants.Span.Kind.SERVER;
 
     /**
      * Add a reference to another span in this span.
@@ -111,7 +107,7 @@ class Span {
      * @param {Span} span The to which the reference should be added
      * @returns {boolean} True if the span was added as a reference
      */
-    addSpanReference(span) {
+    addSpanReference = (span) => {
         let spanAdded = false;
         if (this.isParentOf(span)) {
             this.children.add(span);
@@ -125,17 +121,17 @@ class Span {
             spanAdded = true;
         }
         return spanAdded;
-    }
+    };
 
     /**
      * Reset all references to spans.
      */
-    resetSpanReferences() {
+    resetSpanReferences = () => {
         this.children.clear();
         this.parent = null;
         this.sibling = null;
         this.treeDepth = 0;
-    }
+    };
 
     /**
      * Walk down the trace tree starting from this span in DFS manner.
@@ -147,10 +143,12 @@ class Span {
      * @param {function} postTraverseCallBack The callback to be called after traversing a node.
      * @param {function} shouldTerminate
      */
+
     walk(nodeCallBack, data = {}, postTraverseCallBack = null, shouldTerminate = null) {
         if (shouldTerminate && shouldTerminate(this)) {
             return;
         }
+
 
         let newData;
         if (nodeCallBack) {
@@ -176,55 +174,56 @@ class Span {
         if (postTraverseCallBack) {
             postTraverseCallBack(this);
         }
-    }
+    };
 
     /**
      * Get a unique ID to represent this span.
      *
      * @returns {string} the unique ID to represent this span
      */
-    getUniqueId() {
-        return `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
-    }
+    getUniqueId = () => `${this.traceId}--${this.spanId}${this.kind ? `--${this.kind}` : ""}`;
 
     /**
      * Check whether a span belongs to the cell gateway.
      *
      * @returns {boolean} True if the component to which the span belongs to is a cell gateway
      */
-    isFromCellGateway() {
-        return Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
-    }
+    isFromCellGateway = () => Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
 
     /**
      * Check whether a span belongs to the Istio System.
      *
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
-    isFromIstioSystemComponent() {
-        return this.serviceName === Constants.VICK.System.ISTIO_MIXER_NAME;
-    }
+    isFromIstioSystemComponent = () => this.serviceName === Constants.System.ISTIO_MIXER_NAME;
 
     /**
      * Check whether a span belongs to the VICK System.
      *
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
-    isFromVICKSystemComponent() {
-        return (this.isFromCellGateway() || this.serviceName === Constants.VICK.System.GLOBAL_GATEWAY_NAME);
-    }
+    isFromVICKSystemComponent = () => (
+        this.isFromCellGateway() || this.serviceName === Constants.System.GLOBAL_GATEWAY_NAME
+    );
+
+    /**
+     * Check whether an error occurred during this span.
+     *
+     * @returns {boolean} True if an error had occurred in this span
+     */
+    hasError = () => this.tags.error === "true";
 
     /**
      * Get the cell name from cell gateway span.
      *
      * @returns {Object} Cell details
      */
-    getCell() {
+    getCell = () => {
         let cell = null;
         if (this.cell) {
             cell = this.cell;
-        } else if (Constants.VICK.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.VICK.Cell.GATEWAY_NAME_PATTERN);
+        } else if (Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.Cell.GATEWAY_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1].replace(/_/g, "-"),
@@ -233,8 +232,8 @@ class Span {
                 this.cell = cell;
                 this.serviceName = `${cell.name}-cell-gateway`;
             }
-        } else if (Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.VICK.Cell.MICROSERVICE_NAME_PATTERN);
+        } else if (Constants.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
+            const matches = this.serviceName.match(Constants.Cell.MICROSERVICE_NAME_PATTERN);
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1],
@@ -245,7 +244,7 @@ class Span {
             }
         }
         return cell;
-    }
+    };
 
     /**
      * Create a shallow clone.
@@ -253,7 +252,7 @@ class Span {
      *
      * @returns {Span} The cloned span
      */
-    shallowClone() {
+    shallowClone = () => {
         const span = new Span({
             traceId: this.traceId,
             spanId: this.spanId,
@@ -268,7 +267,7 @@ class Span {
         span.componentType = this.componentType;
         span.cell = {...this.cell};
         return span;
-    }
+    };
 
 }
 

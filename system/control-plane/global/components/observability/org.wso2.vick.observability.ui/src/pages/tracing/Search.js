@@ -17,7 +17,8 @@
  */
 
 import Button from "@material-ui/core/Button";
-import {ColorGeneratorConstants} from "../common/color";
+import ChipInput from "material-ui-chip-input";
+import {ColorGenerator} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -33,11 +34,10 @@ import SearchResult from "./SearchResult";
 import Select from "@material-ui/core/Select/Select";
 import Span from "./utils/span";
 import TextField from "@material-ui/core/TextField/TextField";
-import TopToolbar from "../common/TopToolbar";
+import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography/Typography";
-import {withConfig} from "../common/config";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {ConfigConstants, ConfigHolder} from "../common/config/configHolder";
+import withGlobalState, {StateHolder} from "../common/state";
 
 const styles = (theme) => ({
     container: {
@@ -64,9 +64,6 @@ const styles = (theme) => ({
     }
 });
 
-/**
- * Trace Search.
- */
 class Search extends React.Component {
 
     constructor(props) {
@@ -84,25 +81,22 @@ class Search extends React.Component {
                 cell: queryParams.cell ? queryParams.cell : Search.Constants.ALL_VALUE,
                 microservice: queryParams.microservice ? queryParams.microservice : Search.Constants.ALL_VALUE,
                 operation: queryParams.operation ? queryParams.operation : Search.Constants.ALL_VALUE,
-                tags: queryParams.tags ? queryParams.operation : "",
-                minDuration: queryParams.minDuration ? queryParams.operation : "",
-                minDurationMultiplier: 1,
-                maxDuration: queryParams.maxDuration ? queryParams.operation : "",
-                maxDurationMultiplier: 1
+                tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
+                minDuration: queryParams.minDuration ? queryParams.minDuration : undefined,
+                minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
+                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : undefined,
+                maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
             },
             metaData: {
                 availableMicroservices: [],
                 availableOperations: []
             },
+            hasSearchCompleted: false,
             searchResults: []
         });
-
-        this.loadCellData = this.loadCellData.bind(this);
-        this.getChangeHandler = this.getChangeHandler.bind(this);
-        this.search = this.search.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         const {location} = this.props;
         const queryParams = HttpUtils.parseQueryParams(location.search);
         let isQueryParamsEmpty = true;
@@ -111,69 +105,81 @@ class Search extends React.Component {
                 isQueryParamsEmpty = false;
             }
         }
-        if (!isQueryParamsEmpty) {
-            this.search();
-        }
-    }
 
-    render() {
+        if (!isQueryParamsEmpty) {
+            this.search(true);
+        }
+    };
+
+    render = () => {
         const {classes} = this.props;
-        const {data, filter, metaData, searchResults} = this.state;
+        const {data, filter, metaData, hasSearchCompleted, searchResults} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
         );
 
+        const tagChips = [];
+        for (const tagKey in filter.tags) {
+            if (filter.tags.hasOwnProperty(tagKey)) {
+                tagChips.push(`${tagKey}=${filter.tags[tagKey]}`);
+            }
+        }
+
         return (
-            <Paper className={classes.container}>
-                <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadCellData}/>
-                <Typography variant="h6" color="inherit" className={classes.subheading}>
-                    Search Traces
-                </Typography>
-                <Grid container justify={"flex-start"} className={classes.searchForm}>
-                    <Grid container justify={"flex-start"} spacing={24}>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
-                                <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
-                                    inputProps={{name: "cell", id: "cell"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(data.cells)}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
-                                <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
-                                    inputProps={{name: "microservice", id: "microservice"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(metaData.availableMicroservices)}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
-                                <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
-                                    inputProps={{name: "operation", id: "operation"}}>
-                                    <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
-                                        {Search.Constants.ALL_VALUE}
-                                    </MenuItem>
-                                    {createMenuItemForSelect(metaData.availableOperations)}
-                                </Select>
-                            </FormControl>
+            <React.Fragment>
+                <TopToolbar title={"Distributed Tracing"} onUpdate={this.onGlobalRefresh}/>
+                <Paper className={classes.container}>
+                    <Typography variant="h6" color="inherit" className={classes.subheading}>
+                        Search Traces
+                    </Typography>
+                    <Grid container justify={"flex-start"} className={classes.searchForm}>
+                        <Grid container justify={"flex-start"} spacing={24}>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
+                                    <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
+                                        inputProps={{name: "cell", id: "cell"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(data.cells)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
+                                    <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
+                                        inputProps={{name: "microservice", id: "microservice"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(metaData.availableMicroservices)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl className={classes.formControl} fullWidth={true}>
+                                    <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
+                                    <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
+                                        inputProps={{name: "operation", id: "operation"}}>
+                                        <MenuItem key={Search.Constants.ALL_VALUE} value={Search.Constants.ALL_VALUE}>
+                                            {Search.Constants.ALL_VALUE}
+                                        </MenuItem>
+                                        {createMenuItemForSelect(metaData.availableOperations)}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                         </Grid>
                     </Grid>
                     <Grid container justify={"flex-start"} spacing={24}>
                         <Grid item xs={6}>
                             <FormControl className={classes.formControl} fullWidth={true}>
-                                <TextField label="Tags" id="tags" value={filter.tags} InputLabelProps={{shrink: true}}
-                                    onChange={this.getChangeHandler("tags")} placeholder={"Eg: http.status_code=200"}/>
+                                <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
+                                    onChange={this.handleTagsChange} onDelete={this.handleTagsChange}
+                                    placeholder={"Eg: http.status_code=200"}
+                                />
                             </FormControl>
                         </Grid>
                         <Grid item xs={3}>
@@ -231,34 +237,63 @@ class Search extends React.Component {
                             </FormControl>
                         </Grid>
                     </Grid>
-                </Grid>
-                <Button variant="contained" color="primary" onClick={this.search}>Search</Button>
-                <div className={classes.resultContainer}>
-                    <SearchResult data={searchResults}/>
-                </div>
-            </Paper>
+                    <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}>Search</Button>
+                    {
+                        hasSearchCompleted
+                            ? (
+                                <div className={classes.resultContainer}>
+                                    <SearchResult data={searchResults}/>
+                                </div>
+                            )
+                            : null
+                    }
+                </Paper>
+            </React.Fragment>
         );
-    }
+    };
+
+    onSearchButtonClick = () => {
+        const {history, match, location} = this.props;
+        const {filter} = this.state;
+
+        // Updating the URL to ensure that the user can come back to this page
+        const searchString = HttpUtils.generateQueryParamString({
+            ...filter,
+            tags: JSON.stringify(filter.tags)
+        });
+        history.replace(match.url + searchString, {
+            ...location.state
+        });
+
+        this.search(true);
+    };
+
+    onGlobalRefresh = (isUserAction) => {
+        if (this.state.hasSearchCompleted) {
+            this.search(isUserAction);
+        }
+        this.loadCellData(isUserAction && !this.state.hasSearchCompleted);
+    };
 
     /**
      * Search for traces.
      * Call the backend and search for traces.
      *
-     * @param {boolean} showOverlay Show the overlay while loading
+     * @param {boolean} isUserAction Show the overlay while loading
      */
-    loadCellData(showOverlay) {
-        const {config} = this.props;
+    loadCellData = (isUserAction) => {
+        const {globalState} = this.props;
         const self = this;
 
-        if (showOverlay) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Information", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
         HttpUtils.callBackendAPI(
             {
                 url: "/cells",
                 method: "POST"
             },
-            config
+            globalState
         ).then((data) => {
             const cells = [];
             const microservices = [];
@@ -292,19 +327,28 @@ class Search extends React.Component {
                 }
             }
 
-            self.setState(Search.generateValidState({
-                ...self.state,
+            self.setState((prevState) => Search.generateValidState({
+                ...prevState,
                 data: {
                     cells: cells,
                     microservices: microservices,
                     operations: operations
                 }
             }));
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load Cell Data",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
     /**
      * Get the on change handler for a particular state filter attribute.
@@ -312,24 +356,58 @@ class Search extends React.Component {
      * @param {string} name The name of the filter
      * @returns {Function} The on change handler
      */
-    getChangeHandler(name) {
-        const self = this;
-        return (event) => {
-            self.setState(Search.generateValidState({
-                ...this.state,
-                filter: {
-                    ...this.state.filter,
-                    [name]: event.target.value
-                }
-            }));
-        };
-    }
+    getChangeHandler = (name) => (event) => {
+        this.setState((prevState) => Search.generateValidState({
+            ...prevState,
+            filter: {
+                ...prevState.filter,
+                [name]: event.target.value
+            }
+        }));
+    };
 
-    search() {
+    /**
+     * Handle the tags changing in the search.
+     *
+     * @param {Array.<string>} chips The chips in the tag search input
+     */
+    handleTagsChange = (chips) => {
+        const parseChip = (chip) => {
+            const chipContent = chip.split("=");
+            return {
+                key: chipContent[0].trim(),
+                value: chipContent[1].trim()
+            };
+        };
+
+        // Generating tags object
+        let tags;
+        if (typeof chips === "string") { // Delete tag
+            tags = {...this.state.filter.tags};
+            const tag = parseChip(chips);
+            Reflect.deleteProperty(tags, tag.key);
+        } else { // Tag change
+            tags = {};
+            for (let i = 0; i < chips.length; i++) {
+                const tag = parseChip(chips[i]);
+                tags[tag.key] = tag.value;
+            }
+        }
+
+        this.setState((prevState) => Search.generateValidState({
+            ...prevState,
+            filter: {
+                ...prevState.filter,
+                tags: tags
+            }
+        }));
+    };
+
+    search = (isUserAction) => {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = this.state.filter;
-        const {config} = this.props;
+        const {globalState} = this.props;
         const self = this;
 
         // Build search object
@@ -342,22 +420,24 @@ class Search extends React.Component {
         addSearchParam("cellName", cell);
         addSearchParam("serviceName", microservice);
         addSearchParam("operationName", operation);
-        addSearchParam("tags", tags);
+        addSearchParam("tags", JSON.stringify(Object.keys(tags).length > 0 ? tags : {}));
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
         addSearchParam("queryStartTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).startTime).valueOf());
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
         addSearchParam("queryEndTime",
-            QueryUtils.parseTime(config.get(ConfigConstants.GLOBAL_FILTER).endTime).valueOf());
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
 
-        NotificationUtils.showLoadingOverlay("Searching for Traces", config);
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        }
         HttpUtils.callBackendAPI(
             {
                 url: "/tracing/search",
                 method: "POST",
                 data: search
             },
-            config
+            globalState
         ).then((data) => {
             const traces = {};
             for (let i = 0; i < data.length; i++) {
@@ -391,9 +471,9 @@ class Search extends React.Component {
 
                         let cellNameKey;
                         if (span.isFromVICKSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.VICK;
+                            cellNameKey = ColorGenerator.VICK;
                         } else if (span.isFromIstioSystemComponent()) {
-                            cellNameKey = ColorGeneratorConstants.ISTIO;
+                            cellNameKey = ColorGenerator.ISTIO;
                         } else {
                             cellNameKey = cell.name;
                         }
@@ -403,7 +483,7 @@ class Search extends React.Component {
                         result.rootStartTime = info.rootStartTime;
                         result.rootDuration = info.rootDuration;
                         result.services.push({
-                            cellName: cellNameKey,
+                            cellNameKey: cellNameKey,
                             serviceName: span.serviceName,
                             count: info.count
                         });
@@ -427,15 +507,25 @@ class Search extends React.Component {
                     searchResults.push(result);
                 }
             }
-            self.setState(Search.generateValidState({
-                ...self.state,
+            self.setState((prevState) => Search.generateValidState({
+                ...prevState,
+                hasSearchCompleted: true,
                 searchResults: searchResults
             }));
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch(() => {
-            NotificationUtils.hideLoadingOverlay(config);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to search for Traces",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
         });
-    }
+    };
 
     /**
      * Current state from which the new valid state should be generated.
@@ -443,7 +533,7 @@ class Search extends React.Component {
      * @param {Object} state The current state
      * @returns {Object} The new valid state
      */
-    static generateValidState(state) {
+    static generateValidState = (state) => {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
@@ -481,7 +571,7 @@ class Search extends React.Component {
                 availableOperations: availableOperations
             }
         };
-    }
+    };
 
 }
 
@@ -491,13 +581,16 @@ Search.Constants = {
 
 Search.propTypes = {
     classes: PropTypes.object.isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired
+    }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired,
     match: PropTypes.shape({
         url: PropTypes.string.isRequired
     }).isRequired,
-    config: PropTypes.instanceOf(ConfigHolder).isRequired
+    globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(withConfig(Search));
+export default withStyles(styles)(withGlobalState(Search));
