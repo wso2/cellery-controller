@@ -24,10 +24,13 @@ import $ from 'jquery';
 import TracingUtils from "../../utils/tracingUtils";
 import Span from "../../utils/span";
 import Constants from "../../utils/constants";
-import './SequenceStyles.css'
+import './SequenceStyles.css';
+import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
 
 
 class SequenceDiagram extends Component {
+
     constructor(props){
         super(props);
         this.state = {
@@ -35,8 +38,10 @@ class SequenceDiagram extends Component {
             heading: "Cell - level Sequence",
             spanData:"sequenceDiagram \n",
             copyArr: [],
-            clicked: false
+            clicked: false,
+            cellName: null
         };
+
         this.addCells = this.addCells.bind(this);
         this.addServices = this.addServices.bind(this);
         this.seperateCells = this.seperateCells.bind(this);
@@ -52,7 +57,10 @@ class SequenceDiagram extends Component {
             <div>
 
                 <h3> {this.state.heading} </h3>
-                <div id="hiddenDiv" style={this.state.clicked ? {} : {display:'none'}} onClick={this.addCells}> &lt;&lt; Back to Cell-level Diagram</div>
+                <Button color="primary" style={this.state.clicked ? {} : {display:'none'}} onClick={this.addCells}>
+                    &lt;&lt; Back to Cell-level Diagram
+                </Button>
+                <div>{this.state.cellName}</div>
                 <div className="mermaid" id="mems">
                 {this.state.config}
             </div>
@@ -93,25 +101,61 @@ class SequenceDiagram extends Component {
      */
 
     addServices(callId){
-       let spanArray = this.tryGetSpan(callId);
-        console.log(spanArray);
-        let cellArray =[];
-        for(let i=0;i<spanArray.length;i++){
-                let cellname = removeDash(spanArray[i].serviceName);
-                if (!cellArray.includes(cellname)) {
-                    cellArray.push(cellname);
-                }
-        }
+       // let spanArray = this.tryGetSpan(callId);
+       //  console.log(spanArray);
+       //  let cellArray =[];
+       //  for(let i=0;i<spanArray.length;i++){
+       //          let cellname = removeDash(spanArray[i].serviceName);
+       //          if (!cellArray.includes(cellname)) {
+       //              cellArray.push(cellname);
+       //          }
+       //  }
 
         let data2 ="sequenceDiagram \n";
-        for (let i=1;i<spanArray.length;i++){
-            data2+= removeDash(spanArray[i-1].serviceName) +" ->> "+ removeDash(spanArray[i].serviceName)+ ": Calls \n";
-        }
+
+
+        let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,callId)]
+
+        let parentName = treeRoot.cell.name;
+        data2 += "activate "+ removeDash(treeRoot.serviceName)+"\n";
+        treeRoot.walk(
+            (span) => {
+                if(!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() ){
+                if(!Boolean(span.callingId) && parentName === span.cell.name){
+                    console.log(span);
+                    if (span.parent.serviceName !== span.serviceName) {
+                        data2 += removeDash(span.parent.serviceName) + " ->>+ " + removeDash(span.serviceName) + ": Calls \n";
+                    }
+                }
+            }
+            }, null,
+            (span)=> {
+                if(!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() ) {
+                    if (!Boolean(span.callingId) && parentName === span.cell.name) {
+                        if (span.parent.serviceName !== span.serviceName) {
+                            data2 += removeDash(span.serviceName) + "-->>-" + removeDash(span.parent.serviceName) + ": Return \n";
+                        }
+                    }
+                }
+            },
+
+            (span) => (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent() &&!Boolean(span.callingId) && parentName !== span.parent.cell.name)
+        );
+        data2+= "deactivate " + removeDash(treeRoot.serviceName)+"\n";
+
+
+
+        ////////////////////
+        // for (let i=1;i<spanArray.length;i++){
+        //     data2+= removeDash(spanArray[i-1].serviceName) +" ->> "+ removeDash(spanArray[i].serviceName)+ ": Calls \n";
+        // }
         console.log(data2);
         this.setState({
             config: data2,
             heading : "Span - level Sequence"
         });
+
+        console.log(data2);
     }
 
     /**
@@ -322,10 +366,11 @@ class SequenceDiagram extends Component {
     tryGetSpan(spanCallId){
         let serviceListArr = [];
         let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,spanCallId)];
+        serviceListArr.push(treeRoot);
         let parentName = treeRoot.cell.name;
         treeRoot.walk(
             (span) => {
-                if(!Boolean(span.callingId) && parentName === span.parent.cell.name){
+                if(!Boolean(span.callingId) && parentName === span.cell.name  && !span.cell.name.includes("gateway")){
                     console.log(span.cell.name);
                     serviceListArr.push(span);
                 }
