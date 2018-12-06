@@ -28,12 +28,7 @@ import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
-<<<<<<< HEAD
-
-import TopToolbar from "../../common/TopToolbar";
-=======
 import TopToolbar from "../../common/toptoolbar";
->>>>>>> 8852b9016fc3dad8d7635d408eff6d4d1319301b
 import TracingUtils from "../utils/tracingUtils";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withGlobalState, {StateHolder} from "../../common/state";
@@ -135,20 +130,9 @@ class View extends React.Component {
 
         const traceId = match.params.traceId;
 
-<<<<<<< HEAD
-        const timeline = <Timeline spans={spans}/>;
-<<<<<<< HEAD
-        const sequenceDiagram = <SequenceDiagram spans={spans}/>;
-        const dependencyDiagram = <DependencyDiagram/>;
-=======
-        const sequenceDiagram = <SequenceDiagram/>;
-        const dependencyDiagram = <DependencyDiagram spans={spans}/>;
->>>>>>> 8852b9016fc3dad8d7635d408eff6d4d1319301b
-        const tabContent = [timeline, sequenceDiagram, dependencyDiagram];
-=======
         const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
         const SelectedTabContent = tabContent[selectedTabIndex];
->>>>>>> 53232a703fdbb8e95b0508a3835df9dc49adb574
+
 
         return (
             isLoading

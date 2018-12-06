@@ -23,10 +23,10 @@ import mermaid, {mermaidAPI} from 'mermaid';
 import $ from 'jquery';
 import TracingUtils from "../../utils/tracingUtils";
 import Span from "../../utils/span";
-import Constants from "../../utils/constants";
+import Constants from "../../../common/constants";
 import './SequenceStyles.css';
 import Button from '@material-ui/core/Button';
-import { withStyles } from '@material-ui/core/styles';
+
 
 
 class SequenceDiagram extends Component {
@@ -39,7 +39,8 @@ class SequenceDiagram extends Component {
             spanData:"sequenceDiagram \n",
             copyArr: [],
             clicked: false,
-            cellName: null
+            cellName: null,
+            clonedArray:[],
         };
 
         this.addCells = this.addCells.bind(this);
@@ -84,12 +85,19 @@ class SequenceDiagram extends Component {
 
         });
         console.log(this.props.spans);
+        this.setState({
+            clonedArray:this.props.spans
+        })
         console.log(this.props.clicked);
+
+
     }
     componentDidUpdate(prevProps, prevState) {
       if (this.state.config !== prevState.config) {
           document.getElementById("mems").removeAttribute("data-processed");
           mermaid.init($("#mems"));
+
+          $("rect .actor").css("width", "max-content");
       }
 
     }
@@ -101,21 +109,11 @@ class SequenceDiagram extends Component {
      */
 
     addServices(callId){
-       // let spanArray = this.tryGetSpan(callId);
-       //  console.log(spanArray);
-       //  let cellArray =[];
-       //  for(let i=0;i<spanArray.length;i++){
-       //          let cellname = removeDash(spanArray[i].serviceName);
-       //          if (!cellArray.includes(cellname)) {
-       //              cellArray.push(cellname);
-       //          }
-       //  }
-
         let data2 ="sequenceDiagram \n";
 
 
-        let treeRoot = this.props.spans[findSpanIndexCall(this.props.spans,callId)]
-
+        let treeRoot = this.state.clonedArray[findSpanIndexCall(this.state.clonedArray,callId)];
+        console.log(this.props.spans);
         let parentName = treeRoot.cell.name;
         data2 += "activate "+ removeDash(treeRoot.serviceName)+"\n";
         treeRoot.walk(
