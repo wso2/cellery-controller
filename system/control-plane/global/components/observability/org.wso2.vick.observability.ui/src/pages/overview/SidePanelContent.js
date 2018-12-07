@@ -17,7 +17,7 @@
  */
 
 /* eslint react/display-name: "off" */
-
+import "react-vis/dist/style.css";
 import "./index.css";
 import Avatar from "@material-ui/core/Avatar";
 import Blue from "@material-ui/core/colors/blue";
@@ -48,8 +48,15 @@ import Timeline from "@material-ui/icons/Timeline";
 import Typography from "@material-ui/core/Typography";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import {
+    HorizontalBarSeries,
+    HorizontalGridLines,
+    VerticalGridLines,
+    XAxis,
+    XYPlot,
+    YAxis
+} from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
-
 
 const styles = (theme) => ({
     drawerContent: {
@@ -114,6 +121,9 @@ const styles = (theme) => ({
     cellName: {
         display: "inline-flex",
         paddingLeft: 10
+    },
+    barChart: {
+        marginTop: 20
     }
 });
 
@@ -161,6 +171,8 @@ const SidePanelContent = ({classes, summary, request, isOverview, colorGenerator
             }
         }
     ];
+
+    const BarSeries = HorizontalBarSeries;
 
     return (
         <div className={classes.drawerContent}>
@@ -238,6 +250,44 @@ const SidePanelContent = ({classes, summary, request, isOverview, colorGenerator
                         </TableRow>
                     </TableBody>
                 </Table>
+                <div className={classes.barChart}>
+                    <XYPlot
+                        yType="ordinal"
+                        stackBy="x"
+                        width={250}
+                        height={isOverview === true
+                            ? 80
+                            : 100}>
+                        <VerticalGridLines/>
+                        <HorizontalGridLines/>
+                        <XAxis/>
+                        <YAxis/>
+                        <BarSeries
+                            color={colorGenerator.getColor(ColorGenerator.SUCCESS)}
+                            data={[
+                                {y: "Total", x: request.statusCodes[1].value}
+                            ]}
+                        />
+                        <BarSeries
+                            color={Blue[500]}
+                            data={[
+                                {y: "Total", x: request.statusCodes[2].value}
+                            ]}
+                        />
+                        <BarSeries
+                            color={Orange[500]}
+                            data={[
+                                {y: "Total", x: request.statusCodes[3].value}
+                            ]}
+                        />
+                        <BarSeries
+                            color={colorGenerator.getColor(ColorGenerator.ERROR)}
+                            data={[
+                                {y: "Total", x: request.statusCodes[4].value}
+                            ]}
+                        />
+                    </XYPlot>
+                </div>
             </div>
             <div className={classes.sidebarContainer}>
                 {isOverview === true
