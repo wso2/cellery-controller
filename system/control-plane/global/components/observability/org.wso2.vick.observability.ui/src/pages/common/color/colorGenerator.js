@@ -16,7 +16,10 @@
  * under the License.
  */
 
+import Green from "@material-ui/core/colors/green";
+import Red from "@material-ui/core/colors/red";
 import {StateHolder} from "../state";
+import Yellow from "@material-ui/core/colors/yellow";
 import randomColor from "randomcolor";
 
 /**
@@ -36,9 +39,9 @@ class ColorGenerator {
             [ColorGenerator.VICK]: "#a53288",
             [ColorGenerator.ISTIO]: "#434da1",
             [ColorGenerator.UNKNOWN]: "#71736f",
-            [ColorGenerator.SUCCESS]: "#2ed637",
-            [ColorGenerator.WARNING]: "#ff934f",
-            [ColorGenerator.ERROR]: "#ff282a"
+            [ColorGenerator.SUCCESS]: Green[500],
+            [ColorGenerator.WARNING]: Yellow[700],
+            [ColorGenerator.ERROR]: Red[500]
         };
     }
 
@@ -80,11 +83,11 @@ class ColorGenerator {
      */
     getColorForPercentage = (percentage, globalState) => {
         let colorKey = ColorGenerator.SUCCESS;
-        if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
-            colorKey = ColorGenerator.ERROR;
-        }
         if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.warningThreshold) {
             colorKey = ColorGenerator.WARNING;
+        }
+        if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
+            colorKey = ColorGenerator.ERROR;
         }
         return this.colorMap[colorKey];
     };
