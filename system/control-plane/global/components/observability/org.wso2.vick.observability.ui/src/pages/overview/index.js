@@ -269,11 +269,11 @@ class Overview extends React.Component {
                     },
                     {
                         key: "Successful cells",
-                        value: 2
+                        value: 0
                     },
                     {
                         key: "Failed cells",
-                        value: 1
+                        value: 0
                     },
                     {
                         key: "Warning cells",
@@ -289,19 +289,19 @@ class Overview extends React.Component {
                     },
                     {
                         key: "OK",
-                        value: 3
+                        value: 0
                     },
                     {
                         key: "3xx",
-                        value: 3
+                        value: 0
                     },
                     {
                         key: "4xx",
-                        value: 3
+                        value: 0
                     },
                     {
                         key: "5xx",
-                        value: 3
+                        value: 0
                     }
                 ]
             },
