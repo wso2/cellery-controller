@@ -174,7 +174,7 @@ class Span {
         if (postTraverseCallBack) {
             postTraverseCallBack(this);
         }
-    };
+    }
 
     /**
      * Get a unique ID to represent this span.

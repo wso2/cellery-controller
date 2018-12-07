@@ -150,7 +150,7 @@ Timeline.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
-    clicked:PropTypes.bool
+    clicked: PropTypes.bool
 };
 
 export default withStyles(styles)(Timeline);
