@@ -43,6 +43,8 @@ class SequenceDiagram extends Component {
             clonedArray:[],
         };
 
+        this.mermaidDiv = React.createRef();
+
         this.addCells = this.addCells.bind(this);
         this.addServices = this.addServices.bind(this);
         this.seperateCells = this.seperateCells.bind(this);
@@ -62,7 +64,7 @@ class SequenceDiagram extends Component {
                     &lt;&lt; Back to Cell-level Diagram
                 </Button>
                 <div>{this.state.cellName}</div>
-                <div className="mermaid" id="mems">
+                <div className="mermaid" id="mermaidDiv" ref={this.mermaidDiv}>
                 {this.state.config}
             </div>
             </div>
@@ -74,7 +76,7 @@ class SequenceDiagram extends Component {
         _this.addCells();
 
         interact('.messageText').on('tap', function (event) {
-            if ((event.srcElement.innerHTML !== "Return") && (_this.state.clicked !== true)){
+            if ((event.srcElement.innerHTML !== "Return" && event.srcElement.innerHTML !== "Calls") && (_this.state.clicked !== true)){
                 let numb = event.srcElement.innerHTML.match(/\d+/g).map(Number);
                 _this.addServices(numb);
                 _this.setState({
@@ -87,17 +89,28 @@ class SequenceDiagram extends Component {
         console.log(this.props.spans);
         this.setState({
             clonedArray:this.props.spans
-        })
-        console.log(this.props.clicked);
-
+        });
 
     }
     componentDidUpdate(prevProps, prevState) {
-      if (this.state.config !== prevState.config) {
-          document.getElementById("mems").removeAttribute("data-processed");
-          mermaid.init($("#mems"));
+        let collections = document.getElementsByClassName("messageText");
+        for (let i=0;i<collections.length;i++){
+            if(collections[i].innerHTML.includes("[")) {
+                collections[i].classList.add("newMessageText");
+            }
+        }
 
-          $("rect .actor").css("width", "max-content");
+      if (this.state.config !== prevState.config) {
+
+         this.mermaidDiv.current.removeAttribute("data-processed");
+          mermaid.init(this.mermaidDiv.current);
+
+          for (let i=0;i<collections.length;i++){
+              if(collections[i].innerHTML.match("\\s\\[([0-9]+)\\]+$")) {
+                  collections[i].classList.add("newMessageText");
+              }
+          }
+
       }
 
     }
