@@ -27,6 +27,8 @@ import mermaid from "mermaid";
 
 class SequenceDiagram extends React.Component {
 
+    static GLOBAL = "global";
+
     constructor(props) {
         super(props);
         this.state = {
@@ -212,8 +214,8 @@ class SequenceDiagram extends React.Component {
     static separateCells(spanArray) {
         const cellArray = [];
         for (let i = 0; i < spanArray.length; i++) {
-            if ((spanArray[i].serviceName.includes("global"))) {
-                cellArray.push("global");
+            if ((spanArray[i].serviceName.includes(SequenceDiagram.GLOBAL))) {
+                cellArray.push(SequenceDiagram.GLOBAL);
             }
             if (spanArray[i].cell) {
                 const cellName = SequenceDiagram.removeDash(spanArray[i].cell.name);
@@ -237,7 +239,7 @@ class SequenceDiagram extends React.Component {
         for (let i = 0; i < array.length; i++) {
             dataText += `participant ${array[i]}\n`;
         }
-        dataText += "activate global\n";
+        dataText += `activate ${SequenceDiagram.GLOBAL}\n`;
         return dataText + this.addCellConnections();
     }
 
@@ -255,7 +257,7 @@ class SequenceDiagram extends React.Component {
             let parentCellName;
             if (span.parentId !== "undefined") {
                 if (span.parent.cell === null) {
-                    parentCellName = "global";
+                    parentCellName = SequenceDiagram.GLOBAL;
                 } else {
                     parentCellName = span.parent.cell.name;
                 }
@@ -273,7 +275,7 @@ class SequenceDiagram extends React.Component {
             if (span.cell) {
                 let parentCellName = "";
                 if (span.parent.cell === null) {
-                    parentCellName = "global";
+                    parentCellName = SequenceDiagram.GLOBAL;
                 } else {
                     parentCellName = span.parent.cell.name;
                 }
@@ -282,7 +284,7 @@ class SequenceDiagram extends React.Component {
                 }
             }
         });
-        dataText += "deactivate global";
+        dataText += `deactivate ${SequenceDiagram.GLOBAL}`;
         return dataText;
     }
 
