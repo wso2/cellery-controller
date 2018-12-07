@@ -37,7 +37,9 @@ const DataTable = (props) => {
     const options = {
         download: false,
         selectableRows: false,
-        print: false
+        print: false,
+        filterType: "dropdown",
+        responsive: "scroll"
     };
 
     return (
