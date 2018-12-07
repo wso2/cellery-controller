@@ -43,7 +43,7 @@ class SequenceDiagram extends Component {
             clonedArray:[],
         };
 
-        this.mermaidDiv = React.createRef();
+        this.mermaidDivRef = React.createRef();
 
         this.addCells = this.addCells.bind(this);
         this.addServices = this.addServices.bind(this);
@@ -64,7 +64,7 @@ class SequenceDiagram extends Component {
                     &lt;&lt; Back to Cell-level Diagram
                 </Button>
                 <div>{this.state.cellName}</div>
-                <div className="mermaid" id="mermaidDiv" ref={this.mermaidDiv}>
+                <div className="mermaid" id="mermaidDiv" ref={this.mermaidDivRef}>
                 {this.state.config}
             </div>
             </div>
@@ -93,7 +93,7 @@ class SequenceDiagram extends Component {
 
     }
     componentDidUpdate(prevProps, prevState) {
-        let collections = document.getElementsByClassName("messageText");
+        let collections = this.mermaidDivRef.current.getElementsByClassName("messageText");
         for (let i=0;i<collections.length;i++){
             if(collections[i].innerHTML.includes("[")) {
                 collections[i].classList.add("newMessageText");
@@ -102,8 +102,8 @@ class SequenceDiagram extends Component {
 
       if (this.state.config !== prevState.config) {
 
-         this.mermaidDiv.current.removeAttribute("data-processed");
-          mermaid.init(this.mermaidDiv.current);
+         this.mermaidDivRef.current.removeAttribute("data-processed");
+          mermaid.init(this.mermaidDivRef.current);
 
           for (let i=0;i<collections.length;i++){
               if(collections[i].innerHTML.match("\\s\\[([0-9]+)\\]+$")) {
