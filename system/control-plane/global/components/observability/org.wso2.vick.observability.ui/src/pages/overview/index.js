@@ -16,16 +16,25 @@
  * under the License.
  */
 
-import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
-import CardContent from "@material-ui/core/CardContent";
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import DependencyGraph from "./DependencyGraph";
+import Divider from "@material-ui/core/Divider";
+import Drawer from "@material-ui/core/Drawer";
+import Grey from "@material-ui/core/colors/grey";
+import IconButton from "@material-ui/core/IconButton";
+import MoreIcon from "@material-ui/icons/MoreHoriz";
+import NotificationUtils from "../common/utils/notificationUtils";
+import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
+import SidePanelContent from "./SidePanelContent";
+import StateHolder from "../common/state/stateHolder";
+import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography";
 import axios from "axios";
-import {withRouter} from "react-router-dom";
+import classNames from "classnames";
+import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
 
@@ -76,107 +85,82 @@ const graphConfig = {
     }
 };
 
-const styles = {
-    card: {
-        minWidth: 275,
-        width: 300,
-        height: 500,
-        position: "fixed",
-        bottom: 0,
-        right: 0,
-        top: 70
+const drawerWidth = 300;
+
+const styles = (theme) => ({
+    root: {
+        display: "flex"
     },
-    title: {
-        fontSize: 14
+    moreDetails: {
+        position: "absolute",
+        right: 25,
+        transition: theme.transitions.create(["margin", "width"], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen
+        })
     },
-    moreDetailsButton: {
-        left: 170,
-        bottom: 0
+    moreDetailsShift: {
+        transition: theme.transitions.create(["margin", "width"], {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen
+        })
+    },
+    menuButton: {
+        marginTop: 8,
+        marginRight: 8
+    },
+    hide: {
+        display: "none"
+    },
+    drawer: {
+        width: drawerWidth,
+        flexShrink: 0
+    },
+    drawerPaper: {
+        top: 140,
+        width: drawerWidth,
+        borderTopWidth: 1,
+        borderTopStyle: "solid",
+        borderTopColor: Grey[200]
+    },
+    drawerHeader: {
+        display: "flex",
+        alignItems: "center",
+        padding: 5,
+        justifyContent: "flex-start",
+        textTransform: "uppercase",
+        minHeight: "fit-content"
+    },
+    content: {
+        flexGrow: 1,
+        padding: theme.spacing.unit * 3,
+        transition: theme.transitions.create("margin", {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen
+        }),
+        marginLeft: Number(theme.spacing.unit),
+        marginRight: -drawerWidth
+    },
+    contentShift: {
+        transition: theme.transitions.create("margin", {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen
+        }),
+        marginRight: 0
+    },
+    sideBarHeading: {
+        letterSpacing: 1,
+        fontSize: 12,
+        marginLeft: 4
     }
-};
+});
 
 class Overview extends React.Component {
-
-    constructor(props) {
-        super(props);
-        const colorGenerator = this.props.colorGenerator;
-        graphConfig.node.viewGenerator = this.viewGenerator;
-        this.defaultState = {
-            summary: {
-                topic: "VICK Deployment",
-                content: [
-                    {
-                        key: "Total cells",
-                        value: ""
-                    },
-                    {
-                        key: "Successful cells",
-                        value: ""
-                    },
-                    {
-                        key: "Failed cells",
-                        value: ""
-                    },
-                    {
-                        key: "Warning cells",
-                        value: ""
-                    }
-                ]
-            },
-            isOverallSummary: true,
-            data: {
-                nodes: null,
-                links: null
-            },
-            error: null,
-            reloadGraph: true
-        };
-        this.state = JSON.parse(JSON.stringify(this.defaultState));
-        // TODO: Update the url to the WSO2-sp worker node.
-        axios({
-            method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview"
-        }).then((response) => {
-            const result = response.data;
-            const summaryContent = [
-                {
-                    key: "Total cells",
-                    value: result.nodes.length
-                },
-                {
-                    key: "Successful cells",
-                    value: result.nodes.length
-                },
-                {
-                    key: "Failed cells",
-                    value: "0"
-                },
-                {
-                    key: "Warning cells",
-                    value: "0"
-                }
-            ];
-            this.defaultState.summary.content = summaryContent;
-            colorGenerator.addKeys(result.nodes);
-            this.setState((prevState) => ({
-                data: {
-                    nodes: result.nodes,
-                    links: result.edges
-                },
-                summary: {
-                    ...prevState.summary,
-                    content: summaryContent
-                }
-            }));
-        }).catch((error) => {
-            this.setState({error: error});
-        });
-    }
 
     viewGenerator = (nodeProps) => {
         const color = this.props.colorGenerator.getColor(nodeProps.id);
         return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
+                    width="50px" height="50px" viewBox="0 0 240 240">
             <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
         </svg>;
     };
@@ -240,64 +224,243 @@ class Overview extends React.Component {
         });
     };
 
-
-    render = () => {
-        const {classes} = this.props;
-        return (
-            <div>
-                <DependencyGraph
-                    id="graph-id"
-                    data={this.state.data}
-                    config={graphConfig}
-                    reloadGraph={this.state.reloadGraph}
-                    onClickNode={this.onClickCell}
-                    onClickGraph={this.onClickGraph}
-                />
-                <Card className={classes.card} transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right"
-                }}>
-                    <CardContent>
-                        <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            Summary
-                        </Typography>
-                        <Typography variant="h5" component="h2">
-                            {this.state.summary.topic}
-                        </Typography>
-                        <br/>
-                        {this.state.summary.content.map((element) => <Typography variant="subtitle1" key={element.key}
-                            gutterBottom>
-                            {element.key} : {element.value}
-                            {(element.setValue && element.setValue.length > 0)
-                                && (
-                                    <ul>
-                                        {element.setValue.map((setValueElement) => <li
-                                            key={setValueElement}>{setValueElement}</li>)}
-                                    </ul>)
-                            }
-                            {element.value || (element.setValue && element.setValue.length > 0) ? "" : "None"}
-                        </Typography>
-                        )}
-
-                    </CardContent>
-                    {(!this.state.isOverallSummary) && (
-                        <CardActions>
-                            <Button size="small" variant="contained" color="primary"
-                                className={classes.moreDetailsButton}>
-                                More Details
-                            </Button>
-                        </CardActions>
-                    )}
-                </Card>
-            </div>
-        );
+    handleDrawerOpen = () => {
+        this.setState({open: true});
     };
+
+    handleDrawerClose = () => {
+        this.setState({open: false});
+    };
+
+    loadListInfo = (isUserAction) => {
+        const {globalState} = this.props;
+        const self = this;
+
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+        }
+        // TODO : Change to a backend call to fetch data.
+        setTimeout(() => {
+            const data = [
+                [0.1, "Cell C", 3],
+                [1, "Cell A", 1],
+                [0.8, "Cell B", 2]
+            ];
+            self.setState({
+                listData: data
+            });
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }, 1000);
+    };
+
+    constructor(props) {
+        super(props);
+        const colorGenerator = this.props.colorGenerator;
+        graphConfig.node.viewGenerator = this.viewGenerator;
+        this.defaultState = {
+            summary: {
+                topic: "VICK Deployment",
+                content: [
+                    {
+                        key: "Total cells",
+                        value: 0
+                    },
+                    {
+                        key: "Successful cells",
+                        value: 0
+                    },
+                    {
+                        key: "Failed cells",
+                        value: 0
+                    },
+                    {
+                        key: "Warning cells",
+                        value: 0
+                    }
+                ]
+            },
+            request: {
+                statusCodes: [
+                    {
+                        key: "Total",
+                        value: 0
+                    },
+                    {
+                        key: "OK",
+                        value: 0
+                    },
+                    {
+                        key: "3xx",
+                        value: 0
+                    },
+                    {
+                        key: "4xx",
+                        value: 0
+                    },
+                    {
+                        key: "5xx",
+                        value: 0
+                    }
+                ]
+            },
+            isOverallSummary: true,
+            data: {
+                nodes: null,
+                links: null
+            },
+            error: null,
+            reloadGraph: true,
+            open: true,
+            listData: [],
+            page: 0,
+            rowsPerPage: 5
+        };
+        this.state = JSON.parse(JSON.stringify(this.defaultState));
+        // TODO: Update the url to the WSO2-sp worker node.
+        axios({
+            method: "GET",
+            url: "http://localhost:9123/dependency-model/cell-overview"
+        }).then((response) => {
+            const result = response.data;
+            // TODO: Update values with real data
+            const summaryContent = [
+                {
+                    key: "Total cells",
+                    value: result.nodes.length
+                },
+                {
+                    key: "Successful cells",
+                    value: 2
+                },
+                {
+                    key: "Failed cells",
+                    value: 1
+                },
+                {
+                    key: "Warning cells",
+                    value: 0
+                }
+            ];
+            const statusCodeContent = [
+                {
+                    key: "Total",
+                    value: 0
+                },
+                {
+                    key: "OK",
+                    value: 70
+                },
+                {
+                    key: "3xx",
+                    value: 20
+                },
+                {
+                    key: "4xx",
+                    value: 5
+                },
+                {
+                    key: "5xx",
+                    value: 5
+                }
+            ];
+            this.defaultState.summary.content = summaryContent;
+            colorGenerator.addKeys(result.nodes);
+            this.setState((prevState) => ({
+                data: {
+                    nodes: result.nodes,
+                    links: result.edges
+                },
+                summary: {
+                    ...prevState.summary,
+                    content: summaryContent
+                },
+                request: {
+                    ...prevState.request,
+                    statusCodes: statusCodeContent
+                }
+            }));
+        }).catch((error) => {
+            this.setState({error: error});
+        });
+    }
+
+    render() {
+        const {classes, theme} = this.props;
+        const {open} = this.state;
+
+        return (
+            <React.Fragment>
+                <TopToolbar title={"Overview"} onUpdate={this.loadListInfo}/>
+
+                <div className={classes.root}>
+                    <Paper
+                        className={classNames(classes.content, {
+                            [classes.contentShift]: open
+                        })}
+                    >
+                        <DependencyGraph
+                            id="graph-id"
+                            data={this.state.data}
+                            config={graphConfig}
+                            reloadGraph={this.state.reloadGraph}
+                            onClickNode={this.onClickCell}
+                            onClickGraph={this.onClickGraph}
+                        />
+                    </Paper>
+                    <div className={classNames(classes.moreDetails, {
+                        [classes.moreDetailsShift]: open
+                    })}>
+                        <IconButton
+                            color="inherit"
+                            aria-label="Open drawer"
+                            onClick={this.handleDrawerOpen}
+                            className={classNames(classes.menuButton, open && classes.hide)}
+                        >
+                            <MoreIcon/>
+                        </IconButton>
+                    </div>
+
+                    <Drawer
+                        className={classes.drawer}
+                        variant="persistent"
+                        anchor="right"
+                        open={open}
+                        classes={{
+                            paper: classes.drawerPaper
+                        }}
+                    >
+                        <div className={classes.drawerHeader}>
+                            <IconButton onClick={this.handleDrawerClose}>
+                                {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
+                            </IconButton>
+                            <Typography color="textSecondary" className={classes.sideBarHeading}>
+                                {(this.state.isOverallSummary) ? "Overview" : "Cell Details"}
+                            </Typography>
+                        </div>
+                        <Divider/>
+                        <SidePanelContent
+                            summary={this.state.summary}
+                            request={this.state.request}
+                            isOverview={this.state.isOverallSummary}
+                            open={this.state.open}
+                            listData={this.state.listData}>
+                        </SidePanelContent>
+                    </Drawer>
+                </div>
+            </React.Fragment>
+        );
+    }
 
 }
 
 Overview.propTypes = {
     classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles)(withRouter(withColor(Overview)));
+export default withStyles(styles, {withTheme: true})(withGlobalState(withColor(Overview)));
+

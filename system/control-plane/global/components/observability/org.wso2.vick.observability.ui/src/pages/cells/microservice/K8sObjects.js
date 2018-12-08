@@ -121,7 +121,7 @@ const K8sObjects = (props) => (
                         <TableCell className={props.classes.cellWidth20}/>
                         <TableCell className={props.classes.cellWidth20}/>
                         <TableCell className={props.classes.cellWidth10}>
-                            <IconButton className={props.classes.button} size="small" color="action" component={Link}
+                            <IconButton className={props.classes.button} size="small" color="inherit" component={Link}
                                 to="/system-metrics/pod-usage">
                                 <BarChartIcon/>
                             </IconButton>
