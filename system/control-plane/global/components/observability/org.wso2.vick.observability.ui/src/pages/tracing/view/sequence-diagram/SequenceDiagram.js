@@ -24,7 +24,6 @@ import TracingUtils from "../../utils/tracingUtils";
 import interact from "interactjs";
 import mermaid from "mermaid";
 
-
 class SequenceDiagram extends React.Component {
 
     static GLOBAL = "global";
@@ -33,7 +32,7 @@ class SequenceDiagram extends React.Component {
         super(props);
         this.state = {
             config: "",
-            heading: "Cell - level Sequence",
+            heading: "Cell - Level Sequence",
             spanData: "sequenceDiagram \n",
             copyArr: [],
             clicked: false,
@@ -45,7 +44,6 @@ class SequenceDiagram extends React.Component {
 
         this.addCells = this.addCells.bind(this);
         this.addServices = this.addServices.bind(this);
-        SequenceDiagram.separateCells = SequenceDiagram.separateCells.bind(this);
         this.drawCells = this.drawCells.bind(this);
     }
 
@@ -103,7 +101,6 @@ class SequenceDiagram extends React.Component {
 
     /**
      * Create a copy of the original span list
-     *
      */
 
     cloneArray() {
@@ -143,7 +140,7 @@ class SequenceDiagram extends React.Component {
 
         this.setState({
             config: data2,
-            heading: "Span - level Sequence"
+            heading: "Service - Level Sequence"
         });
     }
 
@@ -200,7 +197,7 @@ class SequenceDiagram extends React.Component {
         }
         this.setState({
             clicked: false,
-            heading: "Cell - level Sequence"
+            heading: "Cell - Level Sequence"
         });
     }
 
@@ -300,7 +297,6 @@ class SequenceDiagram extends React.Component {
         }
         return name;
     }
-
 
     /**
      * Gets the index of the span object from an array by checking the span's unique id.
