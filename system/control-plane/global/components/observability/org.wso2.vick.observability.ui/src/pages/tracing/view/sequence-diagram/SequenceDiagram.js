@@ -147,7 +147,7 @@ class SequenceDiagram extends React.Component {
     /**
      * Updates the text data, which is used by the mermaid library to generate diagrams.
      *
-     * @param {Array} span The span array.
+     * @param {Span} span The span to be checked.
      * @param {String} parentName The parent cell name
      * @return {String} text The updated text
      */
@@ -157,7 +157,7 @@ class SequenceDiagram extends React.Component {
         if (!span.callingId && parentName === span.cell.name) {
             if (span.parent.serviceName !== span.serviceName) {
                 text += `${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
-                    + `${SequenceDiagram.removeDash(span.serviceName)}: Calls \n`;
+                    + `${SequenceDiagram.removeDash(span.serviceName)}:`+ span.operationName+` \n`;
             }
         }
         return text;
