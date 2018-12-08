@@ -23,7 +23,7 @@ import NotificationUtils from "../../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import SequenceDiagram from "./SequenceDiagram";
+import SequenceDiagram from "./sequence-diagram/SequenceDiagram";
 import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
@@ -132,6 +132,7 @@ class View extends React.Component {
 
         const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
         const SelectedTabContent = tabContent[selectedTabIndex];
+
 
         return (
             isLoading
