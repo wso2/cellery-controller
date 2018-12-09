@@ -6,8 +6,8 @@ ARG PORTAL_PORT=3000
 
 WORKDIR ${APP_DIR}
 
-COPY ./node-server/ ${APP_DIR}/
-COPY ./build/ ${APP_DIR}/public/
+COPY node-server ${APP_DIR}/
+COPY build ${APP_DIR}/public/
 
 ENV PORTAL_PORT=${PORTAL_PORT}
 
