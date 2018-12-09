@@ -178,7 +178,7 @@ public class TracingSynapseHandler extends AbstractSynapseHandler {
     }
 
     /**
-     * Finish the stored in message context.
+     * Finish the stored span in message context.
      *
      * @param messageContext The synapse message context
      * @return True if sequence should continue
