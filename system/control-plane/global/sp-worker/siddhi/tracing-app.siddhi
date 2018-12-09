@@ -13,7 +13,7 @@ define stream TelemetryStreamIn (sourceNamespace string, sourceCell string, sour
                                  requestPath string, requestMethod string, responseCode long,
                                  responseDurationNanoSec int, contextReporterKind string);
 
-@Store(type="rdbms", datasource="Message_Tracing_DB", field.length="tags:8000")
+@Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
 define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, cell string,
                                       vickService string, pod string, operationName string, kind string,

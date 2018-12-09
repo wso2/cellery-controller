@@ -13,7 +13,7 @@ define stream ProcessedRequestsStream(sourceNamespace string, sourceCell string,
                                       destinationVICKService string, requestPath string, requestMethod string,
                                       httpResponseGroup string, responseTime double);
 
-@store(type="rdbms",datasource="HTTP_ANALYTICS_DB")
+@store(type="rdbms",datasource="VICK_OBSERVABILITY_DB")
 @purge(enable="false")
 define aggregation RequestAggregation from ProcessedRequestsStream
 select

@@ -10,7 +10,7 @@ define stream CellListQueryStreamIn (messageId string);
       headers="'Access-Control-Allow-Origin:*'", message.id="{{messageId}}", @map(type='json'))
 define stream CellListQueryStreamOut (messageId string, cellName string, serviceName string, operationName string);
 
-from CellListQueryStreamIn#rdbms:query("Message_Tracing_DB",
+from CellListQueryStreamIn#rdbms:query("VICK_OBSERVABILITY_DB",
                                    "SELECT DISTINCT cellName, serviceName, operationName FROM SpanTable",
                                    "cellName string, serviceName string, operationName string")
 insert into CellListQueryStreamOut;

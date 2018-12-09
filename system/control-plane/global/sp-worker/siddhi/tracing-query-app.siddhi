@@ -1,7 +1,7 @@
 @App:name("tracing-query-app")
 @App:description("VICK Tracing Query Siddhi App which queries the stored Zipkin spans")
 
-@Store(type="rdbms", datasource="Message_Tracing_DB", field.length="tags:8000")
+@Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
 define table SpanTable (traceId string, spanId string, parentId string, cellName string, serviceName string,
                         operationName string, kind string, startTime long, duration long, tags string);
@@ -85,7 +85,7 @@ group by messageId
 insert into SelectedTracesStream;
 
 from SelectedTracesStream#rdbms:query(
-    "Message_Tracing_DB",
+    "VICK_OBSERVABILITY_DB",
     str:concat(
         "SELECT a.traceId, a.cellName, a.serviceName, a.count, t.serviceName as rootServiceName, ",
         "t.operationName as rootOperationName, t.startTime as rootStartTime, t.duration as rootDuration FROM (",
