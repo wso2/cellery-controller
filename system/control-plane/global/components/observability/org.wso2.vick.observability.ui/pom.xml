@@ -128,22 +128,24 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--Build Docker image-->
+            <!-- Creating a runnable NodeJS Server ZIP -->
             <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.4.7</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>default</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>build</goal>
+                            <goal>single</goal>
                         </goals>
-                        <configuration>
-                            <repository>${docker.repo.name}/observability-portal</repository>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>${project.basedir}/assembly.xml</descriptor>
+                    </descriptors>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
             </plugin>
         </plugins>
     </build>

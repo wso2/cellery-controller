@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* eslint max-lines: ["off"] */
@@ -49,7 +47,8 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-b-id",
         parentId: "trace-x-id",
-        serviceName: "src:0.0.0.hr_1_0_0_employee",
+        cell: "hr",
+        serviceName: "hr-cell-gateway",
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10020000,
@@ -60,7 +59,8 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-c-id",
         parentId: "span-b-id",
-        serviceName: "src:0.0.0.hr_1_0_0_employee",
+        cell: "hr",
+        serviceName: "hr-cell-gateway",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 10030000,
@@ -71,6 +71,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-c-id",
         parentId: "span-b-id",
+        cell: "hr",
         serviceName: "employee-service",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.SERVER,
@@ -82,6 +83,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-d-id",
         parentId: "span-c-id",
+        cell: "hr",
         serviceName: "employee-service",
         operationName: "is-authorized",
         kind: Constants.Span.Kind.CLIENT,
@@ -114,6 +116,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-f-id",
         parentId: "span-c-id",
+        cell: "hr",
         serviceName: "employee-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.CLIENT,
@@ -125,6 +128,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-f-id",
         parentId: "span-c-id",
+        cell: "hr",
         serviceName: "reviews-service",
         operationName: "get-reviews",
         kind: Constants.Span.Kind.SERVER,
@@ -136,6 +140,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-g-id",
         parentId: "span-c-id",
+        cell: "hr",
         serviceName: "employee-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
@@ -147,7 +152,8 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-g-id",
         parentId: "span-c-id",
-        serviceName: "src:0.0.0.stock_options_1_0_0_employee",
+        cell: "stock-options",
+        serviceName: "stock-options-cell-gateway",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
         startTime: 12100000,
@@ -158,7 +164,8 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-h-id",
         parentId: "span-g-id",
-        serviceName: "src:0.0.0.stock_options_1_0_0_employee",
+        cell: "stock-options",
+        serviceName: "stock-options-cell-gateway",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.CLIENT,
         startTime: 12150000,
@@ -169,6 +176,7 @@ describe("TracingUtils", () => {
         traceId: "trace-x-id",
         spanId: "span-h-id",
         parentId: "span-g-id",
+        cell: "stock-options",
         serviceName: "stock-options-service",
         operationName: "get-employee-stock-options",
         kind: Constants.Span.Kind.SERVER,
@@ -281,25 +289,21 @@ describe("TracingUtils", () => {
 
             expect(hrCellGatewayServerSpan.cell).not.toBeNull();
             expect(hrCellGatewayServerSpan.cell.name).toBe("hr");
-            expect(hrCellGatewayServerSpan.cell.version).toBe("1.0.0");
             expect(hrCellGatewayServerSpan.componentType).toBe(Constants.ComponentType.VICK);
             expect(hrCellGatewayServerSpan.treeDepth).toBe(2);
 
             expect(hrCellGatewayClientSpan.cell).not.toBeNull();
             expect(hrCellGatewayClientSpan.cell.name).toBe("hr");
-            expect(hrCellGatewayClientSpan.cell.version).toBe("1.0.0");
             expect(hrCellGatewayClientSpan.componentType).toBe(Constants.ComponentType.VICK);
             expect(hrCellGatewayClientSpan.treeDepth).toBe(3);
 
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
-            expect(employeeServiceServerSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
             expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
-            expect(employeeServiceToIstioMixerClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
             expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
@@ -313,39 +317,33 @@ describe("TracingUtils", () => {
 
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
-            expect(employeeServiceToReviewsServiceClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToReviewsServiceClientSpan.componentType)
                 .toBe(Constants.ComponentType.MICROSERVICE);
             expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
-            expect(reviewsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(reviewsServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
             expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
-            expect(employeeServiceToStockOptionsCellClientSpan.cell.version).toBe("1.0.0");
             expect(employeeServiceToStockOptionsCellClientSpan.componentType)
                 .toBe(Constants.ComponentType.MICROSERVICE);
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsCellGatewayServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayServerSpan.componentType).toBe(Constants.ComponentType.VICK);
             expect(stockOptionsCellGatewayServerSpan.treeDepth).toBe(6);
 
             expect(stockOptionsCellGatewayClientSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsCellGatewayClientSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsCellGatewayClientSpan.componentType).toBe(Constants.ComponentType.VICK);
             expect(stockOptionsCellGatewayClientSpan.treeDepth).toBe(7);
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsServiceServerSpan.cell.version).toBe("1.0.0");
             expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
