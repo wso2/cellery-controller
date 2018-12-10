@@ -188,11 +188,11 @@ class Overview extends React.Component {
                     },
                     {
                         key: "Failed",
-                        value: 1
+                        value: 0
                     },
                     {
                         key: "Warning",
-                        value: 1
+                        value: 0
                     }
                 ]
             },
@@ -225,7 +225,7 @@ class Overview extends React.Component {
         const self = this;
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
         }
         setTimeout(() => {
             if (isUserAction) {
@@ -253,8 +253,12 @@ class Overview extends React.Component {
 
     constructor(props) {
         super(props);
-        const colorGenerator = this.props.colorGenerator;
+        this.initializeDefault();
         graphConfig.node.viewGenerator = this.viewGenerator;
+        this.callOverviewInfo();
+    }
+
+    initializeDefault = () => {
         this.defaultState = {
             summary: {
                 topic: "VICK Deployment",
@@ -314,6 +318,10 @@ class Overview extends React.Component {
             rowsPerPage: 5
         };
         this.state = JSON.parse(JSON.stringify(this.defaultState));
+    };
+
+    callOverviewInfo = (fromTime, toTime) => {
+        const colorGenerator = this.props.colorGenerator;
         // TODO: Update the url to the WSO2-sp worker node.
         axios({
             method: "GET",
@@ -328,11 +336,11 @@ class Overview extends React.Component {
                 },
                 {
                     key: "Successful",
-                    value: 2
+                    value: result.nodes.length
                 },
                 {
                     key: "Failed",
-                    value: 1
+                    value: 0
                 },
                 {
                     key: "Warning",
@@ -383,7 +391,7 @@ class Overview extends React.Component {
         }).catch((error) => {
             this.setState({error: error});
         });
-    }
+    };
 
 
     render() {
