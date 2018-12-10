@@ -166,59 +166,47 @@ class Overview extends React.Component {
     };
 
     onClickCell = (nodeId) => {
-        const outbound = new Set();
-        const inbound = new Set();
-        this.state.data.links.forEach((element) => {
-            if (element.source === nodeId) {
-                outbound.add(element.target);
-            } else if (element.target === nodeId) {
-                inbound.add(element.source);
-            }
-        });
-        const services = new Set();
+        let cell = null;
         this.state.data.nodes.forEach((element) => {
             if (element.id === nodeId) {
-                element.services.forEach((service) => {
-                    services.add(service);
-                });
+                cell = element;
             }
         });
+        let serviceInfo = this.loadServicesInfo(cell.services);
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
-                topic: `Cell : ${nodeId}`,
+                topic: nodeId,
                 content: [
                     {
-                        key: "Outbound Cells",
-                        setValue: this.populateArray(outbound)
+                        key: "Total",
+                        value: serviceInfo.length,
                     },
                     {
-                        key: "Inbound Cells",
-                        setValue: this.populateArray(inbound)
+                        key: "Successful",
+                        value: serviceInfo.length
                     },
                     {
-                        key: "Micro Services",
-                        setValue: this.populateArray(services)
+                        key: "Failed",
+                        value: 1
+                    },
+                    {
+                        key: "Warning",
+                        value: 1
                     }
-
                 ]
             },
+            listData: serviceInfo,
             reloadGraph: false,
             isOverallSummary: false
-        }));
-    };
-
-    populateArray = (setElements) => {
-        const arrayElements = [];
-        setElements.forEach((setElement) => {
-            arrayElements.push(setElement);
-        });
-        return arrayElements;
+        }))
+        ;
     };
 
     onClickGraph = () => {
         this.setState({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
+            listData: this.loadCellInfo(this.state.data.nodes),
             reloadGraph: true,
             isOverallSummary: true
         });
@@ -239,20 +227,28 @@ class Overview extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
         }
-        // TODO : Change to a backend call to fetch data.
         setTimeout(() => {
-            const data = [
-                [0.1, "Cell C", 3],
-                [1, "Cell A", 1],
-                [0.8, "Cell B", 2]
-            ];
-            self.setState({
-                listData: data
-            });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }, 1000);
+    };
+
+    loadCellInfo = (nodes) => {
+        console.log(nodes);
+        const nodeInfo = [];
+        nodes.forEach((node) => {
+            nodeInfo.push([1, node.id, node.id]);
+        });
+        return nodeInfo;
+    };
+
+    loadServicesInfo = (services) => {
+        const serviceInfo = [];
+        services.forEach((service) => {
+            serviceInfo.push([1, service, service]);
+        });
+        return serviceInfo;
     };
 
     constructor(props) {
@@ -264,19 +260,19 @@ class Overview extends React.Component {
                 topic: "VICK Deployment",
                 content: [
                     {
-                        key: "Total cells",
+                        key: "Total",
                         value: 0
                     },
                     {
-                        key: "Successful cells",
+                        key: "Successful",
                         value: 0
                     },
                     {
-                        key: "Failed cells",
+                        key: "Failed",
                         value: 0
                     },
                     {
-                        key: "Warning cells",
+                        key: "Warning",
                         value: 0
                     }
                 ]
@@ -327,19 +323,19 @@ class Overview extends React.Component {
             // TODO: Update values with real data
             const summaryContent = [
                 {
-                    key: "Total cells",
+                    key: "Total",
                     value: result.nodes.length
                 },
                 {
-                    key: "Successful cells",
+                    key: "Successful",
                     value: 2
                 },
                 {
-                    key: "Failed cells",
+                    key: "Failed",
                     value: 1
                 },
                 {
-                    key: "Warning cells",
+                    key: "Warning",
                     value: 0
                 }
             ];
@@ -367,6 +363,7 @@ class Overview extends React.Component {
             ];
             this.defaultState.summary.content = summaryContent;
             colorGenerator.addKeys(result.nodes);
+            const cellList = this.loadCellInfo(result.nodes);
             this.setState((prevState) => ({
                 data: {
                     nodes: result.nodes,
@@ -379,12 +376,15 @@ class Overview extends React.Component {
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
-                }
+                },
+                listData: cellList
+
             }));
         }).catch((error) => {
             this.setState({error: error});
         });
     }
+
 
     render() {
         const {classes, theme} = this.props;
