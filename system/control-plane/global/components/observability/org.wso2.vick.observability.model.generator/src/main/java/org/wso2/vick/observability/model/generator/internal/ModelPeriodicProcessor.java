@@ -20,16 +20,18 @@ package org.wso2.vick.observability.model.generator.internal;
 import com.google.common.graph.MutableNetwork;
 import org.apache.log4j.Logger;
 import org.wso2.vick.observability.model.generator.Node;
+import org.wso2.vick.observability.model.generator.Utils;
 import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
+import org.wso2.vick.observability.model.generator.model.Model;
 
 import java.util.Set;
 
 /**
  * This is the Scheduled executor which periodically runs
  */
-public class GraphPeriodicProcessor implements Runnable {
-    private static final Logger log = Logger.getLogger(GraphPeriodicProcessor.class);
-    private Object[] lastModel;
+public class ModelPeriodicProcessor implements Runnable {
+    private static final Logger log = Logger.getLogger(ModelPeriodicProcessor.class);
+    private Model lastModel;
 
 
     @Override
@@ -37,23 +39,23 @@ public class GraphPeriodicProcessor implements Runnable {
         try {
             MutableNetwork<Node, String> currentModel = ServiceHolder.getModelManager().getDependencyGraph();
             if (lastModel == null) {
-                this.lastModel = ServiceHolder.getGraphStoreManager().loadGraph();
+                this.lastModel = ServiceHolder.getModelStoreManager().loadLastModel();
             }
             if (this.lastModel == null) {
                 if (currentModel.nodes().size() != 0) {
-                    lastModel = ServiceHolder.getGraphStoreManager().persistGraph(currentModel);
+                    lastModel = ServiceHolder.getModelStoreManager().persistModel(currentModel);
                 }
             } else {
                 Set<Node> currentNodes = currentModel.nodes();
                 Set<String> currentEdges = currentModel.edges();
-                Set<Node> lastNodes = (Set<Node>) this.lastModel[0];
-                Set<String> lastEdges = (Set<String>) this.lastModel[1];
+                Set<Node> lastNodes = this.lastModel.getNodes();
+                Set<String> lastEdges = Utils.getEdgesString(this.lastModel.getEdges());
                 if (currentEdges.size() == lastEdges.size() && currentNodes.size() == lastNodes.size()) {
                     if (isSameNodes(currentNodes, lastNodes) && isSameEdges(currentEdges, lastEdges)) {
                         return;
                     }
                 }
-                lastModel = ServiceHolder.getGraphStoreManager().persistGraph(currentModel);
+                lastModel = ServiceHolder.getModelStoreManager().persistModel(currentModel);
             }
         } catch (GraphStoreException e) {
             log.error("Error occurred while handling the dependency graph persistence. ", e);

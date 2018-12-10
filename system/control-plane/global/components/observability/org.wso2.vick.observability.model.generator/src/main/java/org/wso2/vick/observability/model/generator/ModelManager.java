@@ -22,10 +22,12 @@ import com.google.common.graph.NetworkBuilder;
 import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
 import org.wso2.vick.observability.model.generator.exception.ModelException;
 import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
+import org.wso2.vick.observability.model.generator.model.Edge;
+import org.wso2.vick.observability.model.generator.model.Model;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import static org.wso2.vick.observability.model.generator.Constants.EDGE_NAME_CONNECTOR;
 
 /**
  * This is the Manager, singleton class which performs the operations in the in memory dependency tree.
@@ -35,15 +37,15 @@ public class ModelManager {
 
     public ModelManager() throws ModelException {
         try {
-            Object[] graph = ServiceHolder.getGraphStoreManager().loadGraph();
+            Model model = ServiceHolder.getModelStoreManager().loadLastModel();
             this.dependencyGraph = NetworkBuilder.directed()
                     .allowsParallelEdges(true)
                     .expectedNodeCount(100000)
                     .expectedEdgeCount(1000000)
                     .build();
-            if (graph != null) {
-                Set<Node> nodes = (Set<Node>) graph[0];
-                Set<String> edges = (Set<String>) graph[1];
+            if (model != null) {
+                Set<Node> nodes = model.getNodes();
+                Set<String> edges = Utils.getEdgesString(model.getEdges());
                 addNodes(nodes);
                 addEdges(edges);
             }
@@ -60,7 +62,7 @@ public class ModelManager {
 
     private void addEdges(Set<String> edges) throws ModelException {
         for (String edge : edges) {
-            String[] elements = this.edgeNameElements(edge);
+            String[] elements = Utils.edgeNameElements(edge);
             Node parentNode = getNode(elements[0]);
             Node childNode = getNode(elements[1]);
             if (parentNode != null && childNode != null) {
@@ -95,44 +97,53 @@ public class ModelManager {
 
     public void addLink(Node parent, Node child, String serviceName) {
         try {
-            this.dependencyGraph.addEdge(parent, child, generateEdgeName(parent.getId(), child.getId(), serviceName));
+            this.dependencyGraph.addEdge(parent, child, Utils.generateEdgeName(parent.getId(), child.getId(),
+                    serviceName));
         } catch (Exception ignored) {
         }
-    }
-
-    public Set<Node> getNodes() {
-        return this.dependencyGraph.nodes();
-    }
-
-    public Set<String> getLinks() {
-        return this.dependencyGraph.edges();
     }
 
     public MutableNetwork<Node, String> getDependencyGraph() {
         return dependencyGraph;
     }
 
-    private String generateEdgeName(String parentNodeId, String childNodeId, String serviceName) {
-        return parentNodeId + EDGE_NAME_CONNECTOR + childNodeId + EDGE_NAME_CONNECTOR + serviceName;
-    }
-
-    public String[] edgeNameElements(String edgeName) {
-        return edgeName.split(EDGE_NAME_CONNECTOR);
-    }
-
     public void moveLinks(Node fromNode, Node targetNode, String newEdgePrefix) {
         Set<String> outEdges = this.dependencyGraph.outEdges(fromNode);
         for (String edgeName : outEdges) {
             Node outNode = this.dependencyGraph.incidentNodes(outEdges).target();
-            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + getEdgePostFix(edgeName);
+            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + Utils.getEdgePostFix(edgeName);
             this.addLink(targetNode, outNode, newEdgeName);
             this.dependencyGraph.removeEdge(edgeName);
         }
     }
 
-    private String getEdgePostFix(String edgeName) {
-        int index = edgeName.indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
-        index = edgeName.substring(index).indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
-        return edgeName.substring(index);
+    public Model getGraph(long fromTime, long toTime) throws GraphStoreException {
+        if (fromTime == 0 && toTime == 0) {
+            return new Model(this.dependencyGraph.nodes(), Utils.getEdges(this.dependencyGraph.edges()));
+        } else {
+            if (toTime == 0) {
+                toTime = System.currentTimeMillis();
+            }
+            List<Model> models = ServiceHolder.getModelStoreManager().loadModel(fromTime, toTime);
+            return getMergedModel(models);
+        }
+    }
+
+    private Model getMergedModel(List<Model> models) {
+        Set<Node> allNodes = new HashSet<>();
+        Set<Edge> allEdges = new HashSet<>();
+        for (Model model : models) {
+            Set<Node> aModelNodes = model.getNodes();
+            for (Node node : aModelNodes) {
+                Node nodeFromAllNodes = Utils.getNode(allNodes, node);
+                if (nodeFromAllNodes == null) {
+                    allNodes.add(node);
+                } else {
+                    nodeFromAllNodes.getServices().addAll(node.getServices());
+                }
+            }
+            allEdges.addAll(model.getEdges());
+        }
+        return new Model(allNodes, allEdges);
     }
 }

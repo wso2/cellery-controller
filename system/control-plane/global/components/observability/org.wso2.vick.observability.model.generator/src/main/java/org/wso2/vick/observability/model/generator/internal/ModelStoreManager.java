@@ -23,7 +23,9 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.log4j.Logger;
 import org.wso2.carbon.datasource.core.exception.DataSourceException;
 import org.wso2.vick.observability.model.generator.Node;
+import org.wso2.vick.observability.model.generator.Utils;
 import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
+import org.wso2.vick.observability.model.generator.model.Model;
 
 import java.lang.reflect.Type;
 import java.sql.Connection;
@@ -33,15 +35,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 
 /**
- * This handles the communication between the Graph datasource, and the rest of the other components.
+ * This handles the communication between the Model datasource, and the rest of the other components.
  */
-public class GraphStoreManager {
-    private static final Logger log = Logger.getLogger(GraphPeriodicProcessor.class);
+public class ModelStoreManager {
+    private static final Logger log = Logger.getLogger(ModelPeriodicProcessor.class);
 
     private static final String TABLE_NAME = "DEPENDENCY_MODEL";
     private static final String DATASOURCE_NAME = "DEPENDENCY_DATASOURCE";
@@ -52,7 +56,7 @@ public class GraphStoreManager {
     private DataSource dataSource;
     private Gson gson;
 
-    public GraphStoreManager() {
+    ModelStoreManager() {
         try {
             this.dataSource = (DataSource) ServiceHolder.getDataSourceService().getDataSource(DATASOURCE_NAME);
             createTable();
@@ -74,28 +78,67 @@ public class GraphStoreManager {
         cleanupConnection(null, statement, connection);
     }
 
-    public Object[] loadGraph() throws GraphStoreException {
+    public Model loadLastModel() throws GraphStoreException {
         try {
             Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME
                     + " ORDER BY MODEL_TIME DESC LIMIT 1");
             ResultSet resultSet = statement.executeQuery();
-            Object[] returnObj = null;
-            if (resultSet.next()) {
-                String nodes = resultSet.getString(2);
-                String edges = resultSet.getString(3);
-                Set<Node> nodesSet = gson.fromJson(nodes, NODE_SET_TYPE);
-                Set<String> edgeSet = gson.fromJson(edges, STRING_SET_TYPE);
-                returnObj = new Object[2];
-                returnObj[0] = nodesSet;
-                returnObj[1] = edgeSet;
-            }
+            Model model = getModel(resultSet);
             cleanupConnection(resultSet, statement, connection);
-            return returnObj;
+            return model;
         } catch (SQLException ex) {
             throw new GraphStoreException("Unable to load the graph from datasource : " + DATASOURCE_NAME, ex);
         }
     }
+
+    private Model getModel(ResultSet resultSet) throws SQLException {
+        if (resultSet.next()) {
+            String nodes = resultSet.getString(2);
+            String edges = resultSet.getString(3);
+            Set<Node> nodesSet = gson.fromJson(nodes, NODE_SET_TYPE);
+            Set<String> edgeSet = gson.fromJson(edges, STRING_SET_TYPE);
+            return new Model(nodesSet, Utils.getEdges(edgeSet));
+        }
+        return null;
+    }
+
+    public List<Model> loadModel(long fromTime, long toTime) throws GraphStoreException {
+        try {
+            Connection connection = getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME
+                    + " WHERE MODEL_TIME >= ? AND MODEL_TIME <= ? ORDER BY MODEL_TIME");
+            statement.setTimestamp(1, new Timestamp(fromTime));
+            statement.setTimestamp(2, new Timestamp(toTime));
+            ResultSet resultSet = statement.executeQuery();
+            List<Model> models = new ArrayList<>();
+            Model model = getModel(resultSet);
+            while (model != null) {
+                models.add(model);
+                model = getModel(resultSet);
+            }
+            if (models.isEmpty()) {
+                cleanupConnection(resultSet, statement, null);
+                statement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME
+                        + " ORDER BY MODEL_TIME DESC LIMIT 1");
+                resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    Timestamp timestamp = resultSet.getTimestamp(1);
+                    if (timestamp.getTime() < fromTime) {
+                        resultSet.first();
+                        models.add(getModel(resultSet));
+                    }
+                }
+                cleanupConnection(resultSet, statement, connection);
+            } else {
+                cleanupConnection(resultSet, statement, connection);
+            }
+            return models;
+        } catch (SQLException ex) {
+            throw new GraphStoreException("Unable to load the graph from datasource : " + DATASOURCE_NAME, ex);
+        }
+    }
+
 
     private Connection getConnection() throws SQLException {
         return this.dataSource.getConnection();
@@ -125,7 +168,7 @@ public class GraphStoreManager {
         }
     }
 
-    public Object[] persistGraph(MutableNetwork<Node, String> graph) throws GraphStoreException {
+    public Model persistModel(MutableNetwork<Node, String> graph) throws GraphStoreException {
         try {
             String nodes = gson.toJson(graph.nodes(), NODE_SET_TYPE);
             String edges = gson.toJson(graph.edges(), STRING_SET_TYPE);
@@ -137,11 +180,9 @@ public class GraphStoreManager {
             statement.setString(3, edges);
             statement.executeUpdate();
             connection.commit();
-            Object[] persistedModel = new Object[2];
-            persistedModel[0] = graph.nodes();
-            persistedModel[1] = graph.edges();
+            Model model = new Model(graph.nodes(), Utils.getEdges(graph.edges()));
             cleanupConnection(null, statement, connection);
-            return persistedModel;
+            return model;
         } catch (SQLException ex) {
             throw new GraphStoreException("Unable to persist the graph to the datasource: " + DATASOURCE_NAME, ex);
         }

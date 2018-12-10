@@ -220,22 +220,7 @@ class Overview extends React.Component {
         this.setState({open: false});
     };
 
-    loadListInfo = (isUserAction) => {
-        const {globalState} = this.props;
-        const self = this;
-
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
-        }
-        setTimeout(() => {
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }, 1000);
-    };
-
     loadCellInfo = (nodes) => {
-        console.log(nodes);
         const nodeInfo = [];
         nodes.forEach((node) => {
             nodeInfo.push([1, node.id, node.id]);
@@ -325,7 +310,7 @@ class Overview extends React.Component {
         // TODO: Update the url to the WSO2-sp worker node.
         axios({
             method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview"
+            url: "http://localhost:9123/dependency-model/cell-overview?fromTime=" + fromTime + "&toTime=" + toTime,
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data
@@ -393,6 +378,21 @@ class Overview extends React.Component {
         });
     };
 
+    loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
+        const {globalState} = this.props;
+        const self = this;
+
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
+            this.callOverviewInfo(startTime, endTime);
+        }
+        setTimeout(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }, 1000);
+    };
+
 
     render() {
         const {classes, theme} = this.props;
@@ -400,7 +400,7 @@ class Overview extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Overview"} onUpdate={this.loadListInfo}/>
+                <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
 
                 <div className={classes.root}>
                     <Paper

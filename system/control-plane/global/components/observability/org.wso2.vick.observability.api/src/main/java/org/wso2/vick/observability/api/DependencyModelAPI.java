@@ -18,14 +18,14 @@
 package org.wso2.vick.observability.api;
 
 import org.wso2.vick.observability.api.internal.ServiceHolder;
-import org.wso2.vick.observability.api.model.Graph;
-import org.wso2.vick.observability.api.model.GraphEdge;
+import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
+import org.wso2.vick.observability.model.generator.model.Model;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 /**
@@ -37,21 +37,26 @@ public class DependencyModelAPI {
     @GET
     @Path("/cell-overview")
     @Produces("application/json")
-    public Response getCellOverview() {
-        List<GraphEdge> graphEdges = new ArrayList<>();
-
-        for (String edges : ServiceHolder.getModelManager().getLinks()) {
-            String[] edgeNameElements = ServiceHolder.getModelManager().
-                    edgeNameElements(edges);
-            GraphEdge edge = new GraphEdge(edgeNameElements[0], edgeNameElements[1]);
-            graphEdges.add(edge);
+    public Response getCellOverview(@DefaultValue("0") @QueryParam("fromTime") Long fromTime,
+                                    @DefaultValue("0") @QueryParam("toTime") Long toTime) {
+        try {
+            Model model = ServiceHolder.getModelManager().getGraph(fromTime, toTime);
+            return Response.ok().header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
+                    .header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+                    .entity(model)
+                    .build();
+        } catch (GraphStoreException e) {
+            return Response.serverError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
+                    .header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+                    .entity(e)
+                    .build();
         }
-        return Response.ok().header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
-                .entity(new Graph(ServiceHolder.getModelManager().getNodes(), graphEdges))
-                .build();
+
     }
 
 }
