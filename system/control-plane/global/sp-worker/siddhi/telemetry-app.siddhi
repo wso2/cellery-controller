@@ -34,7 +34,9 @@ group by
     requestPath, requestMethod, httpResponseGroup
 aggregate every sec...year;
 
+--
 -- Storing the data received from Istio Telemetry
+--
 
 from TelemetryStreamIn
 select

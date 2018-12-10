@@ -16,10 +16,36 @@ define stream TelemetryStreamIn (sourceNamespace string, sourceCell string, sour
 @Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
 define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, cell string,
-                                      vickService string, pod string, operationName string, kind string,
+                                      serviceName string, pod string, operationName string, kind string,
                                       startTime long, duration long, tags string);
 
+define function extractFromServiceName[javascript] return string {
+    var serviceName = data[0];
+    var index = data[1];    // 1: cell, 2: service
+
+    var cellGatewayMatches = /^(?:src:\d+\.\d+\.\d+\.(.+)_\d+_\d+_\d+_.+)|(?:(.*)-cell-gateway)$/.exec(serviceName);
+    var mircoserviceMatches = /^(.+)--(.+)$/.exec(serviceName);
+
+    var extractedData = "";
+    if (cellGatewayMatches) {
+        var cell = cellGatewayMatches[1] ? cellGatewayMatches[1] : cellGatewayMatches[2];
+        if (index == 1) {
+            extractedData = cell;
+        } else if (index == 2) {
+            extractedData = cell + "-cell-gateway";
+        }
+    } else if (mircoserviceMatches) {
+        extractedData = mircoserviceMatches[index];
+    }
+    if (!extractedData && index == 2) {
+        extractedData = serviceName;
+    }
+    return extractedData;
+};
+
+--
 -- Storing Zipkin data received for Tracing
+--
 
 from ZipkinStreamIn
 select
@@ -27,8 +53,8 @@ select
     id as spanId,
     parentId,
     "" as namespace,
-    ifThenElse(str:contains(serviceName, "--"), str:split(serviceName, "--", 0), "") as cell,
-    ifThenElse(str:contains(serviceName, "--"), str:split(serviceName, "--", 1), serviceName) as vickService,
+    extractFromServiceName(serviceName, 1) as cell,
+    extractFromServiceName(serviceName, 2) as serviceName,
     "" as pod,
     name as operationName,
     kind,
@@ -42,7 +68,9 @@ update or insert into DistributedTracingTable
     on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
         and DistributedTracingTable.kind == kind;
 
+--
 -- Filling additional data from Telemetry
+--
 
 -- Extracting information for local service
 from TelemetryStreamIn
@@ -51,7 +79,7 @@ select
     ifThenElse(contextReporterKind == "inbound", "SERVER", "CLIENT") as kind,
     ifThenElse(contextReporterKind == "inbound", destinationNamespace, sourceNamespace) as namespace,
     ifThenElse(contextReporterKind == "inbound", destinationCell, sourceCell) as cell,
-    ifThenElse(contextReporterKind == "inbound", destinationVICKService, sourceVICKService) as vickService,
+    ifThenElse(contextReporterKind == "inbound", destinationVICKService, sourceVICKService) as serviceName,
     ifThenElse(contextReporterKind == "inbound", destinationPod, sourcePod) as pod
 insert into ExtractedTelemetryStream;
 
@@ -62,26 +90,29 @@ select
     ifThenElse(contextReporterKind == "inbound", "CLIENT", "SERVER") as kind,
     ifThenElse(contextReporterKind == "inbound", sourceNamespace, destinationNamespace) as namespace,
     ifThenElse(contextReporterKind == "inbound", sourceCell, destinationCell) as cell,
-    ifThenElse(contextReporterKind == "inbound", sourceVICKService, destinationVICKService) as vickService,
+    ifThenElse(contextReporterKind == "inbound", sourceVICKService, destinationVICKService) as serviceName,
     ifThenElse(contextReporterKind == "inbound", sourcePod, destinationPod) as pod
 insert into ExtractedTelemetryStream;
 
-from ExtractedTelemetryStream[vickService != ""]
+from ExtractedTelemetryStream[serviceName != ""]
 select
     cast(map:get(requestHeadersMap, "x-b3-traceid"), "string") as traceId,
     cast(map:get(requestHeadersMap, "x-b3-spanid"), "string") as spanId,
     "" as parentId,
     namespace,
-    cell,
-    vickService,
+    ifThenElse(cell is null, extractFromServiceName(serviceName, 1), cell) as cell,
+    extractFromServiceName(serviceName, 2) as serviceName,
     pod,
     "" as operationName,
     kind,
     0L as startTime,
     0L as duration,
     "{}" as tags
+insert into ProcessedTelemetryDataStream;
+
+from ProcessedTelemetryDataStream[(not traceId is null) and (not spanId is null)]
 update or insert into DistributedTracingTable
     set DistributedTracingTable.namespace = namespace, DistributedTracingTable.cell = cell,
-        DistributedTracingTable.vickService = vickService, DistributedTracingTable.pod = pod
+        DistributedTracingTable.serviceName = serviceName, DistributedTracingTable.pod = pod
     on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
         and DistributedTracingTable.kind == kind;

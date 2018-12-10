@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Constants from "../../common/constants";
@@ -40,11 +38,20 @@ class Span {
         this.duration = spanData.duration ? spanData.duration : 0;
         this.tags = spanData.tags ? JSON.parse(spanData.tags) : {};
 
+        // Adding additional tags
+        const addTagFromSpanData = (tagKey, spanDataKey) => {
+            if (spanData[spanDataKey]) {
+                this.tags[tagKey] = spanData[[spanDataKey]];
+            }
+        };
+        addTagFromSpanData("k8s.pod", "pod");
+        addTagFromSpanData("k8s.namespace", "namespace");
+
         /** @type {string} **/
         this.componentType = "";
 
         /** @type {{name: string, version: string}} **/
-        this.cell = (spanData.cellName ? {name: spanData.cellName, version: null} : null);
+        this.cell = (spanData.cell ? {name: spanData.cell, version: null} : null);
 
         /** @type {Span} **/
         this.parent = null;
@@ -227,10 +234,10 @@ class Span {
             if (Boolean(matches) && matches.length === 3) {
                 cell = {
                     name: matches[1].replace(/_/g, "-"),
-                    version: matches[2].replace(/_/g, ".")
+                    version: null
                 };
                 this.cell = cell;
-                this.serviceName = `${cell.name}-cell-gateway`;
+                this.serviceName = "gateway";
             }
         } else if (Constants.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
             const matches = this.serviceName.match(Constants.Cell.MICROSERVICE_NAME_PATTERN);

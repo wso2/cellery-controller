@@ -375,15 +375,15 @@ wso2.datasources:
           validationTimeout: 30000
           isAutoCommit: false
 
-    - name: VICK_OBSERVABILITY_DB
+    - name: HTTP_ANALYTICS_DB
       description: The datasource used for HTTP Analytics dashboard
       jndiConfig:
-        name: jdbc/VICK_OBSERVABILITY_DB
+        name: jdbc/HTTP_ANALYTICS_DB
         useJndiReference: false
       definition:
         type: RDBMS
         configuration:
-          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/VICK_OBSERVABILITY_DB?autoReconnect=true&useSSL=false'
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/HTTP_ANALYTICS_DB?autoReconnect=true&useSSL=false'
           username: DATABASE_USERNAME
           password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
@@ -404,6 +404,23 @@ wso2.datasources:
           username: wso2carbon
           password: wso2carbon
           driverClassName: org.h2.Driver
+          maxPoolSize: 30
+          idleTimeout: 60000
+          connectionTestQuery: SELECT 1
+          validationTimeout: 30000
+          isAutoCommit: false
+
+    - name: Message_Tracing_DB
+      description: "The datasource used for message tracer to store span information."
+      jndiConfig:
+        name: jdbc/Message_Tracing_DB
+      definition:
+        type: RDBMS
+        configuration:
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/MESSAGE_TRACING_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
+          driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 30
           idleTimeout: 60000
           connectionTestQuery: SELECT 1
@@ -488,6 +505,24 @@ wso2.datasources:
           password: DATABASE_PASSWORD
           driverClassName: com.mysql.jdbc.Driver
           maxPoolSize: 50
+          idleTimeout: 60000
+          connectionTestQuery: SELECT 1
+          validationTimeout: 30000
+          isAutoCommit: false
+
+    - name: VICK_OBSERVABILITY_DB
+      description: The datasource used for HTTP Analytics dashboard
+      jndiConfig:
+        name: jdbc/VICK_OBSERVABILITY_DB
+        useJndiReference: false
+      definition:
+        type: RDBMS
+        configuration:
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/VICK_OBSERVABILITY_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
+          driverClassName: com.mysql.jdbc.Driver
+          maxPoolSize: 30
           idleTimeout: 60000
           connectionTestQuery: SELECT 1
           validationTimeout: 30000

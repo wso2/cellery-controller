@@ -86,7 +86,7 @@ define stream TelemetryInMemorySink(sourceNamespace string, sourceCell string, s
 
 define function extractFromUID[javascript] return string {
     var uid = data[0];
-    var index = data[1];
+    var index = data[1];    // 1: pod, 2: cell, 3: vickService, 4: namespace
 
     var matches = /^(([a-z0-9-]+)--([a-z0-9-]+)-deployment-[a-z0-9]+-[a-z0-9]+)\.([a-z0-9-]+)$/.exec(uid);
 
@@ -101,21 +101,17 @@ define function extractFromUID[javascript] return string {
     return extractedData;
 };
 
-from TelemetryStream
+from TelemetryStream[(not sourceUID is null) and (not destinationUID is null)]
 select
     str:replaceFirst(sourceUID, "^kubernetes://", "") as sourceUID,
     str:replaceFirst(destinationUID, "^kubernetes://", "") as destinationUID,
-    map:createFromJSON(requestHeaders) as requestHeadersMap,
+    ifThenElse(requestHeaders is null, map:create(), map:createFromJSON(requestHeaders)) as requestHeadersMap,
     requestPath,
     requestMethod,
     responseCode,
     responseDurationNanoSec,
     contextReporterKind
 insert into PreprocessedTelemetryStream;
-
--- Storing the required attributes in a in memory sink (To be accessed from other siddhi apps)
--- When updating the used attributes from the received attributes the stream definitions needs to be updated in all
--- the places where the in memory source is used
 
 from PreprocessedTelemetryStream
 select
@@ -127,6 +123,30 @@ select
     extractFromUID(destinationUID, 2) as destinationCell,
     extractFromUID(destinationUID, 3) as destinationVICKService,
     extractFromUID(destinationUID, 1) as destinationPod,
+    requestHeadersMap,
+    requestPath,
+    requestMethod,
+    responseCode,
+    responseDurationNanoSec,
+    contextReporterKind
+insert into ExtractedTelemetryStream;
+
+-- Storing the required attributes in a in memory sink (To be accessed from other siddhi apps)
+-- When updating the used attributes from the received attributes the stream definitions needs to be updated in all
+-- the places where the in memory source is used
+
+from ExtractedTelemetryStream
+select
+    sourceNamespace,
+    sourceCell,
+    ifThenElse(sourceVICKService == "gateway", str:concat(sourceCell, "-cell-gateway"),
+        sourceVICKService) as sourceVICKService,
+    sourcePod,
+    destinationNamespace,
+    destinationCell,
+    ifThenElse(destinationVICKService == "gateway", str:concat(destinationCell, "-cell-gateway"),
+        destinationVICKService) as destinationVICKService,
+    destinationPod,
     requestHeadersMap,
     requestPath,
     requestMethod,
