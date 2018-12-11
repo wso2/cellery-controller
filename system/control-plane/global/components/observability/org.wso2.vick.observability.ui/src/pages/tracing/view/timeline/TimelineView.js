@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* eslint max-lines: ["off"] */
@@ -35,7 +33,6 @@ import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import vis from "vis";
-import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../../common/color";
 
@@ -136,14 +133,6 @@ class TimelineView extends React.Component {
         };
     }
 
-    componentDidMount = () => {
-        this.drawTimeline();
-    };
-
-    componentDidUpdate = () => {
-        this.drawTimeline();
-    };
-
     componentWillUnmount = () => {
         const {classes} = this.props;
 
@@ -224,9 +213,8 @@ class TimelineView extends React.Component {
     };
 
     drawTimeline = () => {
-        const {location, classes, colorGenerator} = this.props;
+        const {selectedMicroservice, classes, colorGenerator} = this.props;
         const self = this;
-        const selectedMicroservice = location.state.selectedMicroservice;
 
         // Un-selecting the spans
         this.selectedSpan = null;
@@ -602,8 +590,11 @@ TimelineView.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
-    location: PropTypes.any.isRequired,
+    selectedMicroservice: PropTypes.shape({
+        cellName: PropTypes.string,
+        serviceName: PropTypes.string.isRequired
+    }).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withColor(TimelineView)));
+export default withStyles(styles, {withTheme: true})(withColor(TimelineView));

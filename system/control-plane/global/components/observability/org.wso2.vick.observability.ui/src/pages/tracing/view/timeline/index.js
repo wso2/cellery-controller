@@ -1,22 +1,21 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Checkbox from "@material-ui/core/Checkbox";
+import {withRouter} from "react-router-dom";
 import Constants from "../../../common/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid";
@@ -41,7 +40,7 @@ const styles = (theme) => ({
     }
 });
 
-class Timeline extends React.Component {
+class Timeline extends React.PureComponent {
 
     constructor(props) {
         super(props);
@@ -53,7 +52,17 @@ class Timeline extends React.Component {
                 Constants.ComponentType.ISTIO
             ]
         };
+
+        this.timelineViewRef = React.createRef();
     }
+
+    componentDidMount = () => {
+        this.timelineViewRef.current.drawTimeline();
+    };
+
+    componentDidUpdate = () => {
+        this.timelineViewRef.current.drawTimeline();
+    };
 
     handleServiceTypeChange = (event) => {
         const serviceType = event.target.value;
@@ -92,7 +101,8 @@ class Timeline extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, location} = this.props;
+        const selectedMicroservice = location.state.selectedMicroservice;
 
         // Finding the service types to be shown in the filter
         const serviceTypes = [];
@@ -138,7 +148,8 @@ class Timeline extends React.Component {
                         </FormControl>
                     </Grid>
                 </Grid>
-                <TimelineView spans={this.getFilteredSpans()}/>
+                <TimelineView spans={this.getFilteredSpans()} selectedMicroservice={selectedMicroservice}
+                    innerRef={this.timelineViewRef}/>
             </React.Fragment>
         );
     };
@@ -150,7 +161,8 @@ Timeline.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
+    location: PropTypes.any.isRequired,
     clicked: PropTypes.bool
 };
 
-export default withStyles(styles)(Timeline);
+export default withStyles(styles)(withRouter(Timeline));
