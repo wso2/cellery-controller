@@ -21,12 +21,12 @@
         <groupId>org.wso2.vick</groupId>
         <artifactId>org.wso2.vick.global.plane.dockerfiles</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.vick.global.plane.dockerfiles.sp</artifactId>
-    <name>WSO2 VICK - Docker Files - SP</name>
+    <name>WSO2 VICK - Dockerfiles - Stream Processor</name>
+    <description>Dockerfiles for WSO2 VICK Stream Processor</description>
     <packaging>pom</packaging>
 
     <modules>

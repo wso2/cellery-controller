@@ -510,6 +510,24 @@ wso2.datasources:
           validationTimeout: 30000
           isAutoCommit: false
 
+    - name: VICK_OBSERVABILITY_DB
+      description: The datasource used for HTTP Analytics dashboard
+      jndiConfig:
+        name: jdbc/VICK_OBSERVABILITY_DB
+        useJndiReference: false
+      definition:
+        type: RDBMS
+        configuration:
+          jdbcUrl: 'jdbc:mysql://MYSQL_DATABASE_HOST:3306/VICK_OBSERVABILITY_DB?autoReconnect=true&useSSL=false'
+          username: DATABASE_USERNAME
+          password: DATABASE_PASSWORD
+          driverClassName: com.mysql.jdbc.Driver
+          maxPoolSize: 30
+          idleTimeout: 60000
+          connectionTestQuery: SELECT 1
+          validationTimeout: 30000
+          isAutoCommit: false
+
 siddhi:
   extensions:
     -

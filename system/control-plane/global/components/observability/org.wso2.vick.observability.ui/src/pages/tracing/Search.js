@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Button from "@material-ui/core/Button";
@@ -419,7 +417,7 @@ class Search extends React.Component {
                 search[key] = value;
             }
         };
-        addSearchParam("cellName", cell);
+        addSearchParam("cell", cell);
         addSearchParam("serviceName", microservice);
         addSearchParam("operationName", operation);
         addSearchParam("tags", JSON.stringify(Object.keys(tags).length > 0 ? tags : {}));
@@ -447,29 +445,29 @@ class Search extends React.Component {
                 if (!traces[dataItem.traceId]) {
                     traces[dataItem.traceId] = {};
                 }
-                if (!traces[dataItem.traceId][dataItem.cellName]) {
-                    traces[dataItem.traceId][dataItem.cellName] = {};
+                if (!traces[dataItem.traceId][dataItem.cell]) {
+                    traces[dataItem.traceId][dataItem.cell] = {};
                 }
-                if (!traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName]) {
-                    traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName] = {};
+                if (!traces[dataItem.traceId][dataItem.cell][dataItem.serviceName]) {
+                    traces[dataItem.traceId][dataItem.cell][dataItem.serviceName] = {};
                 }
-                const info = traces[dataItem.traceId][dataItem.cellName][dataItem.serviceName];
+                const info = traces[dataItem.traceId][dataItem.cell][dataItem.serviceName];
                 info.count = dataItem.count;
                 info.rootServiceName = dataItem.rootServiceName;
                 info.rootOperationName = dataItem.rootOperationName;
                 info.rootStartTime = dataItem.rootStartTime;
                 info.rootDuration = dataItem.rootDuration;
             }
-            const fillResult = (cellName, services, result) => {
+            const fillResult = (cell, services, result) => {
                 for (const serviceName in services) {
                     if (services.hasOwnProperty(serviceName)) {
                         const info = services[serviceName];
 
                         const span = new Span({
-                            cellName: cellName,
+                            cell: cell,
                             serviceName: serviceName
                         });
-                        const cell = span.getCell();
+                        span.getCell();
 
                         let cellNameKey;
                         if (span.isFromVICKSystemComponent()) {
@@ -477,7 +475,7 @@ class Search extends React.Component {
                         } else if (span.isFromIstioSystemComponent()) {
                             cellNameKey = ColorGenerator.ISTIO;
                         } else {
-                            cellNameKey = cell.name;
+                            cellNameKey = span.getCell().name;
                         }
 
                         result.rootServiceName = info.rootServiceName;

@@ -158,7 +158,7 @@
             </dependency>
             <!-- End of Auth components -->
 
-            <!-- SP Woker docker images dependencies -->
+            <!-- SP Worker docker images dependencies -->
             <dependency>
                 <groupId>org.wso2.vick</groupId>
                 <artifactId>org.wso2.vick.telemetry.receiver</artifactId>
@@ -268,7 +268,7 @@
                 <artifactId>client-java</artifactId>
                 <version>3.0.0</version>
             </dependency>
-
+            <!--End of Observability API dependencies-->
         </dependencies>
     </dependencyManagement>
 
@@ -283,9 +283,15 @@
                         <obrRepository>NONE</obrRepository>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>dockerfile-maven-plugin</artifactId>
+                    <version>1.4.9</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
     <properties>
         <maven.checkstyleplugin.version>2.17</maven.checkstyleplugin.version>
         <maven.checkstyle.version>7.8.2</maven.checkstyle.version>

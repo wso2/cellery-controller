@@ -1,25 +1,47 @@
 @App:name("tracing-query-app")
 @App:description("VICK Tracing Query Siddhi App which queries the stored Zipkin spans")
 
-@Store(type="rdbms", datasource="Message_Tracing_DB", field.length="tags:8000")
+@Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
-define table SpanTable (traceId string, spanId string, parentId string, cellName string, serviceName string,
-                        operationName string, kind string, startTime long, duration long, tags string);
+define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, cell string,
+                                      serviceName string, pod string, operationName string, kind string,
+                                      startTime long, duration long, tags string);
+
+--
+-- Streams for fetching cell info
+--
+
+@source(type="http-request", source.id="cell-query-id", receiver.url="http://0.0.0.0:8080/api/cells",
+        @map(type="json", fail.on.missing.attribute="false",
+            @attributes(messageId="trp:messageId")))
+define stream CellInfoQueryStreamIn (messageId string);
+
+@sink(type="http-response", source.id="cell-query-id",
+      headers="'Access-Control-Allow-Origin:*'", message.id="{{messageId}}", @map(type='json'))
+define stream CellInfoQueryStreamOut (messageId string, cell string, serviceName string, operationName string);
+
+--
+-- Streams for trace search
+--
 
 @source(type="http-request", source.id="trace-search-query-id", receiver.url="http://0.0.0.0:8080/api/tracing/search",
         @map(type="json", fail.on.missing.attribute="false",
-            @attributes(messageId="trp:messageId", cellName="cellName", serviceName="serviceName",
+            @attributes(messageId="trp:messageId", cell="cell", serviceName="serviceName",
                         operationName="operationName", tags="tags", minDuration="minDuration",
                         maxDuration="maxDuration", queryStartTime="queryStartTime", queryEndTime="queryEndTime")))
-define stream TraceSearchQueryStreamIn (messageId string, cellName string, serviceName string, operationName string,
+define stream TraceSearchQueryStreamIn (messageId string, cell string, serviceName string, operationName string,
                                         tags string, minDuration long, maxDuration long, queryStartTime long,
                                         queryEndTime long);
 
 @sink(type="http-response", source.id="trace-search-query-id",
       headers="'Access-Control-Allow-Origin:*'", message.id="{{messageId}}", @map(type='json'))
-define stream TraceSearchQueryStreamOut (messageId string, traceId string, cellName string, serviceName string,
+define stream TraceSearchQueryStreamOut (messageId string, traceId string, cell string, serviceName string,
                                          count long, rootServiceName string, rootOperationName string,
                                          rootStartTime long, rootDuration long);
+
+--
+-- Streams for fetching a single trace
+--
 
 @source(type="http-request", source.id="trace-query-id", receiver.url="http://0.0.0.0:8080/api/tracing",
         @map(type="json", fail.on.missing.attribute="false",
@@ -28,11 +50,12 @@ define stream TraceQueryStreamIn (messageId string, traceId string);
 
 @sink(type="http-response", source.id="trace-query-id",
       headers="'Access-Control-Allow-Origin:*'", message.id="{{messageId}}", @map(type='json'))
-define stream TraceQueryStreamOut (messageId string, traceId string, spanId string, parentId string, serviceName string,
-                                   operationName string, kind string, startTime long, duration long, tags string);
+define stream TraceQueryStreamOut (messageId string, traceId string, spanId string, parentId string, namespace string,
+                                   cell string, serviceName string, pod string, operationName string, kind string,
+                                   startTime long, duration long, tags string);
 
 --
--- Trace Search
+-- Utility Functions
 --
 
 define function filterByTags[javascript] return bool {
@@ -55,10 +78,23 @@ define function filterByTags[javascript] return bool {
     return isSelected;
 };
 
+--
+-- Queries for fetching cell info
+--
+
+from CellInfoQueryStreamIn#rdbms:query("VICK_OBSERVABILITY_DB",
+                                   "SELECT DISTINCT cell, serviceName, operationName FROM DistributedTracingTable",
+                                   "cell string, serviceName string, operationName string")
+insert into CellInfoQueryStreamOut;
+
+--
+-- Queries for trace search
+--
+
 from TraceSearchQueryStreamIn
 select
     messageId,
-    default(cellName, "") as cellName,
+    default(cell, "") as cell,
     default(serviceName, "") as serviceName,
     default(operationName, "") as operationName,
     default(tags, "{}") as tags,
@@ -68,8 +104,8 @@ select
     default(queryEndTime, -1L) as queryEndTime
 insert into SanitizedTraceSearchQueryStreamIn;
 
-from SanitizedTraceSearchQueryStreamIn#window.length(1) as q left outer join SpanTable as t
-    on (q.cellName == "" or t.cellName == q.cellName)
+from SanitizedTraceSearchQueryStreamIn#window.length(1) as q left outer join DistributedTracingTable as t
+    on (q.cell == "" or t.cell == q.cell)
         and (q.serviceName == "" or t.serviceName == q.serviceName)
         and (q.operationName == "" or t.operationName == q.operationName)
         and (q.minDuration == -1 or t.duration >= q.minDuration)
@@ -85,28 +121,28 @@ group by messageId
 insert into SelectedTracesStream;
 
 from SelectedTracesStream#rdbms:query(
-    "Message_Tracing_DB",
+    "VICK_OBSERVABILITY_DB",
     str:concat(
-        "SELECT a.traceId, a.cellName, a.serviceName, a.count, t.serviceName as rootServiceName, ",
+        "SELECT a.traceId, a.cell, a.serviceName, a.count, t.serviceName as rootServiceName, ",
         "t.operationName as rootOperationName, t.startTime as rootStartTime, t.duration as rootDuration FROM (",
-            "SELECT traceId, cellName, serviceName, COUNT(spanId) as count FROM SpanTable ",
-            "WHERE traceId RLIKE '^(", traceIdRegex, ")$' GROUP BY traceId, cellName, serviceName",
-        ") AS a INNER JOIN SpanTable AS t ON t.traceId = t.spanId AND (t.kind = 'SERVER' OR t.kind IS NULL) ",
-        "AND a.traceId = t.traceId ORDER BY t.startTime DESC;"
+            "SELECT traceId, cell, serviceName, COUNT(spanId) as count FROM DistributedTracingTable ",
+            "WHERE traceId RLIKE '^(", traceIdRegex, ")$' GROUP BY traceId, cell, serviceName",
+        ") AS a INNER JOIN DistributedTracingTable AS t ON t.traceId = t.spanId ",
+        "AND (t.kind = 'SERVER' OR t.kind IS NULL) AND a.traceId = t.traceId ORDER BY t.startTime DESC;"
     ),
-    "traceId string, cellName string, serviceName string, count long, rootServiceName string, rootOperationName string, rootStartTime long, rootDuration long"
+    "traceId string, cell string, serviceName string, count long, rootServiceName string, rootOperationName string, rootStartTime long, rootDuration long"
 )
 select
-    messageId, traceId, cellName, serviceName, count, rootServiceName, rootOperationName, rootStartTime, rootDuration
+    messageId, traceId, cell, serviceName, count, rootServiceName, rootOperationName, rootStartTime, rootDuration
 insert into TraceSearchQueryStreamOut;
 
 --
--- Trace Query for fetching a single trace
+-- Queries for fetching a single trace
 --
 
-from TraceQueryStreamIn#window.length(1) as q left outer join SpanTable as t
+from TraceQueryStreamIn#window.length(1) as q left outer join DistributedTracingTable as t
     on q.traceId == t.traceId
 select
-    q.messageId, t.traceId, t.spanId, t.parentId, t.serviceName, t.operationName, t.kind, t.startTime,
-    t.duration, t.tags
+    q.messageId, t.traceId, t.spanId, t.parentId, t.namespace, t.cell, t.serviceName, t.pod, t.operationName,
+    t.kind, t.startTime, t.duration, t.tags
 insert into TraceQueryStreamOut;
