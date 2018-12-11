@@ -160,7 +160,7 @@ class Overview extends React.Component {
     viewGenerator = (nodeProps) => {
         const color = this.props.colorGenerator.getColor(nodeProps.id);
         return <svg x="0px" y="0px"
-                    width="50px" height="50px" viewBox="0 0 240 240">
+            width="50px" height="50px" viewBox="0 0 240 240">
             <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
         </svg>;
     };
@@ -238,6 +238,7 @@ class Overview extends React.Component {
     constructor(props) {
         super(props);
         this.initializeDefault();
+        this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
         this.callOverviewInfo();
     }
@@ -301,7 +302,6 @@ class Overview extends React.Component {
             page: 0,
             rowsPerPage: 5
         };
-        this.state = JSON.parse(JSON.stringify(this.defaultState));
     };
 
     callOverviewInfo = (fromTime, toTime) => {
@@ -309,12 +309,11 @@ class Overview extends React.Component {
         // TODO: Update the url to the WSO2-sp worker node.
         let queryParams = "";
         if (fromTime && toTime) {
-            queryParams = "?fromTime=" + fromTime + "&toTime=" + toTime;
-            console.log(queryParams);
+            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
         }
         axios({
             method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview" + queryParams
+            url: `http://localhost:9123/dependency-model/cell-overview${queryParams}`
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data
