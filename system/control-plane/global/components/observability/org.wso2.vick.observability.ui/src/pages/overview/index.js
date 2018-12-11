@@ -172,7 +172,7 @@ class Overview extends React.Component {
                 cell = element;
             }
         });
-        let serviceInfo = this.loadServicesInfo(cell.services);
+        const serviceInfo = this.loadServicesInfo(cell.services);
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
@@ -180,7 +180,7 @@ class Overview extends React.Component {
                 content: [
                     {
                         key: "Total",
-                        value: serviceInfo.length,
+                        value: serviceInfo.length
                     },
                     {
                         key: "Successful",
@@ -199,17 +199,16 @@ class Overview extends React.Component {
             listData: serviceInfo,
             reloadGraph: false,
             isOverallSummary: false
-        }))
-        ;
+        }));
     };
 
     onClickGraph = () => {
-        this.setState({
+        this.setState((prevState) => ({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
-            listData: this.loadCellInfo(this.state.data.nodes),
+            listData: this.loadCellInfo(...prevState.data.nodes),
             reloadGraph: true,
             isOverallSummary: true
-        });
+        }));
     };
 
     handleDrawerOpen = () => {
@@ -308,9 +307,14 @@ class Overview extends React.Component {
     callOverviewInfo = (fromTime, toTime) => {
         const colorGenerator = this.props.colorGenerator;
         // TODO: Update the url to the WSO2-sp worker node.
+        let queryParams = "";
+        if (fromTime && toTime) {
+            queryParams = "?fromTime=" + fromTime + "&toTime=" + toTime;
+            console.log(queryParams);
+        }
         axios({
             method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview?fromTime=" + fromTime + "&toTime=" + toTime,
+            url: "http://localhost:9123/dependency-model/cell-overview" + queryParams
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data
@@ -380,8 +384,6 @@ class Overview extends React.Component {
 
     loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
         const {globalState} = this.props;
-        const self = this;
-
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
             this.callOverviewInfo(startTime, endTime);

@@ -156,8 +156,8 @@ class SequenceDiagram extends React.Component {
         let text = "";
         if (!span.callingId && parentName === span.cell.name) {
             if (span.parent.serviceName !== span.serviceName) {
-                text += `${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
-                    + `${SequenceDiagram.removeDash(span.serviceName)}:`+ span.operationName+` \n`;
+                text += `${`${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
+                    + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName} \n`;
             }
         }
         return text;

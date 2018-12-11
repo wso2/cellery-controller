@@ -84,7 +84,10 @@ public class ModelStoreManager {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME
                     + " ORDER BY MODEL_TIME DESC LIMIT 1");
             ResultSet resultSet = statement.executeQuery();
-            Model model = getModel(resultSet);
+            Model model = null;
+            if (resultSet.next()) {
+                model = getModel(resultSet);
+            }
             cleanupConnection(resultSet, statement, connection);
             return model;
         } catch (SQLException ex) {
@@ -93,14 +96,11 @@ public class ModelStoreManager {
     }
 
     private Model getModel(ResultSet resultSet) throws SQLException {
-        if (resultSet.next()) {
-            String nodes = resultSet.getString(2);
-            String edges = resultSet.getString(3);
-            Set<Node> nodesSet = gson.fromJson(nodes, NODE_SET_TYPE);
-            Set<String> edgeSet = gson.fromJson(edges, STRING_SET_TYPE);
-            return new Model(nodesSet, Utils.getEdges(edgeSet));
-        }
-        return null;
+        String nodes = resultSet.getString(2);
+        String edges = resultSet.getString(3);
+        Set<Node> nodesSet = gson.fromJson(nodes, NODE_SET_TYPE);
+        Set<String> edgeSet = gson.fromJson(edges, STRING_SET_TYPE);
+        return new Model(nodesSet, Utils.getEdges(edgeSet));
     }
 
     public List<Model> loadModel(long fromTime, long toTime) throws GraphStoreException {
@@ -112,10 +112,8 @@ public class ModelStoreManager {
             statement.setTimestamp(2, new Timestamp(toTime));
             ResultSet resultSet = statement.executeQuery();
             List<Model> models = new ArrayList<>();
-            Model model = getModel(resultSet);
-            while (model != null) {
-                models.add(model);
-                model = getModel(resultSet);
+            while (resultSet.next()) {
+                models.add(getModel(resultSet));
             }
             if (models.isEmpty()) {
                 cleanupConnection(resultSet, statement, null);
@@ -125,7 +123,6 @@ public class ModelStoreManager {
                 if (resultSet.next()) {
                     Timestamp timestamp = resultSet.getTimestamp(1);
                     if (timestamp.getTime() < fromTime) {
-                        resultSet.first();
                         models.add(getModel(resultSet));
                     }
                 }

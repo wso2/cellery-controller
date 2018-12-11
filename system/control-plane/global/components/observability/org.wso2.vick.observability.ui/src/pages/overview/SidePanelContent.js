@@ -128,7 +128,6 @@ const styles = (theme) => ({
 });
 
 const SidePanelContent = ({classes, summary, request, isOverview, colorGenerator, globalState, listData}) => {
-    console.log(listData);
     const options = {
         download: false,
         selectableRows: false,
