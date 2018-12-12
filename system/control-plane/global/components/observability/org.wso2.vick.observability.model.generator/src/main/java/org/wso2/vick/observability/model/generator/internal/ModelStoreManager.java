@@ -48,7 +48,7 @@ public class ModelStoreManager {
     private static final Logger log = Logger.getLogger(ModelPeriodicProcessor.class);
 
     private static final String TABLE_NAME = "DEPENDENCY_MODEL";
-    private static final String DATASOURCE_NAME = "DEPENDENCY_DATASOURCE";
+    private static final String DATASOURCE_NAME = "VICK_OBSERVABILITY_DB";
     private static final Type NODE_SET_TYPE = new TypeToken<HashSet<Node>>() {
     }.getType();
     private static final Type STRING_SET_TYPE = new TypeToken<HashSet<String>>() {
