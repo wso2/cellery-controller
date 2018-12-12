@@ -26,6 +26,8 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.kernel.CarbonRuntime;
 import org.wso2.msf4j.MicroservicesRunner;
 import org.wso2.vick.observability.api.DependencyModelAPI;
+import org.wso2.vick.observability.api.exception.mapper.ServerErrorExceptionMapper;
+import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
 import org.wso2.vick.observability.model.generator.ModelManager;
 
@@ -57,6 +59,8 @@ public class ObservabilityDS {
             // Deploying the microservices
             int offset = ServiceHolder.getCarbonRuntime().getConfiguration().getPortsConfig().getOffset();
             ServiceHolder.setMicroservicesRunner(new MicroservicesRunner(DEFAULT_OBSERVABILITY_API_PORT + offset)
+                    .addGlobalRequestInterceptor(new CORSInterceptor())
+                    .addExceptionMapper(new ServerErrorExceptionMapper())
                     .deploy(new DependencyModelAPI())
             );
             ServiceHolder.getMicroservicesRunner().start();
