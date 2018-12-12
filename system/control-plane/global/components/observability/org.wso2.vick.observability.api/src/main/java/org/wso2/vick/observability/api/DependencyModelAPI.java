@@ -1,19 +1,17 @@
 /*
- *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- *  WSO2 Inc. licenses this file to you under the Apache License,
- *  Version 2.0 (the "License"); you may not use this file except
- *  in compliance with the License.
- *  You may obtain a copy of the License at
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.wso2.vick.observability.api;
 
@@ -25,20 +23,21 @@ import org.wso2.vick.observability.model.generator.model.Model;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 /**
- * This is MSF4J service for the dependency model to plot the UI graph.
+ * MSF4J service for fetching the dependency models.
  */
-@Path("/dependency-model")
+@Path("/api/dependency-model")
 public class DependencyModelAPI {
     private static final Logger log = Logger.getLogger(DependencyModelAPI.class);
 
     @GET
-    @Path("/cell-overview")
+    @Path("/cells")
     @Produces("application/json")
     public Response getCellOverview(@DefaultValue("0") @QueryParam("fromTime") Long fromTime,
                                     @DefaultValue("0") @QueryParam("toTime") Long toTime) {
@@ -55,4 +54,9 @@ public class DependencyModelAPI {
         }
     }
 
+    @OPTIONS
+    @Path("/cells")
+    public Response getCellOverviewOptions() {
+        return Response.ok().build();
+    }
 }

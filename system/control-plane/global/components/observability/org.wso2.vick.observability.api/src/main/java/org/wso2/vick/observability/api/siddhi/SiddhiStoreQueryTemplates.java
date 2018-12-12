@@ -16,13 +16,6 @@
 
 package org.wso2.vick.observability.api.siddhi;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonPrimitive;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Siddhi Store Query Templates Enum class containing all the Siddhi Store Queries.
  * The Siddhi Store Query Builder can be accessed from the Siddhi Store Query Templates.
@@ -34,13 +27,28 @@ public enum SiddhiStoreQueryTemplates {
      */
 
     CELL_LEVEL_REQUEST_AGGREGATION("from RequestAggregation\n" +
-            "within ${" + Params.QUERY_START_TIME + "}, ${" + Params.QUERY_END_TIME + "}" +
-            "per ${" + Params.TIME_GRANULARITY + "}" +
+            "within ${" + Params.QUERY_START_TIME + "}, ${" + Params.QUERY_END_TIME + "}\n" +
+            "per ${" + Params.TIME_GRANULARITY + "}\n" +
             "select sourceCell, destinationCell, " +
                 "sum(avgResponseTime * requestCount) / sum(requestCount) as avgResponseTime, " +
                 "sum(requestCount) as requestCount\n" +
-            "group by sourceCell, destinationCell",
-            "sourceCell string, destinationCell string, avgResponseTime long, requestCount long\n"
+            "group by sourceCell, destinationCell"
+    ),
+    DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
+            "select cell, serviceName, operationName\n" +
+            "group by cell, serviceName, operationName"
+    ),
+    DISTRIBUTED_TRACING_SEARCH_GET_TRACE_IDS("from DistributedTracingTable\n" +
+            "on (${" + Params.CELL + "} == \"\" or cell == ${" + Params.CELL + "}) " +
+                "and (${" + Params.SERVICE_NAME + "} == \"\" or serviceName == ${" + Params.SERVICE_NAME + "}) " +
+                "and (${" + Params.OPERATION_NAME + "} == \"\" or " +
+                    "operationName == ${" + Params.OPERATION_NAME + "}) " +
+                "and (${" + Params.MIN_DURATION + "} == -1 or duration >= ${" + Params.MIN_DURATION + "}) " +
+                "and (${" + Params.MAX_DURATION + "} == -1 or duration <= ${" + Params.MAX_DURATION + "}) " +
+                "and (${" + Params.QUERY_START_TIME + "} == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}) " +
+                "and (${" + Params.QUERY_END_TIME + "} == -1 or startTime <= ${" + Params.QUERY_END_TIME + "})\n" +
+            "select traceId\n" +
+            "group by traceId"
     );
 
     /*
@@ -48,17 +56,9 @@ public enum SiddhiStoreQueryTemplates {
      */
 
     private String query;
-    private List<Attribute> selectAttributes;
 
-    SiddhiStoreQueryTemplates(String query, String selectStatement) {
+    SiddhiStoreQueryTemplates(String query) {
         this.query = query;
-
-        this.selectAttributes = new ArrayList<>();
-        String[] attributesWithType = selectStatement.trim().split("\\s*,\\s*");
-        for (String attributeWithType : attributesWithType) {
-            String[] attributeAndType = attributeWithType.split("\\s+");
-            this.selectAttributes.add(new Attribute(attributeAndType[0], attributeAndType[1]));
-        }
     }
 
     /**
@@ -68,62 +68,11 @@ public enum SiddhiStoreQueryTemplates {
         public static final String QUERY_START_TIME = "queryStartTime";
         public static final String QUERY_END_TIME = "queryEndTime";
         public static final String TIME_GRANULARITY = "timeGranularity";
-    }
-
-    /**
-     * Class for storing Siddhi Store Query Template Attribute.
-     * This also helps in parsing the value and getting a JsonElement for the value.
-     */
-    public static class Attribute {
-        private String name;
-        private String type;
-
-        Attribute(String name, String type) {
-            this.name = name;
-            this.type = type;
-        }
-
-        /**
-         * Get the name of this attribute.
-         *
-         * @return The name of the attribute
-         */
-        String getName() {
-            return name;
-        }
-
-        /**
-         * Parse the Siddhi Attribute value and get a Json Element.
-         *
-         * @param value The object to parse
-         * @return The Json Element for the attribute value
-         */
-        JsonElement parseValue(Object value) {
-            JsonElement jsonElement;
-            switch (this.type.toUpperCase()) {
-                case "STRING":
-                    jsonElement = new JsonPrimitive((String) value);
-                    break;
-                case "INT":
-                    jsonElement = new JsonPrimitive((int) value);
-                    break;
-                case "LONG":
-                    jsonElement = new JsonPrimitive((long) value);
-                    break;
-                case "DOUBLE":
-                    jsonElement = new JsonPrimitive((double) value);
-                    break;
-                case "FLOAT":
-                    jsonElement = new JsonPrimitive((float) value);
-                    break;
-                case "BOOL":
-                    jsonElement = new JsonPrimitive((boolean) value);
-                    break;
-                default:
-                    jsonElement = JsonNull.INSTANCE;
-            }
-            return jsonElement;
-        }
+        public static final String CELL = "cell";
+        public static final String SERVICE_NAME = "serviceName";
+        public static final String OPERATION_NAME = "operationName";
+        public static final String MIN_DURATION = "minDuration";
+        public static final String MAX_DURATION = "maxDuration";
     }
 
     /**
@@ -132,6 +81,6 @@ public enum SiddhiStoreQueryTemplates {
      * @return The Siddhi Store Query Builder for the particular query
      */
     public SiddhiStoreQuery.Builder builder() {
-        return new SiddhiStoreQuery.Builder(query, selectAttributes);
+        return new SiddhiStoreQuery.Builder(query);
     }
 }

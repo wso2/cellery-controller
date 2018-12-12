@@ -32,8 +32,11 @@ public class SiddhiStoreQueryManager {
             "define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, " +
                 "cell string, serviceName string, pod string, operationName string, kind string, startTime long, " +
                 "duration long, tags string);";
-    private static final String REQUEST_AGGREGATION_DEFINITION = "@store(type=\"rdbms\", " +
-                "datasource=\"VICK_OBSERVABILITY_DB\")\n" +
+    private static final String REQUEST_AGGREGATION_DEFINITION = "define stream ProcessedRequestsStream(" +
+                "sourceNamespace string, sourceCell string, sourceVICKService string, destinationNamespace string, " +
+                "destinationCell string, destinationVICKService string, requestPath string, requestMethod string, " +
+                "httpResponseGroup string, responseTime double);" +
+            "@store(type=\"rdbms\", datasource=\"VICK_OBSERVABILITY_DB\")\n" +
             "@purge(enable=\"false\")\n" +
             "define aggregation RequestAggregation from ProcessedRequestsStream\n" +
             "select\n" +

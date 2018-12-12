@@ -16,12 +16,8 @@
 
 package org.wso2.vick.observability.api.siddhi;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.vick.observability.api.internal.ServiceHolder;
-
-import java.util.List;
 
 /**
  * Executable Siddhi Store Query.
@@ -31,11 +27,9 @@ import java.util.List;
 public class SiddhiStoreQuery {
 
     private String query;
-    private List<SiddhiStoreQueryTemplates.Attribute> selectAttributes;
 
-    private SiddhiStoreQuery(String query, List<SiddhiStoreQueryTemplates.Attribute> selectAttributes) {
+    private SiddhiStoreQuery(String query) {
         this.query = query;
-        this.selectAttributes = selectAttributes;
     }
 
     /**
@@ -43,19 +37,20 @@ public class SiddhiStoreQuery {
      *
      * @return Siddhi Store Query Results
      */
-    public JsonArray execute() {
+    public Object[][] execute() {
         Event[] queryResults = ServiceHolder.getSiddhiStoreQueryManager().query(query);
+        int rowCount = queryResults.length;
+        int columnCount = queryResults[0].getData().length;
 
-        JsonArray jsonResultArray = new JsonArray();
-        for (Event jsonResultRow : queryResults) {
-            JsonObject jsonObject = new JsonObject();
-            for (int i = 0; i < selectAttributes.size(); i++) {
-                SiddhiStoreQueryTemplates.Attribute attribute = selectAttributes.get(i);
-                jsonObject.add(attribute.getName(), attribute.parseValue(jsonResultRow.getData(i)));
+        Object[][] results = new Object[rowCount][columnCount];
+        for (int i = 0; i < rowCount; i++) {
+            Object[] resultRow = new Object[columnCount];
+            for (int j = 0; j < columnCount; j++) {
+                resultRow[j] = queryResults[i].getData(j);
             }
-            jsonResultArray.add(jsonObject);
+            results[i] = resultRow;
         }
-        return jsonResultArray;
+        return results;
     }
 
     /**
@@ -66,11 +61,9 @@ public class SiddhiStoreQuery {
     public static class Builder {
 
         private String query;
-        private List<SiddhiStoreQueryTemplates.Attribute> selectAttributes;
 
-        Builder(String query, List<SiddhiStoreQueryTemplates.Attribute> selectAttributes) {
+        Builder(String query) {
             this.query = query;
-            this.selectAttributes = selectAttributes;
         }
 
         /**
@@ -91,7 +84,7 @@ public class SiddhiStoreQuery {
          * @return The Siddhi Store Query
          */
         public SiddhiStoreQuery build() {
-            return new SiddhiStoreQuery(query, selectAttributes);
+            return new SiddhiStoreQuery(query);
         }
     }
 }
