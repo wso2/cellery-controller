@@ -37,6 +37,8 @@ define function extractFromServiceName[javascript] return string {
     } else if (mircoserviceMatches) {
         extractedData = mircoserviceMatches[index];
     }
+
+    // Handling service names that does not match any of the regexes
     if (!extractedData && index == 2) {
         extractedData = serviceName;
     }

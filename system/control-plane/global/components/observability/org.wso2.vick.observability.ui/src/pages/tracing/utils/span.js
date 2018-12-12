@@ -221,39 +221,6 @@ class Span {
     hasError = () => this.tags.error === "true";
 
     /**
-     * Get the cell name from cell gateway span.
-     *
-     * @returns {Object} Cell details
-     */
-    getCell = () => {
-        let cell = null;
-        if (this.cell) {
-            cell = this.cell;
-        } else if (Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.Cell.GATEWAY_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1].replace(/_/g, "-"),
-                    version: null
-                };
-                this.cell = cell;
-                this.serviceName = "gateway";
-            }
-        } else if (Constants.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.Cell.MICROSERVICE_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1],
-                    version: null
-                };
-                this.cell = cell;
-                this.serviceName = matches[2];
-            }
-        }
-        return cell;
-    };
-
-    /**
      * Create a shallow clone.
      * This will create a clone without the span references.
      *

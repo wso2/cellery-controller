@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import AuthUtils from "./authUtils";
@@ -89,39 +87,14 @@ class HttpUtils {
     };
 
     /**
-     * Call the Siddhi Store API to fetch data.
-     *
-     * @param {string} appName The Siddhi App Name which contains the Siddhi Store
-     * @param {string} query The siddhi query to run against the Siddhi Store
-     * @param {StateHolder} globalState The global state provided to the current component
-     * @returns {Promise} A promise for the API call
-     */
-    static callSiddhiStoreAPI = (appName, query, globalState) => {
-        const config = {
-            url: `${globalState.get(StateHolder.CONFIG).siddhiStoreAPIURL}`,
-            method: "POST",
-            data: {
-                appName: appName,
-                query: query
-            },
-            auth: {
-                username: "admin",
-                password: "admin"
-            },
-            httpsAgent: HttpUtils.httpsAgent
-        };
-        return HttpUtils.callAPI(config, globalState);
-    };
-
-    /**
      * Call a deployed Siddhi App to fetch results.
      *
      * @param {Object} config Axios configuration object
      * @param {StateHolder} globalState The global state provided to the current component
      * @returns {Promise} A promise for the API call
      */
-    static callSiddhiAppEndpoint = (config, globalState) => {
-        config.url = `${globalState.get(StateHolder.CONFIG).siddhiAppEndpointURL}${config.url}`;
+    static callObservabilityAPI = (config, globalState) => {
+        config.url = `${globalState.get(StateHolder.CONFIG).observabilityAPIURL}${config.url}`;
         return HttpUtils.callAPI(config, globalState);
     };
 
@@ -149,11 +122,7 @@ class HttpUtils {
         axios(config)
             .then((response) => {
                 if (response.status >= 200 && response.status < 400) {
-                    if (response.data.map) {
-                        resolve(response.data.map((dataItem) => dataItem.event));
-                    } else {
-                        resolve(response.data);
-                    }
+                    resolve(response.data);
                 } else {
                     reject(response.data);
                 }

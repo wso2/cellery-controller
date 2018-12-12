@@ -124,14 +124,15 @@ class TracingUtils {
                 span.componentType = Constants.ComponentType.MICROSERVICE;
             }
 
+            let cell = data;
             if (span.isFromCellGateway()) {
-                span.cell = span.getCell();
-                span.serviceName = "gateway";
+                cell = span.cell;
+                span.serviceName = `${cell.name}-cell-gateway`;
             } else if (span.componentType !== Constants.ComponentType.ISTIO) {
-                span.cell = data;
+                span.cell = cell;
             }
 
-            return span.cell;
+            return cell;
         }, null);
     };
 

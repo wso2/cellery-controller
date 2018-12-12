@@ -365,7 +365,7 @@ wso2.datasources:
         connectionTestQuery: SELECT 1
         validationTimeout: 30000
         isAutoCommit: false
-        
+
   - name: IS_ANALYTICS_DB
     description: "The data source used for WSO2 IS Analytics statistics"
     jndiConfig:

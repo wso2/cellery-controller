@@ -85,11 +85,14 @@
             <groupId>org.wso2.extension.siddhi.io.http</groupId>
             <artifactId>siddhi-io-http</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.observability.api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-
             <!-- Copy Maven dependencies into target/files/lib -->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -105,8 +108,8 @@
                             <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/files/lib</outputDirectory>
                             <excludeArtifactIds>
-                                grpc-protobuf,grpc-protobuf-lite,grpc-stub,opencensus-api,opencensus-contrib-grpc-metrics,
-                                proto-google-common-protos ,zipkin
+                                grpc-protobuf, grpc-protobuf-lite, grpc-stub, opencensus-api,
+                                opencensus-contrib-grpc-metrics, proto-google-common-protos, zipkin
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                         </configuration>
@@ -122,8 +125,8 @@
                             <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/files/non-osgi/</outputDirectory>
                             <excludeArtifactIds>
-                                org.wso2.vick.telemetry.receiver,commons-io,gogoproto-java,grpc-wso2,
-                                org.wso2.vick.tracing.receiver,protobuf-wso2
+                                org.wso2.vick.telemetry.receiver, commons-io, gogoproto-java, grpc-wso2,
+                                org.wso2.vick.tracing.receiver, protobuf-wso2, org.wso2.vick.observability.api
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                         </configuration>

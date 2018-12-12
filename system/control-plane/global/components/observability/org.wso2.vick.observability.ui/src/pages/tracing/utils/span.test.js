@@ -963,45 +963,6 @@ describe("Span", () => {
         });
     });
 
-    describe("getCell()", () => {
-        it("should return the cell information if the span is from a Cell Gateway", () => {
-            const cell = hrCellGatewayServerSpan.getCell();
-
-            expect(cell.name).toBe("hr");
-        });
-
-        it("should return the cell name only if the span is from a Cell Microservice", () => {
-            const cell = employeeServiceServerSpan.getCell();
-
-            expect(cell.name).toBe("hr");
-        });
-
-        it("should return the cell if the span already has a cell set", () => {
-            const span = new Span({
-                traceId: "trace-id",
-                spanId: "span-id",
-                parentId: "span-parent-id",
-                serviceName: "service",
-                operationName: "test",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10060000,
-                duration: 940000,
-                tags: "{}"
-            });
-            span.cell = {
-                name: "test-cell"
-            };
-            const cell = span.getCell();
-
-            expect(cell.name).toBe("test-cell");
-        });
-
-        it("should return null if the span is not not from a Cell Gateway", () => {
-            expect(globalGatewayServerSpan.getCell()).toBeNull();
-            expect(istioMixerServerSpan.getCell()).toBeNull();
-        });
-    });
-
     describe("shallowClone()", () => {
         it("should return a copy of the initial span without span references", () => {
             const span = new Span({

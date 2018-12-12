@@ -92,6 +92,9 @@ spec:
         -
           containerPort: 7443
           protocol: "TCP"
+        -
+          containerPort: 9123
+          protocol: "TCP"
 
         volumeMounts:
         - name: sp-worker-conf

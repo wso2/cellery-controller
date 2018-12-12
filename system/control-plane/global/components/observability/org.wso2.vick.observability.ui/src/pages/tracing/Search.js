@@ -71,7 +71,7 @@ class Search extends React.Component {
         const {location} = props;
 
         const queryParams = HttpUtils.parseQueryParams(location.search);
-        this.state = Search.generateValidState({
+        this.state = {
             data: {
                 cells: [],
                 microservices: [],
@@ -82,9 +82,9 @@ class Search extends React.Component {
                 microservice: queryParams.microservice ? queryParams.microservice : Search.ALL_VALUE,
                 operation: queryParams.operation ? queryParams.operation : Search.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
-                minDuration: queryParams.minDuration ? queryParams.minDuration : undefined,
+                minDuration: queryParams.minDuration ? queryParams.minDuration : "",
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
-                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : undefined,
+                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : "",
                 maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
             },
             metaData: {
@@ -93,7 +93,7 @@ class Search extends React.Component {
             },
             hasSearchCompleted: false,
             searchResults: []
-        });
+        };
     }
 
     componentDidMount = () => {
@@ -288,10 +288,10 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
-        HttpUtils.callSiddhiAppEndpoint(
+        HttpUtils.callObservabilityAPI(
             {
-                url: "/cells",
-                method: "POST"
+                url: "/tracing/metadata",
+                method: "GET"
             },
             globalState
         ).then((data) => {
@@ -301,7 +301,7 @@ class Search extends React.Component {
 
             for (let i = 0; i < data.length; i++) {
                 const span = new Span(data[i]);
-                const cell = span.getCell();
+                const cell = span.cell;
 
                 const cellName = (cell ? cell.name : null);
                 const serviceName = span.serviceName;
@@ -327,7 +327,7 @@ class Search extends React.Component {
                 }
             }
 
-            self.setState((prevState) => Search.generateValidState({
+            self.setState((prevState) => ({
                 ...prevState,
                 data: {
                     cells: cells,
@@ -357,11 +357,12 @@ class Search extends React.Component {
      * @returns {Function} The on change handler
      */
     getChangeHandler = (name) => (event) => {
-        this.setState((prevState) => Search.generateValidState({
+        const value = event.currentTarget.value;
+        this.setState((prevState) => ({
             ...prevState,
             filter: {
                 ...prevState.filter,
-                [name]: event.target.value
+                [name]: value
             }
         }));
     };
@@ -394,7 +395,7 @@ class Search extends React.Component {
             }
         }
 
-        this.setState((prevState) => Search.generateValidState({
+        this.setState((prevState) => ({
             ...prevState,
             filter: {
                 ...prevState.filter,
@@ -431,7 +432,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
         }
-        HttpUtils.callSiddhiAppEndpoint(
+        HttpUtils.callObservabilityAPI(
             {
                 url: "/tracing/search",
                 method: "POST",
@@ -467,7 +468,6 @@ class Search extends React.Component {
                             cell: cell,
                             serviceName: serviceName
                         });
-                        span.getCell();
 
                         let cellNameKey;
                         if (span.isFromVICKSystemComponent()) {
@@ -475,7 +475,7 @@ class Search extends React.Component {
                         } else if (span.isFromIstioSystemComponent()) {
                             cellNameKey = ColorGenerator.ISTIO;
                         } else {
-                            cellNameKey = span.getCell().name;
+                            cellNameKey = span.cell.name;
                         }
 
                         result.rootServiceName = info.rootServiceName;
@@ -507,7 +507,7 @@ class Search extends React.Component {
                     searchResults.push(result);
                 }
             }
-            self.setState((prevState) => Search.generateValidState({
+            self.setState((prevState) => ({
                 ...prevState,
                 hasSearchCompleted: true,
                 searchResults: searchResults
@@ -527,13 +527,7 @@ class Search extends React.Component {
         });
     };
 
-    /**
-     * Current state from which the new valid state should be generated.
-     *
-     * @param {Object} state The current state
-     * @returns {Object} The new valid state
-     */
-    static generateValidState = (state) => {
+    static getDerivedStateFromProps = (props, state) => {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
