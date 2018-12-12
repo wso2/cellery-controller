@@ -15,7 +15,6 @@
  */
 
 import Checkbox from "@material-ui/core/Checkbox";
-import {withRouter} from "react-router-dom";
 import Constants from "../../../common/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid";
@@ -29,6 +28,7 @@ import Select from "@material-ui/core/Select/Select";
 import Span from "../../utils/span";
 import TimelineView from "./TimelineView";
 import TracingUtils from "../../utils/tracingUtils";
+import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({

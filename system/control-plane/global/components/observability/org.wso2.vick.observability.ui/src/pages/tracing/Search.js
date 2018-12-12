@@ -288,10 +288,10 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
-        HttpUtils.callSiddhiAppEndpoint(
+        HttpUtils.callObservabilityAPI(
             {
-                url: "/cells",
-                method: "POST"
+                url: "/tracing/metadata",
+                method: "GET"
             },
             globalState
         ).then((data) => {
@@ -432,7 +432,7 @@ class Search extends React.Component {
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
         }
-        HttpUtils.callSiddhiAppEndpoint(
+        HttpUtils.callObservabilityAPI(
             {
                 url: "/tracing/search",
                 method: "POST",
