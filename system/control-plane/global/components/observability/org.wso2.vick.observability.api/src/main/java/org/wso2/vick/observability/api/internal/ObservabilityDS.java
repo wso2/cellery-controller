@@ -23,13 +23,13 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.datasource.core.api.DataSourceService;
 import org.wso2.carbon.kernel.CarbonRuntime;
 import org.wso2.msf4j.MicroservicesRunner;
 import org.wso2.vick.observability.api.DependencyModelAPI;
 import org.wso2.vick.observability.api.exception.mapper.ServerErrorExceptionMapper;
 import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
-import org.wso2.vick.observability.model.generator.ModelManager;
 
 /**
  * This is the declarative service component of the observability API component,
@@ -109,17 +109,19 @@ public class ObservabilityDS {
     }
 
     @Reference(
-            name = "org.wso2.vick.observability.model.generator.ModelManager",
-            service = ModelManager.class,
+            name = "org.wso2.carbon.datasource.core",
+            service = DataSourceService.class,
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetModelManager"
+            unbind = "unsetDataSourceService"
     )
-    protected void setModelManager(ModelManager modelManager) {
-        ServiceHolder.setModelManager(modelManager);
+    protected void setDataSourceService(DataSourceService dataSourceService) {
+        /*
+         * This is not directly used by this component. However, the Siddhi Store RDBMS extension requires this.
+         * Therefore this is added to make sure the data source service is available before this bundle is activated
+         */
     }
 
-    protected void unsetModelManager(ModelManager modelManager) {
-        ServiceHolder.setCarbonRuntime(null);
+    protected void unsetDataSourceService(DataSourceService dataSourceService) {
     }
 }

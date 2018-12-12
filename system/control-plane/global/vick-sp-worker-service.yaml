@@ -64,6 +64,10 @@ spec:
       port: 7443
       name: http-global-gw
       protocol: TCP
+    -
+      port: 9123
+      name: http-observability-api
+      protocol: TCP
 
   # label keys and values that must match in order to receive traffic for this service
   selector:
