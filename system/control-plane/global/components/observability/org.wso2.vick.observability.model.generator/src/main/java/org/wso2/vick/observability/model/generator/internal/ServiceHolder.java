@@ -25,7 +25,7 @@ import org.wso2.vick.observability.model.generator.ModelManager;
  */
 public class ServiceHolder {
     private static DataSourceService dataSourceService;
-    private static GraphStoreManager graphStoreManager;
+    private static ModelStoreManager modelStoreManager;
     private static ModelManager modelManager;
 
     private ServiceHolder() {
@@ -39,12 +39,12 @@ public class ServiceHolder {
         ServiceHolder.dataSourceService = dataSourceService;
     }
 
-    public static GraphStoreManager getGraphStoreManager() {
-        return graphStoreManager;
+    public static ModelStoreManager getModelStoreManager() {
+        return modelStoreManager;
     }
 
-    public static void setGraphStoreManager(GraphStoreManager graphStoreManager) {
-        ServiceHolder.graphStoreManager = graphStoreManager;
+    public static void setModelStoreManager(ModelStoreManager modelStoreManager) {
+        ServiceHolder.modelStoreManager = modelStoreManager;
     }
 
     public static ModelManager getModelManager() {

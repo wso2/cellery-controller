@@ -17,15 +17,17 @@
  */
 package org.wso2.vick.observability.api;
 
+import org.apache.log4j.Logger;
 import org.wso2.vick.observability.api.internal.ServiceHolder;
-import org.wso2.vick.observability.api.model.Graph;
-import org.wso2.vick.observability.api.model.GraphEdge;
+import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
+import org.wso2.vick.observability.model.generator.model.Model;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 /**
@@ -33,25 +35,24 @@ import javax.ws.rs.core.Response;
  */
 @Path("/dependency-model")
 public class DependencyModelAPI {
+    private static final Logger log = Logger.getLogger(DependencyModelAPI.class);
 
     @GET
     @Path("/cell-overview")
     @Produces("application/json")
-    public Response getCellOverview() {
-        List<GraphEdge> graphEdges = new ArrayList<>();
-
-        for (String edges : ServiceHolder.getModelManager().getLinks()) {
-            String[] edgeNameElements = ServiceHolder.getModelManager().
-                    edgeNameElements(edges);
-            GraphEdge edge = new GraphEdge(edgeNameElements[0], edgeNameElements[1]);
-            graphEdges.add(edge);
+    public Response getCellOverview(@DefaultValue("0") @QueryParam("fromTime") Long fromTime,
+                                    @DefaultValue("0") @QueryParam("toTime") Long toTime) {
+        try {
+            Model model = ServiceHolder.getModelManager().getGraph(fromTime, toTime);
+            Response.ResponseBuilder responseBuilder = Response.ok();
+            Utils.addCorsResponseBuilder(responseBuilder, HttpMethod.GET);
+            return responseBuilder.entity(model).build();
+        } catch (GraphStoreException e) {
+            log.error("Error occured while retrieving the dependency API", e);
+            Response.ResponseBuilder responseBuilder = Response.serverError();
+            Utils.addCorsResponseBuilder(responseBuilder, HttpMethod.GET);
+            return responseBuilder.entity(e).build();
         }
-        return Response.ok().header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
-                .entity(new Graph(ServiceHolder.getModelManager().getNodes(), graphEdges))
-                .build();
     }
 
 }

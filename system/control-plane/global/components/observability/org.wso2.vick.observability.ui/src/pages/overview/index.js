@@ -164,62 +164,49 @@ class Overview extends React.Component {
     };
 
     onClickCell = (nodeId) => {
-        const outbound = new Set();
-        const inbound = new Set();
-        this.state.data.links.forEach((element) => {
-            if (element.source === nodeId) {
-                outbound.add(element.target);
-            } else if (element.target === nodeId) {
-                inbound.add(element.source);
-            }
-        });
-        const services = new Set();
+        let cell = null;
         this.state.data.nodes.forEach((element) => {
             if (element.id === nodeId) {
-                element.services.forEach((service) => {
-                    services.add(service);
-                });
+                cell = element;
             }
         });
+        const serviceInfo = this.loadServicesInfo(cell.services);
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
-                topic: `Cell : ${nodeId}`,
+                topic: nodeId,
                 content: [
                     {
-                        key: "Outbound Cells",
-                        setValue: this.populateArray(outbound)
+                        key: "Total",
+                        value: serviceInfo.length
                     },
                     {
-                        key: "Inbound Cells",
-                        setValue: this.populateArray(inbound)
+                        key: "Successful",
+                        value: serviceInfo.length
                     },
                     {
-                        key: "Micro Services",
-                        setValue: this.populateArray(services)
+                        key: "Failed",
+                        value: 0
+                    },
+                    {
+                        key: "Warning",
+                        value: 0
                     }
-
                 ]
             },
+            listData: serviceInfo,
             reloadGraph: false,
             isOverallSummary: false
         }));
     };
 
-    populateArray = (setElements) => {
-        const arrayElements = [];
-        setElements.forEach((setElement) => {
-            arrayElements.push(setElement);
-        });
-        return arrayElements;
-    };
-
     onClickGraph = () => {
-        this.setState({
+        this.setState((prevState) => ({
             summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
+            listData: this.loadCellInfo(...prevState.data.nodes),
             reloadGraph: true,
             isOverallSummary: true
-        });
+        }));
     };
 
     handleDrawerOpen = () => {
@@ -230,51 +217,49 @@ class Overview extends React.Component {
         this.setState({open: false});
     };
 
-    loadListInfo = (isUserAction) => {
-        const {globalState} = this.props;
-        const self = this;
+    loadCellInfo = (nodes) => {
+        const nodeInfo = [];
+        nodes.forEach((node) => {
+            nodeInfo.push([1, node.id, node.id]);
+        });
+        return nodeInfo;
+    };
 
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
-        }
-        // TODO : Change to a backend call to fetch data.
-        setTimeout(() => {
-            const data = [
-                [0.1, "Cell C", 3],
-                [1, "Cell A", 1],
-                [0.8, "Cell B", 2]
-            ];
-            self.setState({
-                listData: data
-            });
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }, 1000);
+    loadServicesInfo = (services) => {
+        const serviceInfo = [];
+        services.forEach((service) => {
+            serviceInfo.push([1, service, service]);
+        });
+        return serviceInfo;
     };
 
     constructor(props) {
         super(props);
-        const colorGenerator = this.props.colorGenerator;
+        this.initializeDefault();
+        this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
+        this.callOverviewInfo();
+    }
+
+    initializeDefault = () => {
         this.defaultState = {
             summary: {
                 topic: "VICK Deployment",
                 content: [
                     {
-                        key: "Total cells",
+                        key: "Total",
                         value: 0
                     },
                     {
-                        key: "Successful cells",
+                        key: "Successful",
                         value: 0
                     },
                     {
-                        key: "Failed cells",
+                        key: "Failed",
                         value: 0
                     },
                     {
-                        key: "Warning cells",
+                        key: "Warning",
                         value: 0
                     }
                 ]
@@ -315,29 +300,36 @@ class Overview extends React.Component {
             page: 0,
             rowsPerPage: 5
         };
-        this.state = JSON.parse(JSON.stringify(this.defaultState));
+    };
+
+    callOverviewInfo = (fromTime, toTime) => {
+        const colorGenerator = this.props.colorGenerator;
         // TODO: Update the url to the WSO2-sp worker node.
+        let queryParams = "";
+        if (fromTime && toTime) {
+            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
+        }
         axios({
             method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview"
+            url: `http://localhost:9123/dependency-model/cell-overview${queryParams}`
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data
             const summaryContent = [
                 {
-                    key: "Total cells",
+                    key: "Total",
                     value: result.nodes.length
                 },
                 {
-                    key: "Successful cells",
-                    value: 2
+                    key: "Successful",
+                    value: result.nodes.length
                 },
                 {
-                    key: "Failed cells",
-                    value: 1
+                    key: "Failed",
+                    value: 0
                 },
                 {
-                    key: "Warning cells",
+                    key: "Warning",
                     value: 0
                 }
             ];
@@ -365,6 +357,7 @@ class Overview extends React.Component {
             ];
             this.defaultState.summary.content = summaryContent;
             colorGenerator.addKeys(result.nodes);
+            const cellList = this.loadCellInfo(result.nodes);
             this.setState((prevState) => ({
                 data: {
                     nodes: result.nodes,
@@ -377,12 +370,28 @@ class Overview extends React.Component {
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
-                }
+                },
+                listData: cellList
+
             }));
         }).catch((error) => {
             this.setState({error: error});
         });
-    }
+    };
+
+    loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
+        const {globalState} = this.props;
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
+            this.callOverviewInfo(startTime, endTime);
+        }
+        setTimeout(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }, 1000);
+    };
+
 
     render() {
         const {classes, theme} = this.props;
@@ -390,7 +399,7 @@ class Overview extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Overview"} onUpdate={this.loadListInfo}/>
+                <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
 
                 <div className={classes.root}>
                     <Paper

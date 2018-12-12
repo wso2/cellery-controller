@@ -185,7 +185,7 @@ const SidePanelContent = ({classes, summary, request, isOverview, colorGenerator
                             className={classes.sideBarContentTitle}> Cell:</Typography>
                         {/* TODO : Change the to URL cell value and cell name to selected cell*/}
                         <Typography component={Link} to={"/cells/cell1"} className={classes.cellName}>
-                            Cell 1</Typography>
+                            {summary.topic}</Typography>
                     </div>
                 }
                 <HttpTrafficIcon className={classes.titleIcon}/>

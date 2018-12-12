@@ -15,26 +15,28 @@
  * under the License.
  *
  */
-package org.wso2.vick.observability.api.model;
+package org.wso2.vick.observability.model.generator.model;
+
+import org.wso2.vick.observability.model.generator.Node;
+import java.util.Set;
 
 /**
- * This is the object model of the cells that are created.
- *
+ * This is the POJO of the whole Model information that is being returned to by the MSF4J services - DependencyModelAPI
  */
-public class CellInfo {
-    private String cellName;
-    private String namespace;
+public class Model {
+    private Set<Node> nodes;
+    private Set<Edge> edges;
 
-    public CellInfo(String cellName, String namespace) {
-        this.cellName = cellName;
-        this.namespace = namespace;
+    public Model(Set<Node> nodes, Set<Edge> edges) {
+        this.nodes = nodes;
+        this.edges = edges;
     }
 
-    public String getCellName() {
-        return cellName;
+    public Set<Node> getNodes() {
+        return nodes;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public Set<Edge> getEdges() {
+        return edges;
     }
 }
