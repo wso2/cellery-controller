@@ -153,14 +153,60 @@ const styles = (theme) => ({
     }
 });
 
+const success = "success";
+const warning = "warning";
+const error = "error";
+
 class Overview extends React.Component {
 
     viewGenerator = (nodeProps) => {
-        const color = this.props.colorGenerator.getColor(nodeProps.id);
+        const nodeId = nodeProps.id;
+        const color = this.props.colorGenerator.getColor(nodeId);
+        const state = this.getCellState(nodeId);
+        if (state === success) {
+            return <svg x="0px" y="0px"
+                width="50px" height="50px" viewBox="0 0 240 240">
+                <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+            </svg>;
+        } else if (state === warning) {
+            return <svg x="0px" y="0px"
+                width="50px" height="50px" viewBox="0 0 240 240">
+                <g>
+                    <g>
+                        <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
+                    </g>
+                </g>
+                <g>
+                    <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
+                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
+                    <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                </g>
+            </svg>;
+        }
         return <svg x="0px" y="0px"
             width="50px" height="50px" viewBox="0 0 240 240">
-            <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+            <g>
+                <g>
+                    <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
+                </g>
+            </g>
+            <g>
+                <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
+                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
+                <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+            </g>
         </svg>;
+    };
+
+
+    getCellState = (nodeId) => {
+        // TODO: load the status from the API call.
+        if (nodeId.startsWith("hr")) {
+            return success;
+        } else if (nodeId.startsWith("stock")) {
+            return warning;
+        }
+        return error;
     };
 
     onClickCell = (nodeId) => {
@@ -194,6 +240,7 @@ class Overview extends React.Component {
                     }
                 ]
             },
+            data: {...prevState.data},
             listData: serviceInfo,
             reloadGraph: false,
             isOverallSummary: false
@@ -201,9 +248,10 @@ class Overview extends React.Component {
     };
 
     onClickGraph = () => {
+        const defaultState = JSON.parse(JSON.stringify(this.defaultState));
         this.setState((prevState) => ({
-            summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
-            listData: this.loadCellInfo(...prevState.data.nodes),
+            summary: defaultState.summary,
+            listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
             isOverallSummary: true
         }));
@@ -356,6 +404,8 @@ class Overview extends React.Component {
                 }
             ];
             this.defaultState.summary.content = summaryContent;
+            this.defaultState.data.nodes = result.nodes;
+            this.defaultState.data.links = result.edges;
             colorGenerator.addKeys(result.nodes);
             const cellList = this.loadCellInfo(result.nodes);
             this.setState((prevState) => ({
