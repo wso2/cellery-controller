@@ -22,10 +22,10 @@ import PropTypes from "prop-types";
 import React from "react";
 import Span from "../../utils/span";
 import TracingUtils from "../../utils/tracingUtils";
-import Typography from '@material-ui/core/Typography';
+import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import mermaid from "mermaid";
-import { createMuiTheme, MuiThemeProvider, withStyles } from '@material-ui/core/styles';
+import {MuiThemeProvider, createMuiTheme, withStyles} from "@material-ui/core/styles";
 
 const styles = () => ({
     newMessageText: {
@@ -33,7 +33,7 @@ const styles = () => ({
         cursor: "pointer"
     },
     newActor: {
-        stroke: "#4c4cb3",
+        stroke: "#4c4cb3"
     },
     newActor2: {
         stroke: "#009688"
@@ -44,8 +44,8 @@ function typographyV1Theme(theme) {
     return createMuiTheme({
         ...theme,
         typography: {
-            useNextVariants: false,
-        },
+            useNextVariants: false
+        }
     });
 }
 
@@ -77,10 +77,11 @@ class SequenceDiagram extends React.Component {
 
             <div>
 
-                <MuiThemeProvider theme={typographyV1Theme}><Typography component="h3" variant="headline" gutterBottom>    {this.state.heading}  </Typography></MuiThemeProvider>
-
-
-                <Button color="primary" className="buttonClass" style={this.state.clicked ? {} : {display: "none"}} onClick={this.addCells}>
+                <MuiThemeProvider theme={typographyV1Theme}><Typography component="h3" variant="headline" gutterBottom>
+                    {this.state.heading}
+                </Typography>
+                </MuiThemeProvider>
+                <Button color="primary" style={this.state.clicked ? {} : {display: "none"}} onClick={this.addCells}>
                     &lt;&lt; Back to Cell-level Diagram
                 </Button>
                 <div>{this.state.cellName}</div>
@@ -114,7 +115,6 @@ class SequenceDiagram extends React.Component {
         }
 
         if (this.state.config !== prevState.config) {
-            console.log(this.state.clicked);
             this.mermaidDivRef.current.removeAttribute("data-processed");
             mermaid.init(this.mermaidDivRef.current);
 
@@ -124,20 +124,16 @@ class SequenceDiagram extends React.Component {
                 }
             }
 
-            if (this.state.clicked){
+            if (this.state.clicked) {
                 for (let i = 0; i < collectionsActor.length; i++) {
                     collectionsActor[i].classList.add(classes.newActor2);
                 }
-            }
-            else {
+            } else {
                 for (let i = 0; i < collectionsActor.length; i++) {
                     collectionsActor[i].classList.add(classes.newActor);
                 }
             }
-
         }
-
-
     }
 
     /**
@@ -198,8 +194,8 @@ class SequenceDiagram extends React.Component {
         let text = "";
         if (!span.callingId && parentName === span.cell.name) {
             if (span.parent.serviceName !== span.serviceName) {
-                text += `${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
-                    + `${SequenceDiagram.removeDash(span.serviceName)}:`+ span.operationName+` \n`;
+                text += `${`${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
+                    + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName} \n`;
             }
         }
         return text;
@@ -361,6 +357,7 @@ class SequenceDiagram extends React.Component {
 }
 
 SequenceDiagram.propTypes = {
+    classes: PropTypes.any.isRequired,
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired
