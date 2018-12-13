@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -36,7 +37,7 @@ public class ServerErrorExceptionMapper implements ExceptionMapper {
         errorResponseJsonObject.add("message", new JsonPrimitive("Unknown Error Occurred"));
 
         return Response.serverError()
-                .header("Content-Type", MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .entity(gson.toJson(errorResponseJsonObject))
                 .build();
     }

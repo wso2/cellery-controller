@@ -46,6 +46,6 @@ public class Utils {
         Utils.addAllowOriginHeader(responseBuilder, Constants.ALL_ORIGIN);
         Utils.addAllowCredentialsHeader(responseBuilder, Boolean.TRUE.toString());
         Utils.addAllowMethodsHeader(responseBuilder, httpMethod);
-        Utils.addAllowHeaders(responseBuilder, Constants.ALLOW_HEADERS);
+        Utils.addAllowHeaders(responseBuilder, Constants.ORIGIN);
     }
 }
