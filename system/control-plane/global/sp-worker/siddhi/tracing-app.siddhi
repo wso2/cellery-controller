@@ -63,6 +63,10 @@ select
     timestamp as startTime,
     duration,
     tags
+insert into ProcessedZipkinStream;
+
+from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
+select *
 update or insert into DistributedTracingTable
     set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
         DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,
