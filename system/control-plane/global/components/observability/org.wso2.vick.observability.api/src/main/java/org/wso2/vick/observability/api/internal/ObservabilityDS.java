@@ -32,6 +32,7 @@ import org.wso2.vick.observability.api.DistributedTracingAPI;
 import org.wso2.vick.observability.api.exception.mapper.ServerErrorExceptionMapper;
 import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
+import org.wso2.vick.observability.model.generator.ModelManager;
 
 /**
  * This is the declarative service component of the observability API component,
@@ -125,5 +126,20 @@ public class ObservabilityDS {
     }
 
     protected void unsetDataSourceService(DataSourceService dataSourceService) {
+    }
+
+    @Reference(
+            name = "org.wso2.vick.observability.model.generator.ModelManager",
+            service = ModelManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetModelManager"
+    )
+    protected void setModelManager(ModelManager modelManager) {
+        ServiceHolder.setModelManager(modelManager);
+    }
+
+    protected void unsetModelManager(ModelManager modelManager) {
+        ServiceHolder.setCarbonRuntime(null);
     }
 }
