@@ -71,15 +71,26 @@ class View extends React.Component {
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: "/tracing",
-                method: "POST",
-                data: {
-                    traceId: traceId
-                }
+                url: `/traces/${traceId}`,
+                method: "GET"
             },
             globalState
         ).then((data) => {
-            const spans = data.map((dataItem) => new Span(dataItem));
+            const spans = data.map((dataItem) => new Span({
+                traceId: dataItem[0],
+                spanId: dataItem[1],
+                parentId: dataItem[2],
+                namespace: dataItem[3],
+                cell: dataItem[4],
+                serviceName: dataItem[5],
+                pod: dataItem[6],
+                operationName: dataItem[7],
+                kind: dataItem[8],
+                startTime: dataItem[9],
+                duration: dataItem[10],
+                tags: dataItem[11]
+            }));
+
             const rootSpan = TracingUtils.buildTree(spans);
             TracingUtils.labelSpanTree(rootSpan);
 

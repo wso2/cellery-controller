@@ -39,16 +39,22 @@ public class SiddhiStoreQuery {
      */
     public Object[][] execute() {
         Event[] queryResults = ServiceHolder.getSiddhiStoreQueryManager().query(query);
-        int rowCount = queryResults.length;
-        int columnCount = queryResults[0].getData().length;
 
-        Object[][] results = new Object[rowCount][columnCount];
-        for (int i = 0; i < rowCount; i++) {
-            Object[] resultRow = new Object[columnCount];
-            for (int j = 0; j < columnCount; j++) {
-                resultRow[j] = queryResults[i].getData(j);
+        Object[][] results;
+        if (queryResults != null) {
+            int rowCount = queryResults.length;
+            int columnCount = queryResults[0].getData().length;
+
+            results = new Object[rowCount][columnCount];
+            for (int i = 0; i < rowCount; i++) {
+                Object[] resultRow = new Object[columnCount];
+                for (int j = 0; j < columnCount; j++) {
+                    resultRow[j] = queryResults[i].getData(j);
+                }
+                results[i] = resultRow;
             }
-            results[i] = resultRow;
+        } else {    // No matching results
+            results = new Object[0][0];
         }
         return results;
     }

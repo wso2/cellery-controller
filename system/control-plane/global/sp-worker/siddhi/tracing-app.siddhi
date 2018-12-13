@@ -42,7 +42,7 @@ define function extractFromServiceName[javascript] return string {
     if (!extractedData && index == 2) {
         extractedData = serviceName;
     }
-    return extractedData;
+    return extractedData.replace(/_/g, "-");
 };
 
 --
