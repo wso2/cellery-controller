@@ -197,6 +197,11 @@
                 <artifactId>org.wso2.vick.observability.api</artifactId>
                 <version>${vick.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.observability.model.generator</artifactId>
+                <version>${vick.version}</version>
+            </dependency>
             <!-- End of SP Worker docker images dependencies -->
 
             <!--SP Dashboard images dependencies-->
