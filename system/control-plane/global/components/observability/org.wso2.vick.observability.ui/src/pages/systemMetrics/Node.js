@@ -18,6 +18,7 @@
 
 import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
+import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
 import Metrics from "./common/Metrics";
 import Paper from "@material-ui/core/Paper";
@@ -30,7 +31,7 @@ import {withStyles} from "@material-ui/core/styles";
 const styles = (theme) => ({
     root: {
         padding: theme.spacing.unit * 3,
-        margin: theme.spacing.unit
+        margin: theme.spacing.unit,
     },
     filters: {
         marginBottom: theme.spacing.unit * 4
@@ -66,6 +67,63 @@ class Node extends React.Component {
     render() {
         const {classes} = this.props;
         const {selectedNode} = this.state;
+        const MSEC_DAILY = 86400000;
+        const timestamp = new Date("December 9 2018").getTime();
+
+        const nodeData = [
+            {
+                name: "Node1",
+                data: [
+                    {x: timestamp + MSEC_DAILY, y: 3},
+                    {x: timestamp + MSEC_DAILY * 2, y: 5},
+                    {x: timestamp + MSEC_DAILY * 3, y: 15},
+                    {x: timestamp + MSEC_DAILY * 4, y: 10},
+                    {x: timestamp + MSEC_DAILY * 5, y: 6},
+                    {x: timestamp + MSEC_DAILY * 6, y: 3},
+                    {x: timestamp + MSEC_DAILY * 7, y: 9},
+                    {x: timestamp + MSEC_DAILY * 8, y: 11}
+                ]
+            },
+            {
+                name: "Node2",
+                data: [
+                    {x: timestamp + MSEC_DAILY, y: 10},
+                    {x: timestamp + MSEC_DAILY * 2, y: 4},
+                    {x: timestamp + MSEC_DAILY * 3, y: 2},
+                    {x: timestamp + MSEC_DAILY * 4, y: 15},
+                    {x: timestamp + MSEC_DAILY * 5, y: 13},
+                    {x: timestamp + MSEC_DAILY * 6, y: 6},
+                    {x: timestamp + MSEC_DAILY * 7, y: 7},
+                    {x: timestamp + MSEC_DAILY * 8, y: 2}
+                ]
+            },
+            {
+                name: "Node3",
+                data: [
+                    {x: timestamp + MSEC_DAILY, y: 6},
+                    {x: timestamp + MSEC_DAILY * 2, y: 3},
+                    {x: timestamp + MSEC_DAILY * 3, y: 5},
+                    {x: timestamp + MSEC_DAILY * 4, y: 1},
+                    {x: timestamp + MSEC_DAILY * 5, y: 16},
+                    {x: timestamp + MSEC_DAILY * 6, y: 4},
+                    {x: timestamp + MSEC_DAILY * 7, y: 6},
+                    {x: timestamp + MSEC_DAILY * 8, y: 7}
+                ]
+            },
+            {
+                name: "Node4",
+                data: [
+                    {x: timestamp + MSEC_DAILY, y: 0},
+                    {x: timestamp + MSEC_DAILY * 2, y: 9},
+                    {x: timestamp + MSEC_DAILY * 3, y: 5},
+                    {x: timestamp + MSEC_DAILY * 4, y: 5},
+                    {x: timestamp + MSEC_DAILY * 5, y: 5},
+                    {x: timestamp + MSEC_DAILY * 6, y: 16},
+                    {x: timestamp + MSEC_DAILY * 7, y: 4},
+                    {x: timestamp + MSEC_DAILY * 8, y: 6}
+                ]
+            }
+        ];
 
         return (
             <React.Fragment>
@@ -92,7 +150,12 @@ class Node extends React.Component {
                         </Button>
                     </div>
                     <div className={classes.graphs}>
-                        <Metrics/>
+                        <Grid container spacing={24}>
+                            {/*TODO: Pass the relevant filtered data to graphData attr*/}
+                            <Metrics graphName="CPU" graphData={nodeData}/>
+                            <Metrics graphName="Memory" graphData={nodeData}/>
+                            <Metrics graphName="Disk" graphData={nodeData}/>
+                        </Grid>
                     </div>
                 </Paper>
             </React.Fragment>
