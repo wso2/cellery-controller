@@ -22,7 +22,6 @@ import org.wso2.vick.observability.model.generator.model.Model;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.HttpMethod;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,14 +42,10 @@ public class DependencyModelAPI {
                                     @DefaultValue("0") @QueryParam("toTime") Long toTime) {
         try {
             Model model = ServiceHolder.getModelManager().getGraph(fromTime, toTime);
-            Response.ResponseBuilder responseBuilder = Response.ok();
-            Utils.addCorsResponseBuilder(responseBuilder, HttpMethod.GET);
-            return responseBuilder.entity(model).build();
+            return Response.ok().entity(model).build();
         } catch (GraphStoreException e) {
             log.error("Error occured while retrieving the dependency API", e);
-            Response.ResponseBuilder responseBuilder = Response.serverError();
-            Utils.addCorsResponseBuilder(responseBuilder, HttpMethod.GET);
-            return responseBuilder.entity(e).build();
+            return Response.serverError().entity(e).build();
         }
     }
 
