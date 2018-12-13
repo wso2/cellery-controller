@@ -15,14 +15,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import "./SequenceStyles.css";
+
+import "./sequence.css";
 import Button from "@material-ui/core/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Span from "../../utils/span";
 import TracingUtils from "../../utils/tracingUtils";
+import Typography from '@material-ui/core/Typography';
 import interact from "interactjs";
 import mermaid from "mermaid";
+import { createMuiTheme, MuiThemeProvider, withStyles } from '@material-ui/core/styles';
+
+const styles = () => ({
+    newMessageText: {
+        fill: "#4c4cb3",
+        cursor: "pointer"
+    },
+    newActor: {
+        stroke: "#4c4cb3",
+    },
+    newActor2: {
+        stroke: "#009688"
+    }
+});
+
+function typographyV1Theme(theme) {
+    return createMuiTheme({
+        ...theme,
+        typography: {
+            useNextVariants: false,
+        },
+    });
+}
 
 class SequenceDiagram extends React.Component {
 
@@ -52,8 +77,10 @@ class SequenceDiagram extends React.Component {
 
             <div>
 
-                <h3> {this.state.heading} </h3>
-                <Button color="primary" style={this.state.clicked ? {} : {display: "none"}} onClick={this.addCells}>
+                <MuiThemeProvider theme={typographyV1Theme}><Typography component="h3" variant="headline" gutterBottom>    {this.state.heading}  </Typography></MuiThemeProvider>
+
+
+                <Button color="primary" className="buttonClass" style={this.state.clicked ? {} : {display: "none"}} onClick={this.addCells}>
                     &lt;&lt; Back to Cell-level Diagram
                 </Button>
                 <div>{this.state.cellName}</div>
@@ -71,32 +98,46 @@ class SequenceDiagram extends React.Component {
                 && (this.state.clicked !== true)) {
                 const numb = event.srcElement.innerHTML.match(/\d+/g).map(Number);
                 this.addServices(numb);
-                this.setState({
-                    clicked: true
-                });
             }
         });
         this.cloneArray();
     }
 
     componentDidUpdate(prevProps, prevState) {
+        const {classes} = this.props;
         const collections = this.mermaidDivRef.current.getElementsByClassName("messageText");
+        const collectionsActor = this.mermaidDivRef.current.getElementsByClassName("actor");
         for (let i = 0; i < collections.length; i++) {
-            if (collections[i].innerHTML.includes("[")) {
-                collections[i].classList.add("newMessageText");
+            if (collections[i].innerHTML.match("\\s\\[([0-9]+)\\]+$")) {
+                collections[i].classList.add(classes.newMessageText);
             }
         }
 
         if (this.state.config !== prevState.config) {
+            console.log(this.state.clicked);
             this.mermaidDivRef.current.removeAttribute("data-processed");
             mermaid.init(this.mermaidDivRef.current);
 
             for (let i = 0; i < collections.length; i++) {
                 if (collections[i].innerHTML.match("\\s\\[([0-9]+)\\]+$")) {
-                    collections[i].classList.add("newMessageText");
+                    collections[i].classList.add(classes.newMessageText);
                 }
             }
+
+            if (this.state.clicked){
+                for (let i = 0; i < collectionsActor.length; i++) {
+                    collectionsActor[i].classList.add(classes.newActor2);
+                }
+            }
+            else {
+                for (let i = 0; i < collectionsActor.length; i++) {
+                    collectionsActor[i].classList.add(classes.newActor);
+                }
+            }
+
         }
+
+
     }
 
     /**
@@ -140,7 +181,8 @@ class SequenceDiagram extends React.Component {
 
         this.setState({
             config: data2,
-            heading: "Service - Level Sequence"
+            heading: "Service - Level Sequence",
+            clicked: true
         });
     }
 
@@ -324,6 +366,6 @@ SequenceDiagram.propTypes = {
     ).isRequired
 };
 
-export default SequenceDiagram;
+export default withStyles(styles, {withTheme: false})(SequenceDiagram);
 
 
