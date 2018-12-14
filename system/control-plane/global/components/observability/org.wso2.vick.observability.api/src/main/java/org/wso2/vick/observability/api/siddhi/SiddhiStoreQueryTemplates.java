@@ -30,8 +30,8 @@ public enum SiddhiStoreQueryTemplates {
             "within ${" + Params.QUERY_START_TIME + "}, ${" + Params.QUERY_END_TIME + "}\n" +
             "per ${" + Params.TIME_GRANULARITY + "}\n" +
             "select sourceCell, destinationCell, " +
-                "sum(avgResponseTime * requestCount) / sum(requestCount) as avgResponseTime, " +
-                "sum(requestCount) as requestCount\n" +
+            "sum(avgResponseTime * requestCount) / sum(requestCount) as avgResponseTime, " +
+            "sum(requestCount) as requestCount\n" +
             "group by sourceCell, destinationCell"
     ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
@@ -40,13 +40,13 @@ public enum SiddhiStoreQueryTemplates {
     ),
     DISTRIBUTED_TRACING_SEARCH_GET_TRACE_IDS("from DistributedTracingTable\n" +
             "on (${" + Params.CELL + "} == \"\" or cell == ${" + Params.CELL + "}) " +
-                "and (${" + Params.SERVICE_NAME + "} == \"\" or serviceName == ${" + Params.SERVICE_NAME + "}) " +
-                "and (${" + Params.OPERATION_NAME + "} == \"\" or " +
-                    "operationName == ${" + Params.OPERATION_NAME + "}) " +
-                "and (${" + Params.MIN_DURATION + "} == -1 or duration >= ${" + Params.MIN_DURATION + "}) " +
-                "and (${" + Params.MAX_DURATION + "} == -1 or duration <= ${" + Params.MAX_DURATION + "}) " +
-                "and (${" + Params.QUERY_START_TIME + "} == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}) " +
-                "and (${" + Params.QUERY_END_TIME + "} == -1 or startTime <= ${" + Params.QUERY_END_TIME + "})\n" +
+            "and (${" + Params.SERVICE_NAME + "} == \"\" or serviceName == ${" + Params.SERVICE_NAME + "}) " +
+            "and (${" + Params.OPERATION_NAME + "} == \"\" or " +
+            "operationName == ${" + Params.OPERATION_NAME + "}) " +
+            "and (${" + Params.MIN_DURATION + "} == -1 or duration >= ${" + Params.MIN_DURATION + "}) " +
+            "and (${" + Params.MAX_DURATION + "} == -1 or duration <= ${" + Params.MAX_DURATION + "}) " +
+            "and (${" + Params.QUERY_START_TIME + "} == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}) " +
+            "and (${" + Params.QUERY_END_TIME + "} == -1 or startTime <= ${" + Params.QUERY_END_TIME + "})\n" +
             "select traceId\n" +
             "group by traceId"
     );
