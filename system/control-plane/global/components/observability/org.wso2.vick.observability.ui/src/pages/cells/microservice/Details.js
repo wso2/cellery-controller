@@ -29,7 +29,8 @@ import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
     table: {
-        width: "20%"
+        width: "20%",
+        marginTop: 25
     },
     successIcon: {
         color: Green[600]
@@ -55,18 +56,6 @@ const Details = (props) => {
         <React.Fragment>
             <Table className={classes.table}>
                 <TableBody>
-                    <TableRow>
-                        <TableCell className={classes.tableCell}>
-                            <Typography color="textSecondary">
-                                Namespace
-                            </Typography>
-                        </TableCell>
-                        <TableCell className={classes.tableCell}>
-                            <Typography>
-                                Default
-                            </Typography>
-                        </TableCell>
-                    </TableRow>
                     <TableRow>
                         <TableCell className={classes.tableCell}>
                             <Typography color="textSecondary">

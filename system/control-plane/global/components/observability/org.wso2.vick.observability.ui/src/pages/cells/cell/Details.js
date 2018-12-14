@@ -33,7 +33,8 @@ import {withStyles} from "@material-ui/core/styles";
 
 const styles = (theme) => ({
     table: {
-        width: "20%"
+        width: "20%",
+        marginTop: 25
     },
     tableCell: {
         borderBottom: "none"
@@ -56,7 +57,6 @@ class Details extends React.Component {
         super(props);
 
         this.state = {
-            namespace: null,
             health: 0,
             dependencyGraphData: []
         };
@@ -72,7 +72,6 @@ class Details extends React.Component {
         // TODO : Fetch data from backend
         setTimeout(() => {
             self.setState({
-                namespace: "Default",
                 health: 0.9,
                 dependencyGraphData: []
             });
@@ -84,7 +83,7 @@ class Details extends React.Component {
 
     render = () => {
         const {classes, colorGenerator, globalState} = this.props;
-        const {namespace, health} = this.state;
+        const {health} = this.state;
 
         const healthColor = colorGenerator.getColorForPercentage(health, globalState);
 
@@ -92,18 +91,6 @@ class Details extends React.Component {
             <React.Fragment>
                 <Table className={classes.table}>
                     <TableBody>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Namespace
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <Typography>
-                                    {namespace}
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
                         <TableRow>
                             <TableCell className={classes.tableCell}>
                                 <Typography color="textSecondary">
