@@ -101,7 +101,7 @@ class MetricsGraphs extends React.Component {
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
         const warningColor = colorGenerator.getColor(ColorGenerator.WARNING);
-        const redirectionColor = colorGenerator.getColor(ColorGenerator.REDIRECTION);
+        const redirectionColor = colorGenerator.getColor(ColorGenerator.CLIENT_ERROR);
         const statusCodesColors = [successColor, redirectionColor, warningColor, errColor];
         const reqResColors = ["#5bbd5a", "#76c7e3"];
         const BarSeries = HorizontalBarSeries;

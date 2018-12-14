@@ -27,24 +27,24 @@ import org.wso2.siddhi.core.event.Event;
  */
 public class SiddhiStoreQueryManager {
     private static final String DISTRIBUTED_TRACING_TABLE_DEFINITION = "@Store(type=\"rdbms\", " +
-            "datasource=\"VICK_OBSERVABILITY_DB\", field.length=\"tags:8000\")\n" +
+                "datasource=\"VICK_OBSERVABILITY_DB\", field.length=\"tags:8000\")\n" +
             "@PrimaryKey(\"traceId\", \"spanId\", \"kind\")\n" +
             "define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, " +
-            "cell string, serviceName string, pod string, operationName string, kind string, startTime long, " +
-            "duration long, tags string);";
+                "cell string, serviceName string, pod string, operationName string, kind string, startTime long, " +
+                "duration long, tags string);";
     private static final String REQUEST_AGGREGATION_DEFINITION = "define stream ProcessedRequestsStream(" +
-            "sourceNamespace string, sourceCell string, sourceVICKService string, destinationNamespace string, " +
-            "destinationCell string, destinationVICKService string, requestPath string, requestMethod string, " +
-            "httpResponseGroup string, responseTime double);" +
+                "sourceNamespace string, sourceCell string, sourceVICKService string, destinationNamespace string, " +
+                "destinationCell string, destinationVICKService string, requestPath string, requestMethod string, " +
+                "httpResponseGroup string, responseTimeSec double, responseSizeBytes long);" +
             "@store(type=\"rdbms\", datasource=\"VICK_OBSERVABILITY_DB\")\n" +
             "@purge(enable=\"false\")\n" +
             "define aggregation RequestAggregation from ProcessedRequestsStream\n" +
-            "select\n" +
-            "sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
-            "destinationVICKService, requestPath, requestMethod, httpResponseGroup, " +
-            "avg(responseTime) as avgResponseTime, count() as requestCount\n" +
+                "select sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
+                "destinationVICKService, requestPath, requestMethod, httpResponseGroup, " +
+                "avg(responseTimeSec) as avgResponseTimeSec, avg(responseSizeBytes) as avgResponseSizeBytes, " +
+                "count() as requestCount\n" +
             "group by sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
-            "destinationVICKService, requestPath, requestMethod, httpResponseGroup\n" +
+                "destinationVICKService, requestPath, requestMethod, httpResponseGroup\n" +
             "aggregate every sec...year;";
     private static final String SIDDHI_APP = DISTRIBUTED_TRACING_TABLE_DEFINITION + "\n" +
             REQUEST_AGGREGATION_DEFINITION;
