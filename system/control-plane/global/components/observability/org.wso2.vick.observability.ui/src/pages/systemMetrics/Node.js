@@ -31,7 +31,7 @@ import {withStyles} from "@material-ui/core/styles";
 const styles = (theme) => ({
     root: {
         padding: theme.spacing.unit * 3,
-        margin: theme.spacing.unit,
+        margin: theme.spacing.unit
     },
     filters: {
         marginBottom: theme.spacing.unit * 4

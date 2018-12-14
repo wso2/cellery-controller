@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import Blue from "@material-ui/core/colors/blue";
 import Green from "@material-ui/core/colors/green";
 import Red from "@material-ui/core/colors/red";
 import {StateHolder} from "../state";
@@ -33,6 +34,7 @@ class ColorGenerator {
     static SUCCESS = "SUCCESS";
     static WARNING = "WARNING";
     static ERROR = "ERROR";
+    static REDIRECTION = "CLIENTERROR";
 
     constructor() {
         this.colorMap = {
@@ -40,8 +42,9 @@ class ColorGenerator {
             [ColorGenerator.ISTIO]: "#434da1",
             [ColorGenerator.UNKNOWN]: "#71736f",
             [ColorGenerator.SUCCESS]: Green[500],
-            [ColorGenerator.WARNING]: Yellow[700],
-            [ColorGenerator.ERROR]: Red[500]
+            [ColorGenerator.WARNING]: Yellow[800],
+            [ColorGenerator.ERROR]: Red[500],
+            [ColorGenerator.REDIRECTION]: Blue[500]
         };
     }
 
