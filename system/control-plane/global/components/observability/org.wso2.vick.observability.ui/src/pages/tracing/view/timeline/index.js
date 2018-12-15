@@ -28,7 +28,6 @@ import Select from "@material-ui/core/Select/Select";
 import Span from "../../utils/span";
 import TimelineView from "./TimelineView";
 import TracingUtils from "../../utils/tracingUtils";
-import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
@@ -50,7 +49,8 @@ class Timeline extends React.PureComponent {
                 Constants.ComponentType.MICROSERVICE,
                 Constants.ComponentType.VICK,
                 Constants.ComponentType.ISTIO
-            ]
+            ],
+            filteredSpans: []
         };
 
         this.timelineViewRef = React.createRef();
@@ -71,38 +71,44 @@ class Timeline extends React.PureComponent {
         });
     };
 
-    /**
-     * Get the filtered spans from the available spans.
-     *
-     * @returns {Array.<Span>} The filtered list of spans
-     */
-    getFilteredSpans = () => {
+    static getDerivedStateFromProps = (props, state) => {
         const spans = [];
-        for (let i = 0; i < this.props.spans.length; i++) {
-            spans.push(this.props.spans[i].shallowClone());
+        for (let i = 0; i < props.spans.length; i++) {
+            spans.push(props.spans[i].shallowClone());
         }
-        TracingUtils.buildTree(spans);
+        if (spans.length > 0) {
+            TracingUtils.buildTree(spans);
+        }
 
         const filteredSpans = [];
-        for (let i = 0; i < spans.length; i++) {
-            const span = spans[i];
+        if (spans.length > 0) {
+            for (let i = 0; i < spans.length; i++) {
+                const span = spans[i];
 
-            // Apply service type filter
-            const isSelected = this.state.selectedServiceTypes.includes(span.componentType);
+                // Apply service type filter
+                const isSelected = state.selectedServiceTypes.includes(span.componentType);
 
-            if (isSelected) {
-                filteredSpans.push(span);
-            } else {
-                // Remove the span from the tree without harming the tree structure
-                TracingUtils.removeSpanFromTree(span);
+                if (isSelected) {
+                    filteredSpans.push(span);
+                } else {
+                    // Remove the span from the tree without harming the tree structure
+                    TracingUtils.removeSpanFromTree(span);
+                }
             }
         }
-        return filteredSpans;
+        if (filteredSpans.length > 0) {
+            const filteredTree = TracingUtils.getTreeRoot(filteredSpans);
+            TracingUtils.labelSpanTree(filteredTree);
+        }
+        return {
+            ...state,
+            filteredSpans: filteredSpans
+        };
     };
 
     render = () => {
-        const {classes, location} = this.props;
-        const selectedMicroservice = location.state.selectedMicroservice;
+        const {classes, selectedMicroservice} = this.props;
+        const {filteredSpans} = this.state;
 
         // Finding the service types to be shown in the filter
         const serviceTypes = [];
@@ -148,7 +154,7 @@ class Timeline extends React.PureComponent {
                         </FormControl>
                     </Grid>
                 </Grid>
-                <TimelineView spans={this.getFilteredSpans()} selectedMicroservice={selectedMicroservice}
+                <TimelineView spans={filteredSpans} selectedMicroservice={selectedMicroservice}
                     innerRef={this.timelineViewRef}/>
             </React.Fragment>
         );
@@ -161,8 +167,11 @@ Timeline.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
-    location: PropTypes.any.isRequired,
-    clicked: PropTypes.bool
+    clicked: PropTypes.bool,
+    selectedMicroservice: PropTypes.shape({
+        cellName: PropTypes.string.isRequired,
+        serviceName: PropTypes.string.isRequired
+    }).isRequired
 };
 
-export default withStyles(styles)(withRouter(Timeline));
+export default withStyles(styles)(Timeline);

@@ -485,7 +485,7 @@
         "react/boolean-prop-naming": "error",
         "react/button-has-type": "error",
         "react/default-props-match-prop-types": "error",
-        "react/display-name": "error",
+        "react/display-name": "off",
         "react/no-did-mount-set-state": "error",
         "react/no-did-update-set-state": "error",
         "react/no-access-state-in-setstate": "error",

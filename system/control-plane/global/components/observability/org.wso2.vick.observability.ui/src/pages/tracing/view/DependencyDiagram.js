@@ -32,27 +32,14 @@ const styles = () => ({
 });
 
 class DependencyDiagram extends React.Component {
-    constructor(props) {
-        super(props);
 
-        this.nodes = [];
-        this.links = [];
-    }
-
-    // shouldComponentUpdate = () => false;
-
-    draw = () => {
-
-    };
+    static MIN_RADIUS = 40;
+    static MAX_RADIUS = 120;
 
     render = () => {
         const {classes, spans, colorGenerator} = this.props;
-        const rootSpan = TracingUtils.buildTree(spans);
-        const MIN_RADIUS = 40;
-        const MAX_RADIUS = 120;
+        const rootSpan = TracingUtils.getTreeRoot(spans);
 
-        let minDuration = Number.MAX_SAFE_INTEGER;
-        let maxDuration = 0;
         const nodeIdList = [];
         const nodes = [];
         const links = [];
@@ -95,23 +82,29 @@ class DependencyDiagram extends React.Component {
         };
         rootSpan.walk((span, data) => {
             let linkSource = data;
-            if (linkSource && span.kind === Constants.Span.Kind.SERVER) { // Ending link traversing
-                addNodeIfNotPresent(span);
-                addLink(linkSource, span);
-                linkSource = null;
-            } else if (!linkSource && span.kind === Constants.Span.Kind.CLIENT) { // Starting link traversing
-                addNodeIfNotPresent(span);
-                linkSource = span;
-            }
-
-            if (span.duration < minDuration) {
-                minDuration = span.duration;
-            }
-            if (span.duration > maxDuration) {
-                maxDuration = span.duration;
+            if (!Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN.test(span.operationName)) {
+                if (linkSource && span.kind === Constants.Span.Kind.SERVER) { // Ending link traversing
+                    addNodeIfNotPresent(span);
+                    addLink(linkSource, span);
+                    linkSource = null;
+                } else if (!linkSource && span.kind === Constants.Span.Kind.CLIENT) { // Starting link traversing
+                    addNodeIfNotPresent(span);
+                    linkSource = span;
+                }
             }
             return linkSource;
         }, null);
+
+        let minDuration = Number.MAX_SAFE_INTEGER;
+        let maxDuration = 0;
+        for (const node of nodes) {
+            if (node.span.duration < minDuration) {
+                minDuration = node.span.duration;
+            }
+            if (node.span.duration > maxDuration) {
+                maxDuration = node.span.duration;
+            }
+        }
 
         return (
             nodes.length > 0 && links.length > 0
@@ -129,8 +122,9 @@ class DependencyDiagram extends React.Component {
                                 fontSize: 15,
                                 highlightFontSize: 15,
                                 viewGenerator: (node) => {
-                                    const radius = (((node.span.duration - minDuration) * (MAX_RADIUS - MIN_RADIUS))
-                                           / (maxDuration - minDuration)) + MIN_RADIUS;
+                                    const radius = (((node.span.duration - minDuration)
+                                        * (DependencyDiagram.MAX_RADIUS - DependencyDiagram.MIN_RADIUS))
+                                        / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
 
                                     let nodeSVGContent;
                                     const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;

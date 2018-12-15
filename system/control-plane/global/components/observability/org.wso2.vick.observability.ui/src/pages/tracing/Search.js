@@ -450,23 +450,7 @@ class Search extends React.Component {
             },
             globalState
         ).then((data) => {
-            const spanCounts = data.spanCounts
-                .map((dataItem) => ({
-                    traceId: dataItem[0],
-                    cellNameKey: dataItem[1],
-                    serviceName: dataItem[2],
-                    count: dataItem[3]
-                }))
-                .reduce((accumulator, dataItem) => {
-                    if (!accumulator[dataItem.traceId]) {
-                        accumulator[dataItem.traceId] = {
-                            services: []
-                        };
-                    }
-                    accumulator[dataItem.traceId].services.push(dataItem);
-                    return accumulator;
-                }, {});
-            const searchResults = data.rootSpans
+            const rootSpans = data.rootSpans
                 .map((dataItem) => ({
                     traceId: dataItem[0],
                     rootServiceName: dataItem[1],
@@ -475,15 +459,25 @@ class Search extends React.Component {
                     rootDuration: dataItem[4]
                 }))
                 .reduce((accumulator, dataItem) => {
-                    if (!accumulator[dataItem.traceId].startTime
-                            || dataItem.startTime < accumulator[dataItem.traceId].startTime) {
-                        accumulator[dataItem.traceId] = {
-                            ...accumulator[dataItem.traceId],
-                            ...dataItem
-                        };
+                    accumulator[dataItem.traceId] = dataItem;
+                    return accumulator;
+                }, {});
+            const searchResults = data.spanCounts
+                .map((dataItem) => ({
+                    traceId: dataItem[0],
+                    cellNameKey: dataItem[1],
+                    serviceName: dataItem[2],
+                    count: dataItem[3]
+                }))
+                .reduce((accumulator, dataItem) => {
+                    if (accumulator[dataItem.traceId]) {
+                        if (!accumulator[dataItem.traceId].services) {
+                            accumulator[dataItem.traceId].services = [];
+                        }
+                        accumulator[dataItem.traceId].services.push(dataItem);
                     }
                     return accumulator;
-                }, spanCounts);
+                }, rootSpans);
 
             const searchResultsArray = [];
             for (const traceId in searchResults) {
