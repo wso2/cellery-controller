@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,7 +68,7 @@ public class ModelGenerationExtension extends StreamProcessor {
     private ExpressionExecutor parentIdExecutor;
     private ExpressionExecutor spanKindExecutor;
     private ExpressionExecutor tagExecutor;
-    private final Map<String, List<SpanCacheInfo.NodeInfo>> pendingEdges = new HashMap<>();
+    private final Map<String, List<SpanCacheInfo.NodeInfo>> pendingEdges = new ConcurrentHashMap<>();
     private final Cache<String, SpanCacheInfo> spanIdNodeCache = CacheBuilder.newBuilder().
             expireAfterAccess(60, TimeUnit.SECONDS).maximumSize(100000).build();
     private final Map<String, Node> nodeCache = new HashMap<>();
@@ -235,7 +236,7 @@ public class ModelGenerationExtension extends StreamProcessor {
                         + expressionExecutors[5].getReturnType());
             }
         }
-        return new ArrayList<Attribute>();
+        return new ArrayList<>();
     }
 
     @Override

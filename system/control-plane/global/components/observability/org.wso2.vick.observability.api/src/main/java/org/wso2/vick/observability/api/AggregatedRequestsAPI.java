@@ -50,7 +50,7 @@ public class AggregatedRequestsAPI {
                     .build()
                     .execute();
             return Response.ok().entity(results).build();
-        }catch (Throwable throwable) {
+        } catch (Throwable throwable) {
             log.error("Unable to get the aggregated results for cells. ", throwable);
             return Response.serverError().entity(throwable).build();
         }
