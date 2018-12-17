@@ -31,7 +31,7 @@ import {withStyles} from "@material-ui/core/styles";
 const styles = (theme) => ({
     root: {
         padding: theme.spacing.unit * 3,
-        margin: theme.spacing.unit,
+        margin: theme.spacing.unit
     },
     filters: {
         marginBottom: theme.spacing.unit * 4
@@ -151,7 +151,7 @@ class Node extends React.Component {
                     </div>
                     <div className={classes.graphs}>
                         <Grid container spacing={24}>
-                            {/*TODO: Pass the relevant filtered data to graphData attr*/}
+                            {/* TODO: Pass the relevant filtered data to graphData attr*/}
                             <Metrics graphName="CPU" graphData={nodeData}/>
                             <Metrics graphName="Memory" graphData={nodeData}/>
                             <Metrics graphName="Disk" graphData={nodeData}/>

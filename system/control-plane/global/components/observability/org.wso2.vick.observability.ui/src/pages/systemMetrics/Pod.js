@@ -151,7 +151,7 @@ class Pod extends React.Component {
                     </div>
                     <div className={classes.graphs}>
                         <Grid container spacing={24}>
-                            {/*TODO: Pass the relevant filtered data to graphData attr*/}
+                            {/* TODO: Pass the relevant filtered data to graphData attr*/}
                             <Metrics graphName="CPU" graphData={podData}/>
                             <Metrics graphName="Memory" graphData={podData}/>
                             <Metrics graphName="Disk" graphData={podData}/>

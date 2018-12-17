@@ -91,7 +91,6 @@ public class ModelGenerationExtension extends StreamProcessor {
                 node.addService(serviceName);
                 SpanCacheInfo spanCacheInfo = setSpanInfo(spanId, node, serviceName, operationName, spanKind);
                 if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND) && spanCacheInfo.getClient() != null) {
-
                     ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(),
                             spanCacheInfo.getServer().getNode(),
                             serviceName + Constants.LINK_SEPARATOR + operationName);

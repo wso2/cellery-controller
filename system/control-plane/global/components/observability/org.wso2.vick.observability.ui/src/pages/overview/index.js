@@ -35,6 +35,7 @@ import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
+import moment from "moment";
 
 const graphConfig = {
     directed: true,
@@ -287,6 +288,7 @@ class Overview extends React.Component {
         this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
         this.callOverviewInfo();
+        this.callRequestStats();
     }
 
     initializeDefault = () => {
@@ -428,6 +430,62 @@ class Overview extends React.Component {
             this.setState({error: error});
         });
     };
+
+    getTimeGranularity = (fromTime, toTime) => {
+        const days = "days";
+
+
+        const hours = "hours";
+
+
+        const minutes = "minutes";
+
+
+        const months = "months";
+
+
+        const seconds = "seconds";
+
+
+        const years = "years";
+        if (toTime.diff(fromTime, "years") > 0) {
+            return years;
+        } else if (toTime.diff(fromTime, months) > 0) {
+            return months;
+        } else if (toTime.diff(fromTime, days) > 0) {
+            return days;
+        } else if (toTime.diff(fromTime, hours) > 0) {
+            return hours;
+        } else if (toTime.diff(fromTime, minutes) > 0) {
+            return minutes;
+        }
+        return seconds;
+    };
+
+    callRequestStats = (fromTime, toTime) => {
+        let queryParams = "";
+        if (!fromTime) {
+
+            /*
+             * FromTime = moment();
+             * toTime = moment().add(1, 'years');
+             * console.log(fromTime);
+             * console.log(toTime);
+             */
+            fromTime = 1;
+            toTime = 4;
+            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}&timeGranularity=seconds`;
+        }
+        axios({
+            method: "GET",
+            url: `http://localhost:9123/api/http-requests/cells${queryParams}`
+        }).then((response) => {
+            console.log(response);
+        }).catch((error) => {
+            this.setState({error: error});
+        });
+    };
+
 
     loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
         const {globalState} = this.props;

@@ -89,7 +89,7 @@ class Metrics extends React.Component {
                     <CardContent className={classes.content}>
                         <div>
                             <FlexibleWidthXYPlot xType="time" height={400}
-                                                 onMouseLeave={() => this.setState({tooltip: []})}>
+                                onMouseLeave={() => this.setState({tooltip: []})}>
                                 <HorizontalGridLines/>
                                 <VerticalGridLines/>
                                 <XAxis title="Time"/>

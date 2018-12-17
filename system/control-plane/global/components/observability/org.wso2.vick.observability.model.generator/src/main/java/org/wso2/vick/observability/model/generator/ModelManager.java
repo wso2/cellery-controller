@@ -110,7 +110,7 @@ public class ModelManager {
     public void moveLinks(Node fromNode, Node targetNode, String newEdgePrefix) {
         Set<String> outEdges = this.dependencyGraph.outEdges(fromNode);
         for (String edgeName : outEdges) {
-            Node outNode = this.dependencyGraph.incidentNodes(outEdges).target();
+            Node outNode = this.dependencyGraph.incidentNodes(edgeName).target();
             String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + Utils.getEdgePostFix(edgeName);
             this.addLink(targetNode, outNode, newEdgeName);
             this.dependencyGraph.removeEdge(edgeName);
