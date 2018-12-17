@@ -4,14 +4,15 @@
 @source(type="inMemory", topic="istio-mixer-report", @map(type="passThrough"))
 define stream TelemetryStreamIn(sourceNamespace string, sourceCell string, sourceVICKService string,
                                 sourcePod string, destinationNamespace string, destinationCell string,
-                                destinationVICKService string, destinationPod string, requestHeadersMap object,
-                                requestPath string, requestMethod string, responseCode long,
-                                responseDurationNanoSec int, contextReporterKind string);
+                                destinationVICKService string, destinationPod string, contextReporterKind string,
+                                requestHeadersMap object, requestPath string, requestMethod string,
+                                requestSizeBytes long, responseCode long, responseDurationNanoSec int,
+                                responseSizeBytes long);
 
 define stream ProcessedRequestsStream(sourceNamespace string, sourceCell string, sourceVICKService string,
                                       destinationNamespace string, destinationCell string,
                                       destinationVICKService string, requestPath string, requestMethod string,
-                                      httpResponseGroup string, responseTime double);
+                                      httpResponseGroup string, responseTimeSec double, responseSizeBytes long);
 
 @store(type="rdbms", datasource="VICK_OBSERVABILITY_DB")
 @purge(enable="false")
@@ -26,7 +27,8 @@ select
     requestPath,
     requestMethod,
     httpResponseGroup,
-    avg(responseTime) as avgResponseTime,
+    avg(responseTimeSec) as avgResponseTimeSec,
+    avg(responseSizeBytes) as avgResponseSizeBytes,
     count() as requestCount
 group by
     sourceNamespace, sourceCell, sourceVICKService,
@@ -46,17 +48,28 @@ select
     destinationNamespace,
     destinationCell,
     destinationVICKService,
+    contextReporterKind,
     cast(map:get(requestHeadersMap, "x-request-id"), "string") as requestId,
     requestPath,
     requestMethod,
     str:concat(convert(cast(responseCode, "int") / 100, "string"), "xx") as httpResponseGroup,
-    convert((responseDurationNanoSec / 1000000), "double") as responseTime
+    convert(responseDurationNanoSec, "double") / 1000000 as responseTimeSec,
+    ifThenElse(responseSizeBytes is null, 0L, responseSizeBytes) as responseSizeBytes
 insert into ProcessedTelemetryStream;
 
 from every(e1=ProcessedTelemetryStream) ->
-    not ProcessedTelemetryStream[e1.requestId == e2.requestId] for 10 minutes
-    or e2=ProcessedTelemetryStream[e1.requestId == e2.requestId] within 10 minutes
+    not ProcessedTelemetryStream[e1.requestId == e2.requestId] for 1 minute
+    or e2=ProcessedTelemetryStream[e1.requestId == e2.requestId] within 1 minute
 select
-    e1.sourceNamespace, e1.sourceCell, e1.sourceVICKService, e1.destinationNamespace, e1.destinationCell,
-    e1.destinationVICKService, e1.requestPath, e1.requestMethod, e1.httpResponseGroup, e1.responseTime
+    e1.sourceNamespace,
+    e1.sourceCell,
+    e1.sourceVICKService,
+    e1.destinationNamespace,
+    e1.destinationCell,
+    e1.destinationVICKService,
+    e1.requestPath,
+    e1.requestMethod,
+    e1.httpResponseGroup,
+    e1.responseTimeSec,
+    ifThenElse(e1.contextReporterKind == "outbound", e1.responseSizeBytes, e2.responseSizeBytes) as responseSizeBytes
 insert into ProcessedRequestsStream;

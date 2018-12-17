@@ -26,29 +26,59 @@ public enum SiddhiStoreQueryTemplates {
      * Siddhi Store Queries Start Here
      */
 
-    CELL_LEVEL_REQUEST_AGGREGATION("from RequestAggregation\n" +
+    REQUEST_AGGREGATION_CELLS("from RequestAggregation\n" +
             "within ${" + Params.QUERY_START_TIME + "}, ${" + Params.QUERY_END_TIME + "}\n" +
-            "per ${" + Params.TIME_GRANULARITY + "}\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
             "select sourceCell, destinationCell, " +
             "sum(avgResponseTime * requestCount) / sum(requestCount) as avgResponseTime, " +
             "sum(requestCount) as requestCount\n" +
             "group by sourceCell, destinationCell"
     ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
+            "on (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +
+            "and (${" + Params.QUERY_END_TIME + "}L == -1 or startTime <= ${" + Params.QUERY_END_TIME + "}L)\n" +
             "select cell, serviceName, operationName\n" +
             "group by cell, serviceName, operationName"
     ),
     DISTRIBUTED_TRACING_SEARCH_GET_TRACE_IDS("from DistributedTracingTable\n" +
-            "on (${" + Params.CELL + "} == \"\" or cell == ${" + Params.CELL + "}) " +
-            "and (${" + Params.SERVICE_NAME + "} == \"\" or serviceName == ${" + Params.SERVICE_NAME + "}) " +
-            "and (${" + Params.OPERATION_NAME + "} == \"\" or " +
-            "operationName == ${" + Params.OPERATION_NAME + "}) " +
-            "and (${" + Params.MIN_DURATION + "} == -1 or duration >= ${" + Params.MIN_DURATION + "}) " +
-            "and (${" + Params.MAX_DURATION + "} == -1 or duration <= ${" + Params.MAX_DURATION + "}) " +
-            "and (${" + Params.QUERY_START_TIME + "} == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}) " +
-            "and (${" + Params.QUERY_END_TIME + "} == -1 or startTime <= ${" + Params.QUERY_END_TIME + "})\n" +
+            "on (\"${" + Params.CELL + "}\" == \"\" or cell == \"${" + Params.CELL + "}\") " +
+            "and (\"${" + Params.SERVICE_NAME + "}\" == \"\" or " +
+            "serviceName == \"${" + Params.SERVICE_NAME + "}\") " +
+            "and (\"${" + Params.OPERATION_NAME + "}\" == \"\" or " +
+            "operationName == \"${" + Params.OPERATION_NAME + "}\") " +
+            "and (${" + Params.MIN_DURATION + "}L == -1 or duration >= ${" + Params.MIN_DURATION + "}L) " +
+            "and (${" + Params.MAX_DURATION + "}L == -1 or duration <= ${" + Params.MAX_DURATION + "}L) " +
+            "and (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +
+            "and (${" + Params.QUERY_END_TIME + "}L == -1 or startTime <= ${" + Params.QUERY_END_TIME + "}L)\n" +
             "select traceId\n" +
             "group by traceId"
+    ),
+    DISTRIBUTED_TRACING_SEARCH_GET_TRACE_IDS_WITH_TAGS("from DistributedTracingTable\n" +
+            "on (\"${" + Params.CELL + "}\" == \"\" or cell == \"${" + Params.CELL + "}\") " +
+            "and (\"${" + Params.SERVICE_NAME + "}\" == \"\" or " +
+            "serviceName == \"${" + Params.SERVICE_NAME + "}\") " +
+            "and (\"${" + Params.OPERATION_NAME + "}\" == \"\" or " +
+            "operationName == \"${" + Params.OPERATION_NAME + "}\") " +
+            "and (${" + Params.MIN_DURATION + "}L == -1 or duration >= ${" + Params.MIN_DURATION + "}L) " +
+            "and (${" + Params.MAX_DURATION + "}L == -1 or duration <= ${" + Params.MAX_DURATION + "}L) " +
+            "and (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +
+            "and (${" + Params.QUERY_END_TIME + "}L == -1 or startTime <= ${" + Params.QUERY_END_TIME + "}L)\n" +
+            "select traceId, tags"
+    ),
+    DISTRIBUTED_TRACING_SEARCH_GET_MULTIPLE_CELL_SERVICE_COUNTS("from DistributedTracingTable\n" +
+            "on ${" + Params.CONDITION + "}\n" +
+            "select traceId, cell, serviceName, count() as count\n" +
+            "group by traceId, cell, serviceName\n" +
+            "order by startTime desc"
+    ),
+    DISTRIBUTED_TRACING_SEARCH_GET_ROOT_SPAN_METADATA("from DistributedTracingTable\n" +
+            "on traceId == spanId and (${" + Params.CONDITION + "})\n" +
+            "select traceId, serviceName, operationName, startTime, duration"
+    ),
+    DISTRIBUTED_TRACING_GET_TRACE("from DistributedTracingTable\n" +
+            "on traceId == \"${" + Params.TRACE_ID + "}\"\n" +
+            "select traceId, spanId, parentId, namespace, cell, serviceName, pod, operationName, kind, startTime, " +
+            "duration, tags"
     );
 
     /*
@@ -73,6 +103,9 @@ public enum SiddhiStoreQueryTemplates {
         public static final String OPERATION_NAME = "operationName";
         public static final String MIN_DURATION = "minDuration";
         public static final String MAX_DURATION = "maxDuration";
+        public static final String TRACE_ID = "traceId";
+        public static final String TAGS_JSON_ENCODED = "tagsJsonEncoded";
+        public static final String CONDITION = "condition";     // Should be used with caution considering SQL injection
     }
 
     /**

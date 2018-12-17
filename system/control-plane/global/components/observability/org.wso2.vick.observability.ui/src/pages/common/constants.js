@@ -39,8 +39,9 @@ const Constants = {
         MICROSERVICE_NAME_PATTERN: /^(.+)--(.+)$/
     },
     System: {
-        ISTIO_MIXER_NAME: "istio-mixer",
-        GLOBAL_GATEWAY_NAME: "global-gateway"
+        ISTIO_MIXER_NAME_PATTERN: /^istio-mixer$/,
+        GLOBAL_GATEWAY_NAME_PATTERN: /^global-gateway$/,
+        SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN: /^async\sext_authz\segress$/
     },
     ComponentType: {
         VICK: "VICK",

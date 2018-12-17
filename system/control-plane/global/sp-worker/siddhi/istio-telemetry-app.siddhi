@@ -80,9 +80,10 @@ define stream TelemetryStream(sourceUID string, sourceIP string, sourceLabels st
 @sink(type="inMemory", topic="istio-mixer-report", @map(type="passThrough"))
 define stream TelemetryInMemorySink(sourceNamespace string, sourceCell string, sourceVICKService string,
                                     sourcePod string, destinationNamespace string, destinationCell string,
-                                    destinationVICKService string, destinationPod string, requestHeadersMap object,
-                                    requestPath string, requestMethod string, responseCode long,
-                                    responseDurationNanoSec int, contextReporterKind string);
+                                    destinationVICKService string, destinationPod string, contextReporterKind string,
+                                    requestHeadersMap object, requestPath string, requestMethod string,
+                                    requestSizeBytes long, responseCode long, responseDurationNanoSec int,
+                                    responseSizeBytes long);
 
 define function extractFromUID[javascript] return string {
     var uid = data[0];
@@ -105,12 +106,14 @@ from TelemetryStream[(not sourceUID is null) and (not destinationUID is null)]
 select
     str:replaceFirst(sourceUID, "^kubernetes://", "") as sourceUID,
     str:replaceFirst(destinationUID, "^kubernetes://", "") as destinationUID,
+    contextReporterKind,
     ifThenElse(requestHeaders is null, map:create(), map:createFromJSON(requestHeaders)) as requestHeadersMap,
     requestPath,
     requestMethod,
+    requestTotalSize,
     responseCode,
     responseDurationNanoSec,
-    contextReporterKind
+    responseTotalSize
 insert into PreprocessedTelemetryStream;
 
 from PreprocessedTelemetryStream
@@ -123,12 +126,14 @@ select
     extractFromUID(destinationUID, 2) as destinationCell,
     extractFromUID(destinationUID, 3) as destinationVICKService,
     extractFromUID(destinationUID, 1) as destinationPod,
+    contextReporterKind,
     requestHeadersMap,
     requestPath,
     requestMethod,
+    requestTotalSize as requestSizeBytes,
     responseCode,
     responseDurationNanoSec,
-    contextReporterKind
+    responseTotalSize as responseSizeBytes
 insert into ExtractedTelemetryStream;
 
 -- Storing the required attributes in a in memory sink (To be accessed from other siddhi apps)
@@ -147,10 +152,12 @@ select
     ifThenElse(destinationVICKService == "gateway", str:concat(destinationCell, "-cell-gateway"),
         destinationVICKService) as destinationVICKService,
     destinationPod,
+    contextReporterKind,
     requestHeadersMap,
     requestPath,
     requestMethod,
+    requestSizeBytes,
     responseCode,
     responseDurationNanoSec,
-    contextReporterKind
+    responseSizeBytes
 insert into TelemetryInMemorySink;

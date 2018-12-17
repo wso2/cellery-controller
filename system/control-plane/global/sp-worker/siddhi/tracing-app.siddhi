@@ -9,9 +9,10 @@ define stream ZipkinStreamIn (traceId string, id string, parentId string, name s
 @source(type="inMemory", topic="istio-mixer-report", @map(type="passThrough"))
 define stream TelemetryStreamIn (sourceNamespace string, sourceCell string, sourceVICKService string,
                                  sourcePod string, destinationNamespace string, destinationCell string,
-                                 destinationVICKService string, destinationPod string, requestHeadersMap object,
-                                 requestPath string, requestMethod string, responseCode long,
-                                 responseDurationNanoSec int, contextReporterKind string);
+                                 destinationVICKService string, destinationPod string, contextReporterKind string,
+                                 requestHeadersMap object, requestPath string, requestMethod string,
+                                 requestSizeBytes long, responseCode long, responseDurationNanoSec int,
+                                 responseSizeBytes long);
 
 @Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
@@ -42,7 +43,7 @@ define function extractFromServiceName[javascript] return string {
     if (!extractedData && index == 2) {
         extractedData = serviceName;
     }
-    return extractedData;
+    return extractedData.replace(/_/g, "-");
 };
 
 --
@@ -63,10 +64,10 @@ select
     timestamp as startTime,
     duration,
     tags
-insert into ProcessedZipkinStream;
-
-from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
-select *
+--insert into ProcessedZipkinStream;
+--
+--from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
+--select *
 update or insert into DistributedTracingTable
     set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
         DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,

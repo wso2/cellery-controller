@@ -72,7 +72,7 @@ class Span {
      * @returns {boolean} True if this is a sibling of the other span
      */
     isSiblingOf = (span) => Boolean(span) && this.traceId === span.traceId && this.spanId === span.spanId
-            && ((this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER)
+        && ((this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER)
             || (this.kind === Constants.Span.Kind.SERVER && span.kind === Constants.Span.Kind.CLIENT));
 
     /**
@@ -202,7 +202,14 @@ class Span {
      *
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
-    isFromIstioSystemComponent = () => this.serviceName === Constants.System.ISTIO_MIXER_NAME;
+    isFromIstioSystemComponent = () => Constants.System.ISTIO_MIXER_NAME_PATTERN.test(this.serviceName);
+
+    /**
+     * Check whether a span belongs to the side car.
+     *
+     * @returns {boolean} True if the span is from side car
+     */
+    isFromSideCar = () => this.tags.component === "proxy";
 
     /**
      * Check whether a span belongs to the VICK System.
@@ -210,7 +217,8 @@ class Span {
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
     isFromVICKSystemComponent = () => (
-        this.isFromCellGateway() || this.serviceName === Constants.System.GLOBAL_GATEWAY_NAME
+        this.isFromCellGateway() || Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(this.serviceName)
+            || Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN.test(this.operationName)
     );
 
     /**

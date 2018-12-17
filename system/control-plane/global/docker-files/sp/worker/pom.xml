@@ -89,6 +89,10 @@
             <groupId>org.wso2.vick</groupId>
             <artifactId>org.wso2.vick.observability.api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.observability.model.generator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -126,7 +130,8 @@
                             <outputDirectory>${project.build.directory}/files/non-osgi/</outputDirectory>
                             <excludeArtifactIds>
                                 org.wso2.vick.telemetry.receiver, commons-io, gogoproto-java, grpc-wso2,
-                                org.wso2.vick.tracing.receiver, protobuf-wso2, org.wso2.vick.observability.api
+                                org.wso2.vick.tracing.receiver, protobuf-wso2, org.wso2.vick.observability.api,
+                                org.wso2.vick.observability.model.generator
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                         </configuration>

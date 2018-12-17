@@ -29,7 +29,7 @@ import org.wso2.msf4j.MicroservicesRunner;
 import org.wso2.vick.observability.api.AggregatedRequestsAPI;
 import org.wso2.vick.observability.api.DependencyModelAPI;
 import org.wso2.vick.observability.api.DistributedTracingAPI;
-import org.wso2.vick.observability.api.exception.mapper.ServerErrorExceptionMapper;
+import org.wso2.vick.observability.api.exception.mapper.APIExceptionMapper;
 import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
 import org.wso2.vick.observability.model.generator.ModelManager;
@@ -63,7 +63,7 @@ public class ObservabilityDS {
             int offset = ServiceHolder.getCarbonRuntime().getConfiguration().getPortsConfig().getOffset();
             ServiceHolder.setMicroservicesRunner(new MicroservicesRunner(DEFAULT_OBSERVABILITY_API_PORT + offset)
                     .addGlobalRequestInterceptor(new CORSInterceptor())
-                    .addExceptionMapper(new ServerErrorExceptionMapper())
+                    .addExceptionMapper(new APIExceptionMapper())
                     .deploy(new DependencyModelAPI(), new AggregatedRequestsAPI(), new DistributedTracingAPI())
             );
             ServiceHolder.getMicroservicesRunner().start();
