@@ -90,6 +90,9 @@ class ColorGenerator {
         if (percentage < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
             colorKey = ColorGenerator.ERROR;
         }
+        if (percentage < 0 || percentage > 1) {
+            colorKey = ColorGenerator.UNKNOWN;
+        }
         return this.colorMap[colorKey];
     };
 

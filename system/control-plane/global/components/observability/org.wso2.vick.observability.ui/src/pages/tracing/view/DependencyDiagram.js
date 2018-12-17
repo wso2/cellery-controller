@@ -33,7 +33,7 @@ const styles = () => ({
 
 class DependencyDiagram extends React.Component {
 
-    static MIN_RADIUS = 40;
+    static MIN_RADIUS = 60;
     static MAX_RADIUS = 120;
 
     render = () => {
@@ -129,6 +129,11 @@ class DependencyDiagram extends React.Component {
                                     let nodeSVGContent;
                                     const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
                                     if (node.span.hasError()) {
+                                        const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
+
+                                        const iconTranslation = radius * (Math.PI / 4);
+                                        const xTranslation = 150;
+                                        const yTranslation = 120 - iconTranslation - 30;
                                         nodeSVGContent = (
                                             <g>
                                                 <g>
@@ -136,14 +141,15 @@ class DependencyDiagram extends React.Component {
                                                         {circle}
                                                     </g>
                                                 </g>
-                                                <g transform="translate(0, 0)">
-                                                    <path stroke="#fff" strokeWidth="3"
-                                                        fill={colorGenerator.getColor(ColorGenerator.ERROR)}
-                                                        d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,
-                                                           42.9s42.9-19.3,42.9-42.9S170.1,6.1, 146.5,6.1z"/>
+                                                <g transform={
+                                                    `translate(${xTranslation}, ${yTranslation}) scale(0.4, 0.4)`
+                                                }>
+                                                    <path stroke="#fff" strokeWidth="10" fill={errorColor}
+                                                        d="M120.5,9.6C59.1,9.6,9,59.8,9,121.3S59.1,233,120.5,
+                                                             233S232,182.8,232,121.3S181.9,9.6,120.5,9.6z"/>
                                                     <path fill="#ffffff"
-                                                        d="M144.6,56.9h7.9v7.9h-7.9V56.9z
-                                                           M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                                                        d="M105.4,164.5h29.9v29.9h-29.9V164.5z M105.4,
+                                                        44.2h29.9v90.1h-29.9V44.2z"/>
                                                 </g>
                                             </g>
                                         );
