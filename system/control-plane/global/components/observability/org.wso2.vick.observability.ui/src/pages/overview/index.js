@@ -359,7 +359,7 @@ class Overview extends React.Component {
         }
         axios({
             method: "GET",
-            url: `http://localhost:9123/dependency-model/cell-overview${queryParams}`
+            url: `http://localhost:9123/api/dependency-model/cells${queryParams}`
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data

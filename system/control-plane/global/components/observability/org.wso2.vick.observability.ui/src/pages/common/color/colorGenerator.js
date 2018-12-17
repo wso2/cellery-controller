@@ -1,21 +1,20 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
+import Blue from "@material-ui/core/colors/blue";
 import Green from "@material-ui/core/colors/green";
 import Red from "@material-ui/core/colors/red";
 import {StateHolder} from "../state";
@@ -33,6 +32,7 @@ class ColorGenerator {
     static SUCCESS = "SUCCESS";
     static WARNING = "WARNING";
     static ERROR = "ERROR";
+    static CLIENT_ERROR = "CLIENT_ERROR";
 
     constructor() {
         this.colorMap = {
@@ -40,8 +40,9 @@ class ColorGenerator {
             [ColorGenerator.ISTIO]: "#434da1",
             [ColorGenerator.UNKNOWN]: "#71736f",
             [ColorGenerator.SUCCESS]: Green[500],
-            [ColorGenerator.WARNING]: Yellow[700],
-            [ColorGenerator.ERROR]: Red[500]
+            [ColorGenerator.WARNING]: Yellow[800],
+            [ColorGenerator.ERROR]: Red[500],
+            [ColorGenerator.CLIENT_ERROR]: Blue[500]
         };
     }
 

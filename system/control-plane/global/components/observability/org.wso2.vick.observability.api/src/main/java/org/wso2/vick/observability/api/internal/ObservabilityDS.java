@@ -29,9 +29,10 @@ import org.wso2.msf4j.MicroservicesRunner;
 import org.wso2.vick.observability.api.AggregatedRequestsAPI;
 import org.wso2.vick.observability.api.DependencyModelAPI;
 import org.wso2.vick.observability.api.DistributedTracingAPI;
-import org.wso2.vick.observability.api.exception.mapper.ServerErrorExceptionMapper;
+import org.wso2.vick.observability.api.exception.mapper.APIExceptionMapper;
 import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
+import org.wso2.vick.observability.model.generator.ModelManager;
 
 /**
  * This is the declarative service component of the observability API component,
@@ -62,7 +63,7 @@ public class ObservabilityDS {
             int offset = ServiceHolder.getCarbonRuntime().getConfiguration().getPortsConfig().getOffset();
             ServiceHolder.setMicroservicesRunner(new MicroservicesRunner(DEFAULT_OBSERVABILITY_API_PORT + offset)
                     .addGlobalRequestInterceptor(new CORSInterceptor())
-                    .addExceptionMapper(new ServerErrorExceptionMapper())
+                    .addExceptionMapper(new APIExceptionMapper())
                     .deploy(new DependencyModelAPI(), new AggregatedRequestsAPI(), new DistributedTracingAPI())
             );
             ServiceHolder.getMicroservicesRunner().start();
@@ -125,5 +126,20 @@ public class ObservabilityDS {
     }
 
     protected void unsetDataSourceService(DataSourceService dataSourceService) {
+    }
+
+    @Reference(
+            name = "org.wso2.vick.observability.model.generator.ModelManager",
+            service = ModelManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetModelManager"
+    )
+    protected void setModelManager(ModelManager modelManager) {
+        ServiceHolder.setModelManager(modelManager);
+    }
+
+    protected void unsetModelManager(ModelManager modelManager) {
+        ServiceHolder.setCarbonRuntime(null);
     }
 }

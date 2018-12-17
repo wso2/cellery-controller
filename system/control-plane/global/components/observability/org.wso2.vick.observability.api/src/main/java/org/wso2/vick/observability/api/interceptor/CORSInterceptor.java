@@ -20,24 +20,29 @@ import org.apache.commons.lang3.StringUtils;
 import org.wso2.msf4j.Request;
 import org.wso2.msf4j.Response;
 import org.wso2.msf4j.interceptor.RequestInterceptor;
+import org.wso2.vick.observability.api.Constants;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Used for applying header for allowing cross origin requests.
- *
+ * <p>
  * This alone is not enough since the browsers send an OPTIONS HTTP call to the endpoint first to check
  * which methods are allowed. Therefore an endpoint with HTTP Method OPTIONS should be added to all services.
  */
 public class CORSInterceptor implements RequestInterceptor {
     @Override
     public boolean interceptRequest(Request request, Response response) {
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-        response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader(Constants.ACCESS_CONTROL_ALLOW_METHODS, HttpMethod.GET + "," + HttpMethod.POST +
+                "," + HttpMethod.PUT + "," + HttpMethod.DELETE);
+        response.setHeader(Constants.ACCESS_CONTROL_MAX_AGE, Constants.MAX_AGE);
+        response.setHeader(Constants.ACCESS_CONTROL_ALLOW_HEADERS, HttpHeaders.CONTENT_TYPE);
 
-        if (StringUtils.isNotBlank(request.getHeader("Origin"))) {
-            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        if (StringUtils.isNotBlank(request.getHeader(Constants.ORIGIN))) {
+            response.setHeader(Constants.ACCESS_CONTROL_ALLOW_ORIGIN, request.getHeader(Constants.ORIGIN));
         } else {
-            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader(Constants.ACCESS_CONTROL_ALLOW_ORIGIN, Constants.ALL_ORIGIN);
         }
         return true;
     }

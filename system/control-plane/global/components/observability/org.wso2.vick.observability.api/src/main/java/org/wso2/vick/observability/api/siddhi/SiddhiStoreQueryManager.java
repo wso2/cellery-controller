@@ -35,14 +35,14 @@ public class SiddhiStoreQueryManager {
     private static final String REQUEST_AGGREGATION_DEFINITION = "define stream ProcessedRequestsStream(" +
                 "sourceNamespace string, sourceCell string, sourceVICKService string, destinationNamespace string, " +
                 "destinationCell string, destinationVICKService string, requestPath string, requestMethod string, " +
-                "httpResponseGroup string, responseTime double);" +
+                "httpResponseGroup string, responseTimeSec double, responseSizeBytes long);" +
             "@store(type=\"rdbms\", datasource=\"VICK_OBSERVABILITY_DB\")\n" +
             "@purge(enable=\"false\")\n" +
             "define aggregation RequestAggregation from ProcessedRequestsStream\n" +
-            "select\n" +
-                "sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
+                "select sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
                 "destinationVICKService, requestPath, requestMethod, httpResponseGroup, " +
-                "avg(responseTime) as avgResponseTime, count() as requestCount\n" +
+                "avg(responseTimeSec) as avgResponseTimeSec, avg(responseSizeBytes) as avgResponseSizeBytes, " +
+                "count() as requestCount\n" +
             "group by sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
                 "destinationVICKService, requestPath, requestMethod, httpResponseGroup\n" +
             "aggregate every sec...year;";
