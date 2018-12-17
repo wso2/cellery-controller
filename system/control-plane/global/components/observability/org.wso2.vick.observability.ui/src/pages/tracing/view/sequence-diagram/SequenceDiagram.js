@@ -246,7 +246,7 @@ class SequenceDiagram extends React.Component {
      */
     addCellConnections() {
         let callId = 1;
-        const tree = TracingUtils.buildTree(this.props.spans);
+        const tree = TracingUtils.getTreeRoot(this.props.spans);
         let dataText = "";
         tree.walk((span, data) => {
             let parentCellName;

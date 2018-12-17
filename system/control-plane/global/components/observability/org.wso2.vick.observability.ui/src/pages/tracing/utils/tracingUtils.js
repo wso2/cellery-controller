@@ -58,36 +58,25 @@ class TracingUtils {
         // Fixing siblings kinds
         for (let i = 0; i < spansList.length; i++) {
             const span = spansList[i];
-            let siblingSpan;
+
+            let hasSameServiceParent = false;
+            let hasSameServiceChild = false;
             for (let j = 0; j < spansList.length; j++) {
-                if (i !== j && span.spanId === spansList[j].spanId) {
-                    siblingSpan = spansList[j];
-                }
-            }
-            if (siblingSpan) {
-                if (!span.kind || !siblingSpan.kind) {
-                    const setSpanKind = (span, kind) => {
-                        if (!span.kind) {
-                            span.kind = kind;
-                            span.tags["span.kind"] = kind;
-                        }
-                    };
-                    if (span.kind === Constants.Span.Kind.CLIENT
-                        || siblingSpan.kind === Constants.Span.Kind.SERVER
-                        || span.startTime < siblingSpan.startTime) {
-                        setSpanKind(span, Constants.Span.Kind.CLIENT);
-                        setSpanKind(siblingSpan, Constants.Span.Kind.SERVER);
-                    } else {
-                        setSpanKind(span, Constants.Span.Kind.SERVER);
-                        setSpanKind(siblingSpan, Constants.Span.Kind.CLIENT);
+                const consideredSpan = spansList[j];
+                if (i !== j && !span.isFromSideCar() && span.serviceName === consideredSpan.serviceName) {
+                    if (span.parentId === consideredSpan.spanId) {
+                        hasSameServiceParent = consideredSpan;
+                    }
+                    if (span.spanId === consideredSpan.parentId) {
+                        hasSameServiceChild = consideredSpan;
+                    }
+                    if (hasSameServiceChild && hasSameServiceParent) {
+                        break;
                     }
                 }
-            } else {
-                const unsetSpanKind = (span) => {
-                    span.kind = null;
-                    Reflect.deleteProperty(span.tags, "span.kind");
-                };
-                unsetSpanKind(span);
+            }
+            if (hasSameServiceChild && hasSameServiceParent) {
+                span.kind = null;
             }
         }
 
@@ -100,12 +89,6 @@ class TracingUtils {
             }
         }
 
-        // Calculating the tree depths
-        rootSpan.walk((span, data) => {
-            span.treeDepth = data;
-            return data + 1;
-        }, 0);
-
         return rootSpan;
     };
 
@@ -115,7 +98,7 @@ class TracingUtils {
      * @param {Span} tree The root span of the tree
      */
     static labelSpanTree = (tree) => {
-        tree.walk((span, data) => {
+        tree.walk((span) => {
             if (span.isFromIstioSystemComponent()) {
                 span.componentType = Constants.ComponentType.ISTIO;
             } else if (span.isFromVICKSystemComponent()) {
@@ -123,17 +106,29 @@ class TracingUtils {
             } else {
                 span.componentType = Constants.ComponentType.MICROSERVICE;
             }
-
-            let cell = data;
-            if (span.isFromCellGateway()) {
-                cell = span.cell;
-                span.serviceName = `${cell.name}-cell-gateway`;
-            } else if (span.componentType !== Constants.ComponentType.ISTIO) {
-                span.cell = cell;
-            }
-
-            return cell;
         }, null);
+
+        // Calculating the tree depths
+        tree.walk((span, data) => {
+            span.treeDepth = data;
+            return data + 1;
+        }, 0);
+    };
+
+    /**
+     * Get the root from a list containing the spans of a tree.
+     *
+     * @param {Array.<Span>} spans The list of spans
+     * @returns {Span} The tree root
+     */
+    static getTreeRoot = (spans) => {
+        const filteredSpans = spans.filter((span) => span.parent === null);
+        if (spans.length !== 1 && filteredSpans.length === spans.length) {
+            throw Error("The spans in the list does not contain a tree structure");
+        } else if (filteredSpans.length !== 1) {
+            throw Error(`Invalid Trace Tree: Expected 1 root span, found ${filteredSpans.length} spans`);
+        }
+        return filteredSpans[0];
     };
 
     /**

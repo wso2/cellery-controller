@@ -55,10 +55,18 @@ class View extends React.Component {
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
             isLoading: true
         };
+
+        this.traceViewRef = React.createRef();
     }
 
     componentDidMount = () => {
         this.loadTrace(true);
+    };
+
+    componentDidUpdate = () => {
+        if (this.traceViewRef.current && this.traceViewRef.current.draw) {
+            this.traceViewRef.current.draw();
+        }
     };
 
     loadTrace = (isUserAction) => {
@@ -71,15 +79,26 @@ class View extends React.Component {
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: "/tracing",
-                method: "POST",
-                data: {
-                    traceId: traceId
-                }
+                url: `/traces/${traceId}`,
+                method: "GET"
             },
             globalState
         ).then((data) => {
-            const spans = data.map((dataItem) => new Span(dataItem));
+            const spans = data.map((dataItem) => new Span({
+                traceId: dataItem[0],
+                spanId: dataItem[1],
+                parentId: dataItem[2],
+                namespace: dataItem[3],
+                cell: dataItem[4],
+                serviceName: dataItem[5],
+                pod: dataItem[6],
+                operationName: dataItem[7],
+                kind: dataItem[8],
+                startTime: dataItem[9],
+                duration: dataItem[10],
+                tags: dataItem[11]
+            }));
+
             const rootSpan = TracingUtils.buildTree(spans);
             TracingUtils.labelSpanTree(rootSpan);
 
@@ -114,23 +133,23 @@ class View extends React.Component {
         });
 
         // Updating the Browser URL
-        const queryParams = HttpUtils.generateQueryParamString({
+        const queryParamsString = HttpUtils.generateQueryParamString({
             tab: this.tabs[value]
         });
-        history.replace(match.url + queryParams, {
+        history.replace(match.url + queryParamsString, {
             ...location.state
         });
     };
 
     render = () => {
-        const {classes, match} = this.props;
+        const {classes, location, match} = this.props;
         const {isLoading, spans, selectedTabIndex} = this.state;
+        const selectedMicroservice = location.state.selectedMicroservice;
 
         const traceId = match.params.traceId;
 
         const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
         const SelectedTabContent = tabContent[selectedTabIndex];
-
 
         return (
             isLoading
@@ -151,7 +170,8 @@ class View extends React.Component {
                                             <Tab label="Sequence Diagram"/>
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
-                                        <SelectedTabContent spans={spans}/>
+                                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                                            selectedMicroservice={selectedMicroservice}/>
                                     </Paper>
                                 )
                         }
@@ -174,7 +194,13 @@ View.propTypes = {
         replace: PropTypes.func.isRequired
     }),
     location: PropTypes.shape({
-        search: PropTypes.string.isRequired
+        search: PropTypes.string.isRequired,
+        state: PropTypes.shape({
+            selectedMicroservice: PropTypes.shape({
+                cellName: PropTypes.string.isRequired,
+                serviceName: PropTypes.string.isRequired
+            }).isRequired
+        }).isRequired
     }).isRequired
 };
 

@@ -19,6 +19,7 @@ package org.wso2.vick.observability.api.exception.mapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.wso2.vick.observability.api.exception.InvalidParamException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -28,15 +29,26 @@ import javax.ws.rs.ext.ExceptionMapper;
 /**
  * Exception Mapper for mapping Server Error Exceptions.
  */
-public class ServerErrorExceptionMapper implements ExceptionMapper {
+public class APIExceptionMapper implements ExceptionMapper {
     private Gson gson = new Gson();
 
     @Override
     public Response toResponse(Throwable throwable) {
-        JsonObject errorResponseJsonObject = new JsonObject();
-        errorResponseJsonObject.add("message", new JsonPrimitive("Unknown Error Occurred"));
+        Response.Status status;
+        String message;
 
-        return Response.serverError()
+        if (throwable instanceof InvalidParamException) {
+            status = Response.Status.PRECONDITION_FAILED;
+            message = throwable.getMessage();
+        } else {
+            status = Response.Status.INTERNAL_SERVER_ERROR;
+            message = "Unknown Error Occurred";
+        }
+
+        JsonObject errorResponseJsonObject = new JsonObject();
+        errorResponseJsonObject.add("message", new JsonPrimitive(message));
+
+        return Response.status(status)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .entity(gson.toJson(errorResponseJsonObject))
                 .build();

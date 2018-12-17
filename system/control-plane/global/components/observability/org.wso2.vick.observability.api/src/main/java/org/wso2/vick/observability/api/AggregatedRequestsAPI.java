@@ -18,6 +18,7 @@ package org.wso2.vick.observability.api;
 
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryTemplates;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
@@ -35,10 +36,10 @@ public class AggregatedRequestsAPI {
     @GET
     @Path("/cells")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getForCells(@QueryParam("queryStartTime") String queryStartTime,
-                                @QueryParam("queryEndTime") String queryEndTime,
-                                @QueryParam("timeGranularity") String timeGranularity) {
-        Object[][] results = SiddhiStoreQueryTemplates.CELL_LEVEL_REQUEST_AGGREGATION.builder()
+    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                @QueryParam("queryEndTime") long queryEndTime,
+                                @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS.builder()
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
                 .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)

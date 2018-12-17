@@ -16,7 +16,6 @@
 
 import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
-import {ColorGenerator} from "../common/color";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../common/utils/httpUtils";
@@ -268,11 +267,11 @@ class Search extends React.Component {
         this.search(true);
     };
 
-    onGlobalRefresh = (isUserAction) => {
+    onGlobalRefresh = (isUserAction, queryStartTime, queryEndTime) => {
         if (this.state.hasSearchCompleted) {
             this.search(isUserAction);
         }
-        this.loadCellData(isUserAction && !this.state.hasSearchCompleted);
+        this.loadCellData(isUserAction && !this.state.hasSearchCompleted, queryStartTime, queryEndTime);
     };
 
     /**
@@ -280,17 +279,23 @@ class Search extends React.Component {
      * Call the backend and search for traces.
      *
      * @param {boolean} isUserAction Show the overlay while loading
+     * @param {number} queryStartTime Start time of the global filter
+     * @param {number} queryEndTime End time of the global filter
      */
-    loadCellData = (isUserAction) => {
+    loadCellData = (isUserAction, queryStartTime, queryEndTime) => {
         const {globalState} = this.props;
         const self = this;
+        const filter = {
+            queryStartTime: queryStartTime.valueOf(),
+            queryEndTime: queryEndTime.valueOf()
+        };
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: "/tracing/metadata",
+                url: `/traces/metadata${HttpUtils.generateQueryParamString(filter)}`,
                 method: "GET"
             },
             globalState
@@ -299,8 +304,14 @@ class Search extends React.Component {
             const microservices = [];
             const operations = [];
 
-            for (let i = 0; i < data.length; i++) {
-                const span = new Span(data[i]);
+            const cellData = data.map((dataItem) => ({
+                cell: dataItem[0],
+                serviceName: dataItem[1],
+                operationName: dataItem[2]
+            }));
+
+            for (let i = 0; i < cellData.length; i++) {
+                const span = new Span(cellData[i]);
                 const cell = span.cell;
 
                 const cellName = (cell ? cell.name : null);
@@ -357,7 +368,7 @@ class Search extends React.Component {
      * @returns {Function} The on change handler
      */
     getChangeHandler = (name) => (event) => {
-        const value = event.currentTarget.value;
+        const value = event.target.value;
         this.setState((prevState) => ({
             ...prevState,
             filter: {
@@ -434,83 +445,50 @@ class Search extends React.Component {
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: "/tracing/search",
-                method: "POST",
-                data: search
+                url: `/traces/search${HttpUtils.generateQueryParamString(search)}`,
+                method: "GET"
             },
             globalState
         ).then((data) => {
-            const traces = {};
-            for (let i = 0; i < data.length; i++) {
-                const dataItem = data[i];
-                if (!traces[dataItem.traceId]) {
-                    traces[dataItem.traceId] = {};
-                }
-                if (!traces[dataItem.traceId][dataItem.cell]) {
-                    traces[dataItem.traceId][dataItem.cell] = {};
-                }
-                if (!traces[dataItem.traceId][dataItem.cell][dataItem.serviceName]) {
-                    traces[dataItem.traceId][dataItem.cell][dataItem.serviceName] = {};
-                }
-                const info = traces[dataItem.traceId][dataItem.cell][dataItem.serviceName];
-                info.count = dataItem.count;
-                info.rootServiceName = dataItem.rootServiceName;
-                info.rootOperationName = dataItem.rootOperationName;
-                info.rootStartTime = dataItem.rootStartTime;
-                info.rootDuration = dataItem.rootDuration;
-            }
-            const fillResult = (cell, services, result) => {
-                for (const serviceName in services) {
-                    if (services.hasOwnProperty(serviceName)) {
-                        const info = services[serviceName];
-
-                        const span = new Span({
-                            cell: cell,
-                            serviceName: serviceName
-                        });
-
-                        let cellNameKey;
-                        if (span.isFromVICKSystemComponent()) {
-                            cellNameKey = ColorGenerator.VICK;
-                        } else if (span.isFromIstioSystemComponent()) {
-                            cellNameKey = ColorGenerator.ISTIO;
-                        } else {
-                            cellNameKey = span.cell.name;
+            const rootSpans = data.rootSpans
+                .map((dataItem) => ({
+                    traceId: dataItem[0],
+                    rootServiceName: dataItem[1],
+                    rootOperationName: dataItem[2],
+                    rootStartTime: dataItem[3],
+                    rootDuration: dataItem[4]
+                }))
+                .reduce((accumulator, dataItem) => {
+                    accumulator[dataItem.traceId] = dataItem;
+                    return accumulator;
+                }, {});
+            const searchResults = data.spanCounts
+                .map((dataItem) => ({
+                    traceId: dataItem[0],
+                    cellNameKey: dataItem[1],
+                    serviceName: dataItem[2],
+                    count: dataItem[3]
+                }))
+                .reduce((accumulator, dataItem) => {
+                    if (accumulator[dataItem.traceId]) {
+                        if (!accumulator[dataItem.traceId].services) {
+                            accumulator[dataItem.traceId].services = [];
                         }
-
-                        result.rootServiceName = info.rootServiceName;
-                        result.rootOperationName = info.rootOperationName;
-                        result.rootStartTime = info.rootStartTime;
-                        result.rootDuration = info.rootDuration;
-                        result.services.push({
-                            cellNameKey: cellNameKey,
-                            serviceName: span.serviceName,
-                            count: info.count
-                        });
+                        accumulator[dataItem.traceId].services.push(dataItem);
                     }
-                }
-            };
-            const searchResults = [];
-            for (const traceId in traces) {
-                if (traces.hasOwnProperty(traceId)) {
-                    const cells = traces[traceId];
-                    const result = {
-                        traceId: traceId,
-                        services: []
-                    };
+                    return accumulator;
+                }, rootSpans);
 
-                    for (const cellName in cells) {
-                        if (cells.hasOwnProperty(cellName)) {
-                            fillResult(cellName, cells[cellName], result);
-                        }
-                    }
-                    searchResults.push(result);
+            const searchResultsArray = [];
+            for (const traceId in searchResults) {
+                if (searchResults.hasOwnProperty(traceId)) {
+                    searchResultsArray.push(searchResults[traceId]);
                 }
             }
             self.setState((prevState) => ({
                 ...prevState,
                 hasSearchCompleted: true,
-                searchResults: searchResults
+                searchResults: searchResultsArray
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
