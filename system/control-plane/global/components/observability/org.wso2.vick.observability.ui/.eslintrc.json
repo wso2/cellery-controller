@@ -176,7 +176,7 @@
         ],
         "max-lines": [
             "error",
-            600
+            700
         ],
         "max-nested-callbacks": "error",
         "max-params": "off",

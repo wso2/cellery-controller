@@ -16,18 +16,18 @@
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import Constants from "../common/constants";
 import DependencyGraph from "./DependencyGraph";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Grey from "@material-ui/core/colors/grey";
+import HttpUtils from "../common/utils/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
-import Constants from "../common/constants";
-import HttpUtils from "../common/utils/httpUtils";
-import QueryUtils from "../common/utils/queryUtils";
 import PropTypes from "prop-types";
+import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
 import StateHolder from "../common/state/stateHolder";
@@ -37,7 +37,6 @@ import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
-import moment from "moment";
 
 const graphConfig = {
     directed: true,
@@ -199,16 +198,15 @@ class Overview extends React.Component {
 
 
     getCellState = (nodeId) => {
-        let healthInfo = this.defaultState.healthInfo.find((element) => {
-            return element.nodeId === nodeId;
-        });
+        const healthInfo = this.defaultState.healthInfo.find((element) => element.nodeId === nodeId);
         return healthInfo.status;
     };
 
     onClickCell = (nodeId) => {
-        let fromTime = this.state.currentTimeRange.fromTime;
-        let toTime = this.state.currentTimeRange.toTime;
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        const fromTime = this.state.currentTimeRange.fromTime;
+        const toTime = this.state.currentTimeRange.toTime;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
+        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
         HttpUtils.callObservabilityAPI(
             {
                 url: `/http-requests/cells/${nodeId}/services${queryParams}`,
@@ -216,9 +214,7 @@ class Overview extends React.Component {
             },
             this.props.globalState
         ).then((response) => {
-            let cell = this.state.data.nodes.find((element) => {
-                return element.id === nodeId;
-            });
+            const cell = this.state.data.nodes.find((element) => element.id === nodeId);
             const serviceHealth = this.getServiceHealth(cell.services, response);
             const serviceHealthCount = this.getHealthCount(serviceHealth);
             const statusCodeContent = this.getStatusCodeContent(nodeId, this.defaultState.request.cellStats);
@@ -263,12 +259,14 @@ class Overview extends React.Component {
     getServiceHealth = (services, responseCodeStats) => {
         const {globalState} = this.props;
         const config = globalState.get(StateHolder.CONFIG);
-        let healthInfo = [];
+        const healthInfo = [];
         services.forEach((service) => {
-            let total = this.getTotalRequests(service, responseCodeStats, '*');
-            if (total !== 0) {
-                let error = this.getTotalRequests(service, responseCodeStats, '5xx');
-                let successPercentage = 1 - (error / total);
+            const total = this.getTotalRequests(service, responseCodeStats, "*");
+            if (total === 0) {
+                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: 1});
+            } else {
+                const error = this.getTotalRequests(service, responseCodeStats, "5xx");
+                const successPercentage = 1 - (error / total);
 
                 if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
                     healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: successPercentage});
@@ -277,8 +275,6 @@ class Overview extends React.Component {
                 } else {
                     healthInfo.push({nodeId: service, status: Constants.Status.Error, percentage: successPercentage});
                 }
-            } else {
-                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: 1});
             }
         });
         return healthInfo;
@@ -287,6 +283,7 @@ class Overview extends React.Component {
     onClickGraph = () => {
         const defaultState = JSON.parse(JSON.stringify(this.defaultState));
         this.setState((prevState) => ({
+            ...prevState,
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
@@ -306,10 +303,7 @@ class Overview extends React.Component {
     loadCellInfo = (nodes) => {
         const nodeInfo = [];
         nodes.forEach((node) => {
-            let healthInfo = this.defaultState.healthInfo.find((element) => {
-                return element.nodeId === node.id;
-            });
-            console.log(healthInfo);
+            const healthInfo = this.defaultState.healthInfo.find((element) => element.nodeId === node.id);
             nodeInfo.push([healthInfo.percentage, node.id, node.id]);
         });
         return nodeInfo;
@@ -318,9 +312,7 @@ class Overview extends React.Component {
     loadServicesInfo = (services, healthInfo) => {
         const serviceInfo = [];
         services.forEach((service) => {
-            let healthElement = healthInfo.find((element) => {
-                return element.nodeId === service;
-            });
+            const healthElement = healthInfo.find((element) => element.nodeId === service);
             serviceInfo.push([healthElement.percentage, service, service]);
         });
         return serviceInfo;
@@ -383,7 +375,7 @@ class Overview extends React.Component {
                         value: 0
                     }
                 ],
-                cellStats: [],
+                cellStats: []
             },
             healthInfo: [],
             isOverallSummary: true,
@@ -402,7 +394,6 @@ class Overview extends React.Component {
 
     callOverviewInfo = (fromTime, toTime) => {
         const colorGenerator = this.props.colorGenerator;
-        // TODO: Update the url to the WSO2-sp worker node.
         let queryParams = "";
         if (fromTime && toTime) {
             queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
@@ -416,7 +407,7 @@ class Overview extends React.Component {
         ).then((response) => {
             const result = response;
             this.defaultState.healthInfo = this.getCellHealth(result.nodes);
-            let healthCount = this.getHealthCount(this.defaultState.healthInfo);
+            const healthCount = this.getHealthCount(this.defaultState.healthInfo);
             const summaryContent = [
                 {
                     key: "Total",
@@ -475,12 +466,14 @@ class Overview extends React.Component {
     getCellHealth = (nodes) => {
         const {globalState} = this.props;
         const config = globalState.get(StateHolder.CONFIG);
-        let healthInfo = [];
+        const healthInfo = [];
         nodes.forEach((node) => {
-            let total = this.getTotalRequests(node.id, this.defaultState.request.cellStats, '*');
-            if (total !== 0) {
-                let error = this.getTotalRequests(node.id, this.defaultState.request.cellStats, '5xx');
-                let successPercentage = 1 - (error / total);
+            const total = this.getTotalRequests(node.id, this.defaultState.request.cellStats, "*");
+            if (total === 0) {
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: 1});
+            } else {
+                const error = this.getTotalRequests(node.id, this.defaultState.request.cellStats, "5xx");
+                const successPercentage = 1 - (error / total);
                 if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
                     healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: successPercentage});
                 } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
@@ -488,19 +481,14 @@ class Overview extends React.Component {
                 } else {
                     healthInfo.push({nodeId: node.id, status: Constants.Status.Error, percentage: successPercentage});
                 }
-            } else {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: 1});
             }
         });
         return healthInfo;
     };
 
     callRequestStats = (fromTime, toTime) => {
-        if (!fromTime) {
-            toTime = moment();
-            fromTime = moment().add(-1, 'years');
-        }
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
+        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
         HttpUtils.callObservabilityAPI(
             {
                 url: `/http-requests/cells${queryParams}`,
@@ -508,7 +496,7 @@ class Overview extends React.Component {
             },
             this.props.globalState
         ).then((response) => {
-            let statusCodeContent = this.getStatusCodeContent(null, response);
+            const statusCodeContent = this.getStatusCodeContent(null, response);
             this.defaultState.request.statusCodes = statusCodeContent;
             this.defaultState.request.cellStats = response;
             this.setState((prevState) => ({
@@ -526,14 +514,13 @@ class Overview extends React.Component {
         });
     };
 
-
     getStatusCodeContent = (cell, data) => {
-        let total = this.getTotalRequests(cell, data, "*");
-        let response2xx = this.getTotalRequests(cell, data, "2xx");
-        let response3xx = this.getTotalRequests(cell, data, "3xx");
-        let response4xx = this.getTotalRequests(cell, data, "4xx");
-        let response5xx = this.getTotalRequests(cell, data, "5xx");
-        let responseUnknown = total - (response2xx + response3xx + response4xx + response5xx);
+        const total = this.getTotalRequests(cell, data, "*");
+        const response2xx = this.getTotalRequests(cell, data, "2xx");
+        const response3xx = this.getTotalRequests(cell, data, "3xx");
+        const response4xx = this.getTotalRequests(cell, data, "4xx");
+        const response5xx = this.getTotalRequests(cell, data, "5xx");
+        const responseUnknown = total - (response2xx + response3xx + response4xx + response5xx);
         return [
             {
                 key: "Total",
@@ -578,7 +565,7 @@ class Overview extends React.Component {
         let total = 0;
         stats.forEach((stat) => {
             if (!cell || cell === stat[0]) {
-                if (responseCode === '*') {
+                if (responseCode === "*") {
                     total += stat[3];
                 } else if (responseCode === stat[1]) {
                     total += stat[3];
@@ -607,7 +594,6 @@ class Overview extends React.Component {
             }
         }, 1000);
     };
-
 
     render() {
         const {classes, theme} = this.props;

@@ -166,7 +166,7 @@ class SidePanelContent extends React.Component {
             {
                 options: {
                     customBodyRender: (value) => <Typography component={Link} className={classes.sidebarListTableText}
-                                                             to={`/cells/${value}`}>{value}</Typography>
+                        to={`/cells/${value}`}>{value}</Typography>
                 }
             },
             {
@@ -191,7 +191,7 @@ class SidePanelContent extends React.Component {
                         : <div className={classes.cellNameContainer}>
                             <CellIcon className={classes.titleIcon}/>
                             <Typography color="inherit"
-                                        className={classes.sideBarContentTitle}> Cell:</Typography>
+                                className={classes.sideBarContentTitle}> Cell:</Typography>
                             {/* TODO : Change the to URL cell value and cell name to selected cell*/}
                             <Typography component={Link} to={"/cells/cell1"} className={classes.cellName}>
                                 {summary.topic}</Typography>
@@ -344,7 +344,8 @@ class SidePanelContent extends React.Component {
                             />
                             {trafficTooltip && <Hint value={trafficTooltip}>
                                 <div className="rv-hint__content">
-                                    {`${trafficTooltip.title} : ${trafficTooltip.percentage}% (${trafficTooltip.count})`}
+                                    {`${trafficTooltip.title} :
+                                    ${trafficTooltip.percentage}% (${trafficTooltip.count})`}
                                 </div>
                             </Hint>}
                         </XYPlot>
@@ -361,7 +362,7 @@ class SidePanelContent extends React.Component {
                     </Typography>
                     <ExpansionPanel className={classes.panel}>
                         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}
-                                               className={classes.expansionSum}>
+                            className={classes.expansionSum}>
                             {summary.content[1].value === 0
                                 ? ""
                                 : <Typography className={classes.secondaryHeading}><CheckCircleOutline

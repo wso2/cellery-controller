@@ -61,8 +61,8 @@ class QueryUtils {
     /**
      * Returns suitable granularity for the provided time range.
      *
-     * @param fromTime
-     * @param toTime
+     * @param {long} fromTime The time from which the query considers
+     * @param {long} toTime The time till which the query considers
      * @returns {string} The granularity to be used
      */
     static getTimeGranularity = (fromTime, toTime) => {
