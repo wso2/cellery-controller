@@ -164,7 +164,7 @@ func validateAndParse(config map[string]interface{}) (*IngressConfig, error) {
 		},
 		Truststore: TruststoreConfig {
 			Location: fmt.Sprint(location),
-			Password: fmt.Sprint(password),
+			Password: fmt.Sprint(truststorePassword),
 		},
 	}, nil
 }

@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* eslint max-lines: ["off"] */
@@ -874,7 +872,7 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-a-id",
         parentId: "trace-x-id",
-        serviceName: Constants.System.GLOBAL_GATEWAY_NAME,
+        serviceName: "global-gateway",
         operationName: "get-hr-info",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10000000,
@@ -885,7 +883,8 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-b-id",
         parentId: "span-a-id",
-        serviceName: "src:0.0.0.hr_1_0_0_employee",
+        cell: "hr",
+        serviceName: "hr-cell-gateway",
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10020000,
@@ -896,6 +895,7 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-c-id",
         parentId: "span-b-id",
+        cell: "hr",
         serviceName: "hr--employee-service",
         operationName: "get-employee-data",
         kind: Constants.Span.Kind.SERVER,
@@ -907,7 +907,7 @@ describe("Span", () => {
         traceId: "trace-x-id",
         spanId: "span-d-id",
         parentId: "span-c-id",
-        serviceName: Constants.System.ISTIO_MIXER_NAME,
+        serviceName: "istio-mixer",
         operationName: "is-authorized",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10060000,
@@ -960,49 +960,6 @@ describe("Span", () => {
 
         it("should return false if the span is from a custom service", () => {
             expect(employeeServiceServerSpan.isFromIstioSystemComponent()).toBe(false);
-        });
-    });
-
-    describe("getCell()", () => {
-        it("should return the cell information if the span is from a Cell Gateway", () => {
-            const cell = hrCellGatewayServerSpan.getCell();
-
-            expect(cell.name).toBe("hr");
-            expect(cell.version).toBe("1.0.0");
-        });
-
-        it("should return the cell name only if the span is from a Cell Microservice", () => {
-            const cell = employeeServiceServerSpan.getCell();
-
-            expect(cell.name).toBe("hr");
-            expect(cell.version).toBeNull();
-        });
-
-        it("should return the cell if the span already has a cell set", () => {
-            const span = new Span({
-                traceId: "trace-id",
-                spanId: "span-id",
-                parentId: "span-parent-id",
-                serviceName: "service",
-                operationName: "test",
-                kind: Constants.Span.Kind.SERVER,
-                startTime: 10060000,
-                duration: 940000,
-                tags: "{}"
-            });
-            span.cell = {
-                name: "test-cell",
-                version: "10.0.0"
-            };
-            const cell = span.getCell();
-
-            expect(cell.name).toBe("test-cell");
-            expect(cell.version).toBe("10.0.0");
-        });
-
-        it("should return null if the span is not not from a Cell Gateway", () => {
-            expect(globalGatewayServerSpan.getCell()).toBeNull();
-            expect(istioMixerServerSpan.getCell()).toBeNull();
         });
     });
 
@@ -1067,8 +1024,7 @@ describe("Span", () => {
             span.addSpanReference(childSpanB);
             span.componentType = Constants.ComponentType.VICK;
             span.cell = {
-                name: "cell-a",
-                version: "1.0.0"
+                name: "cell-a"
             };
 
             const clone = span.shallowClone();
@@ -1099,7 +1055,6 @@ describe("Span", () => {
             expect(clone.cell).not.toBeNull();
             expect(clone.cell).not.toBe(span.cell);
             expect(clone.cell.name).toBe(span.cell.name);
-            expect(clone.cell.version).toBe(span.cell.version);
 
             expect(clone.parent).toBeNull();
             expect(clone.sibling).toBeNull();

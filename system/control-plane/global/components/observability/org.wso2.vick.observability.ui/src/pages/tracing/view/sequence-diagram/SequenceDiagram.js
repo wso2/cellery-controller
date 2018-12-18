@@ -1,23 +1,22 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import "./sequence.css";
 import Button from "@material-ui/core/Button";
+import Constants from "../../../common/constants";
 import PropTypes from "prop-types";
 import React from "react";
 import Span from "../../utils/span";
@@ -75,9 +74,7 @@ class SequenceDiagram extends React.Component {
     render() {
         const {classes} = this.props;
         return (
-
             <div>
-
                 <Typography color="textSecondary" className={classes.subtitle}>
                     {this.state.heading}
                 </Typography>
@@ -89,6 +86,7 @@ class SequenceDiagram extends React.Component {
                     {this.state.config}
                 </div>
             </div>
+
         );
     }
 
@@ -200,17 +198,24 @@ class SequenceDiagram extends React.Component {
 
     addServices(callId) {
         let data2 = "sequenceDiagram \n";
-
         const treeRoot = this.state.clonedArray[SequenceDiagram.findSpanIndexCall(this.state.clonedArray, callId)];
         const parentName = treeRoot.cell.name;
         this.setState({
             cellClicked: parentName
         });
         data2 += `activate ${SequenceDiagram.removeDash(treeRoot.serviceName)}\n`;
+        let j = 0;
         treeRoot.walk(
             (span) => {
                 if (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent()) {
-                    data2 += SequenceDiagram.updateDataText(span, parentName);
+                    if (!span.callingId && parentName === span.cell.name) {
+                        if (span.parent.serviceName !== span.serviceName) {
+                            j += 1;
+                            data2 += `${`${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
+                                + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName}`
+                                + `- [${callId}.${j}] \n`;
+                        }
+                    }
                 }
             }, null,
             (span) => {
@@ -218,12 +223,10 @@ class SequenceDiagram extends React.Component {
                     data2 += SequenceDiagram.updateTextDatawithReturn(span, parentName);
                 }
             },
-
             (span) => (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent()
                 && !span.callingId && parentName !== span.parent.cell.name)
         );
         data2 += `deactivate ${SequenceDiagram.removeDash(treeRoot.serviceName)}\n`;
-
         this.setState({
             config: data2,
             heading: "Service - Level Sequence",
@@ -239,12 +242,12 @@ class SequenceDiagram extends React.Component {
      * @return {String} text The updated text
      */
 
-    static updateDataText(span, parentName) {
+    static updateDataText(span, parentName, callId) {
         let text = "";
         if (!span.callingId && parentName === span.cell.name) {
             if (span.parent.serviceName !== span.serviceName) {
                 text += `${`${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
-                + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName} \n`;
+                + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName} - [${callId}] \n`;
             }
         }
         return text;
@@ -299,7 +302,9 @@ class SequenceDiagram extends React.Component {
         const cellArray = [];
         for (let i = 0; i < spanArray.length; i++) {
             if ((spanArray[i].serviceName.includes(SequenceDiagram.GLOBAL))) {
-                cellArray.push(SequenceDiagram.GLOBAL);
+                if (!cellArray.includes(SequenceDiagram.GLOBAL)) {
+                    cellArray.push(SequenceDiagram.GLOBAL);
+                }
             }
             if (spanArray[i].cell) {
                 const cellName = SequenceDiagram.removeDash(spanArray[i].cell.name);
@@ -335,7 +340,7 @@ class SequenceDiagram extends React.Component {
      */
     addCellConnections() {
         let callId = 1;
-        const tree = TracingUtils.buildTree(this.props.spans);
+        const tree = TracingUtils.getTreeRoot(this.props.spans);
         let dataText = "";
         tree.walk((span, data) => {
             let parentCellName;
@@ -349,9 +354,10 @@ class SequenceDiagram extends React.Component {
                 if (span.cell) {
                     parentCellName = SequenceDiagram.removeDash(parentCellName);
                     childCellName = SequenceDiagram.removeDash(span.cell.name);
-                    if (parentCellName !== childCellName) {
+                    if (parentCellName !== childCellName
+                        && !span.operationName.match(Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN)) {
                         span.callingId = callId;
-                        dataText += `${parentCellName}->>+${childCellName}:${span.serviceName} [${callId}] \n`;
+                        dataText += `${parentCellName}->>+${childCellName}: call ${span.cell.name}-cell [${callId}] \n`;
                         callId += 1;
                     }
                 }
@@ -364,8 +370,10 @@ class SequenceDiagram extends React.Component {
                 } else {
                     parentCellName = span.parent.cell.name;
                 }
-                if (span.cell.name !== parentCellName) {
-                    dataText += `${SequenceDiagram.removeDash(span.cell.name)}-->>-${parentCellName}: Return \n`;
+                if (span.cell.name !== parentCellName
+                    && !span.operationName.match(Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN)) {
+                    dataText += `${SequenceDiagram.removeDash(span.cell.name)}-->>-`
+                        + `${SequenceDiagram.removeDash(parentCellName)}: Return \n`;
                 }
             }
         });

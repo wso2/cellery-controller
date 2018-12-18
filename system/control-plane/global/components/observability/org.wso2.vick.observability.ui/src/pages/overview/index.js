@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
@@ -155,73 +153,108 @@ const styles = (theme) => ({
     }
 });
 
+const success = "success";
+const warning = "warning";
+const error = "error";
+
 class Overview extends React.Component {
 
     viewGenerator = (nodeProps) => {
-        const color = this.props.colorGenerator.getColor(nodeProps.id);
+        const nodeId = nodeProps.id;
+        const color = this.props.colorGenerator.getColor(nodeId);
+        const state = this.getCellState(nodeId);
+        if (state === success) {
+            return <svg x="0px" y="0px"
+                width="50px" height="50px" viewBox="0 0 240 240">
+                <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+            </svg>;
+        } else if (state === warning) {
+            return <svg x="0px" y="0px"
+                width="50px" height="50px" viewBox="0 0 240 240">
+                <g>
+                    <g>
+                        <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
+                    </g>
+                </g>
+                <g>
+                    <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
+                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
+                    <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                </g>
+            </svg>;
+        }
         return <svg x="0px" y="0px"
             width="50px" height="50px" viewBox="0 0 240 240">
-            <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+            <g>
+                <g>
+                    <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
+                </g>
+            </g>
+            <g>
+                <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
+                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
+                <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+            </g>
         </svg>;
     };
 
+
+    getCellState = (nodeId) => {
+        // TODO: load the status from the API call.
+        if (nodeId.startsWith("hr")) {
+            return success;
+        } else if (nodeId.startsWith("stock")) {
+            return warning;
+        }
+        return error;
+    };
+
     onClickCell = (nodeId) => {
-        const outbound = new Set();
-        const inbound = new Set();
-        this.state.data.links.forEach((element) => {
-            if (element.source === nodeId) {
-                outbound.add(element.target);
-            } else if (element.target === nodeId) {
-                inbound.add(element.source);
-            }
-        });
-        const services = new Set();
+        let cell = null;
         this.state.data.nodes.forEach((element) => {
             if (element.id === nodeId) {
-                element.services.forEach((service) => {
-                    services.add(service);
-                });
+                cell = element;
             }
         });
+        const serviceInfo = this.loadServicesInfo(cell.services);
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
-                topic: `Cell : ${nodeId}`,
+                topic: nodeId,
                 content: [
                     {
-                        key: "Outbound Cells",
-                        setValue: this.populateArray(outbound)
+                        key: "Total",
+                        value: serviceInfo.length
                     },
                     {
-                        key: "Inbound Cells",
-                        setValue: this.populateArray(inbound)
+                        key: "Successful",
+                        value: serviceInfo.length
                     },
                     {
-                        key: "Micro Services",
-                        setValue: this.populateArray(services)
+                        key: "Failed",
+                        value: 0
+                    },
+                    {
+                        key: "Warning",
+                        value: 0
                     }
-
                 ]
             },
+            data: {...prevState.data},
+            listData: serviceInfo,
             reloadGraph: false,
             isOverallSummary: false
         }));
     };
 
-    populateArray = (setElements) => {
-        const arrayElements = [];
-        setElements.forEach((setElement) => {
-            arrayElements.push(setElement);
-        });
-        return arrayElements;
-    };
-
     onClickGraph = () => {
-        this.setState({
-            summary: JSON.parse(JSON.stringify(this.defaultState)).summary,
+        const defaultState = JSON.parse(JSON.stringify(this.defaultState));
+        this.setState((prevState) => ({
+            summary: defaultState.summary,
+            listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
             isOverallSummary: true
-        });
+        }));
     };
 
     handleDrawerOpen = () => {
@@ -232,51 +265,49 @@ class Overview extends React.Component {
         this.setState({open: false});
     };
 
-    loadListInfo = (isUserAction) => {
-        const {globalState} = this.props;
-        const self = this;
+    loadCellInfo = (nodes) => {
+        const nodeInfo = [];
+        nodes.forEach((node) => {
+            nodeInfo.push([1, node.id, node.id]);
+        });
+        return nodeInfo;
+    };
 
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
-        }
-        // TODO : Change to a backend call to fetch data.
-        setTimeout(() => {
-            const data = [
-                [0.1, "Cell C", 3],
-                [1, "Cell A", 1],
-                [0.8, "Cell B", 2]
-            ];
-            self.setState({
-                listData: data
-            });
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }, 1000);
+    loadServicesInfo = (services) => {
+        const serviceInfo = [];
+        services.forEach((service) => {
+            serviceInfo.push([1, service, service]);
+        });
+        return serviceInfo;
     };
 
     constructor(props) {
         super(props);
-        const colorGenerator = this.props.colorGenerator;
+        this.initializeDefault();
+        this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
+        this.callOverviewInfo();
+    }
+
+    initializeDefault = () => {
         this.defaultState = {
             summary: {
                 topic: "VICK Deployment",
                 content: [
                     {
-                        key: "Total cells",
+                        key: "Total",
                         value: 0
                     },
                     {
-                        key: "Successful cells",
+                        key: "Successful",
                         value: 0
                     },
                     {
-                        key: "Failed cells",
+                        key: "Failed",
                         value: 0
                     },
                     {
-                        key: "Warning cells",
+                        key: "Warning",
                         value: 0
                     }
                 ]
@@ -317,29 +348,36 @@ class Overview extends React.Component {
             page: 0,
             rowsPerPage: 5
         };
-        this.state = JSON.parse(JSON.stringify(this.defaultState));
+    };
+
+    callOverviewInfo = (fromTime, toTime) => {
+        const colorGenerator = this.props.colorGenerator;
         // TODO: Update the url to the WSO2-sp worker node.
+        let queryParams = "";
+        if (fromTime && toTime) {
+            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
+        }
         axios({
             method: "GET",
-            url: "http://localhost:9123/dependency-model/cell-overview"
+            url: `http://localhost:9123/api/dependency-model/cells${queryParams}`
         }).then((response) => {
             const result = response.data;
             // TODO: Update values with real data
             const summaryContent = [
                 {
-                    key: "Total cells",
+                    key: "Total",
                     value: result.nodes.length
                 },
                 {
-                    key: "Successful cells",
-                    value: 2
+                    key: "Successful",
+                    value: result.nodes.length
                 },
                 {
-                    key: "Failed cells",
-                    value: 1
+                    key: "Failed",
+                    value: 0
                 },
                 {
-                    key: "Warning cells",
+                    key: "Warning",
                     value: 0
                 }
             ];
@@ -366,7 +404,10 @@ class Overview extends React.Component {
                 }
             ];
             this.defaultState.summary.content = summaryContent;
+            this.defaultState.data.nodes = result.nodes;
+            this.defaultState.data.links = result.edges;
             colorGenerator.addKeys(result.nodes);
+            const cellList = this.loadCellInfo(result.nodes);
             this.setState((prevState) => ({
                 data: {
                     nodes: result.nodes,
@@ -379,12 +420,28 @@ class Overview extends React.Component {
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
-                }
+                },
+                listData: cellList
+
             }));
         }).catch((error) => {
             this.setState({error: error});
         });
-    }
+    };
+
+    loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
+        const {globalState} = this.props;
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
+            this.callOverviewInfo(startTime, endTime);
+        }
+        setTimeout(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }, 1000);
+    };
+
 
     render() {
         const {classes, theme} = this.props;
@@ -392,7 +449,7 @@ class Overview extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Overview"} onUpdate={this.loadListInfo}/>
+                <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
 
                 <div className={classes.root}>
                     <Paper

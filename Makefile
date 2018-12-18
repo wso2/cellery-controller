@@ -30,6 +30,13 @@ controller-test:
 controller-test-cover: controller-test
 	go tool cover -html=coverage.out
 
+.PHONY: ingress-test
+ingress-test:
+	go test -covermode=count -coverprofile=coverage.out ./system/ingress-controller/config/... ./system/ingress-controller/handler/...
+
+ingress-test-cover: ingress-test
+	go tool cover -html=coverage.out
+
 global-api-updater:
 	mvn clean install -f system/control-plane/cell/components/global-api-updater/pom.xml
 

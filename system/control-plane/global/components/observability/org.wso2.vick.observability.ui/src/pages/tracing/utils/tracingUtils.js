@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Constants from "../../common/constants";
@@ -60,36 +58,25 @@ class TracingUtils {
         // Fixing siblings kinds
         for (let i = 0; i < spansList.length; i++) {
             const span = spansList[i];
-            let siblingSpan;
+
+            let hasSameServiceParent = false;
+            let hasSameServiceChild = false;
             for (let j = 0; j < spansList.length; j++) {
-                if (i !== j && span.spanId === spansList[j].spanId) {
-                    siblingSpan = spansList[j];
-                }
-            }
-            if (siblingSpan) {
-                if (!span.kind || !siblingSpan.kind) {
-                    const setSpanKind = (span, kind) => {
-                        if (!span.kind) {
-                            span.kind = kind;
-                            span.tags["span.kind"] = kind;
-                        }
-                    };
-                    if (span.kind === Constants.Span.Kind.CLIENT
-                        || siblingSpan.kind === Constants.Span.Kind.SERVER
-                        || span.startTime < siblingSpan.startTime) {
-                        setSpanKind(span, Constants.Span.Kind.CLIENT);
-                        setSpanKind(siblingSpan, Constants.Span.Kind.SERVER);
-                    } else {
-                        setSpanKind(span, Constants.Span.Kind.SERVER);
-                        setSpanKind(siblingSpan, Constants.Span.Kind.CLIENT);
+                const consideredSpan = spansList[j];
+                if (i !== j && !span.isFromSideCar() && span.serviceName === consideredSpan.serviceName) {
+                    if (span.parentId === consideredSpan.spanId) {
+                        hasSameServiceParent = consideredSpan;
+                    }
+                    if (span.spanId === consideredSpan.parentId) {
+                        hasSameServiceChild = consideredSpan;
+                    }
+                    if (hasSameServiceChild && hasSameServiceParent) {
+                        break;
                     }
                 }
-            } else {
-                const unsetSpanKind = (span) => {
-                    span.kind = null;
-                    Reflect.deleteProperty(span.tags, "span.kind");
-                };
-                unsetSpanKind(span);
+            }
+            if (hasSameServiceChild && hasSameServiceParent) {
+                span.kind = null;
             }
         }
 
@@ -102,12 +89,6 @@ class TracingUtils {
             }
         }
 
-        // Calculating the tree depths
-        rootSpan.walk((span, data) => {
-            span.treeDepth = data;
-            return data + 1;
-        }, 0);
-
         return rootSpan;
     };
 
@@ -117,7 +98,7 @@ class TracingUtils {
      * @param {Span} tree The root span of the tree
      */
     static labelSpanTree = (tree) => {
-        tree.walk((span, data) => {
+        tree.walk((span) => {
             if (span.isFromIstioSystemComponent()) {
                 span.componentType = Constants.ComponentType.ISTIO;
             } else if (span.isFromVICKSystemComponent()) {
@@ -125,16 +106,29 @@ class TracingUtils {
             } else {
                 span.componentType = Constants.ComponentType.MICROSERVICE;
             }
-
-            if (span.isFromCellGateway()) {
-                span.cell = span.getCell();
-                span.serviceName = `${span.cell.name}-cell-gateway`;
-            } else if (span.componentType !== Constants.ComponentType.ISTIO) {
-                span.cell = data;
-            }
-
-            return span.cell;
         }, null);
+
+        // Calculating the tree depths
+        tree.walk((span, data) => {
+            span.treeDepth = data;
+            return data + 1;
+        }, 0);
+    };
+
+    /**
+     * Get the root from a list containing the spans of a tree.
+     *
+     * @param {Array.<Span>} spans The list of spans
+     * @returns {Span} The tree root
+     */
+    static getTreeRoot = (spans) => {
+        const filteredSpans = spans.filter((span) => span.parent === null);
+        if (spans.length !== 1 && filteredSpans.length === spans.length) {
+            throw Error("The spans in the list does not contain a tree structure");
+        } else if (filteredSpans.length !== 1) {
+            throw Error(`Invalid Trace Tree: Expected 1 root span, found ${filteredSpans.length} spans`);
+        }
+        return filteredSpans[0];
     };
 
     /**

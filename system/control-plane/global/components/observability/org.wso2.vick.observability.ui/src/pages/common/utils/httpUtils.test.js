@@ -2,19 +2,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* eslint prefer-promise-reject-errors: ["off"] */
@@ -238,14 +236,7 @@ describe("HttpUtils", () => {
         });
 
         const ERROR_DATA = "testError";
-        const AXIOS_OUTPUT_DATA = [
-            {
-                event: "testEvent"
-            }
-        ];
-        const SUCCESS_OUTPUT_DATA = [
-            "testEvent"
-        ];
+        const SUCCESS_OUTPUT_DATA = ["testEvent"];
         const resolveStatusCodes = [
             200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
             300, 301, 302, 303, 304, 305, 306, 307, 308
@@ -260,7 +251,7 @@ describe("HttpUtils", () => {
             axios.mockResolvedValue(new Promise((resolve) => {
                 resolve({
                     status: statusCode,
-                    data: AXIOS_OUTPUT_DATA
+                    data: SUCCESS_OUTPUT_DATA
                 });
             }));
 
@@ -301,7 +292,7 @@ describe("HttpUtils", () => {
         rejectStatusCodes.forEach((statusCode) => {
             it(`should reject with response data when axios resolves with a ${statusCode} status code`, () => {
                 expect.assertions(1);
-                return expect(mockResolve(statusCode)).rejects.toEqual(AXIOS_OUTPUT_DATA);
+                return expect(mockResolve(statusCode)).rejects.toEqual(SUCCESS_OUTPUT_DATA);
             });
         });
 

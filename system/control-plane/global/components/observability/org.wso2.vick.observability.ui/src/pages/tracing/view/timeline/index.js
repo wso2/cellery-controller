@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Checkbox from "@material-ui/core/Checkbox";
@@ -41,7 +39,7 @@ const styles = (theme) => ({
     }
 });
 
-class Timeline extends React.Component {
+class Timeline extends React.PureComponent {
 
     constructor(props) {
         super(props);
@@ -51,9 +49,20 @@ class Timeline extends React.Component {
                 Constants.ComponentType.MICROSERVICE,
                 Constants.ComponentType.VICK,
                 Constants.ComponentType.ISTIO
-            ]
+            ],
+            filteredSpans: []
         };
+
+        this.timelineViewRef = React.createRef();
     }
+
+    componentDidMount = () => {
+        this.timelineViewRef.current.drawTimeline();
+    };
+
+    componentDidUpdate = () => {
+        this.timelineViewRef.current.drawTimeline();
+    };
 
     handleServiceTypeChange = (event) => {
         const serviceType = event.target.value;
@@ -62,37 +71,44 @@ class Timeline extends React.Component {
         });
     };
 
-    /**
-     * Get the filtered spans from the available spans.
-     *
-     * @returns {Array.<Span>} The filtered list of spans
-     */
-    getFilteredSpans = () => {
+    static getDerivedStateFromProps = (props, state) => {
         const spans = [];
-        for (let i = 0; i < this.props.spans.length; i++) {
-            spans.push(this.props.spans[i].shallowClone());
+        for (let i = 0; i < props.spans.length; i++) {
+            spans.push(props.spans[i].shallowClone());
         }
-        TracingUtils.buildTree(spans);
+        if (spans.length > 0) {
+            TracingUtils.buildTree(spans);
+        }
 
         const filteredSpans = [];
-        for (let i = 0; i < spans.length; i++) {
-            const span = spans[i];
+        if (spans.length > 0) {
+            for (let i = 0; i < spans.length; i++) {
+                const span = spans[i];
 
-            // Apply service type filter
-            const isSelected = this.state.selectedServiceTypes.includes(span.componentType);
+                // Apply service type filter
+                const isSelected = state.selectedServiceTypes.includes(span.componentType);
 
-            if (isSelected) {
-                filteredSpans.push(span);
-            } else {
-                // Remove the span from the tree without harming the tree structure
-                TracingUtils.removeSpanFromTree(span);
+                if (isSelected) {
+                    filteredSpans.push(span);
+                } else {
+                    // Remove the span from the tree without harming the tree structure
+                    TracingUtils.removeSpanFromTree(span);
+                }
             }
         }
-        return filteredSpans;
+        if (filteredSpans.length > 0) {
+            const filteredTree = TracingUtils.getTreeRoot(filteredSpans);
+            TracingUtils.labelSpanTree(filteredTree);
+        }
+        return {
+            ...state,
+            filteredSpans: filteredSpans
+        };
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, selectedMicroservice} = this.props;
+        const {filteredSpans} = this.state;
 
         // Finding the service types to be shown in the filter
         const serviceTypes = [];
@@ -138,7 +154,8 @@ class Timeline extends React.Component {
                         </FormControl>
                     </Grid>
                 </Grid>
-                <TimelineView spans={this.getFilteredSpans()}/>
+                <TimelineView spans={filteredSpans} selectedMicroservice={selectedMicroservice}
+                    innerRef={this.timelineViewRef}/>
             </React.Fragment>
         );
     };
@@ -150,7 +167,11 @@ Timeline.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
-    clicked: PropTypes.bool
+    clicked: PropTypes.bool,
+    selectedMicroservice: PropTypes.shape({
+        cellName: PropTypes.string.isRequired,
+        serviceName: PropTypes.string.isRequired
+    }).isRequired
 };
 
 export default withStyles(styles)(Timeline);

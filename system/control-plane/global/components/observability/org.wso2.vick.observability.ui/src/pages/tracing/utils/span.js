@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Constants from "../../common/constants";
@@ -40,11 +38,20 @@ class Span {
         this.duration = spanData.duration ? spanData.duration : 0;
         this.tags = spanData.tags ? JSON.parse(spanData.tags) : {};
 
+        // Adding additional tags
+        const addTagFromSpanData = (tagKey, spanDataKey) => {
+            if (spanData[spanDataKey]) {
+                this.tags[tagKey] = spanData[[spanDataKey]];
+            }
+        };
+        addTagFromSpanData("k8s.pod", "pod");
+        addTagFromSpanData("k8s.namespace", "namespace");
+
         /** @type {string} **/
         this.componentType = "";
 
         /** @type {{name: string, version: string}} **/
-        this.cell = (spanData.cellName ? {name: spanData.cellName, version: null} : null);
+        this.cell = (spanData.cell ? {name: spanData.cell, version: null} : null);
 
         /** @type {Span} **/
         this.parent = null;
@@ -65,7 +72,7 @@ class Span {
      * @returns {boolean} True if this is a sibling of the other span
      */
     isSiblingOf = (span) => Boolean(span) && this.traceId === span.traceId && this.spanId === span.spanId
-            && ((this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER)
+        && ((this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER)
             || (this.kind === Constants.Span.Kind.SERVER && span.kind === Constants.Span.Kind.CLIENT));
 
     /**
@@ -195,7 +202,14 @@ class Span {
      *
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
-    isFromIstioSystemComponent = () => this.serviceName === Constants.System.ISTIO_MIXER_NAME;
+    isFromIstioSystemComponent = () => Constants.System.ISTIO_MIXER_NAME_PATTERN.test(this.serviceName);
+
+    /**
+     * Check whether a span belongs to the side car.
+     *
+     * @returns {boolean} True if the span is from side car
+     */
+    isFromSideCar = () => this.tags.component === "proxy";
 
     /**
      * Check whether a span belongs to the VICK System.
@@ -203,7 +217,8 @@ class Span {
      * @returns {boolean} True if the component to which the span belongs to is a system component
      */
     isFromVICKSystemComponent = () => (
-        this.isFromCellGateway() || this.serviceName === Constants.System.GLOBAL_GATEWAY_NAME
+        this.isFromCellGateway() || Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(this.serviceName)
+            || Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN.test(this.operationName)
     );
 
     /**
@@ -212,39 +227,6 @@ class Span {
      * @returns {boolean} True if an error had occurred in this span
      */
     hasError = () => this.tags.error === "true";
-
-    /**
-     * Get the cell name from cell gateway span.
-     *
-     * @returns {Object} Cell details
-     */
-    getCell = () => {
-        let cell = null;
-        if (this.cell) {
-            cell = this.cell;
-        } else if (Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.Cell.GATEWAY_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1].replace(/_/g, "-"),
-                    version: matches[2].replace(/_/g, ".")
-                };
-                this.cell = cell;
-                this.serviceName = `${cell.name}-cell-gateway`;
-            }
-        } else if (Constants.Cell.MICROSERVICE_NAME_PATTERN.test(this.serviceName)) {
-            const matches = this.serviceName.match(Constants.Cell.MICROSERVICE_NAME_PATTERN);
-            if (Boolean(matches) && matches.length === 3) {
-                cell = {
-                    name: matches[1],
-                    version: null
-                };
-                this.cell = cell;
-                this.serviceName = matches[2];
-            }
-        }
-        return cell;
-    };
 
     /**
      * Create a shallow clone.

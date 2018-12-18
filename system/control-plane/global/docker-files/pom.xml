@@ -26,10 +26,12 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.vick.global.plane.dockerfiles</artifactId>
-    <name>WSO2 VICK - Docker Files Parent</name>
+    <name>WSO2 VICK - Dockerfiles</name>
+    <description>Dockerfiles for WSO2 VICK</description>
     <packaging>pom</packaging>
 
     <modules>
         <module>sp</module>
+        <module>observability</module>
     </modules>
 </project>
