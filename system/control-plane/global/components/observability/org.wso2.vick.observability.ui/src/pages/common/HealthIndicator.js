@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import CheckCircleOutline from "@material-ui/core/SvgIcon/SvgIcon";
+import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import ErrorOutline from "@material-ui/icons/ErrorOutline";
 import React from "react";
 import StateHolder from "./state/stateHolder";
