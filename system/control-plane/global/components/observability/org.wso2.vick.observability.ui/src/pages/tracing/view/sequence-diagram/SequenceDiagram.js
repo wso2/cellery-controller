@@ -28,7 +28,6 @@ import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../../../common/color";
 
-
 const styles = () => ({
     newMessageText: {
         fill: "#4c4cb3",
@@ -232,25 +231,6 @@ class SequenceDiagram extends React.Component {
             heading: "Service - Level Sequence",
             clicked: true
         });
-    }
-
-    /**
-     * Updates the text data, which is used by the mermaid library to generate diagrams.
-     *
-     * @param {Span} span The span to be checked.
-     * @param {String} parentName The parent cell name
-     * @return {String} text The updated text
-     */
-
-    static updateDataText(span, parentName, callId) {
-        let text = "";
-        if (!span.callingId && parentName === span.cell.name) {
-            if (span.parent.serviceName !== span.serviceName) {
-                text += `${`${SequenceDiagram.removeDash(span.parent.serviceName)}  ->>+`
-                + `${SequenceDiagram.removeDash(span.serviceName)}:`}${span.operationName} - [${callId}] \n`;
-            }
-        }
-        return text;
     }
 
     /**
