@@ -266,7 +266,10 @@ class Overview extends React.Component {
     loadCellInfo = (nodes) => {
         const nodeInfo = [];
         nodes.forEach((node) => {
-            nodeInfo.push([1, node.id, node.id]);
+            let healthInfo = this.defaultState.healthInfo.find((element) => {
+                return element.nodeId === node.id;
+            });
+            nodeInfo.push([healthInfo.percentage, node.id, node.id]);
         });
         return nodeInfo;
     };
@@ -284,7 +287,6 @@ class Overview extends React.Component {
         this.initializeDefault();
         this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
-        this.callRequestStats();
     }
 
     initializeDefault = () => {
@@ -433,11 +435,11 @@ class Overview extends React.Component {
             let successPercentage = 1 - (error / total);
 
             if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Success});
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: successPercentage});
             } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Warning});
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Warning, percentage: successPercentage});
             } else {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Error});
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Error, percentage: successPercentage});
             }
         });
         return healthInfo;
