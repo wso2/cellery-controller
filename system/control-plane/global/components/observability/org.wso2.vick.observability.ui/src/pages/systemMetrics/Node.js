@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
 import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -22,9 +21,10 @@ import Metrics from "./common/Metrics";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import Select from "@material-ui/core/Select";
+import Select from "react-select";
 import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
+import withColor, {ColorGenerator} from "../common/color";
 
 const styles = (theme) => ({
     root: {
@@ -32,17 +32,18 @@ const styles = (theme) => ({
         margin: theme.spacing.unit
     },
     filters: {
-        marginBottom: theme.spacing.unit * 4
+        marginBottom: theme.spacing.unit * 4,
+        marginTop: theme.spacing.unit * 2
     },
     formControl: {
         marginRight: theme.spacing.unit * 4,
-        minWidth: 150
+        minWidth: 400
     },
     graphs: {
         marginBottom: theme.spacing.unit * 4
     },
-    button: {
-        marginTop: theme.spacing.unit * 2
+    select: {
+        marginTop: 20
     }
 });
 
@@ -52,19 +53,12 @@ class Node extends React.Component {
         super(props);
 
         this.state = {
-            selectedNode: "all"
+            selectedNode: ""
         };
     }
 
-    handleChange = (name) => (event) => {
-        this.setState({
-            [name]: event.target.value
-        });
-    };
-
     render() {
-        const {classes} = this.props;
-        const {selectedNode} = this.state;
+        const {classes, colorGenerator} = this.props;
         const MSEC_DAILY = 86400000;
         const timestamp = new Date("December 9 2018").getTime();
 
@@ -123,29 +117,63 @@ class Node extends React.Component {
             }
         ];
 
+        const colourStyles = {
+            control: (styles) => ({...styles, backgroundColor: "white"}),
+            option: (styles, {data, isDisabled, isFocused, isSelected}) => {
+                let backgroundColor;
+                let color;
+                if (isDisabled) {
+                    backgroundColor = null;
+                    color = "#ccc";
+                } else if (isSelected) {
+                    backgroundColor = data.color;
+                    color = "white";
+                } else if (isFocused) {
+                    backgroundColor = "#eeeeee";
+                } else {
+                    backgroundColor = null;
+                    color = data.color;
+                }
+
+                return {
+                    ...styles,
+                    backgroundColor: backgroundColor,
+                    color: color,
+                    cursor: isDisabled ? "not-allowed" : "default"
+                };
+            },
+            multiValue: (styles, {data}) => ({
+                ...styles,
+                backgroundColor: colorGenerator.getColor(data.value)
+            }),
+            multiValueRemove: (styles, {data}) => ({
+                ...styles,
+                color: data.color,
+                ":hover": {
+                    backgroundColor: data.color,
+                    color: "white"
+                }
+            })
+        };
+
         return (
             <React.Fragment>
                 <TopToolbar title={"Node Usage Metrics"}/>
                 <Paper className={classes.root}>
-
                     <div className={classes.filters}>
                         <FormControl className={classes.formControl}>
-                            <InputLabel htmlFor="node">Node</InputLabel>
+                            <InputLabel htmlFor="node-multi-select" shrink={true}>Node/s</InputLabel>
                             <Select
-                                native
-                                value={selectedNode}
-                                onChange={this.handleChange("node")}
-                                inputProps={{
-                                    name: "node",
-                                    id: "node"
-                                }}
-                            >
-                                <option value="all">All</option>
-                            </Select>
+                                defaultValue={[{label: nodeData[0].name, value: nodeData[0].name}]}
+                                isMulti
+                                name="node-multi-select"
+                                options={nodeData.map((d) => ({label: d.name, value: d.name}))}
+                                id="node-multi-select"
+                                classNamePrefix="select"
+                                styles={colourStyles}
+                                className={classes.select}
+                            />
                         </FormControl>
-                        <Button variant="outlined" size="small" color="primary" className={classes.button}>
-                            Update
-                        </Button>
                     </div>
                     <div className={classes.graphs}>
                         <Grid container spacing={24}>
@@ -163,7 +191,8 @@ class Node extends React.Component {
 }
 
 Node.propTypes = {
-    classes: PropTypes.object.isRequired
+    classes: PropTypes.object.isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles)(Node);
+export default withStyles(styles)(withColor(Node));
