@@ -19,8 +19,10 @@ import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid";
+import InfoIcon from "@material-ui/icons/InfoOutlined";
 import PropTypes from "prop-types";
 import React from "react";
+import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
@@ -70,7 +72,7 @@ const styles = {
         paddingLeft: 5
     },
     contentGrid: {
-        height: 186
+        marginTop: 48
     },
     toolTipHead: {
         fontWeight: 600
@@ -78,6 +80,13 @@ const styles = {
     barChart: {
         marginTop: 40,
         marginBottom: 40
+    },
+    info: {
+        color: "#999",
+        marginTop: 8,
+        marginRight: 27,
+        fontSize: 18
+
     }
 };
 
@@ -221,7 +230,7 @@ class MetricsGraphs extends React.Component {
                         </Card>
                     </Grid>
                     <Grid item md={3} sm={6} xs={12} alignItems="center">
-                        <Grid item sm={12} className={classes.contentGrid}>
+                        <Grid item sm={12}>
                             <Card className={classes.card}>
                                 <CardHeader
                                     classes={{
@@ -333,6 +342,13 @@ class MetricsGraphs extends React.Component {
                                 }}
                                 title="Request Volume"
                                 className={classes.cardHeader}
+                                action={
+                                    <Tooltip
+                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
+                                        to zoom out.">
+                                        <InfoIcon className={classes.info}/>
+                                    </Tooltip>
+                                }
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -399,6 +415,13 @@ class MetricsGraphs extends React.Component {
                                 }}
                                 title="Request Duration"
                                 className={classes.cardHeader}
+                                action={
+                                    <Tooltip
+                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
+                                        to zoom out.">
+                                        <InfoIcon className={classes.info}/>
+                                    </Tooltip>
+                                }
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -467,6 +490,13 @@ class MetricsGraphs extends React.Component {
                                 }}
                                 title="Request/Response Size"
                                 className={classes.cardHeader}
+                                action={
+                                    <Tooltip
+                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
+                                        to zoom out.">
+                                        <InfoIcon className={classes.info}/>
+                                    </Tooltip>
+                                }
                             />
                             <CardContent className={classes.content}>
                                 <div>

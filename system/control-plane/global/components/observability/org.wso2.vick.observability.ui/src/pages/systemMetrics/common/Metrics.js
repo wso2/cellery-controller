@@ -19,8 +19,10 @@ import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../../common/constants";
 import Grid from "@material-ui/core/Grid";
+import InfoIcon from "@material-ui/icons/InfoOutlined";
 import PropTypes from "prop-types";
 import React from "react";
+import Tooltip from "@material-ui/core/Tooltip";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
@@ -55,6 +57,13 @@ const styles = {
     },
     toolTipHead: {
         fontWeight: 600
+    },
+    info: {
+        color: "#999",
+        marginTop: 8,
+        marginRight: 27,
+        fontSize: 18
+
     }
 };
 
@@ -86,6 +95,12 @@ class Metrics extends React.Component {
                         }}
                         title={graphName}
                         className={classes.cardHeader}
+                        action={
+                            <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the graph
+                            to zoom out.">
+                                <InfoIcon className={classes.info}/>
+                            </Tooltip>
+                        }
                     />
                     <CardContent className={classes.content}>
                         <div>
