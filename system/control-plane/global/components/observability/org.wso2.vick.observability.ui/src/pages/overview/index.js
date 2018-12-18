@@ -205,43 +205,75 @@ class Overview extends React.Component {
     };
 
     onClickCell = (nodeId) => {
-        let cell = this.state.data.nodes.find((element) => {
-            return element.id === nodeId;
+        let fromTime = this.state.currentTimeRange.fromTime;
+        let toTime = this.state.currentTimeRange.toTime;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${this.getTimeGranularity(fromTime, toTime)}`;
+        axios({
+            method: "GET",
+            url: `http://localhost:9123/api/http-requests/cells/${nodeId}/services${queryParams}`
+        }).then((response) => {
+            let cell = this.state.data.nodes.find((element) => {
+                return element.id === nodeId;
+            });
+            const serviceHealth = this.getServiceHealth(cell.services, response.data);
+            const serviceHealthCount = this.getHealthCount(serviceHealth);
+            const statusCodeContent = this.getStatusCodeContent(nodeId, this.defaultState.request.cellStats);
+            const serviceInfo = this.loadServicesInfo(cell.services, serviceHealth);
+            this.setState((prevState) => ({
+                summary: {
+                    ...prevState.summary,
+                    topic: nodeId,
+                    content: [
+                        {
+                            key: "Total",
+                            value: serviceInfo.length
+                        },
+                        {
+                            key: "Successful",
+                            value: serviceHealthCount.success
+                        },
+                        {
+                            key: "Failed",
+                            value: serviceHealthCount.error
+                        },
+                        {
+                            key: "Warning",
+                            value: serviceHealthCount.warning
+                        }
+                    ]
+                },
+                data: {...prevState.data},
+                listData: serviceInfo,
+                reloadGraph: false,
+                isOverallSummary: false,
+                request: {
+                    ...prevState.request,
+                    statusCodes: statusCodeContent
+                }
+            }));
+        }).catch((error) => {
+            this.setState({error: error});
         });
-        const serviceInfo = this.loadServicesInfo(cell.services);
-        const statusCodeContent = this.getStatusCodeContent(nodeId, this.defaultState.request.cellStats);
-        this.setState((prevState) => ({
-            summary: {
-                ...prevState.summary,
-                topic: nodeId,
-                content: [
-                    {
-                        key: "Total",
-                        value: serviceInfo.length
-                    },
-                    {
-                        key: "Successful",
-                        value: serviceInfo.length
-                    },
-                    {
-                        key: "Failed",
-                        value: 0
-                    },
-                    {
-                        key: "Warning",
-                        value: 0
-                    }
-                ]
-            },
-            data: {...prevState.data},
-            listData: serviceInfo,
-            reloadGraph: false,
-            isOverallSummary: false,
-            request: {
-                ...prevState.request,
-                statusCodes: statusCodeContent
+    };
+
+    getServiceHealth = (services, responseCodeStats) => {
+        const {globalState} = this.props;
+        const config = globalState.get(StateHolder.CONFIG);
+        let healthInfo = [];
+        services.forEach((service) => {
+            let total = this.getTotalRequests(service, responseCodeStats, '*');
+            let error = this.getTotalRequests(service, responseCodeStats, '5xx');
+            let successPercentage = 1 - (error / total);
+
+            if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
+                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: successPercentage});
+            } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
+                healthInfo.push({nodeId: service, status: Constants.Status.Warning, percentage: successPercentage});
+            } else {
+                healthInfo.push({nodeId: service, status: Constants.Status.Error, percentage: successPercentage});
             }
-        }));
+        });
+        return healthInfo;
     };
 
     onClickGraph = () => {
@@ -274,10 +306,13 @@ class Overview extends React.Component {
         return nodeInfo;
     };
 
-    loadServicesInfo = (services) => {
+    loadServicesInfo = (services, healthInfo) => {
         const serviceInfo = [];
         services.forEach((service) => {
-            serviceInfo.push([1, service, service]);
+            let healthElement = healthInfo.find((element) => {
+                return element.nodeId === service;
+            });
+            serviceInfo.push([healthElement.percentage, service, service]);
         });
         return serviceInfo;
     };
@@ -553,6 +588,13 @@ class Overview extends React.Component {
         const {globalState} = this.props;
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
+            this.setState((prevState) => ({
+                ...prevState,
+                currentTimeRange: {
+                    fromTime: startTime,
+                    toTime: endTime
+                }
+            }));
             this.callRequestStats(startTime, endTime);
         }
         setTimeout(() => {

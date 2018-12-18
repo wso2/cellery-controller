@@ -34,6 +34,15 @@ public enum SiddhiStoreQueryTemplates {
             "sum(requestCount) as requestCount \n" +
             "group by destinationCell, httpResponseGroup"
     ),
+    REQUEST_AGGREGATION_SERVICES_OF_CELL("from RequestAggregation \n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L \n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\" " +
+            "select destinationVICKService, httpResponseGroup, " +
+            "sum(avgResponseTimeSec * requestCount) / sum(requestCount) as avgResponseTimeSec, " +
+            "sum(requestCount) as requestCount \n" +
+            "group by destinationVICKService, httpResponseGroup " +
+            "having destinationCell == \"${" + Params.CELL + "}\""
+    ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
             "on (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +
             "and (${" + Params.QUERY_END_TIME + "}L == -1 or startTime <= ${" + Params.QUERY_END_TIME + "}L)\n" +

@@ -23,6 +23,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -39,7 +40,7 @@ public class AggregatedRequestsAPI {
     @GET
     @Path("/cells")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
+    public Response getCellStats(@QueryParam("queryStartTime") long queryStartTime,
                                 @QueryParam("queryEndTime") long queryEndTime,
                                 @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
         try {
@@ -47,6 +48,28 @@ public class AggregatedRequestsAPI {
                     .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
                     .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
                     .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)
+                    .build()
+                    .execute();
+            return Response.ok().entity(results).build();
+        } catch (Throwable throwable) {
+            log.error("Unable to get the aggregated results for cells. ", throwable);
+            return Response.serverError().entity(throwable).build();
+        }
+    }
+
+    @GET
+    @Path("/cells/{cellName}/services")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getServicesStats(@QueryParam("queryStartTime") long queryStartTime,
+                                @QueryParam("queryEndTime") long queryEndTime,
+                                @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity,
+                                @PathParam("cellName") String cellName) {
+        try {
+            Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_SERVICES_OF_CELL.builder()
+                    .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                    .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                    .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)
+                    .setArg(SiddhiStoreQueryTemplates.Params.CELL, cellName)
                     .build()
                     .execute();
             return Response.ok().entity(results).build();
