@@ -19,14 +19,18 @@ import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../../common/constants";
 import Grid from "@material-ui/core/Grid";
+import InfoIcon from "@material-ui/icons/InfoOutlined";
 import PropTypes from "prop-types";
 import React from "react";
+import Tooltip from "@material-ui/core/Tooltip";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
     Crosshair,
     DiscreteColorLegend,
+    Highlight,
     HorizontalGridLines,
+    LineMarkSeries,
     LineSeries,
     VerticalGridLines,
     XAxis,
@@ -53,6 +57,13 @@ const styles = {
     },
     toolTipHead: {
         fontWeight: 600
+    },
+    info: {
+        color: "#999",
+        marginTop: 8,
+        marginRight: 27,
+        fontSize: 18
+
     }
 };
 
@@ -64,13 +75,14 @@ class Metrics extends React.Component {
         super(props);
 
         this.state = {
-            tooltip: []
+            tooltip: [],
+            lastDrawLocation: null
         };
     }
 
     render = () => {
         const {classes, colorGenerator, graphName, graphData} = this.props;
-        const {tooltip} = this.state;
+        const {tooltip, lastDrawLocation} = this.state;
         const dateTimeFormat = Constants.Pattern.DATE_TIME;
 
         return (
@@ -83,11 +95,24 @@ class Metrics extends React.Component {
                         }}
                         title={graphName}
                         className={classes.cardHeader}
+                        action={
+                            <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the graph
+                            to zoom out.">
+                                <InfoIcon className={classes.info}/>
+                            </Tooltip>
+                        }
                     />
                     <CardContent className={classes.content}>
                         <div>
-                            <FlexibleWidthXYPlot xType="time" height={400}
-                                onMouseLeave={() => this.setState({tooltip: []})}>
+                            <FlexibleWidthXYPlot xType="time" height={400} animation
+                                xDomain={
+                                    lastDrawLocation && [
+                                        lastDrawLocation.left,
+                                        lastDrawLocation.right
+                                    ]
+                                }
+                                onMouseLeave={() => this.setState({tooltip: []})}
+                            >
                                 <HorizontalGridLines/>
                                 <VerticalGridLines/>
                                 <XAxis title="Time"/>
@@ -105,6 +130,18 @@ class Metrics extends React.Component {
                                                 }))
                                             })}
                                             color={colorGenerator.getColor(dataItem.name)}
+                                        />
+                                    ))
+                                }
+
+
+                                {
+                                    graphData.map((dataItem) => (
+                                        <LineMarkSeries
+                                            key={dataItem.name}
+                                            data={dataItem.data}
+                                            color={colorGenerator.getColor(dataItem.name)}
+                                            size={3}
                                         />))
                                 }
 
@@ -125,6 +162,18 @@ class Metrics extends React.Component {
                                     }
 
                                 </Crosshair>
+                                <Highlight
+                                    onBrushEnd={(area) => this.setState({lastDrawLocation: area})}
+                                    onDrag={(area) => {
+                                        this.setState({
+                                            lastDrawLocation: {
+                                                bottom: lastDrawLocation.bottom + (area.top - area.bottom),
+                                                left: lastDrawLocation.left - (area.right - area.left),
+                                                right: lastDrawLocation.right - (area.right - area.left),
+                                                top: lastDrawLocation.top + (area.top - area.bottom)
+                                            }
+                                        });
+                                    }}/>
                             </FlexibleWidthXYPlot>
                             <DiscreteColorLegend
                                 orientation="horizontal"
