@@ -25,6 +25,7 @@ import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import Constants from "../common/constants";
+import HttpUtils from "../common/utils/httpUtils";
 import QueryUtils from "../common/utils/queryUtils";
 import PropTypes from "prop-types";
 import React from "react";
@@ -32,7 +33,6 @@ import SidePanelContent from "./SidePanelContent";
 import StateHolder from "../common/state/stateHolder";
 import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography";
-import axios from "axios";
 import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
@@ -209,14 +209,17 @@ class Overview extends React.Component {
         let fromTime = this.state.currentTimeRange.fromTime;
         let toTime = this.state.currentTimeRange.toTime;
         let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
-        axios({
-            method: "GET",
-            url: `http://localhost:9123/api/http-requests/cells/${nodeId}/services${queryParams}`
-        }).then((response) => {
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells/${nodeId}/services${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
             let cell = this.state.data.nodes.find((element) => {
                 return element.id === nodeId;
             });
-            const serviceHealth = this.getServiceHealth(cell.services, response.data);
+            const serviceHealth = this.getServiceHealth(cell.services, response);
             const serviceHealthCount = this.getHealthCount(serviceHealth);
             const statusCodeContent = this.getStatusCodeContent(nodeId, this.defaultState.request.cellStats);
             const serviceInfo = this.loadServicesInfo(cell.services, serviceHealth);
@@ -404,11 +407,14 @@ class Overview extends React.Component {
         if (fromTime && toTime) {
             queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
         }
-        axios({
-            method: "GET",
-            url: `http://localhost:9123/api/dependency-model/cells${queryParams}`
-        }).then((response) => {
-            const result = response.data;
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/dependency-model/cells${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
+            const result = response;
             this.defaultState.healthInfo = this.getCellHealth(result.nodes);
             let healthCount = this.getHealthCount(this.defaultState.healthInfo);
             const summaryContent = [
@@ -489,23 +495,25 @@ class Overview extends React.Component {
         return healthInfo;
     };
 
-
     callRequestStats = (fromTime, toTime) => {
         if (!fromTime) {
             toTime = moment();
             fromTime = moment().add(-1, 'years');
         }
         let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
-        axios({
-            method: "GET",
-            url: `http://localhost:9123/api/http-requests/cells${queryParams}`
-        }).then((response) => {
-            let statusCodeContent = this.getStatusCodeContent(null, response.data);
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
+            let statusCodeContent = this.getStatusCodeContent(null, response);
             this.defaultState.request.statusCodes = statusCodeContent;
-            this.defaultState.request.cellStats = response.data;
+            this.defaultState.request.cellStats = response;
             this.setState((prevState) => ({
                 stats: {
-                    cellStats: response.data
+                    cellStats: response
                 },
                 request: {
                     ...prevState.request,
@@ -560,8 +568,8 @@ class Overview extends React.Component {
     };
 
     getPercentage = (responseCode, total) => {
-        if (total !==0){
-           return Math.round((responseCode / total) * 100);
+        if (total !== 0) {
+            return Math.round((responseCode / total) * 100);
         }
         return 0;
     };
