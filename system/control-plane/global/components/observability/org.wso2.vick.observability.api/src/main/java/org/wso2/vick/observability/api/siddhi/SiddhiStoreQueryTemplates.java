@@ -26,13 +26,13 @@ public enum SiddhiStoreQueryTemplates {
      * Siddhi Store Queries Start Here
      */
 
-    REQUEST_AGGREGATION_CELLS("from RequestAggregation\n" +
-            "within ${" + Params.QUERY_START_TIME + "}, ${" + Params.QUERY_END_TIME + "}\n" +
-            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
-            "select sourceCell, destinationCell, " +
-            "sum(avgResponseTime * requestCount) / sum(requestCount) as avgResponseTime, " +
-            "sum(requestCount) as requestCount\n" +
-            "group by sourceCell, destinationCell"
+    REQUEST_AGGREGATION_CELLS("from RequestAggregation \n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L \n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\" " +
+            "select destinationCell, httpResponseGroup, " +
+            "sum(avgResponseTimeSec * requestCount) / sum(requestCount) as avgResponseTimeSec, " +
+            "sum(requestCount) as requestCount \n" +
+            "group by destinationCell, httpResponseGroup"
     ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
             "on (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +

@@ -26,7 +26,7 @@ class DependencyGraph extends React.Component {
     shouldComponentUpdate = (nextProps, nextState) => nextProps.reloadGraph;
 
     render = () => {
-        if (this.props.data.nodes) {
+        if (this.props.data.nodes && this.props.data.nodes.length > 0) {
             return (
                 <Graph
                     id={this.props.id}

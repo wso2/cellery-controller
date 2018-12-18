@@ -166,12 +166,12 @@ class Overview extends React.Component {
         const state = this.getCellState(nodeId);
         if (state === success) {
             return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
+                        width="50px" height="50px" viewBox="0 0 240 240">
                 <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
             </svg>;
         } else if (state === warning) {
             return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
+                        width="50px" height="50px" viewBox="0 0 240 240">
                 <g>
                     <g>
                         <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
@@ -185,7 +185,7 @@ class Overview extends React.Component {
             </svg>;
         }
         return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
+                    width="50px" height="50px" viewBox="0 0 240 240">
             <g>
                 <g>
                     <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
@@ -218,6 +218,37 @@ class Overview extends React.Component {
             }
         });
         const serviceInfo = this.loadServicesInfo(cell.services);
+        let total = this.getTotalRequests(nodeId, this.defaultState.request.cellStats, "*");
+        let response2xx = this.getTotalRequests(nodeId, this.defaultState.request.cellStats, "2xx");
+        let response3xx = this.getTotalRequests(nodeId, this.defaultState.request.cellStats, "3xx");
+        let response4xx = this.getTotalRequests(nodeId, this.defaultState.request.cellStats, "4xx");
+        let response5xx = this.getTotalRequests(nodeId, this.defaultState.request.cellStats, "5xx");
+        const statusCodeContent = [
+            {
+                key: "Total",
+                value: total
+            },
+            {
+                key: "OK",
+                count: response2xx,
+                value: (response2xx / total) * 100
+            },
+            {
+                key: "3xx",
+                count: response3xx,
+                value: (response3xx / total) * 100
+            },
+            {
+                key: "4xx",
+                count: response4xx,
+                value: (response4xx / total) * 100
+            },
+            {
+                key: "5xx",
+                count: response5xx,
+                value: (response5xx / total) * 100
+            }
+        ];
         this.setState((prevState) => ({
             summary: {
                 ...prevState.summary,
@@ -244,7 +275,11 @@ class Overview extends React.Component {
             data: {...prevState.data},
             listData: serviceInfo,
             reloadGraph: false,
-            isOverallSummary: false
+            isOverallSummary: false,
+            request: {
+                ...prevState.request,
+                statusCodes: statusCodeContent
+            }
         }));
     };
 
@@ -254,7 +289,8 @@ class Overview extends React.Component {
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
-            isOverallSummary: true
+            isOverallSummary: true,
+            request: defaultState.request
         }));
     };
 
@@ -336,7 +372,8 @@ class Overview extends React.Component {
                         key: "5xx",
                         value: 0
                     }
-                ]
+                ],
+                cellStats : [],
             },
             isOverallSummary: true,
             data: {
@@ -383,28 +420,6 @@ class Overview extends React.Component {
                     value: 0
                 }
             ];
-            const statusCodeContent = [
-                {
-                    key: "Total",
-                    value: 0
-                },
-                {
-                    key: "OK",
-                    value: 70
-                },
-                {
-                    key: "3xx",
-                    value: 20
-                },
-                {
-                    key: "4xx",
-                    value: 5
-                },
-                {
-                    key: "5xx",
-                    value: 5
-                }
-            ];
             this.defaultState.summary.content = summaryContent;
             this.defaultState.data.nodes = result.nodes;
             this.defaultState.data.links = result.edges;
@@ -419,12 +434,7 @@ class Overview extends React.Component {
                     ...prevState.summary,
                     content: summaryContent
                 },
-                request: {
-                    ...prevState.request,
-                    statusCodes: statusCodeContent
-                },
                 listData: cellList
-
             }));
         }).catch((error) => {
             this.setState({error: error});
@@ -433,20 +443,10 @@ class Overview extends React.Component {
 
     getTimeGranularity = (fromTime, toTime) => {
         const days = "days";
-
-
         const hours = "hours";
-
-
         const minutes = "minutes";
-
-
         const months = "months";
-
-
         const seconds = "seconds";
-
-
         const years = "years";
         if (toTime.diff(fromTime, "years") > 0) {
             return years;
@@ -463,29 +463,75 @@ class Overview extends React.Component {
     };
 
     callRequestStats = (fromTime, toTime) => {
-        let queryParams = "";
         if (!fromTime) {
-
-            /*
-             * FromTime = moment();
-             * toTime = moment().add(1, 'years');
-             * console.log(fromTime);
-             * console.log(toTime);
-             */
-            fromTime = 1;
-            toTime = 4;
-            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}&timeGranularity=seconds`;
+            toTime = moment();
+            fromTime = moment().add(-1, 'years');
         }
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${this.getTimeGranularity(fromTime, toTime)}`;
         axios({
             method: "GET",
             url: `http://localhost:9123/api/http-requests/cells${queryParams}`
         }).then((response) => {
-            console.log(response);
+            let total = this.getTotalRequests(null, response.data, "*");
+            let response2xx = this.getTotalRequests(null, response.data, "2xx");
+            let response3xx = this.getTotalRequests(null, response.data, "3xx");
+            let response4xx = this.getTotalRequests(null, response.data, "4xx");
+            let response5xx = this.getTotalRequests(null, response.data, "5xx");
+            const statusCodeContent = [
+                {
+                    key: "Total",
+                    value: total
+                },
+                {
+                    key: "OK",
+                    count: response2xx,
+                    value: (response2xx / total) * 100
+                },
+                {
+                    key: "3xx",
+                    count: response3xx,
+                    value: (response3xx / total) * 100
+                },
+                {
+                    key: "4xx",
+                    count: response4xx,
+                    value: (response4xx / total) * 100
+                },
+                {
+                    key: "5xx",
+                    count: response5xx,
+                    value: (response5xx / total) * 100
+                }
+            ];
+            this.defaultState.request.statusCodes = statusCodeContent;
+            this.defaultState.request.cellStats = response.data;
+            this.setState((prevState) => ({
+                stats: {
+                    cellStats: response.data
+                },
+                request: {
+                    ...prevState.request,
+                    statusCodes: statusCodeContent
+                }
+            }));
         }).catch((error) => {
             this.setState({error: error});
         });
     };
 
+    getTotalRequests = (cell, stats, responseCode) => {
+        let total = 0;
+        stats.forEach((stat) => {
+            if (!cell || cell === stat[0]) {
+                if (responseCode === '*') {
+                    total += stat[3];
+                } else if (responseCode === stat[1]) {
+                    total += stat[3];
+                }
+            }
+        });
+        return total;
+    };
 
     loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
         const {globalState} = this.props;
