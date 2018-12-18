@@ -109,22 +109,27 @@ public class ModelGenerationExtension extends StreamProcessor {
                         } else {
                             pendingNode = spanCacheInfo.getClient();
                         }
-                        List<SpanCacheInfo.NodeInfo> waitingNodes = pendingEdges.putIfAbsent(parentId,
-                                new ArrayList<>(Collections.singletonList(pendingNode)));
-                        if (waitingNodes != null) {
-                            waitingNodes.add(pendingNode);
+                        synchronized (parentId.intern()) {
+                            List<SpanCacheInfo.NodeInfo> waitingNodes = pendingEdges.putIfAbsent(parentId,
+                                    new ArrayList<>(Collections.singletonList(pendingNode)));
+                            if (waitingNodes != null) {
+                                waitingNodes.add(pendingNode);
+                            }
                         }
                     }
                 }
-                List<SpanCacheInfo.NodeInfo> pendingChildNodes = this.pendingEdges.get(spanId);
-                if (pendingChildNodes != null) {
-                    for (SpanCacheInfo.NodeInfo child : pendingChildNodes) {
-                        if (child != null) {
-                            addLink(spanCacheInfo, child.getNode(), child.getService(), child.getOperationName());
+
+                synchronized (spanId.intern()) {
+                    List<SpanCacheInfo.NodeInfo> pendingChildNodes = this.pendingEdges.get(spanId);
+                    if (pendingChildNodes != null) {
+                        for (SpanCacheInfo.NodeInfo child : pendingChildNodes) {
+                            if (child != null) {
+                                addLink(spanCacheInfo, child.getNode(), child.getService(), child.getOperationName());
+                            }
                         }
                     }
+                    this.pendingEdges.remove(spanId);
                 }
-                this.pendingEdges.remove(spanId);
             }
         }
     }

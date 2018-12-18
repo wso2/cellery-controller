@@ -47,6 +47,11 @@ const Constants = {
         VICK: "VICK",
         ISTIO: "Istio",
         MICROSERVICE: "Microservice"
+    },
+    Status: {
+        Success: "Success",
+        Error: "Error",
+        Warning: "Warning"
     }
 };
 
