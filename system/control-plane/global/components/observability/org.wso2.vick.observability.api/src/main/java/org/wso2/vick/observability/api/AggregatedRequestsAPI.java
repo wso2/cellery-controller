@@ -24,6 +24,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -38,9 +39,10 @@ public class AggregatedRequestsAPI {
     @GET
     @Path("/cells")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
-                                @QueryParam("queryEndTime") long queryEndTime,
-                                @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
+    public Response getAggregatedRequestsForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                                  @QueryParam("queryEndTime") long queryEndTime,
+                                                  @DefaultValue("seconds")
+                                                      @QueryParam("timeGranularity") String timeGranularity) {
         Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS.builder()
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
@@ -53,11 +55,11 @@ public class AggregatedRequestsAPI {
     @GET
     @Path("/cells/metrics")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
-                                @QueryParam("queryEndTime") long queryEndTime,
-                                @DefaultValue("") @QueryParam("sourceCell") String sourceCell,
-                                @DefaultValue("") @QueryParam("destinationCell") String destinationCell,
-                                @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
+    public Response getMetricsForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                       @QueryParam("queryEndTime") long queryEndTime,
+                                       @DefaultValue("") @QueryParam("sourceCell") String sourceCell,
+                                       @DefaultValue("") @QueryParam("destinationCell") String destinationCell,
+                                       @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
         Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS_METRICS.builder()
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
@@ -72,8 +74,8 @@ public class AggregatedRequestsAPI {
     @GET
     @Path("/cells/metadata")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
-                                @QueryParam("queryEndTime") long queryEndTime) {
+    public Response getMetadataForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                        @QueryParam("queryEndTime") long queryEndTime) {
         Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS_METADATA.builder()
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
                 .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
@@ -89,9 +91,27 @@ public class AggregatedRequestsAPI {
         return Response.ok().entity(cells).build();
     }
 
+    @GET
+    @Path("/cells/{cellName}/microservices")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getForMicroservices(@PathParam("cellName") String cellName,
+                                        @QueryParam("queryStartTime") long queryStartTime,
+                                        @QueryParam("queryEndTime") long queryEndTime,
+                                        @DefaultValue("seconds")
+                                            @QueryParam("timeGranularity") String timeGranularity) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELL_MICROSERVICES.builder()
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)
+                .setArg(SiddhiStoreQueryTemplates.Params.CELL, cellName)
+                .build()
+                .execute();
+        return Response.ok().entity(results).build();
+    }
+
     @OPTIONS
-    @Path("/cells")
-    public Response getCellOverviewOptions() {
+    @Path("/*")
+    public Response getOptions() {
         return Response.ok().build();
     }
 }

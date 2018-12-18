@@ -66,7 +66,7 @@ class CellList extends React.Component {
                 sourceCell: dataItem[0],
                 destinationCell: dataItem[1],
                 httpResponseGroup: dataItem[2],
-                avgResponseTimeSec: dataItem[3],
+                totalResponseTimeMilliSec: dataItem[3],
                 requestCount: dataItem[4]
             }));
 
@@ -123,7 +123,7 @@ class CellList extends React.Component {
                 }
             },
             {
-                name: "Average Request Count (requests/s)"
+                name: "Average Inbound Request Count (requests/s)"
             }
         ];
 
@@ -135,21 +135,20 @@ class CellList extends React.Component {
                     inboundErrorCount: 0,
                     outboundErrorCount: 0,
                     requestCount: 0,
-                    totalResponseSize: 0
+                    totalResponseTimeMilliSec: 0
                 };
             }
         };
         for (const cellDatum of cellInfo) {
             initializeDataTableMapEntryIfNotPresent(cellDatum.sourceCell);
             initializeDataTableMapEntryIfNotPresent(cellDatum.destinationCell);
+
             if (cellDatum.httpResponseGroup === "5xx") {
                 dataTableMap[cellDatum.destinationCell].inboundErrorCount += cellDatum.requestCount;
                 dataTableMap[cellDatum.sourceCell].outboundErrorCount += cellDatum.requestCount;
             }
             dataTableMap[cellDatum.destinationCell].requestCount += cellDatum.requestCount;
-            dataTableMap[cellDatum.destinationCell].totalResponseSize += (
-                cellDatum.avgResponseTimeSec * cellDatum.requestCount
-            );
+            dataTableMap[cellDatum.destinationCell].totalResponseTimeMilliSec += cellDatum.totalResponseTimeMilliSec;
         }
 
         // Transforming the objects into 2D array accepted by the Table library
@@ -162,7 +161,7 @@ class CellList extends React.Component {
                     cell,
                     cellData.requestCount === 0 ? 0 : cellData.inboundErrorCount / cellData.requestCount,
                     cellData.requestCount === 0 ? 0 : cellData.outboundErrorCount / cellData.requestCount,
-                    cellData.requestCount === 0 ? 0 : cellData.totalResponseSize * 1000 / cellData.requestCount,
+                    cellData.requestCount === 0 ? 0 : cellData.totalResponseTimeMilliSec / cellData.requestCount,
                     cellData.requestCount
                 ]);
             }

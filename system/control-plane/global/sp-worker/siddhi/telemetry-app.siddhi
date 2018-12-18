@@ -12,7 +12,7 @@ define stream TelemetryStreamIn(sourceNamespace string, sourceCell string, sourc
 define stream ProcessedRequestsStream(sourceNamespace string, sourceCell string, sourceVICKService string,
                                       destinationNamespace string, destinationCell string,
                                       destinationVICKService string, requestPath string, requestMethod string,
-                                      httpResponseGroup string, responseTimeSec double, requestSizeBytes long,
+                                      httpResponseGroup string, responseTimeMilliSec double, requestSizeBytes long,
                                       responseSizeBytes long);
 
 @store(type="rdbms", datasource="VICK_OBSERVABILITY_DB")
@@ -28,7 +28,7 @@ select
     requestPath,
     requestMethod,
     httpResponseGroup,
-    sum(responseTimeSec) as totalResponseTimeSec,
+    sum(responseTimeMilliSec) as totalResponseTimeMilliSec,
     sum(requestSizeBytes) as totalRequestSizeBytes,
     sum(responseSizeBytes) as totalResponseSizeBytes,
     count() as requestCount
@@ -55,7 +55,7 @@ select
     requestPath,
     requestMethod,
     str:concat(convert(cast(responseCode, "int") / 100, "string"), "xx") as httpResponseGroup,
-    convert(responseDurationNanoSec, "double") / 1000000 as responseTimeSec,
+    convert(responseDurationNanoSec, "double") / 1000000 as responseTimeMilliSec,
     ifThenElse(requestSizeBytes is null, 0L, requestSizeBytes) as requestSizeBytes,
     ifThenElse(responseSizeBytes is null, 0L, responseSizeBytes) as responseSizeBytes
 insert into ProcessedTelemetryStream;
@@ -73,7 +73,7 @@ select
     e1.requestPath,
     e1.requestMethod,
     e1.httpResponseGroup,
-    e1.responseTimeSec,
+    e1.responseTimeMilliSec,
     e1.requestSizeBytes,
     e1.responseSizeBytes
 insert into ProcessedRequestsStream;

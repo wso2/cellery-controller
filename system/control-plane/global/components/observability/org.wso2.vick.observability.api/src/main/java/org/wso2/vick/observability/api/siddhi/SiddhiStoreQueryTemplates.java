@@ -36,7 +36,7 @@ public enum SiddhiStoreQueryTemplates {
             "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
             "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
             "select sourceCell, destinationCell, httpResponseGroup, " +
-            "sum(totalResponseTimeSec) as totalResponseTimeSec, " +
+            "sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
             "sum(requestCount) as requestCount\n" +
             "group by sourceCell, destinationCell, httpResponseGroup"
     ),
@@ -46,10 +46,19 @@ public enum SiddhiStoreQueryTemplates {
             "destinationCell == \"${" + Params.DESTINATION_CELL + "}\")\n" +
             "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
             "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
-            "select AGG_TIMESTAMP, httpResponseGroup, sum(totalResponseTimeSec) as totalResponseTimeSec, " +
+            "select AGG_TIMESTAMP, httpResponseGroup, sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
             "sum(totalRequestSizeBytes) as totalRequestSizeBytes, " +
             "sum(totalResponseSizeBytes) as totalResponseSizeBytes, sum(requestCount) as requestCount\n" +
             "group by AGG_TIMESTAMP, httpResponseGroup"
+    ),
+    REQUEST_AGGREGATION_CELL_MICROSERVICES("from RequestAggregation\n" +
+            "on sourceCell == \"${" + Params.CELL + "}\" or destinationCell == \"${" + Params.CELL + "}\"" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
+            "select sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup, " +
+            "sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
+            "sum(requestCount) as requestCount\n" +
+            "group by sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup"
     ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
             "on (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +

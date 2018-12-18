@@ -439,7 +439,7 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Volume(ops)"/>
+                                        <YAxis title="Volume (ops)"/>
                                         <LineSeries data={reqVolumeData}
                                             onNearestX={(d) => this.setState({volumeTooltip: d})}/>
                                         <LineMarkSeries data={reqDurationData} color="#12939a" size={3}/>
@@ -513,7 +513,7 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Duration(s)"/>
+                                        <YAxis title="Duration (ms)"/>
                                         <LineSeries color="#3f51b5" data={reqDurationData}
                                             onNearestX={(d) => this.setState({durationTooltip: d})}/>
                                         <LineMarkSeries data={reqDurationData} color="#3f51b5" size={3}/>
@@ -587,7 +587,7 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Size"/>
+                                        <YAxis title="Size (Bytes)"/>
                                         {
                                             reqResSizeData.map((dataItem, index) => (
                                                 <LineSeries
@@ -607,7 +607,7 @@ class MetricsGraphs extends React.Component {
                                             reqResSizeData.map((dataItem, index) => (
                                                 <LineMarkSeries
                                                     key={dataItem.name}
-                                                    data={dataItem.data}
+                                                    data={dataItem.data.filter((datum) => datum.y > 0)}
                                                     color={reqResColors[index]}
                                                     size={3}
                                                 />

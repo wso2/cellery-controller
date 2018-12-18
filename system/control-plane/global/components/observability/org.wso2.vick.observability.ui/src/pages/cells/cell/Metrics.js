@@ -72,7 +72,7 @@ class Metrics extends React.Component {
     };
 
     update = (isUserAction, startTime, endTime, selectedTypeOverride, selectedCellOverride) => {
-        const {selectedType, selectedCell} = this.state
+        const {selectedType, selectedCell} = this.state;
         const queryStartTime = startTime.valueOf();
         const queryEndTime = endTime.valueOf();
 
