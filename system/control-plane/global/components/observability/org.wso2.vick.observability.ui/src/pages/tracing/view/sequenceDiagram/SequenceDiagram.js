@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import "./sequence.css";
+import "./SequenceDiagram.css";
 import Button from "@material-ui/core/Button";
 import Constants from "../../../common/constants";
 import PropTypes from "prop-types";
@@ -28,7 +28,7 @@ import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../../../common/color";
 
-const styles = () => ({
+const styles = (theme) => ({
     newMessageText: {
         fill: "#4c4cb3",
         cursor: "pointer"
@@ -42,7 +42,13 @@ const styles = () => ({
     subtitle: {
         fontWeight: 400,
         fontSize: "1.2rem",
-        padding: "40px 40px 0px 45px"
+        marginTop: theme.spacing.unit * 3
+    },
+    mermaid: {
+        padding: "20px"
+    },
+    backButton: {
+        margin: theme.spacing.unit
     }
 });
 
@@ -77,11 +83,12 @@ class SequenceDiagram extends React.Component {
                 <Typography color="textSecondary" className={classes.subtitle}>
                     {this.state.heading}
                 </Typography>
-                <Button color="primary" style={this.state.clicked ? {} : {display: "none"}} onClick={this.addCells}>
+                <Button color="primary" style={this.state.clicked ? {} : {display: "none"}}
+                    onClick={this.addCells} className={classes.backButton}>
                     &lt;&lt; Back to Cell-level Diagram
                 </Button>
                 <div>{this.state.cellName}</div>
-                <div className="mermaid" id="mermaidDiv" ref={this.mermaidDivRef}>
+                <div className={classes.mermaid} ref={this.mermaidDivRef}>
                     {this.state.config}
                 </div>
             </div>
@@ -409,6 +416,6 @@ SequenceDiagram.propTypes = {
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles, {withTheme: false})(withRouter(withColor(SequenceDiagram)));
+export default withStyles(styles, {withTheme: true})(withRouter(withColor(SequenceDiagram)));
 
 
