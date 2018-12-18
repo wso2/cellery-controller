@@ -58,6 +58,35 @@ class QueryUtils {
         return time;
     };
 
+    /**
+     * Returns suitable granularity for the provided time range.
+     *
+     * @param fromTime
+     * @param toTime
+     * @returns {string} The granularity to be used
+     */
+    static getTimeGranularity = (fromTime, toTime) => {
+        const days = "days";
+        const hours = "hours";
+        const minutes = "minutes";
+        const months = "months";
+        const seconds = "seconds";
+        const years = "years";
+        if (toTime.diff(fromTime, "years") > 0) {
+            return years;
+        } else if (toTime.diff(fromTime, months) > 0) {
+            return months;
+        } else if (toTime.diff(fromTime, days) > 0) {
+            return days;
+        } else if (toTime.diff(fromTime, hours) > 0) {
+            return hours;
+        } else if (toTime.diff(fromTime, minutes) > 0) {
+            return minutes;
+        }
+        return seconds;
+    };
+
+
 }
 
 export default QueryUtils;

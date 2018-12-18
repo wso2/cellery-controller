@@ -81,7 +81,7 @@ public class AggregatedRequestsAPI {
 
     @OPTIONS
     @Path("/cells")
-    public Response getCellOverviewOptions() {
+    public Response getCellStatsOptions() {
         return Response.ok().build();
     }
 }

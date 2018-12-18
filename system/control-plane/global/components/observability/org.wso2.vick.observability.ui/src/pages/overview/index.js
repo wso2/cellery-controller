@@ -25,6 +25,7 @@ import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import Constants from "../common/constants";
+import QueryUtils from "../common/utils/queryUtils";
 import PropTypes from "prop-types";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
@@ -207,7 +208,7 @@ class Overview extends React.Component {
     onClickCell = (nodeId) => {
         let fromTime = this.state.currentTimeRange.fromTime;
         let toTime = this.state.currentTimeRange.toTime;
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${this.getTimeGranularity(fromTime, toTime)}`;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
         axios({
             method: "GET",
             url: `http://localhost:9123/api/http-requests/cells/${nodeId}/services${queryParams}`
@@ -262,15 +263,19 @@ class Overview extends React.Component {
         let healthInfo = [];
         services.forEach((service) => {
             let total = this.getTotalRequests(service, responseCodeStats, '*');
-            let error = this.getTotalRequests(service, responseCodeStats, '5xx');
-            let successPercentage = 1 - (error / total);
+            if (total !== 0) {
+                let error = this.getTotalRequests(service, responseCodeStats, '5xx');
+                let successPercentage = 1 - (error / total);
 
-            if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
-                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: successPercentage});
-            } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
-                healthInfo.push({nodeId: service, status: Constants.Status.Warning, percentage: successPercentage});
+                if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: successPercentage});
+                } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Warning, percentage: successPercentage});
+                } else {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Error, percentage: successPercentage});
+                }
             } else {
-                healthInfo.push({nodeId: service, status: Constants.Status.Error, percentage: successPercentage});
+                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: 1});
             }
         });
         return healthInfo;
@@ -301,6 +306,7 @@ class Overview extends React.Component {
             let healthInfo = this.defaultState.healthInfo.find((element) => {
                 return element.nodeId === node.id;
             });
+            console.log(healthInfo);
             nodeInfo.push([healthInfo.percentage, node.id, node.id]);
         });
         return nodeInfo;
@@ -466,47 +472,30 @@ class Overview extends React.Component {
         let healthInfo = [];
         nodes.forEach((node) => {
             let total = this.getTotalRequests(node.id, this.defaultState.request.cellStats, '*');
-            let error = this.getTotalRequests(node.id, this.defaultState.request.cellStats, '5xx');
-            let successPercentage = 1 - (error / total);
-
-            if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: successPercentage});
-            } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Warning, percentage: successPercentage});
+            if (total !== 0) {
+                let error = this.getTotalRequests(node.id, this.defaultState.request.cellStats, '5xx');
+                let successPercentage = 1 - (error / total);
+                if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: successPercentage});
+                } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Warning, percentage: successPercentage});
+                } else {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Error, percentage: successPercentage});
+                }
             } else {
-                healthInfo.push({nodeId: node.id, status: Constants.Status.Error, percentage: successPercentage});
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: 1});
             }
         });
         return healthInfo;
     };
 
-    getTimeGranularity = (fromTime, toTime) => {
-        const days = "days";
-        const hours = "hours";
-        const minutes = "minutes";
-        const months = "months";
-        const seconds = "seconds";
-        const years = "years";
-        if (toTime.diff(fromTime, "years") > 0) {
-            return years;
-        } else if (toTime.diff(fromTime, months) > 0) {
-            return months;
-        } else if (toTime.diff(fromTime, days) > 0) {
-            return days;
-        } else if (toTime.diff(fromTime, hours) > 0) {
-            return hours;
-        } else if (toTime.diff(fromTime, minutes) > 0) {
-            return minutes;
-        }
-        return seconds;
-    };
 
     callRequestStats = (fromTime, toTime) => {
         if (!fromTime) {
             toTime = moment();
             fromTime = moment().add(-1, 'years');
         }
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${this.getTimeGranularity(fromTime, toTime)}`;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
         axios({
             method: "GET",
             url: `http://localhost:9123/api/http-requests/cells${queryParams}`
@@ -545,29 +534,36 @@ class Overview extends React.Component {
             {
                 key: "OK",
                 count: response2xx,
-                value: Math.round((response2xx / total) * 100)
+                value: this.getPercentage(response2xx, total)
             },
             {
                 key: "3xx",
                 count: response3xx,
-                value: Math.round((response3xx / total) * 100)
+                value: this.getPercentage(response3xx, total)
             },
             {
                 key: "4xx",
                 count: response4xx,
-                value: Math.round((response4xx / total) * 100)
+                value: this.getPercentage(response4xx, total)
             },
             {
                 key: "5xx",
                 count: response5xx,
-                value: Math.round((response5xx / total) * 100)
+                value: this.getPercentage(response5xx, total)
             },
             {
                 key: "Unknown",
                 count: responseUnknown,
-                value: Math.round((responseUnknown / total) * 100)
+                value: this.getPercentage(responseUnknown, total)
             }
         ];
+    };
+
+    getPercentage = (responseCode, total) => {
+        if (total !==0){
+           return Math.round((responseCode / total) * 100);
+        }
+        return 0;
     };
 
     getTotalRequests = (cell, stats, responseCode) => {
