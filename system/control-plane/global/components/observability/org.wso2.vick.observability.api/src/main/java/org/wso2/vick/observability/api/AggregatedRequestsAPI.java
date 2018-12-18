@@ -18,6 +18,8 @@ package org.wso2.vick.observability.api;
 
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryTemplates;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
@@ -46,6 +48,45 @@ public class AggregatedRequestsAPI {
                 .build()
                 .execute();
         return Response.ok().entity(results).build();
+    }
+
+    @GET
+    @Path("/cells/metrics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                @QueryParam("queryEndTime") long queryEndTime,
+                                @DefaultValue("") @QueryParam("sourceCell") String sourceCell,
+                                @DefaultValue("") @QueryParam("destinationCell") String destinationCell,
+                                @DefaultValue("seconds") @QueryParam("timeGranularity") String timeGranularity) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS_METRICS.builder()
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)
+                .setArg(SiddhiStoreQueryTemplates.Params.SOURCE_CELL, sourceCell)
+                .setArg(SiddhiStoreQueryTemplates.Params.DESTINATION_CELL, destinationCell)
+                .build()
+                .execute();
+        return Response.ok().entity(results).build();
+    }
+
+    @GET
+    @Path("/cells/metadata")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getForCells(@QueryParam("queryStartTime") long queryStartTime,
+                                @QueryParam("queryEndTime") long queryEndTime) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_CELLS_METADATA.builder()
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                .build()
+                .execute();
+
+        Set<String> cells = new HashSet<>();
+        for (Object[] result : results) {
+            cells.add((String) result[0]);
+            cells.add((String) result[1]);
+        }
+
+        return Response.ok().entity(cells).build();
     }
 
     @OPTIONS
