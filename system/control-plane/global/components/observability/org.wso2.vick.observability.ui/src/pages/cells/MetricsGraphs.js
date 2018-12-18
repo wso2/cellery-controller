@@ -27,9 +27,11 @@ import {withStyles} from "@material-ui/core/styles";
 import {
     Crosshair,
     DiscreteColorLegend,
+    Highlight,
     Hint,
     HorizontalBarSeries,
     HorizontalGridLines,
+    LineMarkSeries,
     LineSeries,
     RadialChart,
     VerticalGridLines,
@@ -91,13 +93,19 @@ class MetricsGraphs extends React.Component {
             trafficTooltip: false,
             sizeTooltip: [],
             volumeTooltip: false,
-            durationTooltip: false
+            durationTooltip: false,
+            lastDrawLocationVolumeChart: null,
+            lastDrawLocationDurationChart: null,
+            lastDrawLocationSizeChart: null
         };
     }
 
     render = () => {
         const {classes, colorGenerator} = this.props;
-        const {statusTooltip, trafficTooltip, volumeTooltip, durationTooltip, sizeTooltip} = this.state;
+        const {
+            statusTooltip, trafficTooltip, volumeTooltip, durationTooltip, sizeTooltip, lastDrawLocationVolumeChart,
+            lastDrawLocationDurationChart, lastDrawLocationSizeChart
+        } = this.state;
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
         const warningColor = colorGenerator.getColor(ColorGenerator.WARNING);
@@ -327,8 +335,14 @@ class MetricsGraphs extends React.Component {
                                 className={classes.cardHeader}
                             />
                             <CardContent className={classes.content}>
-                                <div className={classes.lineChart}>
-                                    <FlexibleWidthXYPlot xType="time" height={400}
+                                <div>
+                                    <FlexibleWidthXYPlot xType="time" height={400} animation
+                                        xDomain={
+                                            lastDrawLocationVolumeChart && [
+                                                lastDrawLocationVolumeChart.left,
+                                                lastDrawLocationVolumeChart.right
+                                            ]
+                                        }
                                         onMouseLeave={() => this.setState({volumeTooltip: false})}>
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
@@ -338,11 +352,31 @@ class MetricsGraphs extends React.Component {
                                             data={reqVolumeData}
                                             onNearestX={(d) => this.setState({volumeTooltip: d})}
                                         />
+                                        <LineMarkSeries
+                                            data={reqDurationData}
+                                            color="#12939a"
+                                            size={3}
+                                        />
                                         {volumeTooltip && <Crosshair values={[volumeTooltip]}>
                                             <div className="rv-hint__content">
                                                 {`${moment(volumeTooltip.x).format(Constants.Pattern.DATE_TIME)} :
                                                 ${volumeTooltip.y} Requests`}</div>
                                         </Crosshair>}
+                                        <Highlight
+                                            onBrushEnd={(area) => this.setState({lastDrawLocationVolumeChart: area})}
+                                            onDrag={(area) => {
+                                                this.setState({
+                                                    lastDrawLocationVolumeChart: {
+                                                        bottom: lastDrawLocationVolumeChart.bottom
+                                                        + (area.top - area.bottom),
+                                                        left: lastDrawLocationVolumeChart.left
+                                                        - (area.right - area.left),
+                                                        right: lastDrawLocationVolumeChart.right
+                                                        - (area.right - area.left),
+                                                        top: lastDrawLocationVolumeChart.top + (area.top - area.bottom)
+                                                    }
+                                                });
+                                            }}/>
                                     </FlexibleWidthXYPlot>
                                     <DiscreteColorLegend
                                         orientation="horizontal"
@@ -367,8 +401,14 @@ class MetricsGraphs extends React.Component {
                                 className={classes.cardHeader}
                             />
                             <CardContent className={classes.content}>
-                                <div className={classes.lineChart}>
-                                    <FlexibleWidthXYPlot xType="time" height={400}
+                                <div>
+                                    <FlexibleWidthXYPlot xType="time" height={400} animation
+                                        xDomain={
+                                            lastDrawLocationDurationChart && [
+                                                lastDrawLocationDurationChart.left,
+                                                lastDrawLocationDurationChart.right
+                                            ]
+                                        }
                                         onMouseLeave={() => this.setState({durationTooltip: false})}>
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
@@ -379,11 +419,32 @@ class MetricsGraphs extends React.Component {
                                             onNearestX={(d) => this.setState({durationTooltip: d})}
 
                                         />
+                                        <LineMarkSeries
+                                            data={reqDurationData}
+                                            color="#3f51b5"
+                                            size={3}
+                                        />
                                         {durationTooltip && <Crosshair values={[durationTooltip]}>
                                             <div className="rv-hint__content">
                                                 {`${moment(durationTooltip.x).format(Constants.Pattern.DATE_TIME)} :
                                                 ${durationTooltip.y}`}</div>
                                         </Crosshair>}
+                                        <Highlight
+                                            onBrushEnd={(area) => this.setState({lastDrawLocationDurationChart: area})}
+                                            onDrag={(area) => {
+                                                this.setState({
+                                                    lastDrawLocationDurationChart: {
+                                                        bottom: lastDrawLocationDurationChart.bottom
+                                                        + (area.top - area.bottom),
+                                                        left: lastDrawLocationDurationChart.left
+                                                        - (area.right - area.left),
+                                                        right: lastDrawLocationDurationChart.right
+                                                        - (area.right - area.left),
+                                                        top: lastDrawLocationDurationChart.top
+                                                        + (area.top - area.bottom)
+                                                    }
+                                                });
+                                            }}/>
                                     </FlexibleWidthXYPlot>
                                     <DiscreteColorLegend
                                         orientation="horizontal"
@@ -409,7 +470,13 @@ class MetricsGraphs extends React.Component {
                             />
                             <CardContent className={classes.content}>
                                 <div>
-                                    <FlexibleWidthXYPlot xType="time" height={400}
+                                    <FlexibleWidthXYPlot xType="time" height={400} animation
+                                        xDomain={
+                                            lastDrawLocationSizeChart && [
+                                                lastDrawLocationSizeChart.left,
+                                                lastDrawLocationSizeChart.right
+                                            ]
+                                        }
                                         onMouseLeave={() => this.setState({sizeTooltip: []})}>
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
@@ -427,6 +494,15 @@ class MetricsGraphs extends React.Component {
                                                         }))
                                                     })}
                                                     color={reqResColors[index]}
+                                                />))
+                                        }
+                                        {
+                                            reqResSizeData.map((dataItem, index) => (
+                                                <LineMarkSeries
+                                                    key={dataItem.name}
+                                                    data={dataItem.data}
+                                                    color={reqResColors[index]}
+                                                    size={3}
                                                 />))
                                         }
 
@@ -447,6 +523,20 @@ class MetricsGraphs extends React.Component {
                                                     : null
                                             }
                                         </Crosshair>
+                                        <Highlight
+                                            onBrushEnd={(area) => this.setState({lastDrawLocationSizeChart: area})}
+                                            onDrag={(area) => {
+                                                this.setState({
+                                                    lastDrawLocationSizeChart: {
+                                                        bottom: lastDrawLocationSizeChart.bottom
+                                                        + (area.top - area.bottom),
+                                                        left: lastDrawLocationSizeChart.left - (area.right - area.left),
+                                                        right: lastDrawLocationSizeChart.right
+                                                        - (area.right - area.left),
+                                                        top: lastDrawLocationSizeChart.top + (area.top - area.bottom)
+                                                    }
+                                                });
+                                            }}/>
                                     </FlexibleWidthXYPlot>
                                     <DiscreteColorLegend
                                         orientation="horizontal"
