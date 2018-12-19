@@ -139,6 +139,7 @@ public class ModelGenerationExtension extends StreamProcessor {
                 }
             }
         }
+        processor.process(complexEventChunk);
     }
 
     private void addLink(SpanCacheInfo parentSpan, Node childNode, String serviceName, String operationName,

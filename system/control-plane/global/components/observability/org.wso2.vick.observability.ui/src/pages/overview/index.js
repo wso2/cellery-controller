@@ -564,11 +564,11 @@ class Overview extends React.Component {
     getTotalRequests = (cell, stats, responseCode) => {
         let total = 0;
         stats.forEach((stat) => {
-            if (!cell || cell === stat[0]) {
+            if (!cell || cell === stat[1]) {
                 if (responseCode === "*") {
-                    total += stat[3];
-                } else if (responseCode === stat[1]) {
-                    total += stat[3];
+                    total += stat[4];
+                } else if (responseCode === stat[2]) {
+                    total += stat[4];
                 }
             }
         });
