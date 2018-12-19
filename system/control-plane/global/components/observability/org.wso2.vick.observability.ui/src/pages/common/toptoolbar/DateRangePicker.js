@@ -37,7 +37,7 @@ import {withStyles} from "@material-ui/core";
 
 const styles = (theme) => ({
     dateRangePopOver: {
-        width: 800,
+        width: 700,
         padding: theme.spacing.unit * 2
     },
     dateRangesTitleDivider: {
@@ -55,7 +55,7 @@ const styles = (theme) => ({
         paddingBottom: theme.spacing.unit
     },
     customRangeApplyButton: {
-        marginTop: theme.spacing.unit
+        marginTop: theme.spacing.unit * 2
     },
     isRangeToNowCheckbox: {
         marginLeft: theme.spacing.unit * 0.5
@@ -68,10 +68,14 @@ const styles = (theme) => ({
         padding: theme.spacing.unit * 0.5
     },
     selectedDefaultRange: {
-        fontWeight: 600
+        fontWeight: 500,
+        color: theme.palette.primary.main
     },
     formControl: {
         marginBottom: theme.spacing.unit * 2
+    },
+    collapsible: {
+        marginBottom: 15
     }
 });
 
@@ -200,14 +204,14 @@ class DateRangePicker extends React.Component {
                             <Grid item xs={2} className={classes.customDateRangeInputLabel}>
                                 <InputLabel>From</InputLabel>
                             </Grid>
-                            <Grid item xs={8}>
+                            <Grid item xs={7}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
                                     <TextField error={Boolean(fromErrorMessage)} value={startTime}
                                         onFocus={this.onFromDateRangeInputFocus}
                                         onChange={this.getCustomDateRangeInputChangeHandler("startTime")}
                                         helperText={fromErrorMessage}/>
                                 </FormControl>
-                                <Collapse in={isRangeFromCalendarOpen}>
+                                <Collapse in={isRangeFromCalendarOpen} className={classes.collapsible}>
                                     <Datetime input={false} value={parsedStartTime}
                                         onChange={this.getCustomCalendarChangeHandler("startTime")}/>
                                 </Collapse>
@@ -217,7 +221,7 @@ class DateRangePicker extends React.Component {
                             <Grid item xs={2} className={classes.customDateRangeInputLabel}>
                                 <InputLabel>To</InputLabel>
                             </Grid>
-                            <Grid item xs={8}>
+                            <Grid item xs={7}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
                                     <TextField error={Boolean(toErrorMessage)} value={endTime}
                                         onFocus={this.onToDateRangeInputFocus}
@@ -229,24 +233,30 @@ class DateRangePicker extends React.Component {
                                         onChange={this.getCustomCalendarChangeHandler("endTime")}/>
                                 </Collapse>
                             </Grid>
-                            <Grid item xs={2}>
+                            <Grid item xs={3}>
                                 <FormControlLabel className={classes.isRangeToNowCheckbox}
                                     control={
                                         <Checkbox
                                             checked={isRangeToNow}
                                             onChange={this.onIsRangeToNowCheckBoxClick}
                                             value="isRangeToNow"
+                                            color="default"
                                         />
                                     }
                                     label="now"
                                 />
                             </Grid>
                         </Grid>
-                        <Button variant="outlined" size="small" color="primary"
-                            disabled={Boolean(fromErrorMessage || toErrorMessage)}
-                            className={classes.customRangeApplyButton} onClick={this.onCustomRangeApply}>
-                            Apply
-                        </Button>
+                        <Grid container>
+                            <Grid item xs={2}></Grid>
+                            <Grid item xs={10}>
+                                <Button variant="outlined" size="small" color="primary"
+                                    disabled={Boolean(fromErrorMessage || toErrorMessage)}
+                                    className={classes.customRangeApplyButton} onClick={this.onCustomRangeApply}>
+                                    Apply
+                                </Button>
+                            </Grid>
+                        </Grid>
                     </Grid>
                     <Grid item xs={4} className={classes.defaultRangesContainer}>
                         <Typography variant={"subtitle2"}>Default Ranges</Typography>

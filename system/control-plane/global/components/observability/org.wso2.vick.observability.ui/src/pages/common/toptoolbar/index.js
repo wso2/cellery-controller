@@ -17,9 +17,8 @@
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
-import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
 import Button from "@material-ui/core/Button";
-import CalendarToday from "@material-ui/icons/CalendarToday";
+import CalendarToday from "@material-ui/icons/CalendarTodayOutlined";
 import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
@@ -42,7 +41,7 @@ const styles = (theme) => ({
         position: "sticky",
         top: 64,
         backgroundColor: "#fafafa",
-        marginBottom: theme.spacing.unit * 6,
+        marginBottom: 42,
         zIndex: 999,
         minHeight: 70
     },
@@ -52,18 +51,29 @@ const styles = (theme) => ({
         marginTop: theme.spacing.unit
     },
     dateRangeButton: {
-        marginRight: theme.spacing.unit * 3
+        marginRight: theme.spacing.unit * 3,
+        textTransform: "none",
+        fontWeight: 500,
+        border: "1px solid #e0e0e0"
     },
     startInputAdornment: {
         marginRight: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
+    },
+    refreshTimeSelect: {
+        border: "none",
+        fontSize: 14
     },
     menuButton: {
         marginTop: theme.spacing.unit
     },
     dateRangeNicknameSelectedTime: {
         marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit
+        marginRight: theme.spacing.unit,
+        fontWeight: 500
+    },
+    calendar: {
+        marginLeft: 10
     }
 });
 
@@ -129,13 +139,14 @@ class TopToolbar extends React.Component {
                                     <Typography className={classes.dateRangeNicknameSelectedTime}>
                                         {startTime}
                                     </Typography>
-                                    <Typography color={"textSecondary"}>To</Typography>
+                                    <Typography color={"textSecondary"}>to</Typography>
                                     <Typography className={classes.dateRangeNicknameSelectedTime}>
                                         {endTime}
                                     </Typography>
                                 </React.Fragment>
                             )
-                        }<ArrowDropDown/><CalendarToday/>
+                        }
+                        <CalendarToday color="action" className={classes.calendar}/>
                     </Button>
                     <Popover id="date-range-picker-popper"
                         open={isDateRangeSelectorOpen}
@@ -157,7 +168,8 @@ class TopToolbar extends React.Component {
                             inputProps={{name: "refresh-interval", id: "refresh-interval"}}
                             startAdornment={(<InputAdornment className={classes.startInputAdornment}
                                 variant="filled"
-                                position="start">Refresh</InputAdornment>)}>
+                                position="start">Refresh</InputAdornment>)}
+                            className={classes.refreshTimeSelect}>
                             <MenuItem value={-1}>Off</MenuItem>
                             <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
                             <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
