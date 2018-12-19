@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import ColorGenerator from "../../common/color/colorGenerator";
+import HealthIndicator from "../../common/HealthIndicator";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import React from "react";
@@ -28,7 +28,6 @@ import Typography from "@material-ui/core/Typography/Typography";
 import withColor from "../../common/color";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
-import HealthIndicator from "../../common/HealthIndicator";
 
 const styles = (theme) => ({
     table: {

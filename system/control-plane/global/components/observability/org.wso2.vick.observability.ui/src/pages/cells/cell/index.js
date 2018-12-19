@@ -21,7 +21,6 @@ import Metrics from "./Metrics";
 import MicroserviceList from "./MicroserviceList";
 import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
-import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import Tab from "@material-ui/core/Tab";
@@ -100,7 +99,7 @@ class Cell extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={`${cellName}`} subHeader="(Cell)" onUpdate={this.handleOnUpdate}/>
+                <TopToolbar title={`${cellName}`} subTitle="(Cell)" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>

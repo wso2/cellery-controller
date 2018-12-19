@@ -24,9 +24,9 @@ import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
+import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography/Typography";
 
 const styles = (theme) => ({
     filters: {
