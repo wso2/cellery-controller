@@ -15,6 +15,7 @@
  */
 
 /* eslint react/display-name: "off" */
+
 import "react-vis/dist/style.css";
 import "./index.css";
 import Avatar from "@material-ui/core/Avatar";

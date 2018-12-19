@@ -156,7 +156,7 @@ class View extends React.Component {
                 ? null
                 : (
                     <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
+                        <TopToolbar title={"Distributed Tracing"}/>
                         {
                             spans && spans.length === 0
                                 ? (

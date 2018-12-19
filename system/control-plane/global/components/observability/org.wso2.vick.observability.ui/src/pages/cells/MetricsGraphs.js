@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* eslint max-lines: ["off"] */
+
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
@@ -27,20 +29,8 @@ import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    Crosshair,
-    DiscreteColorLegend,
-    Highlight,
-    Hint,
-    HorizontalBarSeries,
-    HorizontalGridLines,
-    LineMarkSeries,
-    LineSeries,
-    RadialChart,
-    VerticalGridLines,
-    XAxis,
-    XYPlot,
-    YAxis,
-    makeWidthFlexible
+    Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines, LineMarkSeries,
+    RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
 
@@ -52,12 +42,10 @@ const styles = {
         boxShadow: "none",
         border: "1px solid #eee"
     },
-    pos: {
-        marginBottom: 12
-    },
     cardHeader: {
         borderBottom: "1px solid #eee"
-    }, title: {
+    },
+    title: {
         fontSize: 16,
         fontWeight: 500,
         color: "#4d4d4d"
@@ -109,122 +97,224 @@ class MetricsGraphs extends React.Component {
         };
     }
 
+    calculateMetrics = () => {
+        const {colorGenerator, data} = this.props;
+        const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
+        const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
+
+        let totalRequestsCount = 0;
+        let totalErrorsCount = 0;
+        let totalResponseTime = 0;
+        let minTime = Number.MAX_SAFE_INTEGER;
+        let maxTime = 0;
+        const httpResponseGroupCounts = {
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+        };
+        for (const datum of data) {
+            totalRequestsCount += datum.requestCount;
+            totalResponseTime += datum.totalResponseTimeMilliSec;
+            httpResponseGroupCounts[datum.httpResponseGroup] += datum.requestCount;
+
+            if (datum.httpResponseGroup === "5xx") {
+                totalErrorsCount += datum.requestCount;
+            }
+
+            if (datum.timestamp < minTime) {
+                minTime = datum.timestamp;
+            }
+            if (datum.timestamp > maxTime) {
+                maxTime = datum.timestamp;
+            }
+        }
+        const timeRange = maxTime > minTime ? maxTime - minTime : 0;
+
+        // Preparing data for the Success / Failure rate Pie Chart
+        const totalErrorPercentage = totalRequestsCount === 0 ? 0 : totalErrorsCount * 100 / totalRequestsCount;
+        const totalSuccessPercentage = totalRequestsCount === 0
+            ? 0
+            : (totalRequestsCount - totalErrorsCount) * 100 / totalRequestsCount;
+        const statusData = [];
+        if (totalErrorPercentage > 0) {
+            statusData.push({
+                title: "Error",
+                count: totalErrorsCount,
+                percentage: totalErrorPercentage,
+                color: errColor
+            });
+        }
+        if (totalSuccessPercentage > 0) {
+            statusData.push({
+                title: "Success",
+                count: totalRequestsCount - totalErrorsCount,
+                percentage: totalSuccessPercentage,
+                color: successColor
+            });
+        }
+
+        // Preparing data for the HTTP traffic Bar Chart
+        const trafficData = ["2xx", "3xx", "4xx", "5xx"]
+            .map((datum) => ({
+                x: totalRequestsCount === 0 ? 0 : httpResponseGroupCounts[datum] * 100 / totalRequestsCount,
+                y: "Out",
+                title: (datum === "2xx" ? "OK" : datum),
+                count: httpResponseGroupCounts[datum] + 100
+            }));
+
+        // Aggregating the data by timestamp (time-series charts doesn't need to consider response code)
+        const aggregatedData = [];
+        let lastTimestamp = 0;
+        let aggregatedDatum = null;
+        for (let i = 0; i < data.length; i++) {
+            const datum = data[i];
+            if (datum.timestamp === lastTimestamp) {
+                aggregatedDatum.totalRequestSizeBytes += datum.totalRequestSizeBytes;
+                aggregatedDatum.totalResponseSizeBytes += datum.totalResponseSizeBytes;
+                aggregatedDatum.totalResponseTimeMilliSec += datum.totalResponseTimeMilliSec;
+                aggregatedDatum.requestCount += datum.requestCount;
+            } else {
+                if (aggregatedDatum) {
+                    aggregatedData.push(aggregatedDatum);
+                }
+
+                lastTimestamp = datum.timestamp;
+                aggregatedDatum = {
+                    timestamp: datum.timestamp,
+                    totalRequestSizeBytes: datum.totalRequestSizeBytes,
+                    totalResponseSizeBytes: datum.totalResponseSizeBytes,
+                    totalResponseTimeMilliSec: datum.totalResponseTimeMilliSec,
+                    requestCount: datum.requestCount
+                };
+            }
+        }
+
+        // Preparing a proper time-series data-set with 0 requests points added
+        const timeSeriesData = [];
+        const addEmptyTimeSeriesPoint = (timestamp) => {
+            timeSeriesData.push({
+                timestamp: timestamp,
+                totalRequestSizeBytes: 0,
+                totalResponseSizeBytes: 0,
+                totalResponseTimeMilliSec: 0,
+                requestCount: 0
+            });
+        };
+        for (let i = 0; i < aggregatedData.length; i++) {
+            const datum = aggregatedData[i];
+
+            if (i > 0 && timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
+                addEmptyTimeSeriesPoint(datum.timestamp - 1000);
+            }
+            timeSeriesData.push(datum);
+            if (i < aggregatedData.length - 1 && aggregatedData[i + 1].timestamp > datum.timestamp + 1000) {
+                addEmptyTimeSeriesPoint(datum.timestamp + 1000);
+            }
+        }
+
+        // Preparing data for the Request Volume Line Chart
+        const reqVolumeData = timeSeriesData.map((datum) => ({
+            x: datum.timestamp,
+            y: datum.requestCount
+        }));
+
+        // Preparing data for the Request Duration Line Chart
+        const reqDurationData = timeSeriesData.map((datum) => ({
+            x: datum.timestamp,
+            y: datum.requestCount === 0 ? 0 : datum.totalResponseTimeMilliSec / datum.requestCount
+        }));
+
+        // Preparing data for the Response Size Line Chart
+        const reqResSizeData = [
+            {
+                name: "Request",
+                data: timeSeriesData.map((datum) => ({
+                    x: datum.timestamp,
+                    y: datum.requestCount === 0 ? 0 : datum.totalRequestSizeBytes / datum.requestCount
+                }))
+            },
+            {
+                name: "Response",
+                data: timeSeriesData.map((datum) => ({
+                    x: datum.timestamp,
+                    y: datum.requestCount === 0 ? 0 : datum.totalResponseSizeBytes / datum.requestCount
+                }))
+            }
+        ];
+
+        return {
+            totalResponseTime: totalResponseTime,
+            totalRequestsCount: totalRequestsCount,
+            timeRange: timeRange,
+            statusData: statusData,
+            trafficData: trafficData,
+            reqVolumeData: reqVolumeData,
+            reqDurationData: reqDurationData,
+            reqResSizeData: reqResSizeData
+        };
+    };
+
     render = () => {
         const {classes, colorGenerator} = this.props;
         const {
             statusTooltip, trafficTooltip, volumeTooltip, durationTooltip, sizeTooltip, lastDrawLocationVolumeChart,
             lastDrawLocationDurationChart, lastDrawLocationSizeChart
         } = this.state;
+
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
         const warningColor = colorGenerator.getColor(ColorGenerator.WARNING);
         const redirectionColor = colorGenerator.getColor(ColorGenerator.CLIENT_ERROR);
+
         const statusCodesColors = [successColor, redirectionColor, warningColor, errColor];
         const reqResColors = ["#5bbd5a", "#76c7e3"];
-        const BarSeries = HorizontalBarSeries;
-        const dateTimeFormat = Constants.Pattern.DATE_TIME;
 
-        // TODO: Remove when replaced with actual data
-        const MSEC_DAILY = 86400000;
-        const timestamp = new Date("December 9 2018").getTime();
+        const {
+            timeRange, statusData, trafficData, reqDurationData, reqResSizeData, totalRequestsCount,
+            totalResponseTime
+        } = this.calculateMetrics();
 
-        const statusData = [
-            {title: "Error", count: 20, percentage: 2, color: errColor},
-            {title: "Success", count: 80, percentage: 8, color: successColor}
-        ];
-
-        const trafficData = [
-            {y: "Out", x: 70, title: "OK", count: 700, percentage: 70},
-            {y: "Out", x: 20, title: "3xx", count: 200, percentage: 20},
-            {y: "Out", x: 5, title: "4xx", count: 50, percentage: 5},
-            {y: "Out", x: 5, title: "5xx", count: 50, percentage: 5}
-        ];
-
-        const reqVolumeData = [
-            {x: timestamp + MSEC_DAILY, y: 3},
-            {x: timestamp + MSEC_DAILY * 2, y: 5},
-            {x: timestamp + MSEC_DAILY * 3, y: 15},
-            {x: timestamp + MSEC_DAILY * 4, y: 10},
-            {x: timestamp + MSEC_DAILY * 5, y: 6},
-            {x: timestamp + MSEC_DAILY * 6, y: 3},
-            {x: timestamp + MSEC_DAILY * 7, y: 9},
-            {x: timestamp + MSEC_DAILY * 8, y: 11}
-        ];
-        const reqDurationData = [
-            {x: timestamp + MSEC_DAILY, y: 3},
-            {x: timestamp + MSEC_DAILY * 2, y: 5},
-            {x: timestamp + MSEC_DAILY * 3, y: 15},
-            {x: timestamp + MSEC_DAILY * 4, y: 10},
-            {x: timestamp + MSEC_DAILY * 5, y: 6},
-            {x: timestamp + MSEC_DAILY * 6, y: 3},
-            {x: timestamp + MSEC_DAILY * 7, y: 9},
-            {x: timestamp + MSEC_DAILY * 8, y: 11}
-        ];
-
-        const reqResSizeData = [
-            {
-                name: "Request",
-                data: [
-                    {x: timestamp + MSEC_DAILY, y: 3},
-                    {x: timestamp + MSEC_DAILY * 2, y: 5},
-                    {x: timestamp + MSEC_DAILY * 3, y: 15},
-                    {x: timestamp + MSEC_DAILY * 4, y: 10},
-                    {x: timestamp + MSEC_DAILY * 5, y: 6},
-                    {x: timestamp + MSEC_DAILY * 6, y: 3},
-                    {x: timestamp + MSEC_DAILY * 7, y: 9},
-                    {x: timestamp + MSEC_DAILY * 8, y: 11}
-                ]
-            },
-            {
-                name: "Response",
-                data: [
-                    {x: timestamp + MSEC_DAILY, y: 10},
-                    {x: timestamp + MSEC_DAILY * 2, y: 4},
-                    {x: timestamp + MSEC_DAILY * 3, y: 2},
-                    {x: timestamp + MSEC_DAILY * 4, y: 15},
-                    {x: timestamp + MSEC_DAILY * 5, y: 13},
-                    {x: timestamp + MSEC_DAILY * 6, y: 6},
-                    {x: timestamp + MSEC_DAILY * 7, y: 7},
-                    {x: timestamp + MSEC_DAILY * 8, y: 2}
-                ]
-            }
-        ];
+        const zoomHintToolTip = (
+            <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the graph to zoom out.">
+                <InfoIcon className={classes.info}/>
+            </Tooltip>
+        );
 
         return (
             <div className={classes.root}>
                 <Grid container spacing={24}>
                     <Grid item md={3} sm={6} xs={12}>
                         <Card className={classes.card}>
-                            <CardHeader
+                            <CardHeader title="Success / Failure Rate" className={classes.cardHeader}
                                 classes={{
                                     title: classes.title
-                                }}
-                                title="Success/ Failure Rate"
-                                className={classes.cardHeader}
-                            />
+                                }}/>
                             <CardContent className={classes.content} align="center">
-                                <RadialChart
-                                    data={statusData}
-                                    innerRadius={60}
-                                    radius={85}
+                                <RadialChart innerRadius={60} radius={85} width={180} height={180}
+                                    colorType="literal"
                                     getAngle={(d) => d.percentage}
                                     onValueMouseOver={(v) => this.setState({statusTooltip: v})}
-                                    onSeriesMouseOut={(v) => this.setState({statusTooltip: false})}
-                                    width={180}
-                                    height={180}
-                                    colorType="literal"
-                                >
-                                    {statusTooltip && <Hint value={statusTooltip}>
-                                        <div className="rv-hint__content">
-                                            {`${statusTooltip.title} :
-                                            ${statusTooltip.percentage}% (${statusTooltip.count} Requests)`}
-                                        </div>
-                                    </Hint>}
+                                    onSeriesMouseOut={() => this.setState({statusTooltip: false})}
+                                    data={statusData}>
+                                    {
+                                        statusTooltip
+                                            ? (
+                                                <Hint value={statusTooltip}>
+                                                    <div className="rv-hint__content">
+                                                        {
+                                                            `${statusTooltip.title} :
+                                                            ${statusTooltip.percentage}%
+                                                            (${statusTooltip.count} Requests)`
+                                                        }
+                                                    </div>
+                                                </Hint>
+                                            ) : null
+                                    }
                                 </RadialChart>
                                 <div>
                                     <DiscreteColorLegend items={statusData.map((d) => d.title)}
-                                        colors={[errColor, successColor]}
-                                        orientation="horizontal"/>
+                                        colors={[errColor, successColor]} orientation="horizontal"/>
                                 </div>
                             </CardContent>
                         </Card>
@@ -232,16 +322,17 @@ class MetricsGraphs extends React.Component {
                     <Grid item md={3} sm={6} xs={12} alignItems="center">
                         <Grid item sm={12}>
                             <Card className={classes.card}>
-                                <CardHeader
+                                <CardHeader title="Average Response Time" className={classes.cardHeader}
                                     classes={{
                                         title: classes.title
-                                    }}
-                                    title="Average Response Time"
-                                    className={classes.cardHeader}
-                                />
+                                    }}/>
                                 <CardContent align="center">
                                     <Typography className={classes.cardDetails}>
-                                        200
+                                        {
+                                            totalRequestsCount === 0
+                                                ? 0
+                                                : Math.round(totalResponseTime / totalRequestsCount)
+                                        }
                                     </Typography>
                                     <Typography color="textSecondary" className={classes.cardDetailsSecondary}>
                                         ms
@@ -251,16 +342,17 @@ class MetricsGraphs extends React.Component {
                         </Grid>
                         <Grid item sm={12} className={classes.contentGrid}>
                             <Card className={classes.card}>
-                                <CardHeader
+                                <CardHeader title="Average Request Count" className={classes.cardHeader}
                                     classes={{
                                         title: classes.title
-                                    }}
-                                    title="Average Request Count"
-                                    className={classes.cardHeader}
-                                />
+                                    }}/>
                                 <CardContent align="center">
                                     <Typography className={classes.cardDetails}>
-                                        25
+                                        {
+                                            timeRange === 0
+                                                ? 0
+                                                : Math.round(totalRequestsCount * 1000 * 100 / timeRange) / 100
+                                        }
                                     </Typography>
                                     <Typography color="textSecondary" className={classes.cardDetailsSecondary}>
                                         Requests/s
@@ -271,46 +363,41 @@ class MetricsGraphs extends React.Component {
                     </Grid>
                     <Grid item md={6} sm={12} xs={12}>
                         <Card className={classes.card}>
-                            <CardHeader
+                            <CardHeader title="HTTP Traffic" className={classes.cardHeader}
                                 classes={{
                                     title: classes.title
-                                }}
-                                title="HTTP Traffic"
-                                className={classes.cardHeader}
-                            />
+                                }}/>
                             <CardContent className={classes.content}>
                                 <div>
-                                    <FlexibleWidthXYPlot
-                                        yType="ordinal"
-                                        stackBy="x"
-                                        height={100}
+                                    <FlexibleWidthXYPlot yType="ordinal" stackBy="x" height={100}
                                         className={classes.barChart}>
                                         <VerticalGridLines/>
                                         <HorizontalGridLines/>
                                         <XAxis/>
                                         <YAxis/>
-
                                         {
                                             trafficData.map((dataItem, index) => (
-                                                <BarSeries
-                                                    key={dataItem.y}
-                                                    data={[dataItem]}
+                                                <HorizontalBarSeries key={dataItem.y} data={[dataItem]}
                                                     color={statusCodesColors[index]}
                                                     onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                                    onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                                    onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                                                 />
                                             ))
-
                                         }
-                                        {trafficTooltip && <Hint value={trafficTooltip}>
-                                            <div className="rv-hint__content">
-                                                {`${trafficTooltip.title} :
-                                                ${trafficTooltip.percentage}% (${trafficTooltip.count} Requests)`}
-                                            </div>
-                                        </Hint>}
+                                        {
+                                            trafficTooltip
+                                                ? (
+                                                    <Hint value={trafficTooltip}>
+                                                        <div className="rv-hint__content">{
+                                                            `${trafficTooltip.title} : ${trafficTooltip.x}%
+                                                            (${trafficTooltip.count} Requests)`
+                                                        }</div>
+                                                    </Hint>
+                                                )
+                                                : null
+                                        }
                                     </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend
-                                        orientation="horizontal"
+                                    <DiscreteColorLegend orientation="horizontal"
                                         items={[
                                             {
                                                 title: "OK",
@@ -336,19 +423,11 @@ class MetricsGraphs extends React.Component {
                     </Grid>
                     <Grid item md={6} sm={12} xs={12}>
                         <Card className={classes.card}>
-                            <CardHeader
+                            <CardHeader title="Request Volume" className={classes.cardHeader}
                                 classes={{
                                     title: classes.title
                                 }}
-                                title="Request Volume"
-                                className={classes.cardHeader}
-                                action={
-                                    <Tooltip
-                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
-                                        to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -363,39 +442,42 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Volume(ops)"/>
-                                        <LineSeries
-                                            data={reqVolumeData}
-                                            onNearestX={(d) => this.setState({volumeTooltip: d})}
-                                        />
-                                        <LineMarkSeries
-                                            data={reqDurationData}
-                                            color="#12939a"
-                                            size={3}
-                                        />
-                                        {volumeTooltip && <Crosshair values={[volumeTooltip]}>
-                                            <div className="rv-hint__content">
-                                                {`${moment(volumeTooltip.x).format(Constants.Pattern.DATE_TIME)} :
-                                                ${volumeTooltip.y} Requests`}</div>
-                                        </Crosshair>}
+                                        <YAxis title="Volume (ops)"/>
+                                        <LineMarkSeries data={reqDurationData} color="#12939a" size={3}
+                                            onNearestX={(d) => this.setState({volumeTooltip: d})}/>
+                                        {
+                                            volumeTooltip
+                                                ? (
+                                                    <Crosshair values={[volumeTooltip]}>
+                                                        <div className="rv-hint__content">
+                                                            {
+                                                                `${moment(volumeTooltip.x)
+                                                                    .format(Constants.Pattern.DATE_TIME)} :
+                                                                ${volumeTooltip.y} Requests`
+                                                            }
+                                                        </div>
+                                                    </Crosshair>
+                                                )
+                                                : null
+                                        }
                                         <Highlight
                                             onBrushEnd={(area) => this.setState({lastDrawLocationVolumeChart: area})}
                                             onDrag={(area) => {
                                                 this.setState({
                                                     lastDrawLocationVolumeChart: {
                                                         bottom: lastDrawLocationVolumeChart.bottom
-                                                        + (area.top - area.bottom),
+                                                            + (area.top - area.bottom),
                                                         left: lastDrawLocationVolumeChart.left
-                                                        - (area.right - area.left),
+                                                            - (area.right - area.left),
                                                         right: lastDrawLocationVolumeChart.right
-                                                        - (area.right - area.left),
-                                                        top: lastDrawLocationVolumeChart.top + (area.top - area.bottom)
+                                                            - (area.right - area.left),
+                                                        top: lastDrawLocationVolumeChart.top
+                                                            + (area.top - area.bottom)
                                                     }
                                                 });
                                             }}/>
                                     </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend
-                                        orientation="horizontal"
+                                    <DiscreteColorLegend orientation="horizontal"
                                         items={[
                                             {
                                                 title: "Request",
@@ -409,19 +491,11 @@ class MetricsGraphs extends React.Component {
                     </Grid>
                     <Grid item md={6} sm={12} xs={12}>
                         <Card className={classes.card}>
-                            <CardHeader
+                            <CardHeader title="Request Duration" className={classes.cardHeader}
                                 classes={{
                                     title: classes.title
                                 }}
-                                title="Request Duration"
-                                className={classes.cardHeader}
-                                action={
-                                    <Tooltip
-                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
-                                        to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -436,22 +510,24 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Duration(s)"/>
-                                        <LineSeries color="#3f51b5"
-                                            data={reqDurationData}
-                                            onNearestX={(d) => this.setState({durationTooltip: d})}
-
-                                        />
-                                        <LineMarkSeries
-                                            data={reqDurationData}
-                                            color="#3f51b5"
-                                            size={3}
-                                        />
-                                        {durationTooltip && <Crosshair values={[durationTooltip]}>
-                                            <div className="rv-hint__content">
-                                                {`${moment(durationTooltip.x).format(Constants.Pattern.DATE_TIME)} :
-                                                ${durationTooltip.y}`}</div>
-                                        </Crosshair>}
+                                        <YAxis title="Duration (ms)"/>
+                                        <LineMarkSeries data={reqDurationData} color="#3f51b5" size={3}
+                                            onNearestX={(d) => this.setState({durationTooltip: d})}/>
+                                        {
+                                            durationTooltip
+                                                ? (
+                                                    <Crosshair values={[durationTooltip]}>
+                                                        <div className="rv-hint__content">
+                                                            {
+                                                                `${moment(durationTooltip.x)
+                                                                    .format(Constants.Pattern.DATE_TIME)} :
+                                                                ${durationTooltip.y}`
+                                                            }
+                                                        </div>
+                                                    </Crosshair>
+                                                )
+                                                : null
+                                        }
                                         <Highlight
                                             onBrushEnd={(area) => this.setState({lastDrawLocationDurationChart: area})}
                                             onDrag={(area) => {
@@ -469,34 +545,24 @@ class MetricsGraphs extends React.Component {
                                                 });
                                             }}/>
                                     </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend
-                                        orientation="horizontal"
+                                    <DiscreteColorLegend orientation="horizontal"
                                         items={[
                                             {
                                                 title: "Request",
                                                 color: "#3f51b5"
                                             }
-                                        ]}
-                                    />
+                                        ]}/>
                                 </div>
                             </CardContent>
                         </Card>
                     </Grid>
                     <Grid item md={6} sm={12} xs={12}>
                         <Card className={classes.card}>
-                            <CardHeader
+                            <CardHeader title="Request/Response Size" className={classes.cardHeader}
                                 classes={{
                                     title: classes.title
                                 }}
-                                title="Request/Response Size"
-                                className={classes.cardHeader}
-                                action={
-                                    <Tooltip
-                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
-                                        to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -511,42 +577,36 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Size"/>
+                                        <YAxis title="Size (Bytes)"/>
                                         {
                                             reqResSizeData.map((dataItem, index) => (
-                                                <LineSeries
-                                                    key={dataItem.name}
+                                                <LineMarkSeries key={dataItem.name} color={reqResColors[index]} size={3}
                                                     data={dataItem.data}
                                                     onNearestX={(d, {index}) => this.setState({
                                                         sizeTooltip: reqResSizeData.map((d) => ({
                                                             ...d.data[index],
                                                             name: d.name
                                                         }))
-                                                    })}
-                                                    color={reqResColors[index]}
-                                                />))
+                                                    })}/>
+                                            ))
                                         }
-                                        {
-                                            reqResSizeData.map((dataItem, index) => (
-                                                <LineMarkSeries
-                                                    key={dataItem.name}
-                                                    data={dataItem.data}
-                                                    color={reqResColors[index]}
-                                                    size={3}
-                                                />))
-                                        }
-
                                         <Crosshair values={sizeTooltip}>
                                             {
                                                 sizeTooltip.length > 0
                                                     ? (
                                                         <div className="rv-hint__content">
                                                             <div className={classes.toolTipHead}>
-                                                                {`${moment(sizeTooltip[0].x).format(dateTimeFormat)}`}
+                                                                {
+                                                                    `${moment(sizeTooltip[0].x)
+                                                                        .format(Constants.Pattern.DATE_TIME)}`
+                                                                }
                                                             </div>
-                                                            {sizeTooltip.map(
-                                                                (tooltipItem, {index}) => <div key={tooltipItem.name}>
-                                                                    {`${tooltipItem.name}: ${tooltipItem.y}`}</div>)
+                                                            {
+                                                                sizeTooltip.map((tooltipItem) => (
+                                                                    <div key={tooltipItem.name}>
+                                                                        {`${tooltipItem.name}: ${tooltipItem.y}`}
+                                                                    </div>
+                                                                ))
                                                             }
                                                         </div>
                                                     )
@@ -568,14 +628,13 @@ class MetricsGraphs extends React.Component {
                                                 });
                                             }}/>
                                     </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend
-                                        orientation="horizontal"
+                                    <DiscreteColorLegend orientation="horizontal"
                                         items={
                                             reqResSizeData.map((d, index) => ({
                                                 title: d.name,
                                                 color: reqResColors[index]
-                                            }))}
-                                    />
+                                            }))
+                                        }/>
                                 </div>
                             </CardContent>
                         </Card>
@@ -589,7 +648,15 @@ class MetricsGraphs extends React.Component {
 
 MetricsGraphs.propTypes = {
     classes: PropTypes.object.isRequired,
-    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired
+    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
+    data: PropTypes.arrayOf(PropTypes.shape({
+        timestamp: PropTypes.number.isRequired,
+        httpResponseGroup: PropTypes.string.isRequired,
+        totalRequestSizeBytes: PropTypes.number.isRequired,
+        totalResponseSizeBytes: PropTypes.number.isRequired,
+        totalResponseTimeMilliSec: PropTypes.number.isRequired,
+        requestCount: PropTypes.number.isRequired
+    })).isRequired
 };
 
 export default withStyles(styles)(withColor(MetricsGraphs));

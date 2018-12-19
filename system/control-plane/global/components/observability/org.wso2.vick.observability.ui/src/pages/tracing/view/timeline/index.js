@@ -32,7 +32,8 @@ import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({
     formControl: {
-        margin: theme.spacing.unit
+        marginTop: theme.spacing.unit * 4,
+        marginBottom: theme.spacing.unit * 0.5
     },
     microserviceTypeMenuItem: {
         pointerEvents: "none"
@@ -123,9 +124,9 @@ class Timeline extends React.PureComponent {
 
         return (
             <React.Fragment>
-                <Grid container justify={"flex-start"} spacing={24}>
+                <Grid container justify={"flex-start"}>
                     <Grid item xs={3}>
-                        <FormControl className={classes.formControl} fullWidth={true}>
+                        <FormControl className={classes.formControl}>
                             <InputLabel htmlFor="select-multiple-checkbox">Type</InputLabel>
                             <Select multiple value={this.state.selectedServiceTypes}
                                 onChange={this.handleServiceTypeChange}

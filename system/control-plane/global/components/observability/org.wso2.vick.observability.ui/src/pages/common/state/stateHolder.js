@@ -41,18 +41,18 @@ class StateHolder {
 
     constructor() {
         const rawState = {
-            user: AuthUtils.getAuthenticatedUser(),
-            loadingState: {
+            [StateHolder.USER]: AuthUtils.getAuthenticatedUser(),
+            [StateHolder.LOADING_STATE]: {
                 isLoading: false,
                 message: null
             },
-            notificationState: {
+            [StateHolder.NOTIFICATION_STATE]: {
                 isOpen: false,
                 message: null,
                 notificationLevel: null
             },
-            config: {},
-            globalFilter: {
+            [StateHolder.CONFIG]: {},
+            [StateHolder.GLOBAL_FILTER]: {
                 startTime: "now - 1 year",
                 endTime: "now",
                 dateRangeNickname: "Last 1 year",
@@ -181,7 +181,7 @@ class StateHolder {
                     warningThreshold: 0.7
                 }
             };
-            self.state.config = {
+            self.state[StateHolder.CONFIG] = {
                 value: loadedConfiguration,
                 listeners: []
             };
