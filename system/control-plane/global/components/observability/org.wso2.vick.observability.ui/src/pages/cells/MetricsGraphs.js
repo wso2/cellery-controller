@@ -30,7 +30,7 @@ import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
     Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines, LineMarkSeries,
-    LineSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
+    RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
 
@@ -204,7 +204,7 @@ class MetricsGraphs extends React.Component {
         for (let i = 0; i < aggregatedData.length; i++) {
             const datum = aggregatedData[i];
 
-            if (i > 0 && aggregatedData[i - 1].timestamp < datum.timestamp - 1000) {
+            if (i > 0 && timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
                 addEmptyTimeSeriesPoint(datum.timestamp - 1000);
             }
             timeSeriesData.push(datum);
@@ -271,7 +271,7 @@ class MetricsGraphs extends React.Component {
         const reqResColors = ["#5bbd5a", "#76c7e3"];
 
         const {
-            timeRange, statusData, trafficData, reqVolumeData, reqDurationData, reqResSizeData, totalRequestsCount,
+            timeRange, statusData, trafficData, reqDurationData, reqResSizeData, totalRequestsCount,
             totalResponseTime
         } = this.calculateMetrics();
 
@@ -443,9 +443,8 @@ class MetricsGraphs extends React.Component {
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
                                         <YAxis title="Volume (ops)"/>
-                                        <LineSeries data={reqVolumeData}
+                                        <LineMarkSeries data={reqDurationData} color="#12939a" size={3}
                                             onNearestX={(d) => this.setState({volumeTooltip: d})}/>
-                                        <LineMarkSeries data={reqDurationData} color="#12939a" size={3}/>
                                         {
                                             volumeTooltip
                                                 ? (
@@ -512,9 +511,8 @@ class MetricsGraphs extends React.Component {
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
                                         <YAxis title="Duration (ms)"/>
-                                        <LineSeries color="#3f51b5" data={reqDurationData}
+                                        <LineMarkSeries data={reqDurationData} color="#3f51b5" size={3}
                                             onNearestX={(d) => this.setState({durationTooltip: d})}/>
-                                        <LineMarkSeries data={reqDurationData} color="#3f51b5" size={3}/>
                                         {
                                             durationTooltip
                                                 ? (
@@ -582,27 +580,14 @@ class MetricsGraphs extends React.Component {
                                         <YAxis title="Size (Bytes)"/>
                                         {
                                             reqResSizeData.map((dataItem, index) => (
-                                                <LineSeries
-                                                    key={dataItem.name}
+                                                <LineMarkSeries key={dataItem.name} color={reqResColors[index]} size={3}
                                                     data={dataItem.data}
                                                     onNearestX={(d, {index}) => this.setState({
                                                         sizeTooltip: reqResSizeData.map((d) => ({
                                                             ...d.data[index],
                                                             name: d.name
                                                         }))
-                                                    })}
-                                                    color={reqResColors[index]}
-                                                />
-                                            ))
-                                        }
-                                        {
-                                            reqResSizeData.map((dataItem, index) => (
-                                                <LineMarkSeries
-                                                    key={dataItem.name}
-                                                    data={dataItem.data.filter((datum) => datum.y > 0)}
-                                                    color={reqResColors[index]}
-                                                    size={3}
-                                                />
+                                                    })}/>
                                             ))
                                         }
                                         <Crosshair values={sizeTooltip}>

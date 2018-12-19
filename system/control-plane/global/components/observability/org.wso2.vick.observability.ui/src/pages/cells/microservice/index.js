@@ -81,7 +81,7 @@ class Microservice extends React.Component {
     };
 
     handleOnUpdate = (isUserAction, startTime, endTime) => {
-        if (this.tabContentRef.current && this.tabContentRef.current.onUpdate) {
+        if (this.tabContentRef.current && this.tabContentRef.current.update) {
             this.tabContentRef.current.update(isUserAction, startTime, endTime);
         }
     };

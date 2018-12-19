@@ -26,6 +26,7 @@ import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import Typography from "@material-ui/core/Typography/Typography";
 
 const styles = (theme) => ({
     filters: {
@@ -198,7 +199,9 @@ class Metrics extends React.Component {
 
     render = () => {
         const {classes} = this.props;
-        const {selectedType, selectedCell, cells, cellData} = this.state;
+        const {selectedType, selectedCell, cells, cellData, cell} = this.state;
+
+        const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
 
         return (
             <React.Fragment>
@@ -216,9 +219,7 @@ class Metrics extends React.Component {
                         </Select>
                     </FormControl>
                     <FormControl className={classes.formControl}>
-                        <InputLabel htmlFor="selected-cell">
-                            {selectedType === Metrics.INBOUND ? "Source" : "Target"} Cell
-                        </InputLabel>
+                        <InputLabel htmlFor="selected-cell">{targetSourcePrefix} Cell</InputLabel>
                         <Select value={selectedCell}
                             onChange={this.getFilterChangeHandler("selectedCell")}
                             inputProps={{
@@ -233,7 +234,21 @@ class Metrics extends React.Component {
                     </FormControl>
                 </div>
                 <div className={classes.graphs}>
-                    <MetricsGraphs data={cellData}/>
+                    {
+                        cellData.length > 0
+                            ? (
+                                <MetricsGraphs data={cellData}/>
+                            )
+                            : (
+                                <Typography>
+                                    {
+                                        selectedType === Metrics.INBOUND
+                                            ? `No Requests from the selected cell to "${cell}" cell`
+                                            : `No Requests from "${cell}" cell to the selected cell`
+                                    }
+                                </Typography>
+                            )
+                    }
                 </div>
             </React.Fragment>
         );

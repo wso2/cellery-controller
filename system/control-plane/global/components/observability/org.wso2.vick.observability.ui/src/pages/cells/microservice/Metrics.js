@@ -26,6 +26,7 @@ import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import Typography from "@material-ui/core/Typography/Typography";
 
 const styles = (theme) => ({
     filters: {
@@ -254,10 +255,11 @@ class Metrics extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, cell, microservice} = this.props;
         const {selectedType, selectedCell, selectedMicroservice, microserviceData, metadata} = this.state;
 
         const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
+
         return (
             <React.Fragment>
                 <div className={classes.filters}>
@@ -305,7 +307,23 @@ class Metrics extends React.Component {
                     </FormControl>
                 </div>
                 <div className={classes.graphs}>
-                    <MetricsGraphs data={microserviceData}/>
+                    {
+                        microserviceData.length > 0
+                            ? (
+                                <MetricsGraphs data={microserviceData}/>
+                            )
+                            : (
+                                <Typography>
+                                    {
+                                        selectedType === Metrics.INBOUND
+                                            ? "No Requests from the selected microservice "
+                                                + `to the "${cell}" cell's "${microservice}" microservice`
+                                            : `No Requests from the "${cell}" cell's "${microservice}" microservice `
+                                                + "to the selected microservice"
+                                    }
+                                </Typography>
+                            )
+                    }
                 </div>
             </React.Fragment>
         );
