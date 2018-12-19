@@ -209,7 +209,7 @@ class Overview extends React.Component {
         queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
         HttpUtils.callObservabilityAPI(
             {
-                url: `/http-requests/cells/${nodeId}/services${queryParams}`,
+                url: `/http-requests/cells/${nodeId}/microservices${queryParams}`,
                 method: "GET"
             },
             this.props.globalState
@@ -261,11 +261,11 @@ class Overview extends React.Component {
         const config = globalState.get(StateHolder.CONFIG);
         const healthInfo = [];
         services.forEach((service) => {
-            const total = this.getTotalRequests(service, responseCodeStats, "*");
+            const total = this.getTotalServiceRequests(service, responseCodeStats, "*");
             if (total === 0) {
                 healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: 1});
             } else {
-                const error = this.getTotalRequests(service, responseCodeStats, "5xx");
+                const error = this.getTotalServiceRequests(service, responseCodeStats, "5xx");
                 const successPercentage = 1 - (error / total);
 
                 if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
@@ -569,6 +569,20 @@ class Overview extends React.Component {
                     total += stat[3];
                 } else if (responseCode === stat[1]) {
                     total += stat[3];
+                }
+            }
+        });
+        return total;
+    };
+
+    getTotalServiceRequests = (cell, stats, responseCode) => {
+        let total = 0;
+        stats.forEach((stat) => {
+            if (!cell || cell === stat[2]) {
+                if (responseCode === "*") {
+                    total += stat[6];
+                } else if (responseCode === stat[4]) {
+                    total += stat[6];
                 }
             }
         });
