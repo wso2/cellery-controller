@@ -17,8 +17,10 @@
  */
 package org.wso2.vick.observability.model.generator;
 
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
+import org.apache.log4j.Logger;
 import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
 import org.wso2.vick.observability.model.generator.exception.ModelException;
 import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
@@ -33,6 +35,8 @@ import java.util.Set;
  * This is the Manager, singleton class which performs the operations in the in memory dependency tree.
  */
 public class ModelManager {
+    private static final Logger log = Logger.getLogger(ModelManager.class);
+
     private MutableNetwork<Node, String> dependencyGraph;
 
     public ModelManager() throws ModelException {
@@ -97,6 +101,7 @@ public class ModelManager {
 
     public void addLink(Node parent, Node child, String serviceName) {
         try {
+            log.info("Add link: " + Utils.generateEdgeName(parent.getId(), child.getId(), serviceName));
             this.dependencyGraph.addEdge(parent, child, Utils.generateEdgeName(parent.getId(), child.getId(),
                     serviceName));
         } catch (Exception ignored) {
@@ -107,13 +112,24 @@ public class ModelManager {
         return dependencyGraph;
     }
 
-    public void moveLinks(Node fromNode, Node targetNode, String newEdgePrefix) {
-        Set<String> outEdges = this.dependencyGraph.outEdges(fromNode);
-        for (String edgeName : outEdges) {
-            Node outNode = this.dependencyGraph.incidentNodes(edgeName).target();
-            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + Utils.getEdgePostFix(edgeName);
-            this.addLink(targetNode, outNode, newEdgeName);
-            this.dependencyGraph.removeEdge(edgeName);
+    public void moveLinks(Node targetNode, String newEdgePrefix, List<String> edgesToRemove, boolean moveOnlyTarget) {
+        if (edgesToRemove != null) {
+            for (String edgeName : edgesToRemove) {
+                try {
+                    log.info("Trying to remove: " + edgeName);
+                    EndpointPair<Node> endpointPair = this.dependencyGraph.incidentNodes(edgeName);
+                    if (endpointPair != null) {
+                        Node outNode = endpointPair.target();
+                        if (!moveOnlyTarget || outNode.equals(targetNode)) {
+                            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + Utils.getEdgePostFix(edgeName);
+                            this.addLink(targetNode, outNode, newEdgeName);
+                            log.info("Removed Link: " + edgeName);
+                            this.dependencyGraph.removeEdge(edgeName);
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 
