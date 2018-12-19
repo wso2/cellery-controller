@@ -47,6 +47,7 @@ import React from "react";
 import Snackbar from "@material-ui/core/Snackbar/Snackbar";
 import Timeline from "@material-ui/icons/Timeline";
 import Toolbar from "@material-ui/core/Toolbar";
+import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
@@ -307,16 +308,16 @@ class AppLayout extends React.Component {
                 </AppBar>
                 <Drawer variant="permanent"
                     className={classNames(classes.drawer, {
-                        [classes.drawerOpen]: this.state.open,
-                        [classes.drawerClose]: !this.state.open
+                        [classes.drawerOpen]: open,
+                        [classes.drawerClose]: !open
                     })}
                     classes={{
                         paper: classNames({
-                            [classes.drawerOpen]: this.state.open,
-                            [classes.drawerClose]: !this.state.open
+                            [classes.drawerOpen]: open,
+                            [classes.drawerClose]: !open
                         })
                     }}
-                    open={this.state.open}>
+                    open={open}>
                     <div className={classes.toolbar}>
                         <IconButton onClick={this.handleDrawerClose}>
                             {theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
@@ -324,81 +325,116 @@ class AppLayout extends React.Component {
                     </div>
                     <Divider/>
                     <List className={classes.list}>
-                        <ListItem index={0} button key="Overview"
-                            className={classNames({[classes.active]: selectedIndex === 0})}
-                            onClick={(event) => {
-                                this.handleNavItemClick("/", event);
-                            }}>
-                            <ListItemIcon>
-                                <DesktopWindows className={classNames({[classes.active]: selectedIndex === 0})}/>
-                            </ListItemIcon>
-                            <ListItemText primary="Overview"
-                                classes={{primary: classNames({[classes.active]: selectedIndex === 0})}}/>
-                        </ListItem>
-                        <ListItem index={1} button key="Cells"
-                            className={classNames({[classes.active]: selectedIndex === 1})}
-                            onClick={(event) => {
-                                this.handleNavItemClick("/cells", event);
-                            }}>
-                            <ListItemIcon>
-                                <Grain className={classNames({[classes.active]: selectedIndex === 1})}/>
-                            </ListItemIcon>
-                            <ListItemText primary="Cells"
-                                classes={{primary: classNames({[classes.active]: selectedIndex === 1})}}/>
-                        </ListItem>
-                        <ListItem index={2} button key="Distributed Tracing"
-                            className={classNames({[classes.active]: selectedIndex === 2})}
-                            onClick={(event) => {
-                                this.handleNavItemClick("/tracing", event);
-                            }}>
-                            <ListItemIcon>
-                                <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
-                            </ListItemIcon>
-                            <ListItemText primary="Distributed Tracing"
-                                classes={{primary: classNames({[classes.active]: selectedIndex === 2})}}/>
-                        </ListItem>
-                        <ListItem button onClick={this.handleSystemMetricsNavSectionClick}>
-                            <ListItemIcon>
-                                <InsertChartOutlined/>
-                            </ListItemIcon>
-                            <ListItemText inset primary="System Metrics"/>
-                            {this.state.subMenuOpen ? <ExpandLess/> : <ExpandMore/>}
-                        </ListItem>
+                        <Tooltip title="Overview" disableFocusListener={open} disableHoverListener={open}
+                            placement="right"
+                            disableTouchListener={open}>
+                            <ListItem index={0} button key="Overview"
+                                className={classNames({[classes.active]: selectedIndex === 0})}
+                                onClick={(event) => {
+                                    this.handleNavItemClick("/", event);
+                                }}>
+                                <ListItemIcon>
+                                    <DesktopWindows className={classNames({[classes.active]: selectedIndex === 0})}/>
+                                </ListItemIcon>
+                                <ListItemText primary="Overview"
+                                    classes={{primary: classNames({[classes.active]: selectedIndex === 0})}}/>
+                            </ListItem>
+                        </Tooltip>
+                        <Tooltip title="Cells" disableFocusListener={open} disableHoverListener={open} placement="right"
+                            disableTouchListener={open}>
+                            <ListItem index={1} button key="Cells"
+                                className={classNames({[classes.active]: selectedIndex === 1})}
+                                onClick={(event) => {
+                                    this.handleNavItemClick("/cells", event);
+                                }}>
+                                <ListItemIcon>
+                                    <Grain className={classNames({[classes.active]: selectedIndex === 1})}/>
+                                </ListItemIcon>
+                                <ListItemText primary="Cells"
+                                    classes={{primary: classNames({[classes.active]: selectedIndex === 1})}}/>
+                            </ListItem></Tooltip>
+                        <Tooltip title="Distributed Tracing" disableFocusListener={open} disableHoverListener={open}
+                            placement="right"
+                            disableTouchListener={open}>
+                            <ListItem index={2} button key="Distributed Tracing"
+                                className={classNames({[classes.active]: selectedIndex === 2})}
+                                onClick={(event) => {
+                                    this.handleNavItemClick("/tracing", event);
+                                }}>
+                                <ListItemIcon>
+                                    <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
+                                </ListItemIcon>
+                                <ListItemText primary="Distributed Tracing"
+                                    classes={{primary: classNames({[classes.active]: selectedIndex === 2})}}/>
+                            </ListItem>
+                        </Tooltip>
+                        <Tooltip title="System Metrics" disableFocusListener={open} disableHoverListener={open}
+                            placement="right"
+                            disableTouchListener={open}>
+                            <ListItem button onClick={this.handleSystemMetricsNavSectionClick}>
+                                <ListItemIcon>
+                                    <InsertChartOutlined/>
+                                </ListItemIcon>
+                                <ListItemText inset primary="System Metrics"/>
+                                {this.state.subMenuOpen ? <ExpandLess/> : <ExpandMore/>}
+                            </ListItem>
+                        </Tooltip>
                         <Collapse in={this.state.subMenuOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <ListItem index={3} button key="ControlPlane"
-                                    className={classNames({[classes.active]: selectedIndex === 3}, classes.nested)}
-                                    onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/control-plane", event);
-                                    }}>
-                                    <ListItemIcon>
-                                        <BarChart className={classNames({[classes.active]: selectedIndex === 3})}/>
-                                    </ListItemIcon>
-                                    <ListItemText inset primary="Global Control Plane"
-                                        classes={{primary: classNames({[classes.active]: selectedIndex === 3})}}/>
-                                </ListItem>
-                                <ListItem index={4} button key="PodUsage"
-                                    className={classNames({[classes.active]: selectedIndex === 4}, classes.nested)}
-                                    onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/pod-usage", event);
-                                    }}>
-                                    <ListItemIcon>
-                                        <BarChart className={classNames({[classes.active]: selectedIndex === 4})}/>
-                                    </ListItemIcon>
-                                    <ListItemText inset primary="Pod Usage"
-                                        classes={{primary: classNames({[classes.active]: selectedIndex === 4})}}/>
-                                </ListItem>
-                                <ListItem index={5} button key="NodeUsage"
-                                    className={classNames({[classes.active]: selectedIndex === 5}, classes.nested)}
-                                    onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/node-usage", event);
-                                    }}>
-                                    <ListItemIcon>
-                                        <BarChart className={classNames({[classes.active]: selectedIndex === 5})}/>
-                                    </ListItemIcon>
-                                    <ListItemText inset primary="Node Usage"
-                                        classes={{primary: classNames({[classes.active]: selectedIndex === 5})}}/>
-                                </ListItem>
+                                <Tooltip title="Global Control Plane" disableFocusListener={open}
+                                    disableHoverListener={open} placement="right"
+                                    disableTouchListener={open}>
+                                    <ListItem index={3} button key="ControlPlane"
+                                        className={classNames({[classes.active]: selectedIndex === 3},
+                                            classes.nested)}
+                                        onClick={(event) => {
+                                            this.handleNavItemClick("/system-metrics/control-plane", event);
+                                        }}>
+                                        <ListItemIcon>
+                                            <BarChart className={classNames({[classes.active]: selectedIndex === 3})}/>
+                                        </ListItemIcon>
+                                        <ListItemText inset primary="Global Control Plane"
+                                            classes={{
+                                                primary: classNames({[classes.active]: selectedIndex === 3})
+                                            }}/>
+                                    </ListItem>
+                                </Tooltip>
+                                <Tooltip title="Pod Usage" disableFocusListener={open} disableHoverListener={open}
+                                    placement="right"
+                                    disableTouchListener={open}>
+                                    <ListItem index={4} button key="PodUsage"
+                                        className={classNames({[classes.active]: selectedIndex === 4},
+                                            classes.nested)}
+                                        onClick={(event) => {
+                                            this.handleNavItemClick("/system-metrics/pod-usage", event);
+                                        }}>
+                                        <ListItemIcon>
+                                            <BarChart className={classNames({[classes.active]: selectedIndex === 4})}/>
+                                        </ListItemIcon>
+                                        <ListItemText inset primary="Pod Usage"
+                                            classes={{
+                                                primary: classNames({[classes.active]: selectedIndex === 4})
+                                            }}/>
+                                    </ListItem>
+                                </Tooltip>
+                                <Tooltip title="Node Usage" disableFocusListener={open} disableHoverListener={open}
+                                    placement="right"
+                                    disableTouchListener={open}>
+                                    <ListItem index={5} button key="NodeUsage"
+                                        className={classNames({[classes.active]: selectedIndex === 5},
+                                            classes.nested)}
+                                        onClick={(event) => {
+                                            this.handleNavItemClick("/system-metrics/node-usage", event);
+                                        }}>
+                                        <ListItemIcon>
+                                            <BarChart className={classNames({[classes.active]: selectedIndex === 5})}/>
+                                        </ListItemIcon>
+                                        <ListItemText inset primary="Node Usage"
+                                            classes={{
+                                                primary: classNames({[classes.active]: selectedIndex === 5})
+                                            }}/>
+                                    </ListItem>
+                                </Tooltip>
                             </List>
                         </Collapse>
                     </List>

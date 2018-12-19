@@ -116,7 +116,7 @@ class Cell extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={`Cell: ${cellName}`} onUpdate={this.handleOnUpdate}/>
+                <TopToolbar title={`${cellName}`} subHeader="(Cell)" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>

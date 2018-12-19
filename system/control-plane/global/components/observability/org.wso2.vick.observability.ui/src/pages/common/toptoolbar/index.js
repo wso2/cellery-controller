@@ -17,9 +17,8 @@
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
-import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
 import Button from "@material-ui/core/Button";
-import CalendarToday from "@material-ui/icons/CalendarToday";
+import CalendarToday from "@material-ui/icons/CalendarTodayOutlined";
 import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
@@ -32,6 +31,7 @@ import React from "react";
 import Refresh from "@material-ui/icons/Refresh";
 import Select from "@material-ui/core/Select/Select";
 import Toolbar from "@material-ui/core/Toolbar/Toolbar";
+import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
@@ -42,28 +42,45 @@ const styles = (theme) => ({
         position: "sticky",
         top: 64,
         backgroundColor: "#fafafa",
-        marginBottom: theme.spacing.unit * 6,
+        marginBottom: 42,
         zIndex: 999,
         minHeight: 70
     },
     title: {
-        flexGrow: 1,
         marginLeft: theme.spacing.unit,
         marginTop: theme.spacing.unit
     },
+    subHeader: {
+        marginLeft: theme.spacing.unit,
+        marginTop: theme.spacing.unit
+    },
+    grow: {
+        flexGrow: 1
+    },
     dateRangeButton: {
-        marginRight: theme.spacing.unit * 3
+        marginRight: theme.spacing.unit * 3,
+        textTransform: "none",
+        fontWeight: 500,
+        border: "1px solid #e0e0e0"
     },
     startInputAdornment: {
         marginRight: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
+    },
+    refreshTimeSelect: {
+        border: "none",
+        fontSize: 14
     },
     menuButton: {
         marginTop: theme.spacing.unit
     },
     dateRangeNicknameSelectedTime: {
         marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit
+        marginRight: theme.spacing.unit,
+        fontWeight: 500
+    },
+    calendar: {
+        marginLeft: 10
     }
 });
 
@@ -98,7 +115,7 @@ class TopToolbar extends React.Component {
     };
 
     render = () => {
-        const {classes, title, location, history} = this.props;
+        const {classes, title, location, history, subHeader} = this.props;
         const {startTime, endTime, dateRangeNickname, refreshInterval, dateRangeSelectorAnchorElement} = this.state;
 
         const isDateRangeSelectorOpen = Boolean(dateRangeSelectorAnchorElement);
@@ -118,6 +135,14 @@ class TopToolbar extends React.Component {
                     <Typography variant="h5" color="inherit" className={classes.title}>
                         {title}
                     </Typography>
+                    {
+                        subHeader
+                            ? <Typography variant="subtitle1" color="textSecondary" className={classes.subHeader}>
+                                {subHeader}
+                            </Typography>
+                            : null
+                    }
+                    <div className={classes.grow}></div>
                     <Button aria-owns={isDateRangeSelectorOpen ? "date-range-picker-popper" : undefined}
                         className={classes.dateRangeButton} aria-haspopup="true" size="small" variant="text"
                         onClick={(event) => this.openDateRangeSelector(event.currentTarget)}>
@@ -129,13 +154,14 @@ class TopToolbar extends React.Component {
                                     <Typography className={classes.dateRangeNicknameSelectedTime}>
                                         {startTime}
                                     </Typography>
-                                    <Typography color={"textSecondary"}>To</Typography>
+                                    <Typography color={"textSecondary"}>to</Typography>
                                     <Typography className={classes.dateRangeNicknameSelectedTime}>
                                         {endTime}
                                     </Typography>
                                 </React.Fragment>
                             )
-                        }<ArrowDropDown/><CalendarToday/>
+                        }
+                        <CalendarToday color="action" className={classes.calendar}/>
                     </Button>
                     <Popover id="date-range-picker-popper"
                         open={isDateRangeSelectorOpen}
@@ -157,7 +183,8 @@ class TopToolbar extends React.Component {
                             inputProps={{name: "refresh-interval", id: "refresh-interval"}}
                             startAdornment={(<InputAdornment className={classes.startInputAdornment}
                                 variant="filled"
-                                position="start">Refresh</InputAdornment>)}>
+                                position="start">Refresh</InputAdornment>)}
+                            className={classes.refreshTimeSelect}>
                             <MenuItem value={-1}>Off</MenuItem>
                             <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
                             <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
@@ -167,9 +194,11 @@ class TopToolbar extends React.Component {
                             <MenuItem value={5 * 60 * 1000}>Every 5 min</MenuItem>
                         </Select>
                     </FormControl>
-                    <IconButton aria-label="Refresh" onClick={this.refreshManually}>
-                        <Refresh/>
-                    </IconButton>
+                    <Tooltip title="Refresh Now" placement="bottom">
+                        <IconButton aria-label="Refresh" onClick={this.refreshManually}>
+                            <Refresh/>
+                        </IconButton>
+                    </Tooltip>
                 </Toolbar>
             </div>
         );
@@ -300,6 +329,7 @@ class TopToolbar extends React.Component {
 TopToolbar.propTypes = {
     onUpdate: PropTypes.func,
     title: PropTypes.string.isRequired,
+    subHeader: PropTypes.string.isRequired,
     classes: PropTypes.any.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     history: PropTypes.shape({

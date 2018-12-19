@@ -115,7 +115,7 @@ const styles = (theme) => ({
         flexShrink: 0
     },
     drawerPaper: {
-        top: 140,
+        top: 135,
         width: drawerWidth,
         borderTopWidth: 1,
         borderTopStyle: "solid",
