@@ -1,24 +1,22 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
-import ColorGenerator from "../common/color/colorGenerator";
 import DataTable from "../common/DataTable";
+import HealthIndicator from "../common/HealthIndicator";
+import HttpUtils from "../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
@@ -26,7 +24,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";
 import TopToolbar from "../common/toptoolbar";
-import withColor from "../common/color";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 
@@ -42,44 +39,63 @@ class CellList extends React.Component {
         super(props);
 
         this.state = {
-            data: []
+            cellInfo: []
         };
     }
 
-    loadCellInfo = (isUserAction) => {
+    loadCellInfo = (isUserAction, queryStartTime, queryEndTime) => {
         const {globalState} = this.props;
         const self = this;
+
+        const search = {
+            queryStartTime: queryStartTime.valueOf(),
+            queryEndTime: queryEndTime.valueOf()
+        };
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
         }
-        // TODO : Change to a backend call to fetch data.
-        setTimeout(() => {
-            const cellData = [
-                [1, "Cell A", 0, 0.1, 800, 10],
-                [0.8, "Cell B", 0.2, 0.01, 800, 10],
-                [0.6, "Cell C", 0.3, 0.2, 800, 10]
-            ];
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells${HttpUtils.generateQueryParamString(search)}`,
+                method: "GET"
+            },
+            globalState
+        ).then((data) => {
+            const cellInfo = data.map((dataItem) => ({
+                sourceCell: dataItem[0],
+                destinationCell: dataItem[1],
+                httpResponseGroup: dataItem[2],
+                totalResponseTimeMilliSec: dataItem[3],
+                requestCount: dataItem[4]
+            }));
+
             self.setState({
-                data: cellData
+                cellInfo: cellInfo
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
-        }, 1000);
+        }).catch(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load cell information",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
+        });
     };
 
     render = () => {
-        const {classes, colorGenerator, globalState, match} = this.props;
-        const {data} = this.state;
+        const {classes, match} = this.props;
+        const {cellInfo} = this.state;
         const columns = [
             {
                 name: "Health",
                 options: {
-                    customBodyRender: (value) => {
-                        const color = colorGenerator.getColorForPercentage(value, globalState);
-                        return <CheckCircleOutline style={{color: color}}/>;
-                    }
+                    customBodyRender: (value) => <HealthIndicator value={value}/>
                 }
             },
             {
@@ -90,28 +106,72 @@ class CellList extends React.Component {
             },
             {
                 name: "Inbound Error Rate",
-                option: {
+                options: {
                     customBodyRender: (value) => `${value * 100} %`
                 }
             },
             {
                 name: "Outbound Error Rate",
-                option: {
+                options: {
                     customBodyRender: (value) => `${value * 100} %`
                 }
             },
             {
-                name: "Average Response Time (ms)"
+                name: "Average Response Time (ms)",
+                options: {
+                    customBodyRender: (value) => (Math.round(value))
+                }
             },
             {
-                name: "Average Request Count (requests/s)"
+                name: "Average Inbound Request Count (requests/s)"
             }
         ];
+
+        // Processing data to find the required values
+        const dataTableMap = {};
+        const initializeDataTableMapEntryIfNotPresent = (cell) => {
+            if (!dataTableMap[cell]) {
+                dataTableMap[cell] = {
+                    inboundErrorCount: 0,
+                    outboundErrorCount: 0,
+                    requestCount: 0,
+                    totalResponseTimeMilliSec: 0
+                };
+            }
+        };
+        for (const cellDatum of cellInfo) {
+            initializeDataTableMapEntryIfNotPresent(cellDatum.sourceCell);
+            initializeDataTableMapEntryIfNotPresent(cellDatum.destinationCell);
+
+            if (cellDatum.httpResponseGroup === "5xx") {
+                dataTableMap[cellDatum.destinationCell].inboundErrorCount += cellDatum.requestCount;
+                dataTableMap[cellDatum.sourceCell].outboundErrorCount += cellDatum.requestCount;
+            }
+            dataTableMap[cellDatum.destinationCell].requestCount += cellDatum.requestCount;
+            dataTableMap[cellDatum.destinationCell].totalResponseTimeMilliSec += cellDatum.totalResponseTimeMilliSec;
+        }
+
+        // Transforming the objects into 2D array accepted by the Table library
+        const tableData = [];
+        for (const cell in dataTableMap) {
+            if (dataTableMap.hasOwnProperty(cell) && Boolean(cell)) {
+                const cellData = dataTableMap[cell];
+                tableData.push([
+                    cellData.requestCount === 0 ? -1 : 1 - cellData.inboundErrorCount / cellData.requestCount,
+                    cell,
+                    cellData.requestCount === 0 ? 0 : cellData.inboundErrorCount / cellData.requestCount,
+                    cellData.requestCount === 0 ? 0 : cellData.outboundErrorCount / cellData.requestCount,
+                    cellData.requestCount === 0 ? 0 : cellData.totalResponseTimeMilliSec / cellData.requestCount,
+                    cellData.requestCount
+                ]);
+            }
+        }
+
         return (
             <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellInfo}/>
                 <Paper className={classes.root}>
-                    <DataTable columns={columns} data={data}/>
+                    <DataTable columns={columns} data={tableData}/>
                 </Paper>
             </React.Fragment>
         );
@@ -122,10 +182,9 @@ class CellList extends React.Component {
 CellList.propTypes = {
     classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
-    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     match: PropTypes.shape({
         url: PropTypes.string.isRequired
     }).isRequired
 };
 
-export default withStyles(styles)(withGlobalState(withColor(CellList)));
+export default withStyles(styles)(withGlobalState(CellList));

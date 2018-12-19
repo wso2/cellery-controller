@@ -56,12 +56,6 @@ public class DistributedTracingAPI {
         return Response.ok().entity(results).build();
     }
 
-    @OPTIONS
-    @Path("/metadata")
-    public Response getMetadataOptions() {
-        return Response.ok().build();
-    }
-
     @GET
     @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
@@ -184,13 +178,6 @@ public class DistributedTracingAPI {
         return Response.ok().entity(resultsMap).build();
     }
 
-    @OPTIONS
-    @Path("/search")
-    public Response searchOptions() {
-        return Response.ok().build();
-    }
-
-
     @GET
     @Path("/{traceId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -203,8 +190,8 @@ public class DistributedTracingAPI {
     }
 
     @OPTIONS
-    @Path("/{traceId}")
-    public Response getTraceByTraceId() {
+    @Path("/*")
+    public Response getOptions() {
         return Response.ok().build();
     }
 }
