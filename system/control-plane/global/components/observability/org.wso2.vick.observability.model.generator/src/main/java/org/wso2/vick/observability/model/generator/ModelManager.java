@@ -121,7 +121,8 @@ public class ModelManager {
                     if (endpointPair != null) {
                         Node outNode = endpointPair.target();
                         if (!moveOnlyTarget || outNode.equals(targetNode)) {
-                            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR + Utils.getEdgePostFix(edgeName);
+                            String newEdgeName = newEdgePrefix + Constants.LINK_SEPARATOR
+                                    + Utils.getEdgePostFix(edgeName);
                             this.addLink(targetNode, outNode, newEdgeName);
                             log.info("Removed Link: " + edgeName);
                             this.dependencyGraph.removeEdge(edgeName);
