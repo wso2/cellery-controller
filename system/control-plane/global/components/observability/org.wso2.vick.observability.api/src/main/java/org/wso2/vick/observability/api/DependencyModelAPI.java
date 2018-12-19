@@ -50,8 +50,8 @@ public class DependencyModelAPI {
     }
 
     @OPTIONS
-    @Path("/cells")
-    public Response getCellOverviewOptions() {
+    @Path("/*")
+    public Response getOptions() {
         return Response.ok().build();
     }
 }

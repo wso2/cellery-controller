@@ -12,7 +12,8 @@ define stream TelemetryStreamIn(sourceNamespace string, sourceCell string, sourc
 define stream ProcessedRequestsStream(sourceNamespace string, sourceCell string, sourceVICKService string,
                                       destinationNamespace string, destinationCell string,
                                       destinationVICKService string, requestPath string, requestMethod string,
-                                      httpResponseGroup string, responseTimeSec double, responseSizeBytes long);
+                                      httpResponseGroup string, responseTimeMilliSec double, requestSizeBytes long,
+                                      responseSizeBytes long);
 
 @store(type="rdbms", datasource="VICK_OBSERVABILITY_DB")
 @purge(enable="false")
@@ -27,8 +28,9 @@ select
     requestPath,
     requestMethod,
     httpResponseGroup,
-    avg(responseTimeSec) as avgResponseTimeSec,
-    avg(responseSizeBytes) as avgResponseSizeBytes,
+    sum(responseTimeMilliSec) as totalResponseTimeMilliSec,
+    sum(requestSizeBytes) as totalRequestSizeBytes,
+    sum(responseSizeBytes) as totalResponseSizeBytes,
     count() as requestCount
 group by
     sourceNamespace, sourceCell, sourceVICKService,
@@ -53,7 +55,8 @@ select
     requestPath,
     requestMethod,
     str:concat(convert(cast(responseCode, "int") / 100, "string"), "xx") as httpResponseGroup,
-    convert(responseDurationNanoSec, "double") / 1000000 as responseTimeSec,
+    convert(responseDurationNanoSec, "double") / 1000000 as responseTimeMilliSec,
+    ifThenElse(requestSizeBytes is null, 0L, requestSizeBytes) as requestSizeBytes,
     ifThenElse(responseSizeBytes is null, 0L, responseSizeBytes) as responseSizeBytes
 insert into ProcessedTelemetryStream;
 
@@ -70,6 +73,7 @@ select
     e1.requestPath,
     e1.requestMethod,
     e1.httpResponseGroup,
-    e1.responseTimeSec,
-    ifThenElse(e1.contextReporterKind == "outbound", e1.responseSizeBytes, e2.responseSizeBytes) as responseSizeBytes
+    e1.responseTimeMilliSec,
+    e1.requestSizeBytes,
+    e1.responseSizeBytes
 insert into ProcessedRequestsStream;

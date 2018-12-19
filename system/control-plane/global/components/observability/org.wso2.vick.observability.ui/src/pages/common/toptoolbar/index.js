@@ -1,25 +1,23 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
 import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
 import Button from "@material-ui/core/Button";
-import CalendarToday from "@material-ui/icons/CalendarToday";
+import CalendarToday from "@material-ui/icons/CalendarTodayOutlined";
 import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import IconButton from "@material-ui/core/IconButton/IconButton";
@@ -42,28 +40,45 @@ const styles = (theme) => ({
         position: "sticky",
         top: 64,
         backgroundColor: "#fafafa",
-        marginBottom: theme.spacing.unit * 6,
+        marginBottom: 42,
         zIndex: 999,
         minHeight: 70
     },
     title: {
-        flexGrow: 1,
         marginLeft: theme.spacing.unit,
         marginTop: theme.spacing.unit
     },
+    subTitle: {
+        marginLeft: theme.spacing.unit,
+        marginTop: theme.spacing.unit
+    },
+    grow: {
+        flexGrow: 1
+    },
     dateRangeButton: {
-        marginRight: theme.spacing.unit * 3
+        marginRight: theme.spacing.unit * 3,
+        textTransform: "none",
+        fontWeight: 500,
+        border: "1px solid #e0e0e0"
     },
     startInputAdornment: {
         marginRight: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
+    },
+    refreshTimeSelect: {
+        border: "none",
+        fontSize: 14
     },
     menuButton: {
         marginTop: theme.spacing.unit
     },
     dateRangeNicknameSelectedTime: {
         marginLeft: theme.spacing.unit,
-        marginRight: theme.spacing.unit
+        marginRight: theme.spacing.unit,
+        fontWeight: 500
+    },
+    calendar: {
+        marginLeft: 10
     }
 });
 
@@ -79,7 +94,8 @@ class TopToolbar extends React.Component {
             endTime: globalFilter.endTime,
             dateRangeNickname: globalFilter.dateRangeNickname,
             refreshInterval: globalFilter.refreshInterval,
-            dateRangeSelectorAnchorElement: undefined
+            dateRangeSelectorAnchorElement: undefined,
+            isAutoRefreshEnabled: true
         };
 
         this.refreshIntervalID = null;
@@ -97,9 +113,16 @@ class TopToolbar extends React.Component {
         this.stopRefreshTask();
     };
 
+    static getDerivedStateFromProps = (props, state) => ({
+        ...state,
+        isAutoRefreshEnabled: state.endTime.includes("now")
+    });
+
     render = () => {
-        const {classes, title, location, history} = this.props;
-        const {startTime, endTime, dateRangeNickname, refreshInterval, dateRangeSelectorAnchorElement} = this.state;
+        const {classes, title, subTitle, location, history, onUpdate} = this.props;
+        const {
+            startTime, endTime, dateRangeNickname, refreshInterval, dateRangeSelectorAnchorElement, isAutoRefreshEnabled
+        } = this.state;
 
         const isDateRangeSelectorOpen = Boolean(dateRangeSelectorAnchorElement);
         return (
@@ -118,58 +141,92 @@ class TopToolbar extends React.Component {
                     <Typography variant="h5" color="inherit" className={classes.title}>
                         {title}
                     </Typography>
-                    <Button aria-owns={isDateRangeSelectorOpen ? "date-range-picker-popper" : undefined}
-                        className={classes.dateRangeButton} aria-haspopup="true" size="small" variant="text"
-                        onClick={(event) => this.openDateRangeSelector(event.currentTarget)}>
-                        {dateRangeNickname
-                            ? dateRangeNickname
-                            : (
+                    {
+                        subTitle
+                            ? <Typography variant="subtitle1" color="textSecondary" className={classes.subTitle}>
+                                {subTitle}
+                            </Typography>
+                            : null
+                    }
+                    <div className={classes.grow}/>
+                    {
+                        onUpdate
+                            ? (
                                 <React.Fragment>
-                                    <Typography color={"textSecondary"}>From</Typography>
-                                    <Typography className={classes.dateRangeNicknameSelectedTime}>
-                                        {startTime}
-                                    </Typography>
-                                    <Typography color={"textSecondary"}>To</Typography>
-                                    <Typography className={classes.dateRangeNicknameSelectedTime}>
-                                        {endTime}
-                                    </Typography>
+                                    <Button aria-owns={isDateRangeSelectorOpen ? "date-range-picker-popper" : undefined}
+                                        className={classes.dateRangeButton} aria-haspopup="true" size="small"
+                                        variant="text"
+                                        onClick={(event) => this.openDateRangeSelector(event.currentTarget)}>
+                                        {
+                                            dateRangeNickname
+                                                ? dateRangeNickname
+                                                : (
+                                                    <React.Fragment>
+                                                        <Typography color={"textSecondary"}>From</Typography>
+                                                        <Typography className={classes.dateRangeNicknameSelectedTime}>
+                                                            {startTime}
+                                                        </Typography>
+                                                        <Typography color={"textSecondary"}>To</Typography>
+                                                        <Typography className={classes.dateRangeNicknameSelectedTime}>
+                                                            {endTime}
+                                                        </Typography>
+                                                    </React.Fragment>
+                                                )
+                                        }
+                                        <ArrowDropDown/><CalendarToday/>
+                                    </Button>
+                                    <Popover id="date-range-picker-popper"
+                                        open={isDateRangeSelectorOpen}
+                                        anchorEl={dateRangeSelectorAnchorElement}
+                                        onClose={this.closeDateRangeSelector}
+                                        anchorOrigin={{
+                                            vertical: "bottom",
+                                            horizontal: "right"
+                                        }}
+                                        transformOrigin={{
+                                            vertical: "top",
+                                            horizontal: "right"
+                                        }}>
+                                        <DateRangePicker startTime={startTime} endTime={endTime}
+                                            dateRangeNickname={dateRangeNickname} onRangeChange={this.setTimePeriod}/>
+                                    </Popover>
+                                    {
+                                        isAutoRefreshEnabled
+                                            ? (
+                                                <React.Fragment>
+                                                    <FormControl>
+                                                        <Select value={refreshInterval}
+                                                            onChange={this.setRefreshInterval}
+                                                            inputProps={{
+                                                                name: "refresh-interval",
+                                                                id: "refresh-interval"
+                                                            }}
+                                                            startAdornment={(
+                                                                <InputAdornment className={classes.startInputAdornment}
+                                                                    variant="filled" position="start">
+                                                                        Refresh
+                                                                </InputAdornment>
+                                                            )}>
+                                                            <MenuItem value={-1}>Off</MenuItem>
+                                                            <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
+                                                            <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
+                                                            <MenuItem value={15 * 1000}>Every 15 sec</MenuItem>
+                                                            <MenuItem value={30 * 1000}>Every 30 sec</MenuItem>
+                                                            <MenuItem value={60 * 1000}>Every 1 min</MenuItem>
+                                                            <MenuItem value={5 * 60 * 1000}>Every 5 min</MenuItem>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <IconButton aria-label="Refresh" onClick={this.refreshManually}>
+                                                        <Refresh/>
+                                                    </IconButton>
+                                                </React.Fragment>
+                                            )
+                                            : null
+                                    }
                                 </React.Fragment>
                             )
-                        }<ArrowDropDown/><CalendarToday/>
-                    </Button>
-                    <Popover id="date-range-picker-popper"
-                        open={isDateRangeSelectorOpen}
-                        anchorEl={dateRangeSelectorAnchorElement}
-                        onClose={this.closeDateRangeSelector}
-                        anchorOrigin={{
-                            vertical: "bottom",
-                            horizontal: "right"
-                        }}
-                        transformOrigin={{
-                            vertical: "top",
-                            horizontal: "right"
-                        }}>
-                        <DateRangePicker startTime={startTime} endTime={endTime} dateRangeNickname={dateRangeNickname}
-                            onRangeChange={this.setTimePeriod}/>
-                    </Popover>
-                    <FormControl>
-                        <Select value={refreshInterval} onChange={this.setRefreshInterval}
-                            inputProps={{name: "refresh-interval", id: "refresh-interval"}}
-                            startAdornment={(<InputAdornment className={classes.startInputAdornment}
-                                variant="filled"
-                                position="start">Refresh</InputAdornment>)}>
-                            <MenuItem value={-1}>Off</MenuItem>
-                            <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
-                            <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
-                            <MenuItem value={15 * 1000}>Every 15 sec</MenuItem>
-                            <MenuItem value={30 * 1000}>Every 30 sec</MenuItem>
-                            <MenuItem value={60 * 1000}>Every 1 min</MenuItem>
-                            <MenuItem value={5 * 60 * 1000}>Every 5 min</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <IconButton aria-label="Refresh" onClick={this.refreshManually}>
-                        <Refresh/>
-                    </IconButton>
+                            : null
+                    }
                 </Toolbar>
             </div>
         );
@@ -256,12 +313,14 @@ class TopToolbar extends React.Component {
      * Start the refresh task which periodically calls the update method.
      */
     startRefreshTask = () => {
-        const {refreshInterval} = this.state;
+        const {refreshInterval, isAutoRefreshEnabled} = this.state;
         const self = this;
 
         this.stopRefreshTask(); // Stop any existing refresh tasks
-        if (refreshInterval && refreshInterval > 0) {
-            this.refreshIntervalID = setInterval(() => self.refresh(false), refreshInterval);
+        if (isAutoRefreshEnabled) {
+            if (refreshInterval && refreshInterval > 0) {
+                this.refreshIntervalID = setInterval(() => self.refresh(false), refreshInterval);
+            }
         }
     };
 
@@ -300,6 +359,7 @@ class TopToolbar extends React.Component {
 TopToolbar.propTypes = {
     onUpdate: PropTypes.func,
     title: PropTypes.string.isRequired,
+    subTitle: PropTypes.string,
     classes: PropTypes.any.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     history: PropTypes.shape({

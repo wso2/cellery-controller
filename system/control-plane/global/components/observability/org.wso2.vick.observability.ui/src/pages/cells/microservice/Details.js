@@ -66,6 +66,16 @@ const Details = (props) => {
                             <CheckCircleOutline className={classes.successIcon}/>
                         </TableCell>
                     </TableRow>
+                    <TableRow>
+                        <TableCell className={classes.tableCell}>
+                            <Typography color="textSecondary">
+                                Cell
+                            </Typography>
+                        </TableCell>
+                        <TableCell className={classes.tableCell}>
+                            {/* TODO: Add link to Cell*/}
+                        </TableCell>
+                    </TableRow>
                 </TableBody>
             </Table>
             <div className={classes.dependencies}>

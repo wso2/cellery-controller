@@ -42,6 +42,60 @@ public enum SiddhiStoreQueryTemplates {
             "sum(requestCount) as requestCount \n" +
             "group by destinationVICKService, httpResponseGroup " +
             "having destinationCell == \"${" + Params.CELL + "}\""
+    REQUEST_AGGREGATION_CELLS_METADATA("from RequestAggregation\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"seconds\"\n" +
+            "select sourceCell, destinationCell\n" +
+            "group by sourceCell, destinationCell"
+    ),
+    REQUEST_AGGREGATION_CELLS("from RequestAggregation\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
+            "select sourceCell, destinationCell, httpResponseGroup, " +
+            "sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
+            "sum(requestCount) as requestCount\n" +
+            "group by sourceCell, destinationCell, httpResponseGroup"
+    ),
+    REQUEST_AGGREGATION_CELLS_METRICS("from RequestAggregation\n" +
+            "on (\"${" + Params.SOURCE_CELL + "}\" == \"\" or sourceCell == \"${" + Params.SOURCE_CELL + "}\") " +
+            "and (\"${" + Params.DESTINATION_CELL + "}\" == \"\" " +
+            "or destinationCell == \"${" + Params.DESTINATION_CELL + "}\")\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
+            "select AGG_TIMESTAMP, httpResponseGroup, sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
+            "sum(totalRequestSizeBytes) as totalRequestSizeBytes, " +
+            "sum(totalResponseSizeBytes) as totalResponseSizeBytes, sum(requestCount) as requestCount\n" +
+            "group by AGG_TIMESTAMP, httpResponseGroup"
+    ),
+    REQUEST_AGGREGATION_CELL_MICROSERVICES("from RequestAggregation\n" +
+            "on sourceCell == \"${" + Params.CELL + "}\" or destinationCell == \"${" + Params.CELL + "}\"" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
+            "select sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup, " +
+            "sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
+            "sum(requestCount) as requestCount\n" +
+            "group by sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup"
+    ),
+    REQUEST_AGGREGATION_MICROSERVICES_METADATA("from RequestAggregation\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"seconds\"\n" +
+            "select sourceCell, sourceVICKService, destinationCell, destinationVICKService\n" +
+            "group by sourceCell, sourceVICKService, destinationCell, destinationVICKService"
+    ),
+    REQUEST_AGGREGATION_MICROSERVICES_METRICS("from RequestAggregation\n" +
+            "on (\"${" + Params.SOURCE_CELL + "}\" == \"\" or sourceCell == \"${" + Params.SOURCE_CELL + "}\") " +
+            "and (\"${" + Params.SOURCE_MICROSERVICE + "}\" == \"\" " +
+            "or sourceVICKService == \"${" + Params.SOURCE_MICROSERVICE + "}\") " +
+            "and (\"${" + Params.DESTINATION_CELL + "}\" == \"\" " +
+            "or destinationCell == \"${" + Params.DESTINATION_CELL + "}\")\n" +
+            "and (\"${" + Params.DESTINATION_MICROSERVICE + "}\" == \"\" " +
+            "or destinationVICKService == \"${" + Params.DESTINATION_MICROSERVICE + "}\")\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
+            "select AGG_TIMESTAMP, httpResponseGroup, sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
+            "sum(totalRequestSizeBytes) as totalRequestSizeBytes, " +
+            "sum(totalResponseSizeBytes) as totalResponseSizeBytes, sum(requestCount) as requestCount\n" +
+            "group by AGG_TIMESTAMP, httpResponseGroup"
     ),
     DISTRIBUTED_TRACING_METADATA("from DistributedTracingTable\n" +
             "on (${" + Params.QUERY_START_TIME + "}L == -1 or startTime >= ${" + Params.QUERY_START_TIME + "}L) " +
@@ -108,6 +162,10 @@ public enum SiddhiStoreQueryTemplates {
         public static final String QUERY_END_TIME = "queryEndTime";
         public static final String TIME_GRANULARITY = "timeGranularity";
         public static final String CELL = "cell";
+        public static final String SOURCE_CELL = "sourceCell";
+        public static final String SOURCE_MICROSERVICE = "sourceMicroservice";
+        public static final String DESTINATION_CELL = "destinationCell";
+        public static final String DESTINATION_MICROSERVICE = "destinationMicroservice";
         public static final String SERVICE_NAME = "serviceName";
         public static final String OPERATION_NAME = "operationName";
         public static final String MIN_DURATION = "minDuration";

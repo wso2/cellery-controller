@@ -21,7 +21,7 @@ import NotificationUtils from "../../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import SequenceDiagram from "./sequence-diagram/SequenceDiagram";
+import SequenceDiagram from "./sequenceDiagram/SequenceDiagram";
 import Span from "../utils/span";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
@@ -44,7 +44,7 @@ class View extends React.Component {
 
         this.tabs = [
             "timeline",
-            "sequence-diagram",
+            "sequenceDiagram",
             "dependency-diagram"
         ];
         const queryParams = HttpUtils.parseQueryParams(props.location.search);
@@ -156,7 +156,7 @@ class View extends React.Component {
                 ? null
                 : (
                     <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"} onUpdate={this.loadTrace}/>
+                        <TopToolbar title={"Distributed Tracing"}/>
                         {
                             spans && spans.length === 0
                                 ? (

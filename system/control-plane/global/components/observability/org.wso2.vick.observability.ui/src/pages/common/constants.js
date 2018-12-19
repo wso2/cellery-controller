@@ -16,7 +16,7 @@
 
 const Constants = {
     Pattern: {
-        DATE_TIME: "YYYY-MM-DD HH:mm:ss",
+        DATE_TIME: "DD MMM YYYY, hh:mm A",
         Query: {
             SECONDS: "second(?:s)?",
             MINUTES: "minute(?:s)?",

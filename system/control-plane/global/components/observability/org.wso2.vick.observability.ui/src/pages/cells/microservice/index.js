@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Details from "./Details";
@@ -62,9 +60,11 @@ class Microservice extends React.Component {
         this.state = {
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
         };
+
+        this.tabContentRef = React.createRef();
     }
 
-    handleChange = (event, value) => {
+    handleTabChange = (event, value) => {
         const {history, location, match} = this.props;
 
         this.setState({
@@ -80,6 +80,12 @@ class Microservice extends React.Component {
         });
     };
 
+    handleOnUpdate = (isUserAction, startTime, endTime) => {
+        if (this.tabContentRef.current && this.tabContentRef.current.update) {
+            this.tabContentRef.current.update(isUserAction, startTime, endTime);
+        }
+    };
+
     render() {
         const {classes, match} = this.props;
         const {selectedTabIndex} = this.state;
@@ -92,7 +98,7 @@ class Microservice extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={`Cell: ${cellName} - Microservice: ${microserviceName}`}/>
+                <TopToolbar title={`${microserviceName}`} subTitle="(Microservice)" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>
@@ -100,7 +106,7 @@ class Microservice extends React.Component {
                         <Tab label="K8s Objects"/>
                         <Tab label="Metrics"/>
                     </Tabs>
-                    <SelectedTabContent/>
+                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} microservice={microserviceName}/>
                 </Paper>
             </React.Fragment>
         );
