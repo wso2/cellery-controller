@@ -27,6 +27,7 @@ public class ServiceHolder {
     private static DataSourceService dataSourceService;
     private static ModelStoreManager modelStoreManager;
     private static ModelManager modelManager;
+    private static ModelPeriodicProcessor periodicProcessor;
 
     private ServiceHolder() {
     }
@@ -53,5 +54,13 @@ public class ServiceHolder {
 
     public static void setModelManager(ModelManager modelManager) {
         ServiceHolder.modelManager = modelManager;
+    }
+
+    public static ModelPeriodicProcessor getPeriodicProcessor() {
+        return periodicProcessor;
+    }
+
+    public static void setPeriodicProcessor(ModelPeriodicProcessor periodicProcessor) {
+        ServiceHolder.periodicProcessor = periodicProcessor;
     }
 }
