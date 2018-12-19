@@ -105,7 +105,7 @@ class Microservice extends React.Component {
                         <Tab label="K8s Objects"/>
                         <Tab label="Metrics"/>
                     </Tabs>
-                    <SelectedTabContent innerRef={this.tabContentRef}/>
+                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} microservice={microserviceName}/>
                 </Paper>
             </React.Fragment>
         );

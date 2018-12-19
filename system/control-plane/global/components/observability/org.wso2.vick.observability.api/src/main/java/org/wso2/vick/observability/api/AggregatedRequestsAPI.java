@@ -16,6 +16,7 @@
 
 package org.wso2.vick.observability.api;
 
+import com.google.gson.JsonObject;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryTemplates;
 
 import java.util.HashSet;
@@ -113,5 +114,55 @@ public class AggregatedRequestsAPI {
     @Path("/*")
     public Response getOptions() {
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/cells/microservices/metrics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMetricsForMicroservices(@QueryParam("queryStartTime") long queryStartTime,
+                                               @QueryParam("queryEndTime") long queryEndTime,
+                                               @DefaultValue("") @QueryParam("sourceCell") String sourceCell,
+                                               @DefaultValue("")
+                                                   @QueryParam("sourceMicroservice") String sourceMicroservice,
+                                               @DefaultValue("") @QueryParam("destinationCell") String destinationCell,
+                                               @DefaultValue("")
+                                                   @QueryParam("destinationMicroservice")String destinationMicroservice,
+                                               @DefaultValue("seconds")
+                                                   @QueryParam("timeGranularity") String timeGranularity) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_MICROSERVICES_METRICS.builder()
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.TIME_GRANULARITY, timeGranularity)
+                .setArg(SiddhiStoreQueryTemplates.Params.SOURCE_CELL, sourceCell)
+                .setArg(SiddhiStoreQueryTemplates.Params.SOURCE_MICROSERVICE, sourceMicroservice)
+                .setArg(SiddhiStoreQueryTemplates.Params.DESTINATION_CELL, destinationCell)
+                .setArg(SiddhiStoreQueryTemplates.Params.DESTINATION_MICROSERVICE, destinationMicroservice)
+                .build()
+                .execute();
+        return Response.ok().entity(results).build();
+    }
+
+    @GET
+    @Path("/cells/microservices/metadata")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMetadataForMicroservices(@QueryParam("queryStartTime") long queryStartTime,
+                                                @QueryParam("queryEndTime") long queryEndTime) {
+        Object[][] results = SiddhiStoreQueryTemplates.REQUEST_AGGREGATION_MICROSERVICES_METADATA.builder()
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
+                .build()
+                .execute();
+
+        Set<JsonObject> microservices = new HashSet<>();
+        for (Object[] result : results) {
+            for (int i = 0; i < 2; i++) {
+                JsonObject microservice = new JsonObject();
+                microservice.addProperty("cell", (String) result[i * 2]);
+                microservice.addProperty("name", (String) result[i * 2 + 1]);
+                microservices.add(microservice);
+            }
+        }
+
+        return Response.ok().entity(microservices).build();
     }
 }

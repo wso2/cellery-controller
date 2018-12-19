@@ -115,7 +115,7 @@ class MetricsGraphs extends React.Component {
         };
         for (const datum of data) {
             totalRequestsCount += datum.requestCount;
-            totalResponseTime += datum.totalResponseTimeSec;
+            totalResponseTime += datum.totalResponseTimeMilliSec;
             httpResponseGroupCounts[datum.httpResponseGroup] += datum.requestCount;
 
             if (datum.httpResponseGroup === "5xx") {
@@ -172,7 +172,7 @@ class MetricsGraphs extends React.Component {
             if (datum.timestamp === lastTimestamp) {
                 aggregatedDatum.totalRequestSizeBytes += datum.totalRequestSizeBytes;
                 aggregatedDatum.totalResponseSizeBytes += datum.totalResponseSizeBytes;
-                aggregatedDatum.totalResponseTimeSec += datum.totalResponseTimeSec;
+                aggregatedDatum.totalResponseTimeMilliSec += datum.totalResponseTimeMilliSec;
                 aggregatedDatum.requestCount += datum.requestCount;
             } else {
                 if (aggregatedDatum) {
@@ -184,7 +184,7 @@ class MetricsGraphs extends React.Component {
                     timestamp: datum.timestamp,
                     totalRequestSizeBytes: datum.totalRequestSizeBytes,
                     totalResponseSizeBytes: datum.totalResponseSizeBytes,
-                    totalResponseTimeSec: datum.totalResponseTimeSec,
+                    totalResponseTimeMilliSec: datum.totalResponseTimeMilliSec,
                     requestCount: datum.requestCount
                 };
             }
@@ -197,7 +197,7 @@ class MetricsGraphs extends React.Component {
                 timestamp: timestamp,
                 totalRequestSizeBytes: 0,
                 totalResponseSizeBytes: 0,
-                totalResponseTimeSec: 0,
+                totalResponseTimeMilliSec: 0,
                 requestCount: 0
             });
         };
@@ -222,7 +222,7 @@ class MetricsGraphs extends React.Component {
         // Preparing data for the Request Duration Line Chart
         const reqDurationData = timeSeriesData.map((datum) => ({
             x: datum.timestamp,
-            y: datum.requestCount === 0 ? 0 : datum.totalResponseTimeSec / datum.requestCount
+            y: datum.requestCount === 0 ? 0 : datum.totalResponseTimeMilliSec / datum.requestCount
         }));
 
         // Preparing data for the Response Size Line Chart
@@ -275,6 +275,12 @@ class MetricsGraphs extends React.Component {
             totalResponseTime
         } = this.calculateMetrics();
 
+        const zoomHintToolTip = (
+            <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the graph to zoom out.">
+                <InfoIcon className={classes.info}/>
+            </Tooltip>
+        );
+
         return (
             <div className={classes.root}>
                 <Grid container spacing={24}>
@@ -296,8 +302,11 @@ class MetricsGraphs extends React.Component {
                                             ? (
                                                 <Hint value={statusTooltip}>
                                                     <div className="rv-hint__content">
-                                                        {`${statusTooltip.title} :
-                                                        ${statusTooltip.percentage}% (${statusTooltip.count} Requests)`}
+                                                        {
+                                                            `${statusTooltip.title} :
+                                                            ${statusTooltip.percentage}%
+                                                            (${statusTooltip.count} Requests)`
+                                                        }
                                                     </div>
                                                 </Hint>
                                             ) : null
@@ -374,7 +383,6 @@ class MetricsGraphs extends React.Component {
                                                     onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                                                 />
                                             ))
-
                                         }
                                         {
                                             trafficTooltip
@@ -419,12 +427,7 @@ class MetricsGraphs extends React.Component {
                                 classes={{
                                     title: classes.title
                                 }}
-                                action={
-                                    <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the
-                                        graph to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -464,12 +467,13 @@ class MetricsGraphs extends React.Component {
                                                 this.setState({
                                                     lastDrawLocationVolumeChart: {
                                                         bottom: lastDrawLocationVolumeChart.bottom
-                                                        + (area.top - area.bottom),
+                                                            + (area.top - area.bottom),
                                                         left: lastDrawLocationVolumeChart.left
-                                                        - (area.right - area.left),
+                                                            - (area.right - area.left),
                                                         right: lastDrawLocationVolumeChart.right
-                                                        - (area.right - area.left),
-                                                        top: lastDrawLocationVolumeChart.top + (area.top - area.bottom)
+                                                            - (area.right - area.left),
+                                                        top: lastDrawLocationVolumeChart.top
+                                                            + (area.top - area.bottom)
                                                     }
                                                 });
                                             }}/>
@@ -492,13 +496,7 @@ class MetricsGraphs extends React.Component {
                                 classes={{
                                     title: classes.title
                                 }}
-                                action={
-                                    <Tooltip
-                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
-                                        to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -566,13 +564,7 @@ class MetricsGraphs extends React.Component {
                                 classes={{
                                     title: classes.title
                                 }}
-                                action={
-                                    <Tooltip
-                                        title="Click and drag in the plot area to zoom in, click anywhere in the graph
-                                        to zoom out.">
-                                        <InfoIcon className={classes.info}/>
-                                    </Tooltip>
-                                }
+                                action={zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -677,7 +669,7 @@ MetricsGraphs.propTypes = {
         httpResponseGroup: PropTypes.string.isRequired,
         totalRequestSizeBytes: PropTypes.number.isRequired,
         totalResponseSizeBytes: PropTypes.number.isRequired,
-        totalResponseTimeSec: PropTypes.number.isRequired,
+        totalResponseTimeMilliSec: PropTypes.number.isRequired,
         requestCount: PropTypes.number.isRequired
     })).isRequired
 };

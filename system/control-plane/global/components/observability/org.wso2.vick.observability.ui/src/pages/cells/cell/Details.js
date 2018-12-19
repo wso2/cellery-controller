@@ -28,6 +28,7 @@ import Typography from "@material-ui/core/Typography/Typography";
 import withColor from "../../common/color";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import HealthIndicator from "../../common/HealthIndicator";
 
 const styles = (theme) => ({
     table: {
@@ -80,10 +81,8 @@ class Details extends React.Component {
     };
 
     render = () => {
-        const {classes, colorGenerator, globalState} = this.props;
+        const {classes} = this.props;
         const {health} = this.state;
-
-        const healthColor = colorGenerator.getColorForPercentage(health, globalState);
 
         return (
             <React.Fragment>
@@ -96,7 +95,7 @@ class Details extends React.Component {
                                 </Typography>
                             </TableCell>
                             <TableCell className={classes.tableCell}>
-                                <CheckCircleOutline style={{color: healthColor}}/>
+                                <HealthIndicator value={health}/>
                             </TableCell>
                         </TableRow>
                     </TableBody>

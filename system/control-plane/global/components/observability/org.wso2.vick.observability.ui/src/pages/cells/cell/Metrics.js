@@ -47,18 +47,17 @@ const styles = (theme) => ({
 class Metrics extends React.Component {
 
     static ALL_VALUE = "All";
-    static INBOUND = "inbound";
-    static OUTBOUND = "outbound";
+    static INBOUND = "Inbound";
+    static OUTBOUND = "Outbound";
 
     constructor(props) {
         super(props);
 
         this.state = {
-            selectedType: Metrics.OUTBOUND,
+            selectedType: Metrics.INBOUND,
             selectedCell: Metrics.ALL_VALUE,
             cells: [],
-            cellData: [],
-            timeRange: 0
+            cellData: []
         };
     }
 
@@ -82,10 +81,6 @@ class Metrics extends React.Component {
             selectedCellOverride ? selectedCellOverride : selectedCell
         );
         this.loadCellMetadata(isUserAction, queryStartTime, queryEndTime);
-
-        this.setState({
-            timeRange: (endTime - startTime)
-        });
     };
 
     getFilterChangeHandler = (name) => (event) => {
@@ -165,7 +160,7 @@ class Metrics extends React.Component {
         }
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Cell Metrics", globalState);
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -177,7 +172,7 @@ class Metrics extends React.Component {
             const cellData = data.map((datum) => ({
                 timestamp: datum[0],
                 httpResponseGroup: datum[1],
-                totalResponseTimeSec: datum[2],
+                totalResponseTimeMilliSec: datum[2],
                 totalRequestSizeBytes: datum[3],
                 totalResponseSizeBytes: datum[4],
                 requestCount: datum[5]
@@ -193,7 +188,7 @@ class Metrics extends React.Component {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
-                    "Failed to load cell information",
+                    "Failed to load cell metrics",
                     StateHolder.NotificationLevels.ERROR,
                     globalState
                 );
