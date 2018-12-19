@@ -31,6 +31,7 @@ import React from "react";
 import Refresh from "@material-ui/icons/Refresh";
 import Select from "@material-ui/core/Select/Select";
 import Toolbar from "@material-ui/core/Toolbar/Toolbar";
+import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography/Typography";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
@@ -193,9 +194,11 @@ class TopToolbar extends React.Component {
                             <MenuItem value={5 * 60 * 1000}>Every 5 min</MenuItem>
                         </Select>
                     </FormControl>
-                    <IconButton aria-label="Refresh" onClick={this.refreshManually}>
-                        <Refresh/>
-                    </IconButton>
+                    <Tooltip title="Refresh Now" placement="bottom">
+                        <IconButton aria-label="Refresh" onClick={this.refreshManually}>
+                            <Refresh/>
+                        </IconButton>
+                    </Tooltip>
                 </Toolbar>
             </div>
         );

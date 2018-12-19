@@ -28,8 +28,8 @@ describe("QueryUtils", () => {
             const runTest = (time) => validateTime(QueryUtils.parseTime(time),
                 moment(time, Constants.Pattern.DATE_TIME));
 
-            runTest("2018-07-24 14:33:27");
-            runTest("2006-11-14 07:23:51");
+            runTest("24 Jul 2018, 02:33 PM");
+            runTest("14 Nov 2006, 07:23 AM");
         });
 
         it("should return the proper time when a properly formatted relative time query is provided", () => {
