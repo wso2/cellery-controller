@@ -84,7 +84,6 @@ class Microservice extends React.Component {
         const {classes, match} = this.props;
         const {selectedTabIndex} = this.state;
 
-        const cellName = match.params.cellName;
         const microserviceName = match.params.microserviceName;
 
         const tabContent = [Details, K8sObjects, Metrics];
@@ -92,7 +91,7 @@ class Microservice extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={`Cell: ${cellName} - Microservice: ${microserviceName}`}/>
+                <TopToolbar title={`${microserviceName}`} subHeader="(Microservice)"/>
                 <Paper className={classes.root}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>

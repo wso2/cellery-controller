@@ -46,9 +46,15 @@ const styles = (theme) => ({
         minHeight: 70
     },
     title: {
-        flexGrow: 1,
         marginLeft: theme.spacing.unit,
         marginTop: theme.spacing.unit
+    },
+    subHeader: {
+        marginLeft: theme.spacing.unit,
+        marginTop: theme.spacing.unit
+    },
+    grow: {
+        flexGrow: 1
     },
     dateRangeButton: {
         marginRight: theme.spacing.unit * 3,
@@ -108,7 +114,7 @@ class TopToolbar extends React.Component {
     };
 
     render = () => {
-        const {classes, title, location, history} = this.props;
+        const {classes, title, location, history, subHeader} = this.props;
         const {startTime, endTime, dateRangeNickname, refreshInterval, dateRangeSelectorAnchorElement} = this.state;
 
         const isDateRangeSelectorOpen = Boolean(dateRangeSelectorAnchorElement);
@@ -128,6 +134,14 @@ class TopToolbar extends React.Component {
                     <Typography variant="h5" color="inherit" className={classes.title}>
                         {title}
                     </Typography>
+                    {
+                        subHeader
+                            ? <Typography variant="subtitle1" color="textSecondary" className={classes.subHeader}>
+                                {subHeader}
+                            </Typography>
+                            : null
+                    }
+                    <div className={classes.grow}></div>
                     <Button aria-owns={isDateRangeSelectorOpen ? "date-range-picker-popper" : undefined}
                         className={classes.dateRangeButton} aria-haspopup="true" size="small" variant="text"
                         onClick={(event) => this.openDateRangeSelector(event.currentTarget)}>
@@ -312,6 +326,7 @@ class TopToolbar extends React.Component {
 TopToolbar.propTypes = {
     onUpdate: PropTypes.func,
     title: PropTypes.string.isRequired,
+    subHeader: PropTypes.string.isRequired,
     classes: PropTypes.any.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     history: PropTypes.shape({
