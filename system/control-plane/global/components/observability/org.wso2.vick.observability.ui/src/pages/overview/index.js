@@ -16,21 +16,23 @@
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import Constants from "../common/constants";
 import DependencyGraph from "./DependencyGraph";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Grey from "@material-ui/core/colors/grey";
+import HttpUtils from "../common/utils/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
+import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
 import StateHolder from "../common/state/stateHolder";
 import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography";
-import axios from "axios";
 import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
@@ -153,22 +155,18 @@ const styles = (theme) => ({
     }
 });
 
-const success = "success";
-const warning = "warning";
-const error = "error";
-
 class Overview extends React.Component {
 
     viewGenerator = (nodeProps) => {
         const nodeId = nodeProps.id;
         const color = this.props.colorGenerator.getColor(nodeId);
         const state = this.getCellState(nodeId);
-        if (state === success) {
+        if (state === Constants.Status.Success) {
             return <svg x="0px" y="0px"
                 width="50px" height="50px" viewBox="0 0 240 240">
                 <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
             </svg>;
-        } else if (state === warning) {
+        } else if (state === Constants.Status.Warning) {
             return <svg x="0px" y="0px"
                 width="50px" height="50px" viewBox="0 0 240 240">
                 <g>
@@ -200,60 +198,97 @@ class Overview extends React.Component {
 
 
     getCellState = (nodeId) => {
-        // TODO: load the status from the API call.
-        if (nodeId.startsWith("hr")) {
-            return success;
-        } else if (nodeId.startsWith("stock")) {
-            return warning;
-        }
-        return error;
+        const healthInfo = this.defaultState.healthInfo.find((element) => element.nodeId === nodeId);
+        return healthInfo.status;
     };
 
     onClickCell = (nodeId) => {
-        let cell = null;
-        this.state.data.nodes.forEach((element) => {
-            if (element.id === nodeId) {
-                cell = element;
+        const fromTime = this.state.currentTimeRange.fromTime;
+        const toTime = this.state.currentTimeRange.toTime;
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
+        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells/${nodeId}/microservices${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
+            const cell = this.state.data.nodes.find((element) => element.id === nodeId);
+            const serviceHealth = this.getServiceHealth(cell.services, response);
+            const serviceHealthCount = this.getHealthCount(serviceHealth);
+            const statusCodeContent = this.getStatusCodeContent(nodeId, this.defaultState.request.cellStats);
+            const serviceInfo = this.loadServicesInfo(cell.services, serviceHealth);
+            this.setState((prevState) => ({
+                summary: {
+                    ...prevState.summary,
+                    topic: nodeId,
+                    content: [
+                        {
+                            key: "Total",
+                            value: serviceInfo.length
+                        },
+                        {
+                            key: "Successful",
+                            value: serviceHealthCount.success
+                        },
+                        {
+                            key: "Failed",
+                            value: serviceHealthCount.error
+                        },
+                        {
+                            key: "Warning",
+                            value: serviceHealthCount.warning
+                        }
+                    ]
+                },
+                data: {...prevState.data},
+                listData: serviceInfo,
+                reloadGraph: false,
+                isOverallSummary: false,
+                request: {
+                    ...prevState.request,
+                    statusCodes: statusCodeContent
+                }
+            }));
+        }).catch((error) => {
+            this.setState({error: error});
+        });
+    };
+
+    getServiceHealth = (services, responseCodeStats) => {
+        const {globalState} = this.props;
+        const config = globalState.get(StateHolder.CONFIG);
+        const healthInfo = [];
+        services.forEach((service) => {
+            const total = this.getTotalServiceRequests(service, responseCodeStats, "*");
+            if (total === 0) {
+                healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: 1});
+            } else {
+                const error = this.getTotalServiceRequests(service, responseCodeStats, "5xx");
+                const successPercentage = 1 - (error / total);
+
+                if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Success, percentage: successPercentage});
+                } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Warning, percentage: successPercentage});
+                } else {
+                    healthInfo.push({nodeId: service, status: Constants.Status.Error, percentage: successPercentage});
+                }
             }
         });
-        const serviceInfo = this.loadServicesInfo(cell.services);
-        this.setState((prevState) => ({
-            summary: {
-                ...prevState.summary,
-                topic: nodeId,
-                content: [
-                    {
-                        key: "Total",
-                        value: serviceInfo.length
-                    },
-                    {
-                        key: "Successful",
-                        value: serviceInfo.length
-                    },
-                    {
-                        key: "Failed",
-                        value: 0
-                    },
-                    {
-                        key: "Warning",
-                        value: 0
-                    }
-                ]
-            },
-            data: {...prevState.data},
-            listData: serviceInfo,
-            reloadGraph: false,
-            isOverallSummary: false
-        }));
+        return healthInfo;
     };
 
     onClickGraph = () => {
         const defaultState = JSON.parse(JSON.stringify(this.defaultState));
         this.setState((prevState) => ({
+            ...prevState,
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
-            isOverallSummary: true
+            isOverallSummary: true,
+            request: defaultState.request
         }));
     };
 
@@ -268,15 +303,17 @@ class Overview extends React.Component {
     loadCellInfo = (nodes) => {
         const nodeInfo = [];
         nodes.forEach((node) => {
-            nodeInfo.push([1, node.id, node.id]);
+            const healthInfo = this.defaultState.healthInfo.find((element) => element.nodeId === node.id);
+            nodeInfo.push([healthInfo.percentage, node.id, node.id]);
         });
         return nodeInfo;
     };
 
-    loadServicesInfo = (services) => {
+    loadServicesInfo = (services, healthInfo) => {
         const serviceInfo = [];
         services.forEach((service) => {
-            serviceInfo.push([1, service, service]);
+            const healthElement = healthInfo.find((element) => element.nodeId === service);
+            serviceInfo.push([healthElement.percentage, service, service]);
         });
         return serviceInfo;
     };
@@ -286,7 +323,6 @@ class Overview extends React.Component {
         this.initializeDefault();
         this.state = JSON.parse(JSON.stringify(this.defaultState));
         graphConfig.node.viewGenerator = this.viewGenerator;
-        this.callOverviewInfo();
     }
 
     initializeDefault = () => {
@@ -333,9 +369,15 @@ class Overview extends React.Component {
                     {
                         key: "5xx",
                         value: 0
+                    },
+                    {
+                        key: "Unknown",
+                        value: 0
                     }
-                ]
+                ],
+                cellStats: []
             },
+            healthInfo: [],
             isOverallSummary: true,
             data: {
                 nodes: null,
@@ -352,17 +394,20 @@ class Overview extends React.Component {
 
     callOverviewInfo = (fromTime, toTime) => {
         const colorGenerator = this.props.colorGenerator;
-        // TODO: Update the url to the WSO2-sp worker node.
         let queryParams = "";
         if (fromTime && toTime) {
             queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
         }
-        axios({
-            method: "GET",
-            url: `http://localhost:9123/api/dependency-model/cells${queryParams}`
-        }).then((response) => {
-            const result = response.data;
-            // TODO: Update values with real data
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/dependency-model/cells${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
+            const result = response;
+            this.defaultState.healthInfo = this.getCellHealth(result.nodes);
+            const healthCount = this.getHealthCount(this.defaultState.healthInfo);
             const summaryContent = [
                 {
                     key: "Total",
@@ -370,37 +415,15 @@ class Overview extends React.Component {
                 },
                 {
                     key: "Successful",
-                    value: result.nodes.length
+                    value: healthCount.success
                 },
                 {
                     key: "Failed",
-                    value: 0
+                    value: healthCount.error
                 },
                 {
                     key: "Warning",
-                    value: 0
-                }
-            ];
-            const statusCodeContent = [
-                {
-                    key: "Total",
-                    value: 0
-                },
-                {
-                    key: "OK",
-                    value: 70
-                },
-                {
-                    key: "3xx",
-                    value: 20
-                },
-                {
-                    key: "4xx",
-                    value: 5
-                },
-                {
-                    key: "5xx",
-                    value: 5
+                    value: healthCount.warning
                 }
             ];
             this.defaultState.summary.content = summaryContent;
@@ -417,23 +440,171 @@ class Overview extends React.Component {
                     ...prevState.summary,
                     content: summaryContent
                 },
-                request: {
-                    ...prevState.request,
-                    statusCodes: statusCodeContent
-                },
                 listData: cellList
-
             }));
         }).catch((error) => {
             this.setState({error: error});
         });
     };
 
+    getHealthCount = (healthInfo) => {
+        let successCount = 0;
+        let warningCount = 0;
+        let errorCount = 0;
+        healthInfo.forEach((info) => {
+            if (info.status === Constants.Status.Success) {
+                successCount += 1;
+            } else if (info.status === Constants.Status.Warning) {
+                warningCount += 1;
+            } else {
+                errorCount += 1;
+            }
+        });
+        return {success: successCount, warning: warningCount, error: errorCount};
+    };
+
+    getCellHealth = (nodes) => {
+        const {globalState} = this.props;
+        const config = globalState.get(StateHolder.CONFIG);
+        const healthInfo = [];
+        nodes.forEach((node) => {
+            const total = this.getTotalRequests(node.id, this.defaultState.request.cellStats, "*");
+            if (total === 0) {
+                healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: 1});
+            } else {
+                const error = this.getTotalRequests(node.id, this.defaultState.request.cellStats, "5xx");
+                const successPercentage = 1 - (error / total);
+                if (successPercentage > config.percentageRangeMinValue.warningThreshold) {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Success, percentage: successPercentage});
+                } else if (successPercentage > config.percentageRangeMinValue.errorThreshold) {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Warning, percentage: successPercentage});
+                } else {
+                    healthInfo.push({nodeId: node.id, status: Constants.Status.Error, percentage: successPercentage});
+                }
+            }
+        });
+        return healthInfo;
+    };
+
+    callRequestStats = (fromTime, toTime) => {
+        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
+        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells${queryParams}`,
+                method: "GET"
+            },
+            this.props.globalState
+        ).then((response) => {
+            const statusCodeContent = this.getStatusCodeContent(null, response);
+            this.defaultState.request.statusCodes = statusCodeContent;
+            this.defaultState.request.cellStats = response;
+            this.setState((prevState) => ({
+                stats: {
+                    cellStats: response
+                },
+                request: {
+                    ...prevState.request,
+                    statusCodes: statusCodeContent
+                }
+            }));
+            this.callOverviewInfo(fromTime, toTime);
+        }).catch((error) => {
+            this.setState({error: error});
+        });
+    };
+
+    getStatusCodeContent = (cell, data) => {
+        const total = this.getTotalRequests(cell, data, "*");
+        const response2xx = this.getTotalRequests(cell, data, "2xx");
+        const response3xx = this.getTotalRequests(cell, data, "3xx");
+        const response4xx = this.getTotalRequests(cell, data, "4xx");
+        const response5xx = this.getTotalRequests(cell, data, "5xx");
+        const responseUnknown = total - (response2xx + response3xx + response4xx + response5xx);
+        return [
+            {
+                key: "Total",
+                value: total
+            },
+            {
+                key: "OK",
+                count: response2xx,
+                value: this.getPercentage(response2xx, total)
+            },
+            {
+                key: "3xx",
+                count: response3xx,
+                value: this.getPercentage(response3xx, total)
+            },
+            {
+                key: "4xx",
+                count: response4xx,
+                value: this.getPercentage(response4xx, total)
+            },
+            {
+                key: "5xx",
+                count: response5xx,
+                value: this.getPercentage(response5xx, total)
+            },
+            {
+                key: "Unknown",
+                count: responseUnknown,
+                value: this.getPercentage(responseUnknown, total)
+            }
+        ];
+    };
+
+    getPercentage = (responseCode, total) => {
+        if (total !== 0) {
+            return Math.round((responseCode / total) * 100);
+        }
+        return 0;
+    };
+
+    getTotalRequests = (cell, stats, responseCode) => {
+        let total = 0;
+        stats.forEach((stat) => {
+            if (stat[1] !== "") {
+                if (!cell || cell === stat[1]) {
+                    if (responseCode === "*") {
+                        total += stat[4];
+                    } else if (responseCode === stat[2]) {
+                        total += stat[4];
+                    }
+                }
+            }
+        });
+        return total;
+    };
+
+    getTotalServiceRequests = (cell, stats, responseCode) => {
+        let total = 0;
+        stats.forEach((stat) => {
+            if (stat[2] !== "") {
+                if (!cell || cell === stat[2]) {
+                    if (responseCode === "*") {
+                        total += stat[6];
+                    } else if (responseCode === stat[4]) {
+                        total += stat[6];
+                    }
+                }
+            }
+        });
+        return total;
+    };
+
     loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
         const {globalState} = this.props;
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
-            this.callOverviewInfo(startTime, endTime);
+            this.setState((prevState) => ({
+                ...prevState,
+                currentTimeRange: {
+                    fromTime: startTime,
+                    toTime: endTime
+                }
+            }));
+            this.callRequestStats(startTime, endTime);
         }
         setTimeout(() => {
             if (isUserAction) {
@@ -441,7 +612,6 @@ class Overview extends React.Component {
             }
         }, 1000);
     };
-
 
     render() {
         const {classes, theme} = this.props;

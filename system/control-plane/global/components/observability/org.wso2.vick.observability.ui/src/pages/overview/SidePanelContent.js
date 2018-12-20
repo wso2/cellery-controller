@@ -235,6 +235,13 @@ class SidePanelContent extends React.Component {
                                         style={{
                                             backgroundColor: colorGenerator.getColor(ColorGenerator.ERROR)
                                         }}>5xx</Avatar></TableCell>}
+                                {request.statusCodes[5].value === 0
+                                    ? ""
+                                    : <TableCell className={classes.sidebarTableCell}><Avatar
+                                        className={classes.avatar}
+                                        style={{
+                                            backgroundColor: colorGenerator.getColor(ColorGenerator.UNKNOWN)
+                                        }}>xxx</Avatar></TableCell>}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -261,6 +268,11 @@ class SidePanelContent extends React.Component {
                                     : <TableCell
                                         className={classes.sidebarTableCell}>
                                         {request.statusCodes[4].value}%</TableCell>}
+                                {request.statusCodes[5].value === 0
+                                    ? ""
+                                    : <TableCell
+                                        className={classes.sidebarTableCell}>
+                                        {request.statusCodes[5].value}%</TableCell>}
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -281,7 +293,7 @@ class SidePanelContent extends React.Component {
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[1].value, title: request.statusCodes[1].key,
-                                        percentage: request.statusCodes[1].value
+                                        percentage: request.statusCodes[1].value, count: request.statusCodes[1].count
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
@@ -292,7 +304,7 @@ class SidePanelContent extends React.Component {
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[2].value, title: request.statusCodes[2].key,
-                                        percentage: request.statusCodes[2].value
+                                        percentage: request.statusCodes[2].value, count: request.statusCodes[2].count
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
@@ -303,7 +315,7 @@ class SidePanelContent extends React.Component {
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[3].value, title: request.statusCodes[3].key,
-                                        percentage: request.statusCodes[3].value
+                                        percentage: request.statusCodes[3].value, count: request.statusCodes[3].count
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
@@ -313,8 +325,19 @@ class SidePanelContent extends React.Component {
                                 color={colorGenerator.getColor(ColorGenerator.ERROR)}
                                 data={[
                                     {
-                                        y: "Total", x: request.statusCodes[4].value, title: request.statusCodes[1].key,
-                                        percentage: request.statusCodes[4].value
+                                        y: "Total", x: request.statusCodes[4].value, title: request.statusCodes[4].key,
+                                        percentage: request.statusCodes[4].value, count: request.statusCodes[4].count
+                                    }
+                                ]}
+                                onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
+                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                            />
+                            <BarSeries
+                                color={colorGenerator.getColor(ColorGenerator.UNKNOWN)}
+                                data={[
+                                    {
+                                        y: "Total", x: request.statusCodes[5].value, title: request.statusCodes[5].key,
+                                        percentage: request.statusCodes[5].value, count: request.statusCodes[5].count
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
@@ -322,7 +345,8 @@ class SidePanelContent extends React.Component {
                             />
                             {trafficTooltip && <Hint value={trafficTooltip}>
                                 <div className="rv-hint__content">
-                                    {`${trafficTooltip.title} : ${trafficTooltip.percentage}%`}
+                                    {`${trafficTooltip.title} :
+                                    ${trafficTooltip.percentage}% (${trafficTooltip.count})`}
                                 </div>
                             </Hint>}
                         </XYPlot>

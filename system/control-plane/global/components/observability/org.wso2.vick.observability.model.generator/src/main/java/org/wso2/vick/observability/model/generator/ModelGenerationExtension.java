@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,8 +68,10 @@ public class ModelGenerationExtension extends StreamProcessor {
     private ExpressionExecutor parentIdExecutor;
     private ExpressionExecutor spanKindExecutor;
     private ExpressionExecutor tagExecutor;
-    private final Map<String, List<SpanCacheInfo.NodeInfo>> pendingEdges = new HashMap<>();
+    private final Map<String, List<SpanCacheInfo.NodeInfo>> pendingEdges = new ConcurrentHashMap<>();
     private final Cache<String, SpanCacheInfo> spanIdNodeCache = CacheBuilder.newBuilder().
+            expireAfterAccess(60, TimeUnit.SECONDS).maximumSize(100000).build();
+    private final Cache<String, List<String>> spanIdEdgesCache = CacheBuilder.newBuilder().
             expireAfterAccess(60, TimeUnit.SECONDS).maximumSize(100000).build();
     private final Map<String, Node> nodeCache = new HashMap<>();
 
@@ -82,63 +85,97 @@ public class ModelGenerationExtension extends StreamProcessor {
             String serviceName = (String) serviceNameExecutor.execute(streamEvent);
             String operationName = (String) operationNameExecutor.execute(streamEvent);
             String spanId = (String) spanIdExecutor.execute(streamEvent);
-            if (cellName != null && !cellName.trim().equalsIgnoreCase("")) {
+            if (cellName != null && !cellName.trim().equalsIgnoreCase("")
+                    && !operationName.equalsIgnoreCase(Constants.IGNORE_OPERATION_NAME)) {
                 String spanKind = (String) spanKindExecutor.execute(streamEvent);
                 String parentId = (String) parentIdExecutor.execute(streamEvent);
                 String tags = (String) tagExecutor.execute(streamEvent);
-                spanId = spanId.split(Constants.SPAN_ID_KIND_SEPARATOR)[0];
                 Node node = getNode(cellName, tags);
                 node.addService(serviceName);
                 SpanCacheInfo spanCacheInfo = setSpanInfo(spanId, node, serviceName, operationName, spanKind);
                 if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND) && spanCacheInfo.getClient() != null) {
-
+                    ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getServer().getNode(),
+                            serviceName + Constants.LINK_SEPARATOR + operationName,
+                            spanIdEdgesCache.getIfPresent(spanCacheInfo.getSpanId()), false);
+                } else if (spanKind.equalsIgnoreCase(Constants.CLIENT_SPAN_KIND) && spanCacheInfo.getServer() != null) {
                     ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(),
-                            spanCacheInfo.getServer().getNode(),
-                            serviceName + Constants.LINK_SEPARATOR + operationName);
+                            serviceName + Constants.LINK_SEPARATOR + operationName,
+                            spanIdEdgesCache.getIfPresent(spanCacheInfo.getSpanId()), true);
                 }
 
                 ServiceHolder.getModelManager().addNode(node);
                 if (parentId != null) {
                     SpanCacheInfo parentSpanCacheInfo = spanIdNodeCache.getIfPresent(parentId);
                     if (parentSpanCacheInfo != null) {
-                        addLink(parentSpanCacheInfo, node, serviceName, operationName);
+                        addLink(parentSpanCacheInfo, node, serviceName, operationName, spanId);
                     } else {
                         SpanCacheInfo.NodeInfo pendingNode;
-                        if (spanKind.equalsIgnoreCase(Constants.LINK_SEPARATOR)) {
+                        if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND)) {
                             pendingNode = spanCacheInfo.getServer();
                         } else {
                             pendingNode = spanCacheInfo.getClient();
                         }
-                        List<SpanCacheInfo.NodeInfo> waitingNodes = pendingEdges.putIfAbsent(parentId,
-                                new ArrayList<>(Collections.singletonList(pendingNode)));
-                        if (waitingNodes != null) {
-                            waitingNodes.add(pendingNode);
+                        synchronized (parentId.intern()) {
+                            List<SpanCacheInfo.NodeInfo> waitingNodes = pendingEdges.putIfAbsent(parentId,
+                                    new ArrayList<>(Collections.singletonList(pendingNode)));
+                            if (waitingNodes != null) {
+                                waitingNodes.add(pendingNode);
+                            }
                         }
                     }
                 }
-                List<SpanCacheInfo.NodeInfo> pendingChildNodes = this.pendingEdges.get(spanId);
-                if (pendingChildNodes != null) {
-                    for (SpanCacheInfo.NodeInfo child : pendingChildNodes) {
-                        if (child != null) {
-                            addLink(spanCacheInfo, child.getNode(), child.getService(), child.getOperationName());
+
+                synchronized (spanId.intern()) {
+                    List<SpanCacheInfo.NodeInfo> pendingChildNodes = this.pendingEdges.get(spanId);
+                    if (pendingChildNodes != null) {
+                        for (SpanCacheInfo.NodeInfo child : pendingChildNodes) {
+                            if (child != null) {
+                                addLink(spanCacheInfo, child.getNode(), child.getService(), child.getOperationName(),
+                                        spanId);
+                            }
                         }
                     }
+                    this.pendingEdges.remove(spanId);
                 }
-                this.pendingEdges.remove(spanId);
             }
         }
+        processor.process(complexEventChunk);
     }
 
-    private void addLink(SpanCacheInfo parentSpan, Node childNode, String serviceName, String operationName) {
-        SpanCacheInfo.NodeInfo parentNode;
-        if (parentSpan.getServer() != null) {
-            parentNode = parentSpan.getServer();
-        } else {
-            parentNode = parentSpan.getClient();
-        }
+    private void addLink(SpanCacheInfo parentSpan, Node childNode, String serviceName, String operationName,
+                         String spanId) {
+        SpanCacheInfo.NodeInfo parentNode = getParentNode(parentSpan, childNode);
         String linkName = parentNode.getService() + Constants.LINK_SEPARATOR + parentNode.getOperationName()
                 + Constants.LINK_SEPARATOR + serviceName + Constants.LINK_SEPARATOR + operationName;
+        synchronized (spanId.intern()) {
+            List<String> edgesCacheIfPresent = spanIdEdgesCache.getIfPresent(spanId);
+            if (edgesCacheIfPresent == null) {
+                edgesCacheIfPresent = new ArrayList<>();
+                spanIdEdgesCache.put(spanId, edgesCacheIfPresent);
+            }
+            edgesCacheIfPresent.add(Utils.generateEdgeName(parentNode.getNode().getId(), childNode.getId(), linkName));
+        }
         ServiceHolder.getModelManager().addLink(parentNode.getNode(), childNode, linkName);
+    }
+
+    private SpanCacheInfo.NodeInfo getParentNode(SpanCacheInfo parentCacheInfo, Node childNode) {
+        SpanCacheInfo.NodeInfo parentNode = null;
+        if (parentCacheInfo.getServer() != null) {
+            if (childNode.getId().equalsIgnoreCase(parentCacheInfo.getServer().getNode().getId())) {
+                parentNode = parentCacheInfo.getServer();
+                return parentNode;
+            } else {
+                parentNode = parentCacheInfo.getServer();
+            }
+        }
+        if (parentCacheInfo.getClient() != null) {
+            if (childNode.getId().equalsIgnoreCase(parentCacheInfo.getClient().getNode().getId())) {
+                parentNode = parentCacheInfo.getClient();
+            } else if (parentNode == null) {
+                parentNode = parentCacheInfo.getClient();
+            }
+        }
+        return parentNode;
     }
 
     private Node getNode(String componentName, String tags) {
@@ -236,7 +273,7 @@ public class ModelGenerationExtension extends StreamProcessor {
                         + expressionExecutors[5].getReturnType());
             }
         }
-        return new ArrayList<Attribute>();
+        return new ArrayList<>();
     }
 
     @Override

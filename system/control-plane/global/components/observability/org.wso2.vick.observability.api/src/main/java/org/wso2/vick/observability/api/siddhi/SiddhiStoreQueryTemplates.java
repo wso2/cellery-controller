@@ -26,12 +26,6 @@ public enum SiddhiStoreQueryTemplates {
      * Siddhi Store Queries Start Here
      */
 
-    REQUEST_AGGREGATION_CELLS_METADATA("from RequestAggregation\n" +
-            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
-            "per \"seconds\"\n" +
-            "select sourceCell, destinationCell\n" +
-            "group by sourceCell, destinationCell"
-    ),
     REQUEST_AGGREGATION_CELLS("from RequestAggregation\n" +
             "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
             "per \"${" + Params.TIME_GRANULARITY + "}\"\n" +
@@ -39,6 +33,12 @@ public enum SiddhiStoreQueryTemplates {
             "sum(totalResponseTimeMilliSec) as totalResponseTimeMilliSec, " +
             "sum(requestCount) as requestCount\n" +
             "group by sourceCell, destinationCell, httpResponseGroup"
+    ),
+    REQUEST_AGGREGATION_CELLS_METADATA("from RequestAggregation\n" +
+            "within ${" + Params.QUERY_START_TIME + "}L, ${" + Params.QUERY_END_TIME + "}L\n" +
+            "per \"seconds\"\n" +
+            "select sourceCell, destinationCell\n" +
+            "group by sourceCell, destinationCell"
     ),
     REQUEST_AGGREGATION_CELLS_METRICS("from RequestAggregation\n" +
             "on (\"${" + Params.SOURCE_CELL + "}\" == \"\" or sourceCell == \"${" + Params.SOURCE_CELL + "}\") " +
