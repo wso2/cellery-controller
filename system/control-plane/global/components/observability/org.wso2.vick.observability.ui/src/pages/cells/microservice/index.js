@@ -22,7 +22,6 @@ import Metrics from "./Metrics";
 import Paper from "@material-ui/core/Paper";
 import PropTypes from "prop-types";
 import React from "react";
-import StateHolder from "../../common/state/stateHolder";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import TopToolbar from "../../common/toptoolbar";
@@ -117,7 +116,6 @@ class Microservice extends React.Component {
 
 Microservice.propTypes = {
     classes: PropTypes.object.isRequired,
-    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             cellName: PropTypes.string.isRequired,

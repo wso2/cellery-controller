@@ -160,7 +160,7 @@ class MetricsGraphs extends React.Component {
                 x: totalRequestsCount === 0 ? 0 : httpResponseGroupCounts[datum] * 100 / totalRequestsCount,
                 y: "Out",
                 title: (datum === "2xx" ? "OK" : datum),
-                count: httpResponseGroupCounts[datum] + 100
+                count: httpResponseGroupCounts[datum]
             }));
 
         // Aggregating the data by timestamp (time-series charts doesn't need to consider response code)
@@ -271,7 +271,7 @@ class MetricsGraphs extends React.Component {
         const reqResColors = ["#5bbd5a", "#76c7e3"];
 
         const {
-            timeRange, statusData, trafficData, reqDurationData, reqResSizeData, totalRequestsCount,
+            timeRange, statusData, trafficData, reqVolumeData, reqDurationData, reqResSizeData, totalRequestsCount,
             totalResponseTime
         } = this.calculateMetrics();
 
@@ -304,7 +304,7 @@ class MetricsGraphs extends React.Component {
                                                     <div className="rv-hint__content">
                                                         {
                                                             `${statusTooltip.title} :
-                                                            ${statusTooltip.percentage}%
+                                                            ${Math.round(statusTooltip.percentage)}%
                                                             (${statusTooltip.count} Requests)`
                                                         }
                                                     </div>
@@ -314,7 +314,8 @@ class MetricsGraphs extends React.Component {
                                 </RadialChart>
                                 <div>
                                     <DiscreteColorLegend items={statusData.map((d) => d.title)}
-                                        colors={[errColor, successColor]} orientation="horizontal"/>
+                                        colors={statusData.map((statusDatum) => statusDatum.color)}
+                                        orientation="horizontal"/>
                                 </div>
                             </CardContent>
                         </Card>
@@ -389,7 +390,7 @@ class MetricsGraphs extends React.Component {
                                                 ? (
                                                     <Hint value={trafficTooltip}>
                                                         <div className="rv-hint__content">{
-                                                            `${trafficTooltip.title} : ${trafficTooltip.x}%
+                                                            `${trafficTooltip.title} : ${Math.round(trafficTooltip.x)}%
                                                             (${trafficTooltip.count} Requests)`
                                                         }</div>
                                                     </Hint>
@@ -442,8 +443,8 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <VerticalGridLines/>
                                         <XAxis title="Time"/>
-                                        <YAxis title="Volume (ops)"/>
-                                        <LineMarkSeries data={reqDurationData} color="#12939a" size={3}
+                                        <YAxis title="Volume (ops / s)"/>
+                                        <LineMarkSeries data={reqVolumeData} color="#12939a" size={3}
                                             onNearestX={(d) => this.setState({volumeTooltip: d})}/>
                                         {
                                             volumeTooltip
@@ -453,7 +454,7 @@ class MetricsGraphs extends React.Component {
                                                             {
                                                                 `${moment(volumeTooltip.x)
                                                                     .format(Constants.Pattern.DATE_TIME)} :
-                                                                ${volumeTooltip.y} Requests`
+                                                                ${Math.round(volumeTooltip.y)} Requests`
                                                             }
                                                         </div>
                                                     </Crosshair>
@@ -521,7 +522,7 @@ class MetricsGraphs extends React.Component {
                                                             {
                                                                 `${moment(durationTooltip.x)
                                                                     .format(Constants.Pattern.DATE_TIME)} :
-                                                                ${durationTooltip.y}`
+                                                                ${Math.round(durationTooltip.y)} ms`
                                                             }
                                                         </div>
                                                     </Crosshair>
@@ -604,7 +605,10 @@ class MetricsGraphs extends React.Component {
                                                             {
                                                                 sizeTooltip.map((tooltipItem) => (
                                                                     <div key={tooltipItem.name}>
-                                                                        {`${tooltipItem.name}: ${tooltipItem.y}`}
+                                                                        {
+                                                                            `${tooltipItem.name} Size:
+                                                                            ${Math.round(tooltipItem.y)} Bytes`
+                                                                        }
                                                                     </div>
                                                                 ))
                                                             }

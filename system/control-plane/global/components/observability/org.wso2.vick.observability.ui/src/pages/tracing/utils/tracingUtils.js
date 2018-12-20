@@ -80,7 +80,20 @@ class TracingUtils {
             }
         }
 
-        // Adding references to the connected nodes
+        TracingUtils.addTreeConnections(spansList, rootSpan);
+
+        return rootSpan;
+    };
+
+    /**
+     * Add the connections (parent-child and sibling relationships) to build the tree connections.
+     *
+     * @private
+     * @param {Array.<Span>} spansList The list of spans to add the connections between
+     * @param {Span} rootSpan The root span for this tree (Used to find isolated spans)
+     */
+    static addTreeConnections(spansList, rootSpan) {
+        // Adding references to the properly connected nodes
         for (let i = 0; i < spansList.length; i++) {
             for (let j = 0; j < spansList.length; j++) {
                 if (i !== j) {
@@ -89,8 +102,20 @@ class TracingUtils {
             }
         }
 
-        return rootSpan;
-    };
+        // Adding improperly connected nodes (parent-child relationship)
+        for (let i = 0; i < spansList.length; i++) {
+            const currentSpan = spansList[i];
+            if (!currentSpan.parent && currentSpan !== rootSpan) {
+                for (let j = 0; j < spansList.length; j++) {
+                    if (spansList[j].spanId === currentSpan.parentId) {
+                        currentSpan.parent = spansList[j];
+                        spansList[j].children.add(currentSpan);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Traverse the span tree and label the nodes.

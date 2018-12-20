@@ -107,13 +107,13 @@ class CellList extends React.Component {
             {
                 name: "Inbound Error Rate",
                 options: {
-                    customBodyRender: (value) => `${value * 100} %`
+                    customBodyRender: (value) => `${Math.round(value * 100)} %`
                 }
             },
             {
                 name: "Outbound Error Rate",
                 options: {
-                    customBodyRender: (value) => `${value * 100} %`
+                    customBodyRender: (value) => `${Math.round(value * 100)} %`
                 }
             },
             {
