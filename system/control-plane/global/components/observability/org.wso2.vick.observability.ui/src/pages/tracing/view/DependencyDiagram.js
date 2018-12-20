@@ -82,7 +82,8 @@ class DependencyDiagram extends React.Component {
         };
         rootSpan.walk((span, data) => {
             let linkSource = data;
-            if (!Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN.test(span.operationName)) {
+            if (!Constants.System.SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN.test(span.operationName)
+                && !Constants.System.ISTIO_MIXER_NAME_PATTERN.test(span.serviceName)) {
                 if (linkSource && span.kind === Constants.Span.Kind.SERVER) { // Ending link traversing
                     addNodeIfNotPresent(span);
                     addLink(linkSource, span);
