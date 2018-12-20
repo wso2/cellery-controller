@@ -16,8 +16,10 @@
 
 import ColorGenerator from "../../common/color/colorGenerator";
 import HealthIndicator from "../../common/HealthIndicator";
+import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
+import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
@@ -55,28 +57,72 @@ class Details extends React.Component {
         super(props);
 
         this.state = {
-            health: 0,
+            health: -1,
             dependencyGraphData: []
         };
     }
 
-    update = (isUserAction) => {
+    componentDidMount = () => {
         const {globalState} = this.props;
+
+        this.update(
+            true,
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf(),
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf()
+        );
+    };
+
+    update = (isUserAction, queryStartTime, queryEndTime) => {
+        const {globalState, cell} = this.props;
         const self = this;
+
+        const search = {
+            queryStartTime: queryStartTime.valueOf(),
+            queryEndTime: queryEndTime.valueOf(),
+            destinationCell: cell
+        };
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
         }
-        // TODO : Fetch data from backend
-        setTimeout(() => {
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/http-requests/cells/metrics/${HttpUtils.generateQueryParamString(search)}`,
+                method: "GET"
+            },
+            globalState
+        ).then((data) => {
+            const aggregatedData = data.map((datum) => ({
+                isError: datum[1] === "5xx",
+                count: datum[5]
+            })).reduce((accumulator, currentValue) => {
+                if (currentValue.isError) {
+                    accumulator.errorsCount += currentValue.count;
+                }
+                accumulator.total += currentValue.count;
+                return accumulator;
+            }, {
+                errorsCount: 0,
+                total: 0
+            });
+
             self.setState({
-                health: 0.9,
+                health: 1 - (aggregatedData.count === 0 ? aggregatedData.errorsCount / aggregatedData.count : 0),
                 dependencyGraphData: []
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
-        }, 1000);
+        }).catch(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load cell information",
+                    StateHolder.NotificationLevels.ERROR,
+                    globalState
+                );
+            }
+        });
     };
 
     render = () => {
@@ -117,7 +163,8 @@ class Details extends React.Component {
 Details.propTypes = {
     classes: PropTypes.object.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
-    globalState: PropTypes.instanceOf(StateHolder).isRequired
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
+    cell: PropTypes.string.isRequired
 };
 
 export default withStyles(styles)(withColor(withGlobalState(Details)));

@@ -16,6 +16,7 @@
 
 import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import ErrorOutline from "@material-ui/icons/ErrorOutline";
+import {HelpOutline} from "@material-ui/icons";
 import React from "react";
 import StateHolder from "./state/stateHolder";
 import withGlobalState from "./state";
@@ -25,10 +26,11 @@ import * as PropTypes from "prop-types";
 const HealthIndicator = ({colorGenerator, globalState, value}) => {
     const color = colorGenerator.getColorForPercentage(value, globalState);
     let Icon;
-    if (value < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
+    if (value < 0 || value > 1) {
+        Icon = HelpOutline;
+    } else if (value < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.errorThreshold) {
         Icon = ErrorOutline;
-    } else if (value
-        < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.warningThreshold) {
+    } else if (value < globalState.get(StateHolder.CONFIG).percentageRangeMinValue.warningThreshold) {
         Icon = ErrorOutline;
     } else {
         Icon = CheckCircleOutline;
