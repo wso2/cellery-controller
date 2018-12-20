@@ -564,11 +564,13 @@ class Overview extends React.Component {
     getTotalRequests = (cell, stats, responseCode) => {
         let total = 0;
         stats.forEach((stat) => {
-            if (!cell || cell === stat[1]) {
-                if (responseCode === "*") {
-                    total += stat[4];
-                } else if (responseCode === stat[2]) {
-                    total += stat[4];
+            if (stat[1] !== "") {
+                if (!cell || cell === stat[1]) {
+                    if (responseCode === "*") {
+                        total += stat[4];
+                    } else if (responseCode === stat[2]) {
+                        total += stat[4];
+                    }
                 }
             }
         });
@@ -578,11 +580,13 @@ class Overview extends React.Component {
     getTotalServiceRequests = (cell, stats, responseCode) => {
         let total = 0;
         stats.forEach((stat) => {
-            if (!cell || cell === stat[2]) {
-                if (responseCode === "*") {
-                    total += stat[6];
-                } else if (responseCode === stat[4]) {
-                    total += stat[6];
+            if (stat[2] !== "") {
+                if (!cell || cell === stat[2]) {
+                    if (responseCode === "*") {
+                        total += stat[6];
+                    } else if (responseCode === stat[4]) {
+                        total += stat[6];
+                    }
                 }
             }
         });
