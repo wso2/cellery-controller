@@ -18,10 +18,10 @@
 # ------------------------------------------------------------------------
 
 #Deploy VICK with kubeadm K8s provider.
-#cat vick-setup-all-in-one.sh |bash -s -- kubeadm
+#cat vick-setup-all-in-one.sh | bash -s -- kubeadm
 
 #Deploy VICK with GCP K8s provier.
-#cat vick-setup-all-in-one.sh |bash -s -- GCP proj-vick
+#cat vick-setup-all-in-one.sh | bash -s -- GCP proj-vick
 
 function install_k8s_kubeadm () {
     K8S_VERSION=$1
@@ -605,4 +605,6 @@ if [ $iaas == "kubeadm" ]; then
     install_nginx_ingress_kubeadm $download_path
 fi
 #check GCP ingress
+echo "VICK installation is finished."
+echo "-=🎉=-"
 
