@@ -348,11 +348,8 @@ function deploy_sp_dashboard_worker () {
     #Create SP dashboard configmaps
     kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
     #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
-    #Create SP status dashboard deployment
-    kubectl apply -f ${download_location}/vick-sp-dashboard-deployment.yaml -n vick-system
-    kubectl apply -f ${download_location}/vick-sp-dashboard-service.yaml -n vick-system
-    #Create SP dashboard ingress
-    kubectl apply -f ${download_location}/vick-sp-dashboard-ingress.yaml -n vick-system
+    #Create vick dashboard deployment, service and ingress.
+    kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
 }
 function init_control_plane () {
     local download_location=$1
@@ -458,9 +455,7 @@ control_plane_yaml=(
     "vick-apim-pub-store-ingress.yaml"
     "vick-apim-pub-store.yaml"
     "vick-ns-init.yaml"
-    "vick-sp-dashboard-deployment.yaml"
-    "vick-sp-dashboard-ingress.yaml"
-    "vick-sp-dashboard-service.yaml"
+    "vick-observability-portal.yaml"
     "vick-sp-persistent-volumes.yaml"
     "vick-sp-worker-deployment.yaml"
     "vick-sp-worker-service.yaml"
