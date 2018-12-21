@@ -32,7 +32,6 @@
     <name>WSO2 VICK - Auth STS Endpoint</name>
     <packaging>war</packaging>
 
-
     <build>
         <plugins>
             <!--maven war plugin-->
@@ -121,8 +120,6 @@
 
     <properties>
         <swagger.jaxrs.version>1.5.20</swagger.jaxrs.version>
-
-
 
         <carbon.p2.plugin.version>1.5.3</carbon.p2.plugin.version>
         <org.apache.felix.annotations.version>1.2.4</org.apache.felix.annotations.version>

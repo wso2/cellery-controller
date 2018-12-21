@@ -15,13 +15,11 @@
 # limitations under the License
 #
 # ------------------------------------------------------------------------
+
 FROM wso2vick/wso2am:base
 
 # Copy the jar files
-RUN rm -rf /home/wso2carbon/wso2am-2.6.0/repository/components/lib/org.wso2.vick.auth.*.jar
-COPY files/*.jar /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
+COPY ./target/files/lib/*.jar /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
 
-RUN rm -rf /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps/api#identity#vick-auth#*.war
-
-COPY files/*.war /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
-COPY files/*.war /home/wso2carbon/wso2-tmp/server/webapps/
+# Copying the STS Web App
+COPY ./target/files/lib/*.war /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
