@@ -15,27 +15,25 @@
  */
 
 /* eslint react/display-name: "off" */
+/* eslint max-len: ["off"] */
 
 import "react-vis/dist/style.css";
 import "./index.css";
 import Avatar from "@material-ui/core/Avatar";
-import BlurOnIcon from "@material-ui/icons/BlurOn";
-import CellIcon from "@material-ui/icons/CheckBoxOutlineBlank";
 import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
 import ErrorIcon from "@material-ui/icons/ErrorOutline";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpansionPanel from "@material-ui/core/ExpansionPanel";
 import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
 import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import Grain from "@material-ui/icons/Grain";
 import Grey from "@material-ui/core/colors/grey";
-import HttpTrafficIcon from "@material-ui/icons/CallSplit";
 import IconButton from "@material-ui/core/IconButton";
 import {Link} from "react-router-dom";
 import MUIDataTable from "mui-datatables";
 import PropTypes from "prop-types";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";
+import SvgIcon from "@material-ui/core/SvgIcon";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -64,7 +62,7 @@ const styles = (theme) => ({
         fontSize: 14,
         fontWeight: 500,
         display: "inline-flex",
-        paddingLeft: 5
+        paddingLeft: 10
     },
     titleIcon: {
         verticalAlign: "middle"
@@ -124,6 +122,44 @@ const styles = (theme) => ({
         marginTop: 20
     }
 });
+
+const CellIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M7,0.1L1,3.5l0,6.9l6,3.5l6-3.4l0-6.9L7,0.1z M12,9.9l-5,2.9L2,9.9l0-5.7l5-2.9l5,2.9L12,9.9z"/>
+    </SvgIcon>
+);
+
+const MicroserviceIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M7,5.4C5.6,5.4,4.4,6.5,4.4,8s1.2,2.6,2.6,2.6c1.4,0,2.6-1.2,2.6-2.6S8.5,5.4,7,5.4z M7,9.6C6.2,9.6,5.4,8.8,5.4,8
+c0-0.9,0.7-1.6,1.6-1.6c0.9,0,1.6,0.7,1.6,1.6C8.6,8.8,7.9,9.6,7,9.6z M7,3.5c0.4,0,0.8,0.3,0.8,0.8S7.5,5,7,5S6.3,4.7,6.3,4.3
+S6.6,3.5,7,3.5z M11,10c-0.2,0.4-0.7,0.5-1,0.3s-0.5-0.7-0.3-1c0.2-0.4,0.7-0.5,1-0.3C11,9.1,11.2,9.6,11,10z M4.5,9.6
+c0,0.4-0.3,0.8-0.8,0.8S2.9,10,2.9,9.6s0.3-0.8,0.8-0.8S4.5,9.2,4.5,9.6z M12.4,9.6c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5
+s1.5-0.7,1.5-1.5S13.2,9.6,12.4,9.6z M12.4,11.5c-0.3,0-0.5-0.2-0.5-0.5c0-0.3,0.2-0.5,0.5-0.5c0.3,0,0.5,0.2,0.5,0.5
+C12.9,11.3,12.7,11.5,12.4,11.5z M1.6,9.6c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5S3,11.9,3,11.1S2.4,9.6,1.6,9.6z M1.6,11.6
+c-0.3,0-0.5-0.2-0.5-0.5s0.2-0.5,0.5-0.5S2,10.8,2,11.1S1.8,11.6,1.6,11.6z M7,3.2c0.8,0,1.5-0.7,1.5-1.5S7.8,0.2,7,0.2
+S5.6,0.9,5.6,1.7S6.2,3.2,7,3.2z M7,1.2c0.3,0,0.5,0.2,0.5,0.5S7.3,2.2,7,2.2S6.6,2,6.6,1.7S6.8,1.2,7,1.2z M10.2,5.5
+c0-0.6,0.5-1.1,1.1-1.1c0.6,0,1.1,0.5,1.1,1.1c0,0.6-0.5,1.1-1.1,1.1C10.7,6.6,10.2,6.1,10.2,5.5z M8.3,12.7c0,0.6-0.5,1.1-1.1,1.1
+s-1.1-0.5-1.1-1.1c0-0.6,0.5-1.1,1.1-1.1S8.3,12,8.3,12.7z M1.8,5.5c0-0.6,0.5-1.1,1.1-1.1C3.5,4.4,4,4.9,4,5.5
+c0,0.6-0.5,1.1-1.1,1.1C2.3,6.6,1.8,6.1,1.8,5.5z"/>
+    </SvgIcon>
+);
+
+const HttpTrafficIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M1.1,6.2V2.9c0-0.2,0.2-0.4,0.4-0.4h8.8V0.2l2.4,2.6c0.1,0.1,0.1,0.3,0,0.4l-2.5,2.6l0-2.3H2.1l0,2.9c0,0.2-0.2,0.4-0.4,0.4
+H1.5C1.3,6.6,1.1,6.4,1.1,6.2z M12.5,7.4h-0.3c-0.2,0-0.4,0.2-0.4,0.4l0,2.9H3.7l0-2.3l-2.5,2.6c-0.1,0.1-0.1,0.3,0,0.4l2.4,2.6
+v-2.3h8.8c0.2,0,0.4-0.2,0.4-0.4V7.8C12.9,7.6,12.7,7.4,12.5,7.4z"/>
+    </SvgIcon>
+);
+
+const CellsIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M10.7,13.7l-3.1-1.8V8.4l3.1-1.8l3.1,1.8v3.6L10.7,13.7z M7,7.5L3.8,5.7V2L7,0.2L10.2,2v3.6L7,7.5z M5.1,4.9 l1.9,1l1.9
+-1V 2.8L7,1.8l-1.9,1V4.9z M3.4,13.8L0.2,12V8.4l3.2-1.8l3.2,1.8V12L3.4,13.8z M8.8,11.2l1.9,1l1.9-1V9.1l-1.9 -1l-1.9,
+1V11.2z M1.5,11.2l1.9,1l1.9-1V9.1l-1.9-1l-1.9,1V11.2z"/>
+    </SvgIcon>
+);
 
 class SidePanelContent extends React.Component {
 
@@ -190,7 +226,7 @@ class SidePanelContent extends React.Component {
                     {isOverview === true
                         ? ""
                         : <div className={classes.cellNameContainer}>
-                            <CellIcon className={classes.titleIcon}/>
+                            <CellIcon className={classes.titleIcon} fontSize="small"/>
                             <Typography color="inherit"
                                 className={classes.sideBarContentTitle}> Cell:</Typography>
                             {/* TODO : Change the to URL cell value and cell name to selected cell*/}
@@ -198,7 +234,7 @@ class SidePanelContent extends React.Component {
                                 {summary.topic}</Typography>
                         </div>
                     }
-                    <HttpTrafficIcon className={classes.titleIcon}/>
+                    <HttpTrafficIcon className={classes.titleIcon} fontSize="small"/>
                     <Typography color="inherit" className={classes.sideBarContentTitle}>
                         HTTP Traffic
                     </Typography>
@@ -354,8 +390,8 @@ class SidePanelContent extends React.Component {
                 </div>
                 <div className={classes.sidebarContainer}>
                     {isOverview === true
-                        ? <Grain className={classes.titleIcon}/>
-                        : <BlurOnIcon className={classes.titleIcon}/>}
+                        ? <CellsIcon className={classes.titleIcon} fontSize="small"/>
+                        : <MicroserviceIcon className={classes.titleIcon} fontSize="small"/>}
                     <Typography color="inherit" className={classes.sideBarContentTitle}>
                         {isOverview === true
                             ? "Cells"
