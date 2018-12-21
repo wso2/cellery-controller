@@ -15,7 +15,6 @@
  */
 
 import ArrowBack from "@material-ui/icons/ArrowBack";
-import ArrowDropDown from "@material-ui/icons/ArrowDropDown";
 import Button from "@material-ui/core/Button";
 import CalendarToday from "@material-ui/icons/CalendarTodayOutlined";
 import DateRangePicker from "./DateRangePicker";
@@ -173,7 +172,7 @@ class TopToolbar extends React.Component {
                                                     </React.Fragment>
                                                 )
                                         }
-                                        <ArrowDropDown/><CalendarToday/>
+                                        <CalendarToday color="action" className={classes.calendar}/>
                                     </Button>
                                     <Popover id="date-range-picker-popper"
                                         open={isDateRangeSelectorOpen}
@@ -206,7 +205,8 @@ class TopToolbar extends React.Component {
                                                                     variant="filled" position="start">
                                                                         Refresh
                                                                 </InputAdornment>
-                                                            )}>
+                                                            )}
+                                                            className={classes.refreshTimeSelect}>
                                                             <MenuItem value={-1}>Off</MenuItem>
                                                             <MenuItem value={5 * 1000}>Every 5 sec</MenuItem>
                                                             <MenuItem value={10 * 1000}>Every 10 sec</MenuItem>
@@ -217,7 +217,7 @@ class TopToolbar extends React.Component {
                                                         </Select>
                                                     </FormControl>
                                                     <IconButton aria-label="Refresh" onClick={this.refreshManually}>
-                                                        <Refresh/>
+                                                        <Refresh />
                                                     </IconButton>
                                                 </React.Fragment>
                                             )
