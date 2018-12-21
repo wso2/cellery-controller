@@ -159,7 +159,7 @@ function update_apim_nfs_volumes () {
  local download_location=$1
     for param in "${!nfs_config_params[@]}"
     do
-        sed -i '' "s|$param|${nfs_config_params[$param]}|g" ${download_location}/vick-apim-artifacts-persistent-volumes.yaml
+        sed -i "s|$param|${nfs_config_params[$param]}|g" ${download_location}/vick-apim-artifacts-persistent-volumes.yaml
     done
 }
 
@@ -235,7 +235,7 @@ function deploy_mysql_server_gcp () {
     gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=us-west1-c
     service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
     #if service account is zero exit
-    gsutil -q mb --retention 3600s -l us-west1 gs://vickdb
+    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
     gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
     gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
     gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
@@ -263,7 +263,7 @@ function read_control_plane_datasources_configs () {
     if [[ ! -z "${db_user/ //}" ]]; then
             config_params["DATABASE_USERNAME"]=$db_user
     fi
-    read -p "Database user password: " db_passwd < /dev/tty
+    read -s -p "Database user password: " db_passwd < /dev/tty
     if [[ ! -z "${db_passwd/ //}" ]]; then
             config_params["DATABASE_PASSWORD"]=$db_passwd
     fi
@@ -564,7 +564,7 @@ if [ $install_mysql == "y" ]; then
         read_control_plane_datasources_configs
         #Update the sql
         update_control_plance_sql $download_path
-        deploy_mysql_server_gcp $download_path "vick-mysql-9"
+        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 100))"
     elif [ $iaas == "kubeadm" ]; then
         read_control_plane_datasources_configs
         #update the sql file
