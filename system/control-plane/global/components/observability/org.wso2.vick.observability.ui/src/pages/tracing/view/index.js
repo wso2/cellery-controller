@@ -15,6 +15,7 @@
  */
 
 import DependencyDiagram from "./DependencyDiagram";
+import ErrorBoundary from "../../common/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
@@ -75,6 +76,9 @@ class View extends React.Component {
         const self = this;
 
         if (isUserAction) {
+            self.setState({
+                isLoading: true
+            });
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
         HttpUtils.callObservabilityAPI(
@@ -104,17 +108,19 @@ class View extends React.Component {
 
             self.setState({
                 traceTree: rootSpan,
-                spans: TracingUtils.getOrderedList(rootSpan),
-                isLoading: false
+                spans: TracingUtils.getOrderedList(rootSpan)
             });
             if (isUserAction) {
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }).catch(() => {
-            self.setState({
-                isLoading: false
-            });
             if (isUserAction) {
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     `Failed to fetch Trace with ID ${traceId}`,
@@ -170,8 +176,10 @@ class View extends React.Component {
                                             <Tab label="Sequence Diagram"/>
                                             <Tab label="Dependency Diagram"/>
                                         </Tabs>
-                                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                            selectedMicroservice={selectedMicroservice}/>
+                                        <ErrorBoundary message={"Unable to render Invalid Trace"}>
+                                            <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                                                selectedMicroservice={selectedMicroservice}/>
+                                        </ErrorBoundary>
                                     </Paper>
                                 )
                         }
