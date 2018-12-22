@@ -33,6 +33,5 @@
         <module>orbit</module>
         <module>observability</module>
         <module>auth</module>
-        <module>widgets</module>
     </modules>
 </project>

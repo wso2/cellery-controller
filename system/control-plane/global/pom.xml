@@ -143,7 +143,7 @@
                 <version>${zipkin.reporter.version}</version>
             </dependency>
 
-            <!--Auth components-->
+            <!-- APIM docker image dependencies -->
             <dependency>
                 <groupId>org.wso2.vick</groupId>
                 <artifactId>org.wso2.vick.auth.extensions</artifactId>
@@ -154,7 +154,23 @@
                 <artifactId>org.wso2.vick.auth.sts.core</artifactId>
                 <version>${vick.version}</version>
             </dependency>
-            <!-- End of Auth components -->
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.auth.sts.endpoint</artifactId>
+                <version>${vick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.tracing.synapse.handler</artifactId>
+                <version>${vick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.auth.sts.endpoint</artifactId>
+                <version>${vick.version}</version>
+                <type>war</type>
+            </dependency>
+            <!-- End of APIM docker image dependencies -->
 
             <!-- SP Worker docker images dependencies -->
             <dependency>
@@ -203,57 +219,6 @@
                 <version>${vick.version}</version>
             </dependency>
             <!-- End of SP Worker docker images dependencies -->
-
-            <!--SP Dashboard images dependencies-->
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.opentracing</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.latency.comparison</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.latency.time</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.request.count.comparison</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.request.count.filter</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.request.count.time</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.request.statistics</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.vick</groupId>
-                <artifactId>org.wso2.vick.widgets.response.code.filter</artifactId>
-                <version>${vick.version}</version>
-                <type>zip</type>
-            </dependency>
-            <!--End of dashboard dependencies-->
 
             <!--Observability API dependencies-->
             <dependency>

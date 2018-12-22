@@ -16,15 +16,10 @@
 #
 # ------------------------------------------------------------------------
 
-FROM docker.wso2.com/wso2sp-dashboard:4.3.0
+FROM wso2vick/wso2am:base
 
-ARG VICK_PROFILE_FILES=./files
-ARG VICK_TARGET_FILES=./target/files
+# Copy the jar files
+COPY ./target/files/lib/*.jar /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
 
-# Copy Widgets
-COPY --chown=wso2carbon:wso2  ${VICK_TARGET_FILES}/widgets ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets
-COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/dashboard/* ${WSO2_SERVER_HOME}/wso2/dashboard/resources/dashboards/
-COPY --chown=wso2carbon:wso2 ${VICK_PROFILE_FILES}/patches/widgets/OpenTracingList/widgetConf.json ${WSO2_SERVER_HOME}/wso2/dashboard/deployment/web-ui-apps/portal/extensions/widgets/OpenTracingList/
-
-# Expose ports
-EXPOSE 9714 9643 9614 7713 7613
+# Copying the STS Web App
+COPY ./target/files/lib/*.war /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
