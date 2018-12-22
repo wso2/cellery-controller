@@ -15,6 +15,7 @@
  */
 
 import ColorGenerator from "./colorGenerator";
+import StateHolder from "../state/stateHolder";
 
 describe("ColorGenerator", () => {
     const INITIAL_KEY_COUNT = 7;
@@ -144,6 +145,43 @@ describe("ColorGenerator", () => {
         });
     });
 
+    describe("getColorForPercentage()", () => {
+        const globalState = new StateHolder();
+        const colorGenerator = new ColorGenerator();
+        globalState.set(StateHolder.CONFIG, {
+            percentageRangeMinValue: {
+                errorThreshold: 0.5,
+                warningThreshold: 0.7
+            }
+        });
+
+        const unknownColor = colorGenerator.colorMap[ColorGenerator.UNKNOWN];
+        const errorColor = colorGenerator.colorMap[ColorGenerator.ERROR];
+        const warningColor = colorGenerator.colorMap[ColorGenerator.WARNING];
+        const successColor = colorGenerator.colorMap[ColorGenerator.SUCCESS];
+
+        it("should return unknown color if a value is less than 0 or greater than 1 is provided", () => {
+            expect(colorGenerator.getColorForPercentage(-1, globalState)).toBe(unknownColor);
+            expect(colorGenerator.getColorForPercentage(2, globalState)).toBe(unknownColor);
+        });
+
+        it("should return error color if a value 0 and 0.5 is provided (including 0)", () => {
+            expect(colorGenerator.getColorForPercentage(0, globalState)).toBe(errorColor);
+            expect(colorGenerator.getColorForPercentage(0.3, globalState)).toBe(errorColor);
+        });
+
+        it("should return warning color if a value between 0.5 and 0.7 is provided (including 0.5)", () => {
+            expect(colorGenerator.getColorForPercentage(0.5, globalState)).toBe(warningColor);
+            expect(colorGenerator.getColorForPercentage(0.6, globalState)).toBe(warningColor);
+        });
+
+        it("should return success color if a value between 0.7 and 1 is provided (including 0.7 and 1)", () => {
+            expect(colorGenerator.getColorForPercentage(0.7, globalState)).toBe(successColor);
+            expect(colorGenerator.getColorForPercentage(0.8, globalState)).toBe(successColor);
+            expect(colorGenerator.getColorForPercentage(1, globalState)).toBe(successColor);
+        });
+    });
+
     describe("regenerateNewColorScheme()", () => {
         const keyCount = 200;
         let keyList;
@@ -165,7 +203,7 @@ describe("ColorGenerator", () => {
         it("should generate colors for all the existing colors", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
-            const spy = jest.spyOn(ColorGenerator, "generateColors");
+            const spy = jest.spyOn(colorGenerator, "generateColors");
             colorGenerator.regenerateNewColorScheme();
 
             expect(spy).toHaveBeenCalledTimes(1);
