@@ -46,7 +46,7 @@ class TracingUtils {
                     rootSpanIndex = 1;
                 }
             } else {
-                throw Error("Invalid Trace: Expected 1 root span, found two non-client kind root spans candidates.");
+                throw Error("Invalid Trace: Expected 1 root span, found two non-sibling root spans candidates.");
             }
             rootSpan = rootSpanCandidates[rootSpanIndex];
             rootSpanCandidates[0].sibling = rootSpanCandidates[1];
@@ -63,7 +63,8 @@ class TracingUtils {
             let hasSameServiceChild = false;
             for (let j = 0; j < spansList.length; j++) {
                 const consideredSpan = spansList[j];
-                if (i !== j && !span.isFromSideCar() && span.serviceName === consideredSpan.serviceName) {
+                if (i !== j && !span.isFromSideCar() && span.cell === consideredSpan.cell
+                    && span.serviceName === consideredSpan.serviceName) {
                     if (span.parentId === consideredSpan.spanId) {
                         hasSameServiceParent = true;
                     }

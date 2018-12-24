@@ -71,6 +71,106 @@ describe("HttpUtils", () => {
         });
     });
 
+    describe("generateQueryParamString()", () => {
+        it("should generate the query param string from the provided object", () => {
+            const queryParams = HttpUtils.generateQueryParamString({
+                key1: "value1",
+                key2: "value2",
+                key3: "value3",
+                key4: true,
+                key5: 134
+            });
+
+            expect(queryParams).toBe("?key1=value1&key2=value2&key3=value3&key4=true&key5=134");
+        });
+
+        it("should generate the URL encoded query param string from the provided object", () => {
+            const queryParams = HttpUtils.generateQueryParamString({
+                key1: "value 1",
+                key2: "value-2",
+                "key:3": "value3"
+            });
+
+            expect(queryParams).toBe("?key1=value%201&key2=value-2&key%3A3=value3");
+        });
+
+        it("should generate the query param string from the provided object without undefined and null values", () => {
+            const queryParams = HttpUtils.generateQueryParamString({
+                key1: "value1",
+                key2: "value2",
+                key3: undefined,
+                key4: null
+            });
+
+            expect(queryParams).toBe("?key1=value1&key2=value2");
+        });
+
+        it("should return empty string without failing when a proper object is not provided", () => {
+            expect(HttpUtils.generateQueryParamString(undefined)).toBe("");
+            expect(HttpUtils.generateQueryParamString(null)).toBe("");
+            expect(HttpUtils.generateQueryParamString({})).toBe("");
+        });
+
+        {
+            const faultyQueries = [
+                {
+                    type: "Array",
+                    data: {
+                        key1: "value1",
+                        key2: ["value2a", "value2b", "value2c"]
+                    }
+                },
+                {
+                    type: "Object",
+                    data: {
+                        key3: "value4`",
+                        key4: {
+                            value2a: "value2a",
+                            value2b: "value2b",
+                            value2c: "value2c"
+                        }
+                    }
+                }
+            ];
+
+            for (const query of faultyQueries) {
+                it(`should throw an error if a key with value of type ${query.type} is provided`, () => {
+                    expect(() => HttpUtils.generateQueryParamString(query.data)).toThrow();
+                });
+            }
+        }
+    });
+
+    describe("callObservabilityAPI()", () => {
+        const OBSERVABILITY_API_URL = "http://wso2sp-observability-api/api";
+        const stateHolder = new StateHolder();
+        stateHolder.set(StateHolder.CONFIG, {
+            observabilityAPIURL: OBSERVABILITY_API_URL
+        });
+
+        it("should call callAPI method and append the observability API URL", async () => {
+            axios.mockImplementation((config) => {
+                expect(config.url).toBe(`${OBSERVABILITY_API_URL}/test`);
+
+                return new Promise((resolve) => {
+                    resolve({
+                        status: 200,
+                        data: [
+                            {
+                                value: "testData"
+                            }
+                        ]
+                    });
+                });
+            });
+
+            await HttpUtils.callObservabilityAPI({
+                url: "/test",
+                method: "POST"
+            }, stateHolder);
+        });
+    });
+
     describe("callAPI()", () => {
         const backendURL = "http://www.example.com/test";
         let stateHolder;
@@ -95,9 +195,7 @@ describe("HttpUtils", () => {
                         status: 200,
                         data: [
                             {
-                                event: {
-                                    value: "testData"
-                                }
+                                value: "testData"
                             }
                         ]
                     });
@@ -127,9 +225,7 @@ describe("HttpUtils", () => {
                         status: 200,
                         data: [
                             {
-                                event: {
-                                    value: "testData"
-                                }
+                                value: "testData"
                             }
                         ]
                     });
@@ -156,9 +252,7 @@ describe("HttpUtils", () => {
                         status: 200,
                         data: [
                             {
-                                event: {
-                                    value: "testData"
-                                }
+                                value: "testData"
                             }
                         ]
                     });
@@ -188,9 +282,7 @@ describe("HttpUtils", () => {
                         status: 200,
                         data: [
                             {
-                                event: {
-                                    value: "testData"
-                                }
+                                value: "testData"
                             }
                         ]
                     });
@@ -217,9 +309,7 @@ describe("HttpUtils", () => {
                         status: 200,
                         data: [
                             {
-                                event: {
-                                    value: "testData"
-                                }
+                                value: "testData"
                             }
                         ]
                     });
@@ -233,6 +323,18 @@ describe("HttpUtils", () => {
                     "Content-Type": "application/xml"
                 }
             }, stateHolder);
+        });
+
+        it("should reject with the error if an error without response is provided", async () => {
+            axios.mockImplementation(
+                () => new Promise((resolve, reject) => reject(new Error("Test Error"))));
+
+            const callAPIPromise = HttpUtils.callAPI({
+                url: backendURL,
+                methods: "POST"
+            }, stateHolder);
+
+            await expect(callAPIPromise).rejects.toEqual(new Error("Test Error"));
         });
 
         const ERROR_DATA = "testError";

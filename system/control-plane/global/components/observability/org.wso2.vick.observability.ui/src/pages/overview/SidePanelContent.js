@@ -181,8 +181,7 @@ class SidePanelContent extends React.Component {
             filter: false,
             search: false,
             viewColumns: false,
-            rowHover: false,
-            rowsPerPageOptions: false
+            rowHover: false
         };
 
         const columns = [
@@ -224,7 +223,7 @@ class SidePanelContent extends React.Component {
             <div className={classes.drawerContent}>
                 <div className={classes.sidebarContainer}>
                     {isOverview === true
-                        ? ""
+                        ? null
                         : <div className={classes.cellNameContainer}>
                             <CellIcon className={classes.titleIcon} fontSize="small"/>
                             <Typography color="inherit"
@@ -244,35 +243,35 @@ class SidePanelContent extends React.Component {
                             <TableRow>
                                 <TableCell className={classes.sidebarTableCell}>Requests/s</TableCell>
                                 {request.statusCodes[1].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}><Avatar
                                         className={classes.avatar}
                                         style={{
                                             backgroundColor: colorGenerator.getColor(ColorGenerator.SUCCESS)
                                         }}>OK</Avatar></TableCell>}
                                 {request.statusCodes[2].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}><Avatar
                                         className={classes.avatar}
                                         style={{
                                             backgroundColor: colorGenerator.getColor(ColorGenerator.CLIENT_ERROR)
                                         }}>3xx</Avatar></TableCell>}
                                 {request.statusCodes[3].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}><Avatar
                                         className={classes.avatar}
                                         style={{
                                             backgroundColor: colorGenerator.getColor(ColorGenerator.WARNING)
                                         }}>4xx</Avatar></TableCell>}
                                 {request.statusCodes[4].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}><Avatar
                                         className={classes.avatar}
                                         style={{
                                             backgroundColor: colorGenerator.getColor(ColorGenerator.ERROR)
                                         }}>5xx</Avatar></TableCell>}
                                 {request.statusCodes[5].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}><Avatar
                                         className={classes.avatar}
                                         style={{
@@ -286,26 +285,26 @@ class SidePanelContent extends React.Component {
                                     className={classes.sidebarTableCell}>
                                     {request.statusCodes[0].value}</TableCell>
                                 {request.statusCodes[1].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell className={classes.sidebarTableCell}>
                                         {request.statusCodes[1].value}%</TableCell>}
                                 {request.statusCodes[2].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell
                                         className={classes.sidebarTableCell}>
                                         {request.statusCodes[2].value}%</TableCell>}
                                 {request.statusCodes[3].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell
                                         className={classes.sidebarTableCell}>
                                         {request.statusCodes[3].value}%</TableCell>}
                                 {request.statusCodes[4].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell
                                         className={classes.sidebarTableCell}>
                                         {request.statusCodes[4].value}%</TableCell>}
                                 {request.statusCodes[5].value === 0
-                                    ? ""
+                                    ? null
                                     : <TableCell
                                         className={classes.sidebarTableCell}>
                                         {request.statusCodes[5].value}%</TableCell>}
@@ -401,7 +400,7 @@ class SidePanelContent extends React.Component {
                         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}
                             className={classes.expansionSum}>
                             {summary.content[1].value === 0
-                                ? ""
+                                ? null
                                 : <Typography className={classes.secondaryHeading}><CheckCircleOutline
                                     className={classes.cellIcon}
                                     style={{
@@ -409,7 +408,7 @@ class SidePanelContent extends React.Component {
                                     }}/> {summary.content[1].value}
                                 </Typography>}
                             {summary.content[2].value === 0
-                                ? ""
+                                ? null
                                 : <Typography className={classes.secondaryHeading}><ErrorIcon
                                     className={classes.cellIcon}
                                     style={{

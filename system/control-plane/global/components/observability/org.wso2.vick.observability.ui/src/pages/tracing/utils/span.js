@@ -21,22 +21,23 @@ import Constants from "../../common/constants";
  */
 class Span {
 
-
     /**
      * Span constructor.
      *
      * @param {Object} spanData Span data object
      */
     constructor(spanData) {
-        this.traceId = spanData.traceId;
-        this.spanId = spanData.spanId;
-        this.parentId = spanData.parentId;
         this.serviceName = spanData.serviceName;
         this.operationName = spanData.operationName;
         this.kind = (spanData.kind ? spanData.kind.toUpperCase() : null);
-        this.startTime = spanData.startTime ? spanData.startTime : 0;
-        this.duration = spanData.duration ? spanData.duration : 0;
+        this.startTime = spanData.startTime;
+        this.duration = spanData.duration;
         this.tags = spanData.tags ? JSON.parse(spanData.tags) : {};
+
+        /** These values should not be used. These are only used for building the tree structure **/
+        this.traceId = spanData.traceId;
+        this.spanId = spanData.spanId;
+        this.parentId = spanData.parentId;
 
         // Adding additional tags
         const addTagFromSpanData = (tagKey, spanDataKey) => {
@@ -84,16 +85,17 @@ class Span {
     isParentOf = (span) => {
         let isParentOfSpan = false;
         if (Boolean(span) && this.traceId === span.traceId) {
-            if (this.spanId === span.spanId && this.kind === Constants.Span.Kind.CLIENT
-                    && span.kind === Constants.Span.Kind.SERVER) { // Siblings
-                isParentOfSpan = true;
+            if (this.spanId === span.spanId) {
+                if (this.kind === Constants.Span.Kind.CLIENT && span.kind === Constants.Span.Kind.SERVER) { // Siblings
+                    isParentOfSpan = true;
+                }
             } else if (this.spanId === span.parentId) {
                 isParentOfSpan = true;
-                if (this.hasSibling()) {
-                    isParentOfSpan = isParentOfSpan && this.kind === Constants.Span.Kind.SERVER;
+                if (this.hasSibling() && this.kind !== Constants.Span.Kind.SERVER) {
+                    isParentOfSpan = false;
                 }
-                if (span.hasSibling()) {
-                    isParentOfSpan = isParentOfSpan && span.kind === Constants.Span.Kind.CLIENT;
+                if (span.hasSibling() && span.kind !== Constants.Span.Kind.CLIENT) {
+                    isParentOfSpan = false;
                 }
             }
         }
@@ -155,7 +157,6 @@ class Span {
         if (shouldTerminate && shouldTerminate(this)) {
             return;
         }
-
 
         let newData;
         if (nodeCallBack) {
@@ -226,7 +227,7 @@ class Span {
      *
      * @returns {boolean} True if an error had occurred in this span
      */
-    hasError = () => this.tags.error === "true";
+    hasError = () => this.tags.error === true || this.tags.error === "true";
 
     /**
      * Create a shallow clone.

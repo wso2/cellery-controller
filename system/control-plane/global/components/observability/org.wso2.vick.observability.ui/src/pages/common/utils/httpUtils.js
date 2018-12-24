@@ -60,27 +60,20 @@ class HttpUtils {
     static generateQueryParamString = (queryParams) => {
         let queryString = "";
         if (queryParams) {
-            for (const queryParamKey in queryParams) {
-                if (queryParams.hasOwnProperty(queryParamKey)) {
-                    const queryParamValue = queryParams[queryParamKey];
-
-                    if (!queryParamValue) {
-                        continue;
-                    }
-
-                    // Validating
-                    if (typeof queryParamKey !== "string") {
-                        throw Error(`Query param key need to be a string, instead found ${typeof queryParamKey}`);
-                    }
-                    if (typeof queryParamValue !== "string" && typeof queryParamValue !== "number"
-                            && typeof queryParamValue !== "boolean") {
-                        throw Error(`Query param value need to be a string, instead found ${typeof queryParamValue}`);
-                    }
-
-                    // Generating query string
-                    queryString += queryString ? "&" : "?";
-                    queryString += `${encodeURIComponent(queryParamKey)}=${encodeURIComponent(queryParamValue)}`;
+            for (const [queryParamKey, queryParamValue] of Object.entries(queryParams)) {
+                if (!queryParamValue) {
+                    continue;
                 }
+
+                // Validating
+                if (typeof queryParamValue !== "string" && typeof queryParamValue !== "number"
+                    && typeof queryParamValue !== "boolean") {
+                    throw Error(`Query param value need to be a string, instead found ${typeof queryParamValue}`);
+                }
+
+                // Generating query string
+                queryString += queryString ? "&" : "?";
+                queryString += `${encodeURIComponent(queryParamKey)}=${encodeURIComponent(queryParamValue)}`;
             }
         }
         return queryString;

@@ -55,6 +55,10 @@ const Constants = {
     }
 };
 
+/*
+ * Constants that are made up of other constants starts here.
+ * These cannot be defined in a single object. Hence these are defined separately.
+ */
 Constants.Pattern.Query.TIME_UNIT = `${Constants.Pattern.Query.YEARS}|${Constants.Pattern.Query.MONTHS}|`
     + `${Constants.Pattern.Query.DAYS}|${Constants.Pattern.Query.HOURS}|${Constants.Pattern.Query.MINUTES}|`
     + `${Constants.Pattern.Query.SECONDS}`;

@@ -20,6 +20,27 @@ import Constants from "../../common/constants";
 import Span from "./span";
 
 describe("Span", () => {
+    describe("constructor()", () => {
+        it("should add the pod and namespace if provided to tags", () => {
+            const span = new Span({
+                traceId: "trace-a-id",
+                spanId: "span-a-id",
+                parentId: "span-parent-id",
+                serviceName: "client-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: "{}",
+                pod: "test-pod",
+                namespace: "test-namespace"
+            });
+
+            expect(span.tags["k8s.pod"]).toBe("test-pod");
+            expect(span.tags["k8s.namespace"]).toBe("test-namespace");
+        });
+    });
+
     describe("isSiblingOf()", () => {
         it("should return true if the sibling span is provided", () => {
             const clientSpan = new Span({
@@ -42,7 +63,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.SERVER,
                 startTime: 10010,
                 duration: 50,
-                tags: "{}"
+                tags: JSON.stringify({error: true, key1: "value1", key3: "value3"})
             });
 
             expect(clientSpan.isSiblingOf(serverSpan)).toBe(true);
@@ -703,8 +724,14 @@ describe("Span", () => {
     });
 
     describe("walk()", () => {
-        it("should walk down the tree", () => {
-            const parentSpan = new Span({
+        let parentSpan;
+        let siblingSpan;
+        let span;
+        let childSpanA;
+        let childSpanB;
+
+        beforeEach(() => {
+            parentSpan = new Span({
                 traceId: "trace-id",
                 spanId: "span-parent-id",
                 parentId: "span-parent-parent-id",
@@ -712,9 +739,9 @@ describe("Span", () => {
                 operationName: "get-resource",
                 startTime: 10000,
                 duration: 1000,
-                tags: "{}"
+                tags: JSON.stringify({error: true, key1: "value1", key42: "value42"})
             });
-            const siblingSpan = new Span({
+            siblingSpan = new Span({
                 traceId: "trace-id",
                 spanId: "span-id",
                 parentId: "span-parent-id",
@@ -723,9 +750,9 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.CLIENT,
                 startTime: 10020,
                 duration: 980,
-                tags: "{}"
+                tags: JSON.stringify({error: true, keyT: "valueT", key2: "value2"})
             });
-            const span = new Span({
+            span = new Span({
                 traceId: "trace-id",
                 spanId: "span-id",
                 parentId: "span-parent-id",
@@ -734,9 +761,9 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.SERVER,
                 startTime: 10010,
                 duration: 960,
-                tags: "{}"
+                tags: JSON.stringify({error: true, key1: "value1", key24: "value24"})
             });
-            const childSpanA = new Span({
+            childSpanA = new Span({
                 traceId: "trace-id",
                 spanId: "span-child--a-id",
                 parentId: "span-id",
@@ -744,9 +771,9 @@ describe("Span", () => {
                 operationName: "work",
                 startTime: 10030,
                 duration: 400,
-                tags: "{}"
+                tags: JSON.stringify({error: true, key1: "value1", keyW: "valueW"})
             });
-            const childSpanB = new Span({
+            childSpanB = new Span({
                 traceId: "trace-id",
                 spanId: "span-child-b-id",
                 parentId: "span-id",
@@ -754,7 +781,7 @@ describe("Span", () => {
                 operationName: "work",
                 startTime: 10530,
                 duration: 300,
-                tags: "{}"
+                tags: JSON.stringify({error: true, key1: "value1", key5: "value5"})
             });
 
             const spansList = [span, parentSpan, siblingSpan, childSpanA, childSpanB];
@@ -765,7 +792,9 @@ describe("Span", () => {
                     }
                 }
             }
+        });
 
+        it("should walk down the tree and call the relevant callbacks", () => {
             const initialData = {count: 0};
             const preWalkNodes = [];
             const postWalkNodes = [];
@@ -789,30 +818,147 @@ describe("Span", () => {
                 postWalkNodes.push(node);
             });
 
+            expect(preWalkNodes).toHaveLength(5);
             expect(preWalkNodes[0]).toBe(parentSpan);
             expect(preWalkNodes[1]).toBe(siblingSpan);
             expect(preWalkNodes[2]).toBe(span);
             expect(preWalkNodes[3]).toBe(childSpanA);
             expect(preWalkNodes[4]).toBe(childSpanB);
 
+            expect(postWalkNodes).toHaveLength(5);
             expect(postWalkNodes[0]).toBe(childSpanA);
             expect(postWalkNodes[1]).toBe(childSpanB);
             expect(postWalkNodes[2]).toBe(span);
             expect(postWalkNodes[3]).toBe(siblingSpan);
             expect(postWalkNodes[4]).toBe(parentSpan);
 
+            expect(walkData).toHaveLength(6);
+            expect(walkData[0]).not.toBeUndefined();
             expect(walkData[0].id).toBeUndefined();
             expect(walkData[0].count).toBe(0);
+            expect(walkData[1]).not.toBeUndefined();
             expect(walkData[1].id).toBe(parentSpan.getUniqueId());
             expect(walkData[1].count).toBe(1);
+            expect(walkData[2]).not.toBeUndefined();
             expect(walkData[2].id).toBe(siblingSpan.getUniqueId());
             expect(walkData[2].count).toBe(2);
+            expect(walkData[3]).not.toBeUndefined();
             expect(walkData[3].id).toBe(span.getUniqueId());
             expect(walkData[3].count).toBe(3);
+            expect(walkData[4]).not.toBeUndefined();
             expect(walkData[4].id).toBe(childSpanA.getUniqueId());
             expect(walkData[4].count).toBe(4);
+            expect(walkData[5]).not.toBeUndefined();
             expect(walkData[5].id).toBe(childSpanB.getUniqueId());
             expect(walkData[5].count).toBe(4);
+        });
+
+        it("should not fail and walk down the tree and call the relevant callbacks when node callback is not provided",
+            () => {
+                const initialData = {count: 0};
+                const postWalkNodes = [];
+                parentSpan.walk(null, initialData, (node) => {
+                    expect(postWalkNodes).not.toContain(node);
+                    postWalkNodes.push(node);
+                });
+
+                expect(postWalkNodes).toHaveLength(5);
+                expect(postWalkNodes[0]).toBe(childSpanA);
+                expect(postWalkNodes[1]).toBe(childSpanB);
+                expect(postWalkNodes[2]).toBe(span);
+                expect(postWalkNodes[3]).toBe(siblingSpan);
+                expect(postWalkNodes[4]).toBe(parentSpan);
+            }
+        );
+
+        it("should not fail and walk down the tree and call the relevant callbacks when post traversal callback "
+            + "is not provided", () => {
+            const initialData = {count: 0};
+            const preWalkNodes = [];
+            const walkData = [initialData];
+            parentSpan.walk((node, data) => {
+                expect(preWalkNodes).not.toContain(node);
+                expect(walkData).toContain(data);
+
+                const newData = {
+                    id: node.getUniqueId(),
+                    count: data.count + 1
+                };
+                preWalkNodes.push(node);
+                walkData.push(newData);
+                return newData;
+            }, initialData, null);
+
+            expect(preWalkNodes).toHaveLength(5);
+            expect(preWalkNodes[0]).toBe(parentSpan);
+            expect(preWalkNodes[1]).toBe(siblingSpan);
+            expect(preWalkNodes[2]).toBe(span);
+            expect(preWalkNodes[3]).toBe(childSpanA);
+            expect(preWalkNodes[4]).toBe(childSpanB);
+
+            expect(walkData).toHaveLength(6);
+            expect(walkData[0]).not.toBeUndefined();
+            expect(walkData[0].id).toBeUndefined();
+            expect(walkData[0].count).toBe(0);
+            expect(walkData[1]).not.toBeUndefined();
+            expect(walkData[1].id).toBe(parentSpan.getUniqueId());
+            expect(walkData[1].count).toBe(1);
+            expect(walkData[2]).not.toBeUndefined();
+            expect(walkData[2].id).toBe(siblingSpan.getUniqueId());
+            expect(walkData[2].count).toBe(2);
+            expect(walkData[3]).not.toBeUndefined();
+            expect(walkData[3].id).toBe(span.getUniqueId());
+            expect(walkData[3].count).toBe(3);
+            expect(walkData[4]).not.toBeUndefined();
+            expect(walkData[4].id).toBe(childSpanA.getUniqueId());
+            expect(walkData[4].count).toBe(4);
+            expect(walkData[5]).not.toBeUndefined();
+            expect(walkData[5].id).toBe(childSpanB.getUniqueId());
+            expect(walkData[5].count).toBe(4);
+        });
+
+        it("should walk down the tree and terminate based on the shouldTerminate method", () => {
+            const initialData = {count: 0};
+            const preWalkNodes = [];
+            const postWalkNodes = [];
+            const walkData = [initialData];
+            parentSpan.walk((node, data) => {
+                expect(preWalkNodes).not.toContain(node);
+                expect(postWalkNodes).not.toContain(node);
+                expect(walkData).toContain(data);
+
+                const newData = {
+                    id: node.getUniqueId(),
+                    count: data.count + 1
+                };
+                preWalkNodes.push(node);
+                walkData.push(newData);
+                return newData;
+            }, initialData, (node) => {
+                expect(preWalkNodes).toContain(node);
+                expect(postWalkNodes).not.toContain(node);
+
+                postWalkNodes.push(node);
+            }, (currentSpan) => currentSpan.getUniqueId() === span.getUniqueId());
+
+            expect(preWalkNodes).toHaveLength(2);
+            expect(preWalkNodes[0]).toBe(parentSpan);
+            expect(preWalkNodes[1]).toBe(siblingSpan);
+
+            expect(postWalkNodes).toHaveLength(2);
+            expect(postWalkNodes[0]).toBe(siblingSpan);
+            expect(postWalkNodes[1]).toBe(parentSpan);
+
+            expect(walkData).toHaveLength(3);
+            expect(walkData[0]).not.toBeUndefined();
+            expect(walkData[0].id).toBeUndefined();
+            expect(walkData[0].count).toBe(0);
+            expect(walkData[1]).not.toBeUndefined();
+            expect(walkData[1].id).toBe(parentSpan.getUniqueId());
+            expect(walkData[1].count).toBe(1);
+            expect(walkData[2]).not.toBeUndefined();
+            expect(walkData[2].id).toBe(siblingSpan.getUniqueId());
+            expect(walkData[2].count).toBe(2);
         });
     });
 
@@ -827,7 +973,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.CLIENT,
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key1: "value1", key2: "value2"})
             });
             const siblingSpan = new Span({
                 traceId: "trace-id",
@@ -838,7 +984,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.SERVER,
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key14: "value14", keyB: "valueB"})
             });
             const parentSpan = new Span({
                 traceId: "trace-id",
@@ -848,7 +994,7 @@ describe("Span", () => {
                 operationName: "get-resource",
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key1: "value1", keyA: "valueA"})
             });
             const differentTraceSpan = new Span({
                 traceId: "trace-different-id",
@@ -859,7 +1005,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.SERVER,
                 startTime: 200000,
                 duration: 1203,
-                tags: "{}"
+                tags: JSON.stringify({key1: "value1", key2: "value2"})
             });
 
             expect(span.getUniqueId()).not.toBe(siblingSpan.getUniqueId());
@@ -877,7 +1023,7 @@ describe("Span", () => {
         kind: Constants.Span.Kind.SERVER,
         startTime: 10000000,
         duration: 3160000,
-        tags: "{}"
+        tags: JSON.stringify({key1: "value1", key2: "value2"})
     });
     const hrCellGatewayServerSpan = new Span({
         traceId: "trace-x-id",
@@ -889,7 +1035,7 @@ describe("Span", () => {
         kind: Constants.Span.Kind.SERVER,
         startTime: 10020000,
         duration: 3090000,
-        tags: "{}"
+        tags: JSON.stringify({component: "proxy", key1: "value1", key2: "value2"})
     });
     const employeeServiceServerSpan = new Span({
         traceId: "trace-x-id",
@@ -901,7 +1047,7 @@ describe("Span", () => {
         kind: Constants.Span.Kind.SERVER,
         startTime: 10040000,
         duration: 3040000,
-        tags: "{}"
+        tags: JSON.stringify({component: "proxy", key7: "value7", key4: "value4"})
     });
     const istioMixerServerSpan = new Span({
         traceId: "trace-x-id",
@@ -912,7 +1058,7 @@ describe("Span", () => {
         kind: Constants.Span.Kind.SERVER,
         startTime: 10060000,
         duration: 940000,
-        tags: "{}"
+        tags: JSON.stringify({key5: "value5", key10: "value10"})
     });
 
     describe("isFromCellGateway()", () => {
@@ -963,6 +1109,100 @@ describe("Span", () => {
         });
     });
 
+    describe("isFromSideCar()", () => {
+        it("should return true if the span is from a Side Car", () => {
+            expect(hrCellGatewayServerSpan.isFromSideCar()).toBe(true);
+            expect(employeeServiceServerSpan.isFromSideCar()).toBe(true);
+        });
+
+        it("should return false if the span is not from a Side Car", () => {
+            expect(istioMixerServerSpan.isFromSideCar()).toBe(false);
+            expect(globalGatewayServerSpan.isFromSideCar()).toBe(false);
+        });
+    });
+
+    describe("hasError()", () => {
+        it("should return true if the span has an error", () => {
+            const spanA = new Span({
+                traceId: "trace-id",
+                spanId: "span-a-id",
+                parentId: "span-parent-id",
+                serviceName: "client-a-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: JSON.stringify({error: true, key1: "value1", key2: "value2"})
+            });
+            const spanB = new Span({
+                traceId: "trace-id",
+                spanId: "span-b-id",
+                parentId: "span-parent-id",
+                serviceName: "client-b-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10004,
+                duration: 104,
+                tags: JSON.stringify({error: "true", key1: "value1", key2: "value2"})
+            });
+
+            expect(spanA.hasError()).toBe(true);
+            expect(spanB.hasError()).toBe(true);
+        });
+
+        it("should return false if the span has not errors", () => {
+            const spanA = new Span({
+                traceId: "trace-id",
+                spanId: "span-a-id",
+                parentId: "span-parent-id",
+                serviceName: "client-a-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10000,
+                duration: 100,
+                tags: JSON.stringify({error: false, key1: "value1", key2: "value2"})
+            });
+            const spanB = new Span({
+                traceId: "trace-id",
+                spanId: "span-b-id",
+                parentId: "span-parent-id",
+                serviceName: "client-b-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10074,
+                duration: 1074,
+                tags: JSON.stringify({error: "false", key1: "value1", key2: "value2"})
+            });
+            const spanC = new Span({
+                traceId: "trace-id",
+                spanId: "span-c-id",
+                parentId: "span-parent-id",
+                serviceName: "client-c-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10074,
+                duration: 1074,
+                tags: JSON.stringify({error: "none", key1: "value1", key2: "value2"})
+            });
+            const spanD = new Span({
+                traceId: "trace-id",
+                spanId: "span-d-id",
+                parentId: "span-parent-id",
+                serviceName: "client-d-service",
+                operationName: "get-resource",
+                kind: Constants.Span.Kind.CLIENT,
+                startTime: 10004,
+                duration: 104,
+                tags: JSON.stringify({key1: "value1", key2: "value2"})
+            });
+
+            expect(spanA.hasError()).toBe(false);
+            expect(spanB.hasError()).toBe(false);
+            expect(spanC.hasError()).toBe(false);
+            expect(spanD.hasError()).toBe(false);
+        });
+    });
+
     describe("shallowClone()", () => {
         it("should return a copy of the initial span without span references", () => {
             const span = new Span({
@@ -974,7 +1214,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.CLIENT,
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key12: "value12", key9: "value9"})
             });
             const siblingSpan = new Span({
                 traceId: "trace-id",
@@ -985,7 +1225,7 @@ describe("Span", () => {
                 kind: Constants.Span.Kind.SERVER,
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key1: "value1", key2: "value2"})
             });
             const parentSpan = new Span({
                 traceId: "trace-id",
@@ -995,7 +1235,7 @@ describe("Span", () => {
                 operationName: "get-resource",
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key23: "value23", key8: "value8"})
             });
             const childSpanA = new Span({
                 traceId: "trace-id",
@@ -1005,7 +1245,7 @@ describe("Span", () => {
                 operationName: "work",
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key11: "value11", key4: "value4"})
             });
             const childSpanB = new Span({
                 traceId: "trace-id",
@@ -1015,7 +1255,7 @@ describe("Span", () => {
                 operationName: "work",
                 startTime: 10000,
                 duration: 100,
-                tags: "{}"
+                tags: JSON.stringify({key1: "value1", key2: "value2"})
             });
 
             span.addSpanReference(siblingSpan);

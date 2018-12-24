@@ -27,12 +27,6 @@ class StateHolder {
     static CONFIG = "config";
     static GLOBAL_FILTER = "globalFilter";
 
-    static NotificationLevels = {
-        INFO: "INFO",
-        WARNING: "WARNING",
-        ERROR: "ERROR"
-    };
-
     /**
      * @type {Object}
      * @private
@@ -43,7 +37,7 @@ class StateHolder {
         const rawState = {
             [StateHolder.USER]: AuthUtils.getAuthenticatedUser(),
             [StateHolder.LOADING_STATE]: {
-                isLoading: false,
+                loadingOverlayCount: 0,
                 message: null
             },
             [StateHolder.NOTIFICATION_STATE]: {
@@ -53,21 +47,18 @@ class StateHolder {
             },
             [StateHolder.CONFIG]: {},
             [StateHolder.GLOBAL_FILTER]: {
-                startTime: "now - 1 year",
+                startTime: "now - 24 hours",
                 endTime: "now",
-                dateRangeNickname: "Last 1 year",
+                dateRangeNickname: "Last 24 hours",
                 refreshInterval: 30 * 1000 // 30 milli-seconds
             }
         };
 
         const initialState = {};
-        for (const stateKey in rawState) {
-            if (rawState.hasOwnProperty(stateKey)) {
-                initialState[stateKey] = {
-                    value: rawState[stateKey],
-                    listeners: []
-                };
-            }
+        for (const [stateKey, stateValue] of Object.entries(rawState)) {
+            initialState[stateKey] = {
+                value: stateValue
+            };
         }
 
         this.state = initialState;
@@ -174,17 +165,13 @@ class StateHolder {
         const self = this;
         return new Promise((resolve) => {
             // TODO : Load configuration from server
-            const loadedConfiguration = {
+            self.set(StateHolder.CONFIG, {
                 observabilityAPIURL: "http://wso2sp-observability-api/api",
                 percentageRangeMinValue: {
                     errorThreshold: 0.5,
                     warningThreshold: 0.7
                 }
-            };
-            self.state[StateHolder.CONFIG] = {
-                value: loadedConfiguration,
-                listeners: []
-            };
+            });
             resolve();
         });
     };

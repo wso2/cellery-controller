@@ -51,7 +51,7 @@ class ColorGenerator {
      *
      * @param {Array.<string>} keys The array of keys to add to the current keys
      */
-    addKeys = (keys = []) => {
+    addKeys = (keys) => {
         const self = this;
         const newKeys = keys.filter((key) => !(key in self.colorMap));
         const colors = this.generateColors(newKeys.length);
@@ -105,11 +105,9 @@ class ColorGenerator {
         const colors = this.generateColors(keyCount);
 
         let i = 0;
-        for (const key in this.colorMap) {
-            if (this.colorMap.hasOwnProperty(key)) {
-                this.colorMap[key] = colors[i];
-                i += 1;
-            }
+        for (const key of Object.keys(this.colorMap)) {
+            this.colorMap[key] = colors[i];
+            i += 1;
         }
     };
 

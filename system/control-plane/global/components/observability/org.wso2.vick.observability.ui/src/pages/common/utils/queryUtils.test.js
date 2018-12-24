@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import Constants from "../constants";
@@ -92,6 +90,75 @@ describe("QueryUtils", () => {
             expect(() => QueryUtils.parseTime("")).toThrow();
             expect(() => QueryUtils.parseTime(undefined)).toThrow();
             expect(() => QueryUtils.parseTime(null)).toThrow();
+        });
+    });
+
+    describe("getTimeGranularity()", () => {
+        const currentTimeMilliseconds = moment().valueOf();
+
+        const currentTime = () => moment(currentTimeMilliseconds);
+        const getValidator = (expectedGranularity) => (fromTime, toTime) => {
+            const timeGranularity = QueryUtils.getTimeGranularity(fromTime, toTime);
+            expect(timeGranularity).toBe(expectedGranularity);
+        };
+
+        it("should return years if the time difference is greater than 3 years", () => {
+            const validate = getValidator("years");
+
+            validate(currentTime(), currentTime().add(3, "years"));
+            validate(currentTime(), currentTime().add(3, "years").add(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(10, "years"));
+            validate(currentTime(), currentTime().add(100000, "years"));
+        });
+
+        it("should return months if the time difference is between 3 months and 3 years (including 3 months)", () => {
+            const validate = getValidator("months");
+
+            validate(currentTime(), currentTime().add(3, "months"));
+            validate(currentTime(), currentTime().add(3, "months").add(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(10, "months"));
+            validate(currentTime(), currentTime().add(2, "years"));
+            validate(currentTime(), currentTime().add(3, "years").subtract(1, "milliseconds"));
+        });
+
+        it("should return days if the time difference is between 3 days and 3 months (including 3 days)", () => {
+            const validate = getValidator("days");
+
+            validate(currentTime(), currentTime().add(3, "days"));
+            validate(currentTime(), currentTime().add(3, "days").add(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(17, "days"));
+            validate(currentTime(), currentTime().add(2, "months"));
+            validate(currentTime(), currentTime().add(3, "months").subtract(1, "milliseconds"));
+        });
+
+        it("should return hours if the time difference is between 3 hours and 3 days (including 3 hours)", () => {
+            const validate = getValidator("hours");
+
+            validate(currentTime(), currentTime().add(3, "hours"));
+            validate(currentTime(), currentTime().add(3, "hours").add(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(13, "hours"));
+            validate(currentTime(), currentTime().add(2, "days"));
+            validate(currentTime(), currentTime().add(3, "days").subtract(1, "milliseconds"));
+        });
+
+        it("should return minutes if the time difference is between 3 mins and 3 hours (including 3 mins)", () => {
+            const validate = getValidator("minutes");
+
+            validate(currentTime(), currentTime().add(3, "minutes"));
+            validate(currentTime(), currentTime().add(3, "minutes").add(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(10, "minutes"));
+            validate(currentTime(), currentTime().add(2, "hours"));
+            validate(currentTime(), currentTime().add(3, "hours").subtract(1, "milliseconds"));
+        });
+
+        it("should return seconds if the time difference is lower than 3 mins", () => {
+            const validate = getValidator("seconds");
+
+            validate(currentTime(), currentTime().add(3, "minute").subtract(1, "milliseconds"));
+            validate(currentTime(), currentTime().add(2, "minute"));
+            validate(currentTime(), currentTime().add(10, "seconds"));
+            validate(currentTime(), currentTime().add(148, "milliseconds"));
+            validate(currentTime(), currentTime().add(1, "milliseconds"));
         });
     });
 });

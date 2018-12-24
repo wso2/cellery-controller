@@ -52,15 +52,19 @@ class View extends React.Component {
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
+            traceTree: null,
             spans: [],
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
-            isLoading: true
+            isLoading: false
         };
 
         this.traceViewRef = React.createRef();
     }
 
     componentDidMount = () => {
+        const {globalState} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.loadTrace(true);
     };
 
@@ -70,6 +74,18 @@ class View extends React.Component {
         }
     };
 
+    componentWillUnmount() {
+        const {globalState} = this.props;
+
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    }
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
+    };
+
     loadTrace = (isUserAction) => {
         const {globalState, match} = this.props;
         const traceId = match.params.traceId;
@@ -77,7 +93,8 @@ class View extends React.Component {
 
         if (isUserAction) {
             self.setState({
-                isLoading: true
+                traceTree: null,
+                spans: []
             });
             NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         }
@@ -111,20 +128,14 @@ class View extends React.Component {
                 spans: TracingUtils.getOrderedList(rootSpan)
             });
             if (isUserAction) {
-                self.setState({
-                    isLoading: false
-                });
                 NotificationUtils.hideLoadingOverlay(globalState);
             }
         }).catch(() => {
             if (isUserAction) {
-                self.setState({
-                    isLoading: false
-                });
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     `Failed to fetch Trace with ID ${traceId}`,
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
@@ -149,7 +160,7 @@ class View extends React.Component {
 
     render = () => {
         const {classes, location, match} = this.props;
-        const {isLoading, spans, selectedTabIndex} = this.state;
+        const {spans, selectedTabIndex, isLoading} = this.state;
         const selectedMicroservice = location.state.selectedMicroservice;
 
         const traceId = match.params.traceId;

@@ -354,7 +354,7 @@ class Search extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to load Cell Data",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
@@ -498,7 +498,7 @@ class Search extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to search for Traces",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
