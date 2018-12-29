@@ -196,7 +196,9 @@ class Span {
      *
      * @returns {boolean} True if the component to which the span belongs to is a cell gateway
      */
-    isFromCellGateway = () => Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName);
+    isFromCellGateway = () => (
+        Boolean(this.cell) && Boolean(this.cell.name) && Constants.Cell.GATEWAY_NAME_PATTERN.test(this.serviceName)
+    );
 
     /**
      * Check whether a span belongs to the Istio System.

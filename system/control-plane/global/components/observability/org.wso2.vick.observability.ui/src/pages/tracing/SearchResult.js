@@ -45,8 +45,7 @@ const styles = (theme) => ({
     },
     cellName: {
         fontWeight: 500,
-        fontSize: "normal",
-        paddingRight: theme.spacing.unit
+        fontSize: "normal"
     },
     serviceName: {
         fontWeight: 500,
@@ -172,7 +171,7 @@ class SearchResult extends React.Component {
                                                     result.rootCellName
                                                         ? (
                                                             <span className={classes.cellName}>
-                                                                {result.rootCellName}
+                                                                {`${result.rootCellName}:`}
                                                             </span>
                                                         )
                                                         : null

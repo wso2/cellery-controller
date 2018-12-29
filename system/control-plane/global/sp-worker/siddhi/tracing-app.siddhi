@@ -33,7 +33,7 @@ define function extractFromServiceName[javascript] return string {
         if (index == 1) {
             extractedData = cell;
         } else if (index == 2) {
-            extractedData = cell + "-cell-gateway";
+            extractedData = "cell-gateway";
         }
     } else if (mircoserviceMatches) {
         extractedData = mircoserviceMatches[index];

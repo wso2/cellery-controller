@@ -1030,7 +1030,7 @@ describe("Span", () => {
         spanId: "span-b-id",
         parentId: "span-a-id",
         cell: "hr",
-        serviceName: "hr-cell-gateway",
+        serviceName: "cell-gateway",
         operationName: "call-hr-cell",
         kind: Constants.Span.Kind.SERVER,
         startTime: 10020000,

@@ -44,7 +44,7 @@ class DependencyDiagram extends React.Component {
         const nodes = [];
         const links = [];
         const getUniqueNodeId = (span) => (
-            `${span.cell && span.cell.name && !span.isFromCellGateway() ? `${span.cell.name}:` : ""}${span.serviceName}`
+            `${span.cell && span.cell.name ? `${span.cell.name}:` : ""}${span.serviceName}`
         );
         const addNodeIfNotPresent = (span) => {
             if (!nodeIdList.includes(getUniqueNodeId(span))) {

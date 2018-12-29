@@ -35,7 +35,7 @@ const Constants = {
         }
     },
     Cell: {
-        GATEWAY_NAME_PATTERN: /^(.*)-cell-gateway$/,
+        GATEWAY_NAME_PATTERN: /^cell-gateway$/,
         MICROSERVICE_NAME_PATTERN: /^(.+)--(.+)$/
     },
     System: {
