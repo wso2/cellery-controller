@@ -20,7 +20,6 @@ import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./sequenceDiagram/SequenceDiagram";
 import Span from "../utils/span";
@@ -31,6 +30,7 @@ import TopToolbar from "../../common/toptoolbar";
 import TracingUtils from "../utils/tracingUtils";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withGlobalState, {StateHolder} from "../../common/state";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     container: {
@@ -65,7 +65,7 @@ class View extends React.Component {
         const {globalState} = this.props;
 
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-        this.loadTrace(true);
+        this.loadTrace();
     };
 
     componentDidUpdate = () => {
@@ -86,18 +86,16 @@ class View extends React.Component {
         });
     };
 
-    loadTrace = (isUserAction) => {
+    loadTrace = () => {
         const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        if (isUserAction) {
-            self.setState({
-                traceTree: null,
-                spans: []
-            });
-            NotificationUtils.showLoadingOverlay("Loading trace", globalState);
-        }
+        self.setState({
+            traceTree: null,
+            spans: []
+        });
+        NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         HttpUtils.callObservabilityAPI(
             {
                 url: `/traces/${traceId}`,
@@ -120,25 +118,25 @@ class View extends React.Component {
                 tags: dataItem[11]
             }));
 
-            const rootSpan = TracingUtils.buildTree(spans);
-            TracingUtils.labelSpanTree(rootSpan);
+            try {
+                const rootSpan = TracingUtils.buildTree(spans);
+                TracingUtils.labelSpanTree(rootSpan);
 
-            self.setState({
-                traceTree: rootSpan,
-                spans: TracingUtils.getOrderedList(rootSpan)
-            });
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    traceTree: rootSpan,
+                    spans: TracingUtils.getOrderedList(rootSpan)
+                });
+            } catch (e) {
+                NotificationUtils.showNotification(e.message, NotificationUtils.Levels.INFO, globalState);
             }
+            NotificationUtils.hideLoadingOverlay(globalState);
         }).catch(() => {
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-                NotificationUtils.showNotification(
-                    `Failed to fetch Trace with ID ${traceId}`,
-                    NotificationUtils.Levels.ERROR,
-                    globalState
-                );
-            }
+            NotificationUtils.hideLoadingOverlay(globalState);
+            NotificationUtils.showNotification(
+                `Failed to fetch Trace with ID ${traceId}`,
+                NotificationUtils.Levels.ERROR,
+                globalState
+            );
         });
     };
 
