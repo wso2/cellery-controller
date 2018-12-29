@@ -120,7 +120,8 @@ public enum SiddhiStoreQueryTemplates {
     ),
     DISTRIBUTED_TRACING_SEARCH_GET_ROOT_SPAN_METADATA("from DistributedTracingTable\n" +
             "on traceId == spanId and (${" + Params.CONDITION + "})\n" +
-            "select traceId, serviceName, operationName, startTime, duration"
+            "select traceId, cell, serviceName, operationName, startTime, duration\n" +
+            "order by startTime desc"
     ),
     DISTRIBUTED_TRACING_GET_TRACE("from DistributedTracingTable\n" +
             "on traceId == \"${" + Params.TRACE_ID + "}\"\n" +
