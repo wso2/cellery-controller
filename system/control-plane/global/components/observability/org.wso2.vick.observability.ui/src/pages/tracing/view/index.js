@@ -15,9 +15,9 @@
  */
 
 import DependencyDiagram from "./DependencyDiagram";
-import ErrorBoundary from "../../common/ErrorBoundary";
+import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
-import NotFound from "../../common/NotFound";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
