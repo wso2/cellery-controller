@@ -474,6 +474,7 @@ control_plane_yaml=(
     "apim-configs/gw/registry.xml"
     "apim-configs/gw/resources/api_templates/velocity_template.xml"
     "apim-configs/gw/api-manager.xml"
+    "apim-configs/gw/synapse-handlers.xml"
     "apim-configs/gw/log4j.properties"
     "apim-configs/pub-store/datasources/master-datasources.xml"
     "apim-configs/pub-store/user-mgt.xml"

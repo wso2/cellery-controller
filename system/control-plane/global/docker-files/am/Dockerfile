@@ -19,7 +19,8 @@
 FROM wso2vick/wso2am:base
 
 # Copy the jar files
-COPY ./target/files/lib/*.jar /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
+COPY ./target/files/dropins/** /home/wso2carbon/wso2am-2.6.0/repository/components/dropins/
+COPY ./target/files/lib/** /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
 
 # Copying the STS Web App
-COPY ./target/files/lib/*.war /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
+COPY ./target/files/webapps/** /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
