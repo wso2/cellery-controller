@@ -5,7 +5,7 @@
   "author": "WSO2 Org",
   "license": "Apache-2.0",
   "scripts": {
-    "clean": "rimraf ./build/ && rimraf ./node-server/public/",
+    "clean": "rimraf ./build/ && rimraf ./node-server/public/ && rimraf ./coverage/",
     "start": "react-scripts start",
     "lint": "eslint --color --fix src/",
     "build": "react-scripts build",
