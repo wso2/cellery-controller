@@ -39,4 +39,7 @@ const (
 
 	setupConfigVolumeName = "setup-config-volume"
 	setupConfigMountPath  = "/wso2am-micro-gw-2.6.0/resources/conf"
+
+	// used for tracing
+	appLabelKey = "app"
 )

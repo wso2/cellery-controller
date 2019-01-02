@@ -300,26 +300,6 @@ data:
     tokenCache.capacity=100
     tokenCache.evictionFactor=0.25
 
-    [analytics]
-    enable=true
-    uploadingTimeSpanInMillis=30000
-    uploadingEndpoint="http://wso2sp-worker.vick-system:9090/analytics/v1.0/usage/upload-file"
-    rotatingPeriod=30000
-    task.uploadFiles=true
-    username="admin"
-    password="admin"
-
-    [b7a.observability.tracing]
-    enabled=true
-    name="zipkin"
-
-    [b7a.observability.tracing.zipkin]
-    reporter.hostname="wso2sp-worker.vick-system"
-    reporter.port=9411
-    reporter.api.context="/api/v1/spans"
-    reporter.api.version="v1"
-    reporter.compression.enabled=false
-
   cell-gateway-init-image: wso2vick/cell-gateway-init
   cell-gateway-image: wso2vick/cell-gateway
   cell-sts-config: |

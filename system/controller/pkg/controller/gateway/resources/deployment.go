@@ -30,7 +30,7 @@ import (
 
 func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
-	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
+	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 	var cellName string
 	cellName, ok := gateway.Labels[vick.CellLabelKey]

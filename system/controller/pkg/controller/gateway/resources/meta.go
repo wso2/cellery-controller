@@ -25,8 +25,9 @@ import (
 )
 
 func createGatewayLabels(gateway *v1alpha1.Gateway) map[string]string {
-	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+1)
+	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+2)
 	labels[vick.CellGatewayLabelKey] = gateway.Name
+	labels[appLabelKey] = gateway.Name
 
 	for k, v := range gateway.ObjectMeta.Labels {
 		labels[k] = v
