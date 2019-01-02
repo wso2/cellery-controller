@@ -17,16 +17,15 @@
 import "./SequenceDiagram.css";
 import Button from "@material-ui/core/Button";
 import Constants from "../../../common/constants";
-import PropTypes from "prop-types";
 import React from "react";
 import Span from "../../utils/span";
 import TracingUtils from "../../utils/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import mermaid from "mermaid";
-import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../../../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     newMessageText: {
@@ -416,6 +415,6 @@ SequenceDiagram.propTypes = {
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withColor(SequenceDiagram)));
+export default withStyles(styles, {withTheme: true})(withColor(SequenceDiagram));
 
 

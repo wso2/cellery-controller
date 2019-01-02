@@ -82,9 +82,8 @@ class NotificationUtils {
      */
     static closeNotification = (globalState) => {
         globalState.set(StateHolder.NOTIFICATION_STATE, {
-            isOpen: false,
-            message: null,
-            notificationLevel: null
+            ...globalState.get(StateHolder.NOTIFICATION_STATE),
+            isOpen: false
         });
     };
 

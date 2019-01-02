@@ -36,11 +36,17 @@ const styles = (theme) => ({
     unknownErrorContentIndicator: {
         margin: theme.spacing.unit * 3,
         fontSize: "4em",
-        color: "#808080"
+        color: "#6E6E6E"
     },
-    unknownErrorContent: {
+    unknownErrorTitle: {
+        margin: theme.spacing.unit,
         fontSize: "1.5em",
         fontWeight: 400,
+        color: "#6e6e6e"
+    },
+    unknownErrorDescription: {
+        fontSize: "1em",
+        fontWeight: 300,
         color: "#808080"
     }
 });
@@ -49,16 +55,26 @@ const UnknownError = (props) => (
     <div className={props.classes.unknownErrorContainer}>
         <div className={props.classes.unknownError}>
             <ErrorOutline className={props.classes.unknownErrorContentIndicator}/>
-            <div className={props.classes.unknownErrorContent}>
-                {props.message ? props.message : "Something Went Wrong"}
+            <div className={props.classes.unknownErrorTitle}>
+                {props.title ? props.title : "Something Went Wrong"}
             </div>
+            {
+                props.description
+                    ? (
+                        <div className={props.classes.unknownErrorDescription}>
+                            {props.description}
+                        </div>
+                    )
+                    : null
+            }
         </div>
     </div>
 );
 
 UnknownError.propTypes = {
     classes: PropTypes.object.isRequired,
-    message: PropTypes.string
+    title: PropTypes.string,
+    description: PropTypes.string
 };
 
 export default withStyles(styles, {withTheme: true})(UnknownError);

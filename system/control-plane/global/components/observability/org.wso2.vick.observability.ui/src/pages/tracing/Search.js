@@ -363,6 +363,13 @@ class Search extends React.Component {
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                if (cells.length === 0) {
+                    NotificationUtils.showNotification(
+                        "No Traces Available in the Selected Time Range",
+                        NotificationUtils.Levels.WARNING,
+                        globalState
+                    );
+                }
             }
         }).catch(() => {
             if (isUserAction) {

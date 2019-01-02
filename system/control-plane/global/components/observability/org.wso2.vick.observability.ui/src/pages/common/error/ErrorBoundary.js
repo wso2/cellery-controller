@@ -22,7 +22,7 @@ import * as PropTypes from "prop-types";
  * Error Boundary to catch error in React Components.
  * This Component can be used to wrap areas of the React App and catch any errors that occur inside them.
  *
- * Example:- A graph can be wrapped and the message can be set to "Invalid Data" to make sure that the users sees
+ * Example:- A graph can be wrapped and the title can be set to "Invalid Data" to make sure that the users sees
  * this message instead of a blank screen if an error occurs.
  *
  * This will not affect the dev servers and the errors will still be shown.
@@ -44,12 +44,12 @@ class ErrorBoundary extends React.Component {
     });
 
     render = () => {
-        const {children, message} = this.props;
+        const {children, title, description} = this.props;
         const {hasError} = this.state;
 
         let content;
         if (hasError) {
-            content = <UnknownError message={message}/>;
+            content = <UnknownError title={title} description={description}/>;
         } else {
             content = children;
         }
@@ -59,8 +59,9 @@ class ErrorBoundary extends React.Component {
 }
 
 ErrorBoundary.propTypes = {
-    message: PropTypes.string,
-    children: PropTypes.any.isRequired
+    children: PropTypes.any.isRequired,
+    title: PropTypes.string,
+    description: PropTypes.string
 };
 
 export default ErrorBoundary;

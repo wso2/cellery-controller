@@ -28,6 +28,7 @@ import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
 import TopToolbar from "../../common/toptoolbar";
 import TracingUtils from "../utils/tracingUtils";
+import UnknownError from "../../common/error/UnknownError";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withGlobalState, {StateHolder} from "../../common/state";
 import * as PropTypes from "prop-types";
@@ -55,7 +56,8 @@ class View extends React.Component {
             traceTree: null,
             spans: [],
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
-            isLoading: false
+            isLoading: false,
+            errorMessage: null
         };
 
         this.traceViewRef = React.createRef();
@@ -127,7 +129,11 @@ class View extends React.Component {
                     spans: TracingUtils.getOrderedList(rootSpan)
                 });
             } catch (e) {
-                NotificationUtils.showNotification(e.message, NotificationUtils.Levels.INFO, globalState);
+                NotificationUtils.showNotification(
+                    "Unable to Render Invalid Trace", NotificationUtils.Levels.ERROR, globalState);
+                self.setState({
+                    errorMessage: e.message
+                });
             }
             NotificationUtils.hideLoadingOverlay(globalState);
         }).catch(() => {
@@ -158,7 +164,7 @@ class View extends React.Component {
 
     render = () => {
         const {classes, location, match} = this.props;
-        const {spans, selectedTabIndex, isLoading} = this.state;
+        const {spans, selectedTabIndex, isLoading, errorMessage} = this.state;
         const selectedMicroservice = location.state.selectedMicroservice;
 
         const traceId = match.params.traceId;
@@ -166,32 +172,35 @@ class View extends React.Component {
         const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
         const SelectedTabContent = tabContent[selectedTabIndex];
 
+        let view;
+        if (spans && spans.length) {
+            view = (
+                <Paper className={classes.container}>
+                    <Tabs value={selectedTabIndex} indicatorColor="primary"
+                        onChange={this.handleTabChange}>
+                        <Tab label="Timeline"/>
+                        <Tab label="Sequence Diagram"/>
+                        <Tab label="Dependency Diagram"/>
+                    </Tabs>
+                    <ErrorBoundary title={"Unable to render Invalid Trace"}>
+                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                            selectedMicroservice={selectedMicroservice}/>
+                    </ErrorBoundary>
+                </Paper>
+            );
+        } else if (errorMessage) {
+            view = <UnknownError title={"Unable to Render Trace"} description={errorMessage}/>;
+        } else {
+            view = <NotFound title={`Trace with ID "${traceId}" Not Found`}/>;
+        }
+
         return (
             isLoading
                 ? null
                 : (
                     <React.Fragment>
                         <TopToolbar title={"Distributed Tracing"}/>
-                        {
-                            spans && spans.length === 0
-                                ? (
-                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
-                                )
-                                : (
-                                    <Paper className={classes.container}>
-                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
-                                            onChange={this.handleTabChange}>
-                                            <Tab label="Timeline"/>
-                                            <Tab label="Sequence Diagram"/>
-                                            <Tab label="Dependency Diagram"/>
-                                        </Tabs>
-                                        <ErrorBoundary message={"Unable to render Invalid Trace"}>
-                                            <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                                selectedMicroservice={selectedMicroservice}/>
-                                        </ErrorBoundary>
-                                    </Paper>
-                                )
-                        }
+                        {view}
                     </React.Fragment>
                 )
         );
