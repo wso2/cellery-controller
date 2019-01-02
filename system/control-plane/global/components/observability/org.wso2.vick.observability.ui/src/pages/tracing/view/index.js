@@ -165,7 +165,7 @@ class View extends React.Component {
     render = () => {
         const {classes, location, match} = this.props;
         const {spans, selectedTabIndex, isLoading, errorMessage} = this.state;
-        const selectedMicroservice = location.state.selectedMicroservice;
+        const selectedMicroservice = location.state ? location.state.selectedMicroservice : null;
 
         const traceId = match.params.traceId;
 
