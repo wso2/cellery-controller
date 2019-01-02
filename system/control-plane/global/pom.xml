@@ -128,6 +128,16 @@
                 <version>${open.tracing.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-util</artifactId>
+                <version>${open.tracing.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zipkin.brave</groupId>
+                <artifactId>brave</artifactId>
+                <version>${brave.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.opentracing.brave</groupId>
                 <artifactId>brave-opentracing</artifactId>
                 <version>${brave.open.tracing.version}</version>
@@ -141,6 +151,21 @@
                 <groupId>io.zipkin.reporter2</groupId>
                 <artifactId>zipkin-sender-urlconnection</artifactId>
                 <version>${zipkin.reporter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zipkin.reporter2</groupId>
+                <artifactId>zipkin-sender-okhttp3</artifactId>
+                <version>${zipkin.reporter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
             </dependency>
 
             <!-- APIM docker image dependencies -->
@@ -274,7 +299,7 @@
         <kubernetes.client.version>3.0.0</kubernetes.client.version>
         <carbon.datasource.version>1.1.4</carbon.datasource.version>
 
-        <!-- external jars for receiver -->
+        <!-- External Jars for Telemetry Receiver -->
         <protobuf.java.version>3.6.1</protobuf.java.version>
         <grpc.stub.version>1.15.0</grpc.stub.version>
         <proto.google.common.proto>1.12.0</proto.google.common.proto>
@@ -282,18 +307,21 @@
         <grpc.wso2.version>1.15.0.wso2v1</grpc.wso2.version>
         <opencensus.version>0.16.1</opencensus.version>
 
-        <!-- External Jars for Tracing Synapse Handler -->
+        <!-- External Jars for Tracing Utilization -->
         <zipkin.version>2.11.6</zipkin.version>
         <zipkin.reporter.version>2.5.0</zipkin.reporter.version>
         <thrift.version>0.10.0</thrift.version>
         <synapse.core.version>2.1.7-wso2v80</synapse.core.version>
         <open.tracing.version>0.31.0</open.tracing.version>
+        <brave.version>4.17.1</brave.version>
         <brave.open.tracing.version>0.29.0</brave.open.tracing.version>
+        <okhttp.version>3.11.0</okhttp.version>
+        <okio.version>1.14.0</okio.version>
 
         <!-- SP Worker Connectors -->
         <siddhi.io.http.version>1.0.41</siddhi.io.http.version>
 
-         <!--Docker repo name - By default wso2vick-->
+        <!-- Docker Repository Name -->
         <docker.repo.name>wso2vick</docker.repo.name>
     </properties>
 </project>

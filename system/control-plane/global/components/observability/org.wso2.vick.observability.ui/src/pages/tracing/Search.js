@@ -90,13 +90,17 @@ class Search extends React.Component {
                 availableMicroservices: [],
                 availableOperations: []
             },
+            isLoading: false,
             hasSearchCompleted: false,
             searchResults: []
         };
     }
 
     componentDidMount = () => {
-        const {location} = this.props;
+        const {globalState, location} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+
         const queryParams = HttpUtils.parseQueryParams(location.search);
         let isQueryParamsEmpty = true;
         for (const key in queryParams) {
@@ -104,15 +108,26 @@ class Search extends React.Component {
                 isQueryParamsEmpty = false;
             }
         }
-
         if (!isQueryParamsEmpty) {
             this.search(true);
         }
     };
 
+    componentWillUnmount() {
+        const {globalState} = this.props;
+
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    }
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
+    };
+
     render = () => {
         const {classes} = this.props;
-        const {data, filter, metaData, hasSearchCompleted, searchResults} = this.state;
+        const {data, filter, metaData, isLoading, hasSearchCompleted, searchResults} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
@@ -238,7 +253,7 @@ class Search extends React.Component {
                     </Grid>
                     <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}>Search</Button>
                     {
-                        hasSearchCompleted
+                        hasSearchCompleted && !isLoading
                             ? (
                                 <div className={classes.resultContainer}>
                                     <SearchResult data={searchResults}/>
@@ -348,13 +363,20 @@ class Search extends React.Component {
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                if (cells.length === 0) {
+                    NotificationUtils.showNotification(
+                        "No Traces Available in the Selected Time Range",
+                        NotificationUtils.Levels.WARNING,
+                        globalState
+                    );
+                }
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to load Cell Data",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
@@ -453,10 +475,11 @@ class Search extends React.Component {
             const rootSpans = data.rootSpans
                 .map((dataItem) => ({
                     traceId: dataItem[0],
-                    rootServiceName: dataItem[1],
-                    rootOperationName: dataItem[2],
-                    rootStartTime: dataItem[3],
-                    rootDuration: dataItem[4]
+                    rootCellName: dataItem[1],
+                    rootServiceName: dataItem[2],
+                    rootOperationName: dataItem[3],
+                    rootStartTime: dataItem[4],
+                    rootDuration: dataItem[5]
                 }))
                 .reduce((accumulator, dataItem) => {
                     accumulator[dataItem.traceId] = dataItem;
@@ -498,7 +521,7 @@ class Search extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to search for Traces",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }

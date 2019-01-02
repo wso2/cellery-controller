@@ -4,7 +4,6 @@
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
- * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,7 +17,7 @@
 
 import ControlPlane from "./ControlPlane";
 import Node from "./Node";
-import NotFound from "../common/NotFound";
+import NotFound from "../common/error/NotFound";
 import Pod from "./Pod";
 import PropTypes from "prop-types";
 import React from "react";

@@ -43,9 +43,14 @@ const styles = (theme) => ({
         fontSize: "small",
         textAlign: "right"
     },
-    serviceName: {
+    cellName: {
         fontWeight: 500,
         fontSize: "normal"
+    },
+    serviceName: {
+        fontWeight: 500,
+        fontSize: "normal",
+        paddingRight: theme.spacing.unit
     },
     operationName: {
         color: "#616161",
@@ -162,8 +167,17 @@ class SearchResult extends React.Component {
                                         onClick={(event) => this.loadTracePage(event, result.traceId)}>
                                         <Grid container className={classes.traceHeader}>
                                             <Grid item xs={8}>
+                                                {
+                                                    result.rootCellName
+                                                        ? (
+                                                            <span className={classes.cellName}>
+                                                                {`${result.rootCellName}:`}
+                                                            </span>
+                                                        )
+                                                        : null
+                                                }
                                                 <span className={classes.serviceName}>
-                                                    {`${result.rootServiceName} `}
+                                                    {result.rootServiceName}
                                                 </span>
                                                 <span className={classes.operationName}>
                                                     {result.rootOperationName}
@@ -230,7 +244,7 @@ class SearchResult extends React.Component {
                     </React.Fragment>
                 )
                 : (
-                    <div>No Results</div>
+                    <div>No Traces Found</div>
                 )
         );
     };
@@ -245,6 +259,7 @@ SearchResult.propTypes = {
     colorGenerator: PropTypes.instanceOf(ColorGenerator),
     data: PropTypes.arrayOf(PropTypes.shape({
         traceId: PropTypes.string.isRequired,
+        rootCellName: PropTypes.string.isRequired,
         rootServiceName: PropTypes.string.isRequired,
         rootOperationName: PropTypes.string.isRequired,
         rootStartTime: PropTypes.number.isRequired,

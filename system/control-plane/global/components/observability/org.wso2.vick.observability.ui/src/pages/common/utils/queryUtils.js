@@ -21,6 +21,15 @@ import moment from "moment";
 
 class QueryUtils {
 
+    static YEARS = "years";
+    static MONTHS = "months";
+    static DAYS = "days";
+    static HOURS = "hours";
+    static MINUTES = "minutes";
+    static SECONDS = "seconds";
+
+    static TIME_GRANULARITY_MINIMUM_VALUE = 2;
+
     /**
      * Parse a time query string.
      *
@@ -44,13 +53,11 @@ class QueryUtils {
 
             // Calculating the proper time based on the query
             time = moment();
-            if (matches) {
-                for (let i = 0; i < matches.length; i++) {
-                    const match = matches[i];
-                    const amount = match.amount;
-                    const unit = match.unit.toLowerCase();
-                    time = time.subtract(amount, (unit.endsWith("s") ? unit : `${unit}s`));
-                }
+            for (let i = 0; i < matches.length; i++) {
+                const match = matches[i];
+                const amount = match.amount;
+                const unit = match.unit.toLowerCase();
+                time = time.subtract(amount, (unit.endsWith("s") ? unit : `${unit}s`));
             }
         } else if (time.format() === "Invalid date") {
             throw Error("Invalid time");
@@ -61,31 +68,27 @@ class QueryUtils {
     /**
      * Returns suitable granularity for the provided time range.
      *
-     * @param {long} fromTime The time from which the query considers
-     * @param {long} toTime The time till which the query considers
+     * @param {moment.Moment} fromTime The time from which the query considers
+     * @param {moment.Moment} toTime The time till which the query considers
      * @returns {string} The granularity to be used
      */
     static getTimeGranularity = (fromTime, toTime) => {
-        const days = "days";
-        const hours = "hours";
-        const minutes = "minutes";
-        const months = "months";
-        const seconds = "seconds";
-        const years = "years";
-        if (toTime.diff(fromTime, "years") > 0) {
-            return years;
-        } else if (toTime.diff(fromTime, months) > 0) {
-            return months;
-        } else if (toTime.diff(fromTime, days) > 0) {
-            return days;
-        } else if (toTime.diff(fromTime, hours) > 0) {
-            return hours;
-        } else if (toTime.diff(fromTime, minutes) > 0) {
-            return minutes;
+        let timeGranularity;
+        if (toTime.diff(fromTime, QueryUtils.YEARS) > QueryUtils.TIME_GRANULARITY_MINIMUM_VALUE) {
+            timeGranularity = QueryUtils.YEARS;
+        } else if (toTime.diff(fromTime, QueryUtils.MONTHS) > QueryUtils.TIME_GRANULARITY_MINIMUM_VALUE) {
+            timeGranularity = QueryUtils.MONTHS;
+        } else if (toTime.diff(fromTime, QueryUtils.DAYS) > QueryUtils.TIME_GRANULARITY_MINIMUM_VALUE) {
+            timeGranularity = QueryUtils.DAYS;
+        } else if (toTime.diff(fromTime, QueryUtils.HOURS) > QueryUtils.TIME_GRANULARITY_MINIMUM_VALUE) {
+            timeGranularity = QueryUtils.HOURS;
+        } else if (toTime.diff(fromTime, QueryUtils.MINUTES) > QueryUtils.TIME_GRANULARITY_MINIMUM_VALUE) {
+            timeGranularity = QueryUtils.MINUTES;
+        } else {
+            timeGranularity = QueryUtils.SECONDS;
         }
-        return seconds;
+        return timeGranularity;
     };
-
 
 }
 

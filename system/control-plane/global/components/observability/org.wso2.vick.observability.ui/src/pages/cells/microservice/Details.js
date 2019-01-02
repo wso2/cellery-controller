@@ -118,7 +118,7 @@ class Details extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to load microservice information",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }

@@ -21,6 +21,7 @@
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
 import AuthUtils from "./pages/common/utils/authUtils";
+import CheckCircle from "@material-ui/icons/CheckCircle";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import CircularProgress from "@material-ui/core/CircularProgress";
@@ -29,9 +30,11 @@ import Collapse from "@material-ui/core/Collapse";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
+import Error from "@material-ui/icons/Error";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import IconButton from "@material-ui/core/IconButton";
+import Info from "@material-ui/icons/Info";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -40,7 +43,6 @@ import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import NotificationUtils from "./pages/common/utils/notificationUtils";
-import PropTypes from "prop-types";
 import React from "react";
 import Settings from "@material-ui/icons/SettingsOutlined";
 import Snackbar from "@material-ui/core/Snackbar/Snackbar";
@@ -49,10 +51,12 @@ import Timeline from "@material-ui/icons/Timeline";
 import Toolbar from "@material-ui/core/Toolbar";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
+import Warning from "@material-ui/icons/Warning";
 import classNames from "classnames";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withGlobalState, {StateHolder} from "./pages/common/state";
+import * as PropTypes from "prop-types";
 
 const drawerWidth = 240;
 
@@ -154,6 +158,16 @@ const styles = (theme) => ({
     },
     list: {
         paddingTop: 0
+    },
+    snackbarIcon: {
+        fontSize: "1.5em"
+    },
+    snackbarMessageContainer: {
+        display: "flex",
+        alignItems: "center"
+    },
+    snackbarMessage: {
+        paddingLeft: theme.spacing.unit
     }
 });
 
@@ -286,7 +300,7 @@ class AppLayout extends React.Component {
     handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
         this.setState({
             loadingState: {
-                isLoading: newState.isLoading,
+                isLoading: newState.loadingOverlayCount > 0,
                 message: newState.message
             }
         });
@@ -304,6 +318,33 @@ class AppLayout extends React.Component {
 
     handleNotificationClose = () => {
         NotificationUtils.closeNotification(this.props.globalState);
+    };
+
+    generateSnackbarMessage = () => {
+        const {classes} = this.props;
+        const {notificationState} = this.state;
+
+        let Icon;
+        switch (notificationState.notificationLevel) {
+            case NotificationUtils.Levels.SUCCESS:
+                Icon = CheckCircle;
+                break;
+            case NotificationUtils.Levels.WARNING:
+                Icon = Warning;
+                break;
+            case NotificationUtils.Levels.ERROR:
+                Icon = Error;
+                break;
+            default:
+                Icon = Info;
+        }
+
+        return (
+            <span className={classes.snackbarMessageContainer}>
+                <Icon className={classes.snackbarIcon}/>
+                <span className={classes.snackbarMessage}>{notificationState.message}</span>
+            </span>
+        );
     };
 
     render = () => {
@@ -524,7 +565,7 @@ class AppLayout extends React.Component {
                     autoHideDuration={5000}
                     onClose={this.handleNotificationClose}
                     ContentProps={{"aria-describedby": "message-id"}}
-                    message={this.state.notificationState.message}
+                    message={this.generateSnackbarMessage()}
                     action={[
                         <IconButton key="close" aria-label="Close" color="inherit"
                             onClick={this.handleNotificationClose}>

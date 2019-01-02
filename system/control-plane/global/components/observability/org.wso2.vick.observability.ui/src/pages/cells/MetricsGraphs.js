@@ -320,7 +320,7 @@ class MetricsGraphs extends React.Component {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid item md={3} sm={6} xs={12} alignItems="center">
+                    <Grid container item md={3} sm={6} xs={12} alignItems="center">
                         <Grid item sm={12}>
                             <Card className={classes.card}>
                                 <CardHeader title="Average Response Time" className={classes.cardHeader}
@@ -378,7 +378,7 @@ class MetricsGraphs extends React.Component {
                                         <YAxis/>
                                         {
                                             trafficData.map((dataItem, index) => (
-                                                <HorizontalBarSeries key={dataItem.y} data={[dataItem]}
+                                                <HorizontalBarSeries key={dataItem.title} data={[dataItem]}
                                                     color={statusCodesColors[index]}
                                                     onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
                                                     onSeriesMouseOut={() => this.setState({trafficTooltip: false})}

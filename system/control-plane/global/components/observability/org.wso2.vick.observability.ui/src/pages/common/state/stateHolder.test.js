@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -22,49 +21,48 @@
 import StateHolder from "./stateHolder";
 
 describe("ConfigHolder", () => {
+    const loggedInUser = "User1";
+    localStorage.setItem(StateHolder.USER, loggedInUser);
+
     const validateInitialState = (stateHolder) => {
         {
             const config = stateHolder.state[StateHolder.CONFIG];
             expect(config).not.toBeUndefined();
-            expect(Object.keys(config)).toHaveLength(2);
+            expect(Object.keys(config)).toHaveLength(1);
             expect(config.value).not.toBeUndefined();
-            expect(config.listeners).toEqual([]);
         }
         {
             const globalFilter = stateHolder.state[StateHolder.GLOBAL_FILTER];
             expect(globalFilter).not.toBeUndefined();
-            expect(Object.keys(globalFilter)).toHaveLength(2);
+            expect(Object.keys(globalFilter)).toHaveLength(1);
             expect(globalFilter.value).not.toBeUndefined();
-            expect(globalFilter.value.startTime).not.toBeUndefined();
-            expect(globalFilter.value.endTime).not.toBeUndefined();
-            expect(globalFilter.value.refreshInterval).not.toBeUndefined();
-            expect(globalFilter.listeners).toEqual([]);
+            expect(globalFilter.value.startTime).toBe("now - 24 hours");
+            expect(globalFilter.value.endTime).toBe("now");
+            expect(globalFilter.value.dateRangeNickname).toBe("Last 24 hours");
+            expect(globalFilter.value.refreshInterval).toBe(30 * 1000);
         }
         {
             const loadingState = stateHolder.state[StateHolder.LOADING_STATE];
             expect(loadingState).not.toBeUndefined();
-            expect(Object.keys(loadingState)).toHaveLength(2);
+            expect(Object.keys(loadingState)).toHaveLength(1);
             expect(loadingState.value).not.toBeUndefined();
-            expect(loadingState.value.isLoading).not.toBeUndefined();
-            expect(loadingState.value.message).not.toBeUndefined();
-            expect(loadingState.listeners).toEqual([]);
+            expect(loadingState.value.loadingOverlayCount).toBe(0);
+            expect(loadingState.value.message).toBeNull();
         }
         {
             const notificationState = stateHolder.state[StateHolder.NOTIFICATION_STATE];
             expect(notificationState).not.toBeUndefined();
-            expect(Object.keys(notificationState)).toHaveLength(2);
+            expect(Object.keys(notificationState)).toHaveLength(1);
             expect(notificationState.value).not.toBeUndefined();
-            expect(notificationState.value.isOpen).not.toBeUndefined();
-            expect(notificationState.value.message).not.toBeUndefined();
-            expect(notificationState.value.notificationLevel).not.toBeUndefined();
-            expect(notificationState.listeners).toEqual([]);
+            expect(notificationState.value.isOpen).toBe(false);
+            expect(notificationState.value.message).toBeNull();
+            expect(notificationState.value.notificationLevel).toBeNull();
         }
         {
             const user = stateHolder.state[StateHolder.USER];
             expect(user).not.toBeUndefined();
-            expect(Object.keys(user)).toHaveLength(2);
-            expect(user.value).not.toBeUndefined();
-            expect(user.listeners).toEqual([]);
+            expect(Object.keys(user)).toHaveLength(1);
+            expect(user.value).toBe(loggedInUser);
         }
     };
 
@@ -535,6 +533,18 @@ describe("ConfigHolder", () => {
             expect(stateHolder.state.key3.listeners).toHaveLength(2);
             expect(stateHolder.state.key3.listeners[0]).toBe(key3Callback1);
             expect(stateHolder.state.key3.listeners[1]).toBe(key3Callback2);
+
+            stateHolder.set("key2", "newValue");
+
+            expect(stateHolder.state.key2).not.toBeUndefined();
+            expect(stateHolder.state.key2.value).toBe("newValue");
+            expect(stateHolder.state.key2.listeners).not.toBeUndefined();
+            expect(stateHolder.state.key2.listeners).toHaveLength(2);
+            expect(stateHolder.state.key2.listeners[0]).toBe(key2Callback1);
+            expect(stateHolder.state.key2.listeners[1]).toBe(key2Callback3);
+            expect(key2Callback1).toHaveBeenCalled();
+            expect(key2Callback2).not.toHaveBeenCalled();
+            expect(key2Callback3).toHaveBeenCalled();
         });
 
         it("should not make any changes if the key does not exist", () => {
@@ -581,6 +591,30 @@ describe("ConfigHolder", () => {
             expect(stateHolder.state.key3.listeners).toHaveLength(2);
             expect(stateHolder.state.key3.listeners[0]).toBe(key3Callback1);
             expect(stateHolder.state.key3.listeners[1]).toBe(key3Callback2);
+        });
+
+        it("should not not fail and should not make any changes if the listeners list was not yet added", () => {
+            const stateHolder = new StateHolder();
+            const callback1 = jest.fn();
+            const callback2 = jest.fn();
+            stateHolder.state.key1 = {
+                value: "value1"
+            };
+            stateHolder.state.key2 = {
+                value: "value2",
+                listeners: []
+            };
+            stateHolder.removeListener("key1", callback1);
+            stateHolder.removeListener("key2", callback2);
+
+            expect(Object.keys(stateHolder.state)).toHaveLength(7);
+            validateInitialState(stateHolder);
+            expect(stateHolder.state.key1).not.toBeUndefined();
+            expect(stateHolder.state.key1.value).toBe("value1");
+            expect(stateHolder.state.key1.listeners).toBeUndefined();
+            expect(stateHolder.state.key2).not.toBeUndefined();
+            expect(stateHolder.state.key2.value).toBe("value2");
+            expect(stateHolder.state.key2.listeners).toEqual([]);
         });
     });
 });

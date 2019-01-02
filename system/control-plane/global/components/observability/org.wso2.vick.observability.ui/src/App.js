@@ -19,9 +19,9 @@
 import AppLayout from "./AppLayout";
 import Cells from "./pages/cells";
 import {ColorProvider} from "./pages/common/color";
-import NotFound from "./pages/common/NotFound";
+import ErrorBoundary from "./pages/common/error/ErrorBoundary";
+import NotFound from "./pages/common/error/NotFound";
 import Overview from "./pages/overview";
-import PropTypes from "prop-types";
 import React from "react";
 import SignIn from "./pages/SignIn";
 import SystemMetrics from "./pages/systemMetrics";
@@ -29,6 +29,7 @@ import Tracing from "./pages/tracing";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
 import withGlobalState, {StateHolder, StateProvider} from "./pages/common/state";
+import * as PropTypes from "prop-types";
 
 class StatelessProtectedPortal extends React.Component {
 
@@ -53,13 +54,15 @@ class StatelessProtectedPortal extends React.Component {
         return isAuthenticated
             ? (
                 <AppLayout>
-                    <Switch>
-                        <Route exact path="/" component={Overview}/>
-                        <Route path="/cells" component={Cells}/>
-                        <Route path="/tracing" component={Tracing}/>
-                        <Route path="/system-metrics" component={SystemMetrics}/>
-                        <Route path="/*" component={NotFound}/>
-                    </Switch>
+                    <ErrorBoundary>
+                        <Switch>
+                            <Route exact path="/" component={Overview}/>
+                            <Route path="/cells" component={Cells}/>
+                            <Route path="/tracing" component={Tracing}/>
+                            <Route path="/system-metrics" component={SystemMetrics}/>
+                            <Route path="/*" component={NotFound}/>
+                        </Switch>
+                    </ErrorBoundary>
                 </AppLayout>
             )
             : <SignIn/>;
@@ -87,13 +90,15 @@ const theme = createMuiTheme({
  */
 const App = () => (
     <MuiThemeProvider theme={theme}>
-        <ColorProvider>
-            <StateProvider>
-                <BrowserRouter>
-                    <ProtectedPortal/>
-                </BrowserRouter>
-            </StateProvider>
-        </ColorProvider>
+        <ErrorBoundary>
+            <ColorProvider>
+                <StateProvider>
+                    <BrowserRouter>
+                        <ProtectedPortal/>
+                    </BrowserRouter>
+                </StateProvider>
+            </ColorProvider>
+        </ErrorBoundary>
     </MuiThemeProvider>
 );
 

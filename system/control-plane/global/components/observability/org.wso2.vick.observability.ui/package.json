@@ -5,17 +5,16 @@
   "author": "WSO2 Org",
   "license": "Apache-2.0",
   "scripts": {
-    "clean": "rimraf ./build/ && rimraf ./node-server/public/",
+    "clean": "rimraf ./build/ && rimraf ./node-server/public/ && rimraf ./coverage/",
     "start": "react-scripts start",
     "lint": "eslint --color --fix src/",
     "build": "react-scripts build",
-    "test": "CI=true react-scripts test --colors --resetModules --restoreMocks --testURL=http://test.vick.com",
+    "test": "CI=true react-scripts test --colors --testURL=http://test.vick.com --coverage",
     "eject": "react-scripts eject"
   },
   "dependencies": {
     "@material-ui/core": "^3.3.2",
     "@material-ui/icons": "^3.0.1",
-    "@types/react": "^16.4.18",
     "axios": "^0.18.0",
     "classnames": "^2.2.6",
     "d3": "^5.7.0",
@@ -25,8 +24,8 @@
     "d3-zoom": "^1.7.3",
     "eslint-plugin-jest": "^22.0.0",
     "interactjs": "^1.3.4",
-    "mermaid": "7.0.5",
     "material-ui-chip-input": "^1.0.0-beta.9",
+    "mermaid": "7.0.5",
     "moment": "^2.22.2",
     "mui-datatables": "^2.0.0-beta-41",
     "prop-types": "^15.6.2",
@@ -43,6 +42,10 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.2"
+  },
+  "jest": {
+    "resetMocks": true,
+    "resetModules": true
   },
   "browserslist": [
     ">0.2%",

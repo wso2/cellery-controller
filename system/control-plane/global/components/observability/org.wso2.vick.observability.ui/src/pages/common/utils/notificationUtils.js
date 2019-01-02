@@ -4,7 +4,6 @@
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
- * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,6 +19,12 @@ import {StateHolder} from "../state";
 
 class NotificationUtils {
 
+    static Levels = {
+        INFO: "INFO",
+        WARNING: "WARNING",
+        ERROR: "ERROR"
+    };
+
     /**
      * Show the loading overlay.
      *
@@ -27,8 +32,9 @@ class NotificationUtils {
      * @param {StateHolder} globalState The global state provided to the current component
      */
     static showLoadingOverlay = (message, globalState) => {
+        const prevState = globalState.get(StateHolder.LOADING_STATE);
         globalState.set(StateHolder.LOADING_STATE, {
-            isLoading: true,
+            loadingOverlayCount: prevState.loadingOverlayCount + 1,
             message: message
         });
     };
@@ -39,11 +45,20 @@ class NotificationUtils {
      * @param {StateHolder} globalState The global state provided to the current component
      */
     static hideLoadingOverlay = (globalState) => {
+        const prevState = globalState.get(StateHolder.LOADING_STATE);
         globalState.set(StateHolder.LOADING_STATE, {
-            isLoading: false,
+            loadingOverlayCount: prevState.loadingOverlayCount === 0 ? 0 : prevState.loadingOverlayCount - 1,
             message: null
         });
     };
+
+    /**
+     * Check if the loading overlay is currently shown.
+     *
+     * @param {StateHolder} globalState The global state provided to the current component
+     * @returns {boolean} True if the loading state is currently shown
+     */
+    static isLoadingOverlayShown = (globalState) => globalState.get(StateHolder.LOADING_STATE).loadingOverlayCount > 0;
 
     /**
      * Show a notification to the user.
@@ -67,9 +82,8 @@ class NotificationUtils {
      */
     static closeNotification = (globalState) => {
         globalState.set(StateHolder.NOTIFICATION_STATE, {
-            isOpen: false,
-            message: null,
-            notificationLevel: null
+            ...globalState.get(StateHolder.NOTIFICATION_STATE),
+            isOpen: false
         });
     };
 

@@ -24,16 +24,16 @@ define function extractFromServiceName[javascript] return string {
     var serviceName = data[0];
     var index = data[1];    // 1: cell, 2: service
 
-    var cellGatewayMatches = /^(?:src:\d+\.\d+\.\d+\.(.+)_\d+_\d+_\d+_.+)|(?:(.*)-cell-gateway)$/.exec(serviceName);
+    var cellGatewayMatches = /^src:\d+\.\d+\.\d+\.(.+)_\d+_\d+_\d+_.+$/.exec(serviceName);
     var mircoserviceMatches = /^(.+)--(.+)$/.exec(serviceName);
 
     var extractedData = "";
     if (cellGatewayMatches) {
-        var cell = cellGatewayMatches[1] ? cellGatewayMatches[1] : cellGatewayMatches[2];
+        var cell = cellGatewayMatches[1];
         if (index == 1) {
             extractedData = cell;
         } else if (index == 2) {
-            extractedData = cell + "-cell-gateway";
+            extractedData = "gateway";
         }
     } else if (mircoserviceMatches) {
         extractedData = mircoserviceMatches[index];

@@ -4,7 +4,6 @@
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
- * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -38,11 +37,17 @@ const styles = (theme) => ({
     notFoundContentIndicator: {
         margin: theme.spacing.unit * 3,
         fontSize: "4em",
-        color: "#808080"
+        color: "#6e6e6e"
     },
-    notFoundContent: {
+    notFoundTitle: {
+        margin: theme.spacing.unit,
         fontSize: "1.5em",
         fontWeight: 400,
+        color: "#6e6e6e"
+    },
+    notFoundDescription: {
+        fontSize: "1em",
+        fontWeight: 300,
         color: "#808080"
     }
 });
@@ -51,16 +56,26 @@ const NotFound = (props) => (
     <div className={props.classes.notFoundContainer}>
         <div className={props.classes.notFound}>
             <ErrorOutline className={props.classes.notFoundContentIndicator}/>
-            <div className={props.classes.notFoundContent}>
-                {props.content ? props.content : "Unable to Find What You were Looking For"}
+            <div className={props.classes.notFoundTitle}>
+                {props.title ? props.title : "Unable to Find What You were Looking For"}
             </div>
+            {
+                props.description
+                    ? (
+                        <div className={props.classes.notFoundDescription}>
+                            {props.description}
+                        </div>
+                    )
+                    : null
+            }
         </div>
     </div>
 );
 
 NotFound.propTypes = {
     classes: PropTypes.object.isRequired,
-    content: PropTypes.string
+    title: PropTypes.string,
+    description: PropTypes.string
 };
 
 export default withStyles(styles, {withTheme: true})(NotFound);

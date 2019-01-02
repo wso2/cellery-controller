@@ -131,7 +131,7 @@ class Metrics extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to load cell information",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
@@ -190,7 +190,7 @@ class Metrics extends React.Component {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
                     "Failed to load cell metrics",
-                    StateHolder.NotificationLevels.ERROR,
+                    NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }

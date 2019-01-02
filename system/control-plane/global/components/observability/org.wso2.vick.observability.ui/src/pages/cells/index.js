@@ -19,7 +19,7 @@
 import Cell from "./cell";
 import CellList from "./CellList";
 import MicroService from "./microservice";
-import NotFound from "../common/NotFound";
+import NotFound from "../common/error/NotFound";
 import PropTypes from "prop-types";
 import React from "react";
 import {Route, Switch, withRouter} from "react-router-dom";

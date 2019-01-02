@@ -116,6 +116,10 @@ select
     responseTotalSize
 insert into PreprocessedTelemetryStream;
 
+-- Storing the required attributes in a in memory sink (To be accessed from other siddhi apps)
+-- When updating the used attributes from the received attributes the stream definitions needs to be updated in all
+-- the places where the in memory source is used
+
 from PreprocessedTelemetryStream
 select
     extractFromUID(sourceUID, 4) as sourceNamespace,
@@ -134,30 +138,4 @@ select
     responseCode,
     responseDurationNanoSec,
     responseTotalSize as responseSizeBytes
-insert into ExtractedTelemetryStream;
-
--- Storing the required attributes in a in memory sink (To be accessed from other siddhi apps)
--- When updating the used attributes from the received attributes the stream definitions needs to be updated in all
--- the places where the in memory source is used
-
-from ExtractedTelemetryStream
-select
-    sourceNamespace,
-    sourceCell,
-    ifThenElse(sourceVICKService == "gateway", str:concat(sourceCell, "-cell-gateway"),
-        sourceVICKService) as sourceVICKService,
-    sourcePod,
-    destinationNamespace,
-    destinationCell,
-    ifThenElse(destinationVICKService == "gateway", str:concat(destinationCell, "-cell-gateway"),
-        destinationVICKService) as destinationVICKService,
-    destinationPod,
-    contextReporterKind,
-    requestHeadersMap,
-    requestPath,
-    requestMethod,
-    requestSizeBytes,
-    responseCode,
-    responseDurationNanoSec,
-    responseSizeBytes
 insert into TelemetryInMemorySink;

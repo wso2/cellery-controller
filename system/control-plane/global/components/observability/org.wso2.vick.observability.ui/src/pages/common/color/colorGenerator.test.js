@@ -15,21 +15,27 @@
  */
 
 import ColorGenerator from "./colorGenerator";
+import StateHolder from "../state/stateHolder";
 
 describe("ColorGenerator", () => {
-    const INITIAL_KEY_COUNT = 7;
+    const INITIAL_KEYS = [
+        ColorGenerator.VICK, ColorGenerator.ISTIO, ColorGenerator.UNKNOWN, ColorGenerator.SUCCESS,
+        ColorGenerator.WARNING, ColorGenerator.ERROR, ColorGenerator.CLIENT_ERROR
+    ];
+    const INITIAL_KEY_COUNT = INITIAL_KEYS.length;
+
+    const validateInitialKeys = (colorGenerator) => {
+        for (const key of INITIAL_KEYS) {
+            expect(colorGenerator.colorMap[key]).not.toBeUndefined();
+        }
+    };
 
     describe("constructor()", () => {
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
             expect(Object.keys(colorGenerator.colorMap)).toHaveLength(INITIAL_KEY_COUNT);
-            expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
+            validateInitialKeys(colorGenerator);
         });
     });
 
@@ -46,12 +52,7 @@ describe("ColorGenerator", () => {
             colorGenerator.addKeys(keyList);
 
             expect(Object.keys(colorGenerator.colorMap)).toHaveLength(keyList.length + INITIAL_KEY_COUNT);
-            expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
+            validateInitialKeys(colorGenerator);
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
@@ -59,24 +60,21 @@ describe("ColorGenerator", () => {
             expect(colorGenerator.colorMap[KEY_5]).not.toBeUndefined();
         });
 
-        it("should not add duplicate keys", () => {
+        it("should not add duplicate keys nor change the color", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
+
+            const key2Color = colorGenerator.colorMap[KEY_2];
+            const key5Color = colorGenerator.colorMap[KEY_5];
             colorGenerator.addKeys([KEY_2, KEY_5]);
 
             expect(Object.keys(colorGenerator.colorMap)).toHaveLength(keyList.length + INITIAL_KEY_COUNT);
-            expect(colorGenerator.colorMap[ColorGenerator.VICK]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ISTIO]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.UNKNOWN]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.SUCCESS]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.WARNING]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.ERROR]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[ColorGenerator.CLIENT_ERROR]).not.toBeUndefined();
+            validateInitialKeys(colorGenerator);
             expect(colorGenerator.colorMap[KEY_1]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[KEY_2]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_3]).not.toBeUndefined();
             expect(colorGenerator.colorMap[KEY_4]).not.toBeUndefined();
-            expect(colorGenerator.colorMap[KEY_5]).not.toBeUndefined();
+            expect(colorGenerator.colorMap[KEY_2]).toBe(key2Color);
+            expect(colorGenerator.colorMap[KEY_5]).toBe(key5Color);
         });
     });
 
@@ -86,9 +84,9 @@ describe("ColorGenerator", () => {
 
         beforeEach(() => {
             keyList = [];
-            keyList.push(ColorGenerator.VICK);
-            keyList.push(ColorGenerator.ISTIO);
-            keyList.push(ColorGenerator.ERROR);
+            for (const key of INITIAL_KEYS) {
+                keyList.push(key);
+            }
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }
@@ -111,7 +109,7 @@ describe("ColorGenerator", () => {
                     }
                 }
             }
-            expect(similarColors).toBeLessThan(5); // There are few overlaps
+            expect(similarColors).toBe(0);
             expect(spy).not.toHaveBeenCalledTimes(keyCount);
         });
 
@@ -144,19 +142,52 @@ describe("ColorGenerator", () => {
         });
     });
 
+    describe("getColorForPercentage()", () => {
+        const globalState = new StateHolder();
+        const colorGenerator = new ColorGenerator();
+        globalState.set(StateHolder.CONFIG, {
+            percentageRangeMinValue: {
+                errorThreshold: 0.5,
+                warningThreshold: 0.7
+            }
+        });
+
+        const unknownColor = colorGenerator.colorMap[ColorGenerator.UNKNOWN];
+        const errorColor = colorGenerator.colorMap[ColorGenerator.ERROR];
+        const warningColor = colorGenerator.colorMap[ColorGenerator.WARNING];
+        const successColor = colorGenerator.colorMap[ColorGenerator.SUCCESS];
+
+        it("should return unknown color if a value is less than 0 or greater than 1 is provided", () => {
+            expect(colorGenerator.getColorForPercentage(-1, globalState)).toBe(unknownColor);
+            expect(colorGenerator.getColorForPercentage(2, globalState)).toBe(unknownColor);
+        });
+
+        it("should return error color if a value 0 and 0.5 is provided (including 0)", () => {
+            expect(colorGenerator.getColorForPercentage(0, globalState)).toBe(errorColor);
+            expect(colorGenerator.getColorForPercentage(0.3, globalState)).toBe(errorColor);
+        });
+
+        it("should return warning color if a value between 0.5 and 0.7 is provided (including 0.5)", () => {
+            expect(colorGenerator.getColorForPercentage(0.5, globalState)).toBe(warningColor);
+            expect(colorGenerator.getColorForPercentage(0.6, globalState)).toBe(warningColor);
+        });
+
+        it("should return success color if a value between 0.7 and 1 is provided (including 0.7 and 1)", () => {
+            expect(colorGenerator.getColorForPercentage(0.7, globalState)).toBe(successColor);
+            expect(colorGenerator.getColorForPercentage(0.8, globalState)).toBe(successColor);
+            expect(colorGenerator.getColorForPercentage(1, globalState)).toBe(successColor);
+        });
+    });
+
     describe("regenerateNewColorScheme()", () => {
         const keyCount = 200;
         let keyList;
 
         beforeEach(() => {
             keyList = [];
-            keyList.push(ColorGenerator.VICK);
-            keyList.push(ColorGenerator.ISTIO);
-            keyList.push(ColorGenerator.UNKNOWN);
-            keyList.push(ColorGenerator.SUCCESS);
-            keyList.push(ColorGenerator.WARNING);
-            keyList.push(ColorGenerator.ERROR);
-            keyList.push(ColorGenerator.CLIENT_ERROR);
+            for (const key of INITIAL_KEYS) {
+                keyList.push(key);
+            }
             for (let i = 0; i < keyCount; i++) {
                 keyList.push(`key${i}`);
             }
@@ -165,7 +196,7 @@ describe("ColorGenerator", () => {
         it("should generate colors for all the existing colors", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
-            const spy = jest.spyOn(ColorGenerator, "generateColors");
+            const spy = jest.spyOn(colorGenerator, "generateColors");
             colorGenerator.regenerateNewColorScheme();
 
             expect(spy).toHaveBeenCalledTimes(1);

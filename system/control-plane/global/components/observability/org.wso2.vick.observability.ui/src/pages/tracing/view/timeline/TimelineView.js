@@ -45,9 +45,14 @@ const styles = (theme) => ({
         boxSizing: "border-box",
         display: "inline-block"
     },
-    serviceName: {
+    cellName: {
         fontWeight: 500,
         fontSize: "normal"
+    },
+    serviceName: {
+        fontWeight: 500,
+        fontSize: "normal",
+        paddingRight: theme.spacing.unit
     },
     operationName: {
         color: "#7c7c7c",
@@ -269,7 +274,14 @@ class TimelineView extends React.Component {
                                 minWidth: `${(this.trace.treeHeight + 1) * 15 + 100}px`,
                                 width: `${(self.spanLabelWidth > 0 ? self.spanLabelWidth : null)}px`
                             }} className={classes.spanLabelContainer}>
-                                <span className={classes.serviceName}>{`${item.span.serviceName} `}</span>
+                                {
+                                    item.span.cell && item.span.cell.name
+                                        ? (
+                                            <span className={classes.cellName}>{`${item.span.cell.name}:`}</span>
+                                        )
+                                        : null
+                                }
+                                <span className={classes.serviceName}>{item.span.serviceName}</span>
                                 <span className={classes.operationName}>{item.span.operationName}</span>
                             </div>
                             {(

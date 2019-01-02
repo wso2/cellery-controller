@@ -102,10 +102,6 @@ public class DistributedTracingAPI {
                 .setArg(SiddhiStoreQueryTemplates.Params.SERVICE_NAME, serviceName)
                 .setArg(SiddhiStoreQueryTemplates.Params.OPERATION_NAME, operationName)
                 .setArg(SiddhiStoreQueryTemplates.Params.MIN_DURATION, minDuration)
-                .setArg(SiddhiStoreQueryTemplates.Params.MAX_DURATION, maxDuration)
-                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
-                .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
-                .setArg(SiddhiStoreQueryTemplates.Params.TAGS_JSON_ENCODED, jsonEncodedTags)
                 .build()
                 .execute();
 
@@ -139,35 +135,41 @@ public class DistributedTracingAPI {
             }
         }
 
-        Object[][] spanCountResults;
-        Object[][] rootSpanResults;
+        Object[][] spanCountResults = null;
+        Object[][] rootSpanResults = null;
         if (traceIds.size() > 0) {
-            // Calculating a match condition for the traceIds
-            StringBuilder traceIdMatchConditionBuilder = new StringBuilder();
-            String[] traceIdArray = traceIds.toArray(new String [0]);
-            for (int i = 0; i < traceIdArray.length; i++) {
-                if (i != 0) {
-                    traceIdMatchConditionBuilder.append(" or ");
-                }
-                traceIdMatchConditionBuilder.append("traceId == \"")
-                        .append(traceIdArray[i])
-                        .append("\"");
-            }
-            String traceIdMatchCondition = traceIdMatchConditionBuilder.toString();
-
-            spanCountResults =
-                    SiddhiStoreQueryTemplates.DISTRIBUTED_TRACING_SEARCH_GET_MULTIPLE_CELL_SERVICE_COUNTS.builder()
-                            .setArg(SiddhiStoreQueryTemplates.Params.CONDITION, traceIdMatchCondition)
-                            .build()
-                            .execute();
-
             rootSpanResults = SiddhiStoreQueryTemplates.DISTRIBUTED_TRACING_SEARCH_GET_ROOT_SPAN_METADATA
                     .builder()
-                    .setArg(SiddhiStoreQueryTemplates.Params.CONDITION, traceIdMatchCondition)
+                    .setArg(
+                            SiddhiStoreQueryTemplates.Params.CONDITION,
+                            Utils.generateSiddhiMatchConditionForAnyValues(
+                                    "traceId", traceIds.toArray(new String [0]))
+                    )
+                    .setArg(SiddhiStoreQueryTemplates.Params.MAX_DURATION, maxDuration)
+                    .setArg(SiddhiStoreQueryTemplates.Params.QUERY_START_TIME, queryStartTime)
+                    .setArg(SiddhiStoreQueryTemplates.Params.QUERY_END_TIME, queryEndTime)
                     .build()
                     .execute();
-        } else {
+
+            // Creating the array of trace IDs of the selected root spans
+            String[] rootSpanResultIds = new String[rootSpanResults.length];
+            for (int i = 0; i < rootSpanResults.length; i++) {
+                rootSpanResultIds[i] = (String) rootSpanResults[i][0];
+            }
+
+            if (rootSpanResultIds.length > 0) {
+                spanCountResults =
+                        SiddhiStoreQueryTemplates.DISTRIBUTED_TRACING_SEARCH_GET_MULTIPLE_CELL_SERVICE_COUNTS.builder()
+                                .setArg(SiddhiStoreQueryTemplates.Params.CONDITION,
+                                        Utils.generateSiddhiMatchConditionForAnyValues("traceId", rootSpanResultIds))
+                                .build()
+                                .execute();
+            }
+        }
+        if (spanCountResults == null) {
             spanCountResults = new Object[0][0];
+        }
+        if (rootSpanResults == null) {
             rootSpanResults = new Object[0][0];
         }
 

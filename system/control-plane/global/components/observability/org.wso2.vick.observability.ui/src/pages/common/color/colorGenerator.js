@@ -51,10 +51,10 @@ class ColorGenerator {
      *
      * @param {Array.<string>} keys The array of keys to add to the current keys
      */
-    addKeys = (keys = []) => {
+    addKeys = (keys) => {
         const self = this;
         const newKeys = keys.filter((key) => !(key in self.colorMap));
-        const colors = ColorGenerator.generateColors(newKeys.length);
+        const colors = this.generateColors(newKeys.length);
 
         for (let i = 0; i < newKeys.length; i++) {
             self.colorMap[newKeys[i]] = colors[i];
@@ -102,14 +102,12 @@ class ColorGenerator {
      */
     regenerateNewColorScheme = () => {
         const keyCount = Object.keys(this.colorMap).length;
-        const colors = ColorGenerator.generateColors(keyCount);
+        const colors = this.generateColors(keyCount);
 
         let i = 0;
-        for (const key in this.colorMap) {
-            if (this.colorMap.hasOwnProperty(key)) {
-                this.colorMap[key] = colors[i];
-                i += 1;
-            }
+        for (const key of Object.keys(this.colorMap)) {
+            this.colorMap[key] = colors[i];
+            i += 1;
         }
     };
 
@@ -120,10 +118,25 @@ class ColorGenerator {
      * @param {number} count The number of colors to generate
      * @returns {Array.<string>} The colors generated
      */
-    static generateColors = (count) => randomColor({
-        luminosity: "light",
-        count: count
-    });
+    generateColors = (count) => {
+        const newColors = [];
+        let colorsLeftCount = count;
+        while (colorsLeftCount > 0) {
+            const generatedColors = randomColor({
+                luminosity: "light",
+                count: colorsLeftCount
+            });
+
+            // Verifying that the colors are distinct and adding them to the list
+            for (const generatedColor of generatedColors) {
+                if (!this.colorMap[generatedColor] && !newColors.includes(generatedColor)) {
+                    newColors.push(generatedColor);
+                    colorsLeftCount -= 1;
+                }
+            }
+        }
+        return newColors;
+    }
 
 }
 

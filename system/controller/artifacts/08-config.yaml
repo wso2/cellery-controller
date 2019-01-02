@@ -56,11 +56,11 @@ data:
     tokenCache.evictionFactor=0.25
 
     [analytics]
-    enable=true
+    enable=false
     uploadingTimeSpanInMillis=30000
     uploadingEndpoint="http://wso2sp-worker.vick-system:9090/analytics/v1.0/usage/upload-file"
     rotatingPeriod=30000
-    task.uploadFiles=true
+    task.uploadFiles=false
     username="admin"
     password="admin"
 

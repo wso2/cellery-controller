@@ -15,11 +15,11 @@
  */
 
 import DependencyDiagram from "./DependencyDiagram";
+import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
-import NotFound from "../../common/NotFound";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import SequenceDiagram from "./sequenceDiagram/SequenceDiagram";
 import Span from "../utils/span";
@@ -28,8 +28,10 @@ import Tabs from "@material-ui/core/Tabs";
 import Timeline from "./timeline";
 import TopToolbar from "../../common/toptoolbar";
 import TracingUtils from "../utils/tracingUtils";
+import UnknownError from "../../common/error/UnknownError";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withGlobalState, {StateHolder} from "../../common/state";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     container: {
@@ -51,16 +53,21 @@ class View extends React.Component {
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
+            traceTree: null,
             spans: [],
             selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
-            isLoading: true
+            isLoading: false,
+            errorMessage: null
         };
 
         this.traceViewRef = React.createRef();
     }
 
     componentDidMount = () => {
-        this.loadTrace(true);
+        const {globalState} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+        this.loadTrace();
     };
 
     componentDidUpdate = () => {
@@ -69,14 +76,28 @@ class View extends React.Component {
         }
     };
 
-    loadTrace = (isUserAction) => {
+    componentWillUnmount() {
+        const {globalState} = this.props;
+
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    }
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
+    };
+
+    loadTrace = () => {
         const {globalState, match} = this.props;
         const traceId = match.params.traceId;
         const self = this;
 
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading trace", globalState);
-        }
+        self.setState({
+            traceTree: null,
+            spans: []
+        });
+        NotificationUtils.showLoadingOverlay("Loading trace", globalState);
         HttpUtils.callObservabilityAPI(
             {
                 url: `/traces/${traceId}`,
@@ -99,29 +120,29 @@ class View extends React.Component {
                 tags: dataItem[11]
             }));
 
-            const rootSpan = TracingUtils.buildTree(spans);
-            TracingUtils.labelSpanTree(rootSpan);
+            try {
+                const rootSpan = TracingUtils.buildTree(spans);
+                TracingUtils.labelSpanTree(rootSpan);
 
-            self.setState({
-                traceTree: rootSpan,
-                spans: TracingUtils.getOrderedList(rootSpan),
-                isLoading: false
-            });
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }).catch(() => {
-            self.setState({
-                isLoading: false
-            });
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    traceTree: rootSpan,
+                    spans: TracingUtils.getOrderedList(rootSpan)
+                });
+            } catch (e) {
                 NotificationUtils.showNotification(
-                    `Failed to fetch Trace with ID ${traceId}`,
-                    StateHolder.NotificationLevels.ERROR,
-                    globalState
-                );
+                    "Unable to Render Invalid Trace", NotificationUtils.Levels.ERROR, globalState);
+                self.setState({
+                    errorMessage: e.message
+                });
             }
+            NotificationUtils.hideLoadingOverlay(globalState);
+        }).catch(() => {
+            NotificationUtils.hideLoadingOverlay(globalState);
+            NotificationUtils.showNotification(
+                `Failed to fetch Trace with ID ${traceId}`,
+                NotificationUtils.Levels.ERROR,
+                globalState
+            );
         });
     };
 
@@ -143,13 +164,35 @@ class View extends React.Component {
 
     render = () => {
         const {classes, location, match} = this.props;
-        const {isLoading, spans, selectedTabIndex} = this.state;
-        const selectedMicroservice = location.state.selectedMicroservice;
+        const {spans, selectedTabIndex, isLoading, errorMessage} = this.state;
+        const selectedMicroservice = location.state ? location.state.selectedMicroservice : null;
 
         const traceId = match.params.traceId;
 
         const tabContent = [Timeline, SequenceDiagram, DependencyDiagram];
         const SelectedTabContent = tabContent[selectedTabIndex];
+
+        let view;
+        if (spans && spans.length) {
+            view = (
+                <Paper className={classes.container}>
+                    <Tabs value={selectedTabIndex} indicatorColor="primary"
+                        onChange={this.handleTabChange}>
+                        <Tab label="Timeline"/>
+                        <Tab label="Sequence Diagram"/>
+                        <Tab label="Dependency Diagram"/>
+                    </Tabs>
+                    <ErrorBoundary title={"Unable to render Invalid Trace"}>
+                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                            selectedMicroservice={selectedMicroservice}/>
+                    </ErrorBoundary>
+                </Paper>
+            );
+        } else if (errorMessage) {
+            view = <UnknownError title={"Unable to Render Trace"} description={errorMessage}/>;
+        } else {
+            view = <NotFound title={`Trace with ID "${traceId}" Not Found`}/>;
+        }
 
         return (
             isLoading
@@ -157,24 +200,7 @@ class View extends React.Component {
                 : (
                     <React.Fragment>
                         <TopToolbar title={"Distributed Tracing"}/>
-                        {
-                            spans && spans.length === 0
-                                ? (
-                                    <NotFound content={`Trace with ID "${traceId}" Not Found`}/>
-                                )
-                                : (
-                                    <Paper className={classes.container}>
-                                        <Tabs value={selectedTabIndex} indicatorColor="primary"
-                                            onChange={this.handleTabChange}>
-                                            <Tab label="Timeline"/>
-                                            <Tab label="Sequence Diagram"/>
-                                            <Tab label="Dependency Diagram"/>
-                                        </Tabs>
-                                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                            selectedMicroservice={selectedMicroservice}/>
-                                    </Paper>
-                                )
-                        }
+                        {view}
                     </React.Fragment>
                 )
         );
