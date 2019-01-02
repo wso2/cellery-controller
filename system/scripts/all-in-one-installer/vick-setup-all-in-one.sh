@@ -42,7 +42,7 @@ function install_k8s_kubeadm () {
         #default tested version
         sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
     fi
-    sudo apt-get update
+    sudo apt-get update -qq
     sudo apt-get install -y docker.io
     #Install NFS client
     sudo apt-get install -y nfs-common
@@ -52,6 +52,7 @@ function install_k8s_kubeadm () {
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] http://apt.kubernetes.io/ kubernetes-xenial main"
     #Install K8s components
+    echo "⚙️ Installing kubeadm\n"
     sudo apt-get install -y kubelet=$K8S_VERSION kubeadm=$K8S_VERSION kubectl=$K8S_VERSION
     sudo apt-mark hold kubelet kubeadm kubectl
 }
@@ -64,6 +65,7 @@ fi
 
 if [ $node_type == "master" ]; then
     #Initialize the k8s cluster
+    echo "⚙️ Installing k8s using kubeadm\n"
     sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 
     sleep 60
@@ -91,7 +93,7 @@ if [ $node_type == "master" ]; then
 
     #Wait to restart the K8s with new admission plugins
     sleep 60
- echo "K8s Master node installation is finished"
+ echo "👣 k8s Master node installation is finished"
 
 elif [ $node_type == "worker" ]; then
     read -p "Enter the Master node IP and the Token [master_node_ip token discovery_token_ca_cert_hash]:" master_node_ip token discovery_token_ca_cert_hash
@@ -503,7 +505,7 @@ declare -A nfs_config_params
 #Install K8s
 if [[ -n ${iaas/[ ]*\n/} ]]; then
     if [ $iaas == "GCP" ]; then
-        echo "GCP selected"
+        echo "ℹ️ Selected k8s provider: GCP"
         if [ -n $gcp_project ]; then
             install_k8s_gcp $gcp_project
         else
@@ -511,29 +513,29 @@ if [[ -n ${iaas/[ ]*\n/} ]]; then
             exit 0
         fi
     elif [ $iaas == "kubeadm" ]; then
-        echo "kubeadm selected"
+        echo "ℹ️ Selected k8s provider: kubeadm"
         install_k8s_kubeadm $k8s_version
         #configure master node
         configure_k8s_kubeadm
     else
-        echo "Installation script only supports GCP and Kubeadm"
+        echo "Installation script supported k8s providers are GCP and Kubeadm."
         exit 0
     fi
 else
-    echo "Installing vick in to an existing K8s cluster"
+    echo "Installing VICK into an existing K8s cluster"
 fi
 
 #Create temporary foldr to download vick artifacts
 create_artifact_folder $download_path
 
-echo "Downloading vick artifacts to ${download_path}"
+echo "🕷️ Downloading vick artifacts to ${download_path}"
 
 download_vick_artifacts $control_plane_base_url $download_path "${control_plane_yaml[@]}"
 download_vick_artifacts $crd_base_url  $download_path "${crd_yaml[@]}"
 download_vick_artifacts $istio_base_url $download_path "${istio_yaml[@]}"
 
 #Init control plane
-echo "Creating vick-system namespace and the service account"
+echo "🔧 Creating vick-system namespace and the service account"
 
 init_control_plane $download_path
 
@@ -566,7 +568,7 @@ if [ $install_mysql == "y" ]; then
         update_control_plance_sql $download_path
         deploy_mysql_server $download_path
     else
-        echo "Deploy MySQL server into the existing K8s clusters"
+        echo "🔧 Deploy MySQL server into the existing K8s clusters"
         read_control_plane_datasources_configs
         update_control_plance_sql $download_path
         deploy_mysql_server $download_path
@@ -577,29 +579,30 @@ fi
 
 update_control_plane_datasources $download_path
 
-echo "Deploying the control plane API Manager"
+echo "ℹ️ Start to Deploying the VICK control plane\n"
+echo "🔧 Deploying the control plane API Manager"
 
 deploy_global_gw $download_path $iaas
 deploy_global_pubstore $download_path
 
-echo "Deploying SP"
+echo "🔧Deploying SP"
 
 deploy_sp_dashboard_worker $download_path $iaas
 
-echo "Deploying Istio"
+echo "🔧 Deploying Istio"
 
 deploy_istio $download_path $istio_version
 
-echo "Deploying vick crds"
+echo "🔧 Deploying VICK CRDs"
 
 deploy_vick_crds $download_path
 
-echo "Deploying nginx-ingress"
+echo "🔧 Deploying nginx-ingress"
 
 if [ $iaas == "kubeadm" ]; then
     install_nginx_ingress_kubeadm $download_path
 fi
 #check GCP ingress
-echo "VICK installation is finished."
+echo "ℹ️ VICK installation is finished."
 echo "-=🎉=-"
 
