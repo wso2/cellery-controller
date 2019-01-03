@@ -141,6 +141,9 @@ class MicroserviceList extends React.Component {
                 name: "Average Inbound Request Count (requests/s)"
             }
         ];
+        const options = {
+            filter: false
+        };
 
         // Processing data to find the required values
         const dataTableMap = {};
@@ -204,7 +207,7 @@ class MicroserviceList extends React.Component {
             }
         }
 
-        return <DataTable columns={columns} data={tableData}/>;
+        return <DataTable columns={columns} options={options} data={tableData}/>;
     };
 
 }

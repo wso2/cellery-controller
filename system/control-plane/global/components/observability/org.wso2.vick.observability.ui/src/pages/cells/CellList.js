@@ -126,6 +126,9 @@ class CellList extends React.Component {
                 name: "Average Inbound Request Count (requests/s)"
             }
         ];
+        const options = {
+            filter: false
+        };
 
         // Processing data to find the required values
         const dataTableMap = {};
@@ -171,7 +174,7 @@ class CellList extends React.Component {
             <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellInfo}/>
                 <Paper className={classes.root}>
-                    <DataTable columns={columns} data={tableData}/>
+                    <DataTable columns={columns} options={options} data={tableData}/>
                 </Paper>
             </React.Fragment>
         );

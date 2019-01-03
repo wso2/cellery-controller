@@ -42,7 +42,6 @@ const graphConfig = {
     directed: true,
     automaticRearrangeAfterDropNode: false,
     collapsible: false,
-    height: 800,
     highlightDegree: 1,
     highlightOpacity: 0.2,
     linkHighlightBehavior: false,
@@ -51,7 +50,8 @@ const graphConfig = {
     nodeHighlightBehavior: true,
     panAndZoom: false,
     staticGraph: false,
-    width: 1400,
+    height: 700,
+    width: 1050,
     d3: {
         alphaTarget: 0.05,
         gravity: -1500,
