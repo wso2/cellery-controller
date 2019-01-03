@@ -39,17 +39,31 @@ class MicroserviceList extends React.Component {
         super(props);
 
         this.state = {
-            microserviceInfo: []
+            microserviceInfo: [],
+            isLoading: false
         };
     }
 
     componentDidMount = () => {
         const {globalState} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
+    };
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
     };
 
     update = (isUserAction, startTime, endTime) => {
@@ -105,7 +119,7 @@ class MicroserviceList extends React.Component {
 
     render = () => {
         const {cell} = this.props;
-        const {microserviceInfo} = this.state;
+        const {microserviceInfo, isLoading} = this.state;
         const columns = [
             {
                 name: "Health",
@@ -207,7 +221,11 @@ class MicroserviceList extends React.Component {
             }
         }
 
-        return <DataTable columns={columns} options={options} data={tableData}/>;
+        return (
+            isLoading
+                ? null
+                : <DataTable columns={columns} options={options} data={tableData}/>
+        );
     };
 
 }

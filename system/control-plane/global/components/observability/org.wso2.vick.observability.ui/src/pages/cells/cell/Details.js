@@ -58,18 +58,31 @@ class Details extends React.Component {
 
         this.state = {
             health: -1,
-            dependencyGraphData: []
+            dependencyGraphData: [],
+            isLoading: false
         };
     }
 
     componentDidMount = () => {
         const {globalState} = this.props;
 
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf(),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf()
         );
+    };
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
@@ -127,34 +140,38 @@ class Details extends React.Component {
 
     render = () => {
         const {classes} = this.props;
-        const {health} = this.state;
+        const {health, isLoading} = this.state;
 
         return (
-            <React.Fragment>
-                <Table className={classes.table}>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell className={classes.tableCell}>
-                                <Typography color="textSecondary">
-                                    Health
-                                </Typography>
-                            </TableCell>
-                            <TableCell className={classes.tableCell}>
-                                <HealthIndicator value={health}/>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-                <div className={classes.dependencies}>
-                    <Typography color="textSecondary" className={classes.subtitle}>
-                        Dependencies
-                    </Typography>
-                    <div className={classes.diagram}>
-                        {/* TODO : Implement Cell Dependency Diagram */}
-                        Dependency Diagram
-                    </div>
-                </div>
-            </React.Fragment>
+            isLoading
+                ? null
+                : (
+                    <React.Fragment>
+                        <Table className={classes.table}>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className={classes.tableCell}>
+                                        <Typography color="textSecondary">
+                                            Health
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <HealthIndicator value={health}/>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                        <div className={classes.dependencies}>
+                            <Typography color="textSecondary" className={classes.subtitle}>
+                                Dependencies
+                            </Typography>
+                            <div className={classes.diagram}>
+                                {/* TODO : Implement Cell Dependency Diagram */}
+                                Dependency Diagram
+                            </div>
+                        </div>
+                    </React.Fragment>
+                )
         );
     }
 

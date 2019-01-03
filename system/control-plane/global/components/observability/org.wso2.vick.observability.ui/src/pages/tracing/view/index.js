@@ -78,7 +78,6 @@ class View extends React.Component {
 
     componentWillUnmount() {
         const {globalState} = this.props;
-
         globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
     }
 
@@ -183,8 +182,12 @@ class View extends React.Component {
                         <Tab label="Dependency Diagram"/>
                     </Tabs>
                     <ErrorBoundary title={"Unable to render Invalid Trace"}>
-                        <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                            selectedMicroservice={selectedMicroservice}/>
+                        {
+                            isLoading
+                                ? null
+                                : <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                                    selectedMicroservice={selectedMicroservice}/>
+                        }
                     </ErrorBoundary>
                 </Paper>
             );
@@ -195,14 +198,10 @@ class View extends React.Component {
         }
 
         return (
-            isLoading
-                ? null
-                : (
-                    <React.Fragment>
-                        <TopToolbar title={"Distributed Tracing"}/>
-                        {view}
-                    </React.Fragment>
-                )
+            <React.Fragment>
+                <TopToolbar title={"Distributed Tracing"}/>
+                {view}
+            </React.Fragment>
         );
     };
 

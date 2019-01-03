@@ -23,12 +23,10 @@ import Metrics from "./Metrics";
 import MicroserviceList from "./MicroserviceList";
 import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
-import StateHolder from "../../common/state/stateHolder";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
 import Timeline from "@material-ui/icons/Timeline";
 import TopToolbar from "../../common/toptoolbar";
-import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
 
@@ -148,8 +146,7 @@ Cell.propTypes = {
     }),
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
-    }).isRequired,
-    globalState: PropTypes.instanceOf(StateHolder).isRequired
+    }).isRequired
 };
 
-export default withStyles(styles)(withGlobalState(Cell));
+export default withStyles(styles)(Cell);
