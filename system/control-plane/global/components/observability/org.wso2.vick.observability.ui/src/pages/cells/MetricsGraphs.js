@@ -98,7 +98,7 @@ class MetricsGraphs extends React.Component {
     }
 
     calculateMetrics = () => {
-        const {colorGenerator, data} = this.props;
+        const {colorGenerator, data, direction} = this.props;
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
@@ -158,7 +158,7 @@ class MetricsGraphs extends React.Component {
         const trafficData = ["2xx", "3xx", "4xx", "5xx"]
             .map((datum) => ({
                 x: totalRequestsCount === 0 ? 0 : httpResponseGroupCounts[datum] * 100 / totalRequestsCount,
-                y: "Out",
+                y: direction,
                 title: (datum === "2xx" ? "OK" : datum),
                 count: httpResponseGroupCounts[datum]
             }));
@@ -660,7 +660,8 @@ MetricsGraphs.propTypes = {
         totalResponseSizeBytes: PropTypes.number.isRequired,
         totalResponseTimeMilliSec: PropTypes.number.isRequired,
         requestCount: PropTypes.number.isRequired
-    })).isRequired
+    })).isRequired,
+    direction: PropTypes.string.isRequired
 };
 
 export default withStyles(styles)(withColor(MetricsGraphs));

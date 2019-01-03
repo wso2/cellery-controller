@@ -20,7 +20,6 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
@@ -105,7 +104,7 @@ class MicroserviceList extends React.Component {
     };
 
     render = () => {
-        const {classes, cell} = this.props;
+        const {cell} = this.props;
         const {microserviceInfo} = this.state;
         const columns = [
             {
@@ -205,11 +204,7 @@ class MicroserviceList extends React.Component {
             }
         }
 
-        return (
-            <Paper className={classes.root}>
-                <DataTable columns={columns} data={tableData}/>
-            </Paper>
-        );
+        return <DataTable columns={columns} data={tableData}/>;
     };
 
 }

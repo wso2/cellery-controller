@@ -237,7 +237,8 @@ class Metrics extends React.Component {
                     {
                         cellData.length > 0
                             ? (
-                                <MetricsGraphs data={cellData}/>
+                                <MetricsGraphs data={cellData}
+                                    direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
                             )
                             : (
                                 <Typography>

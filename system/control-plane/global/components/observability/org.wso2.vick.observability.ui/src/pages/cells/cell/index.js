@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
+import Button from "@material-ui/core/Button/Button";
 import Details from "./Details";
 import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../../common/utils/httpUtils";
+import {Link} from "react-router-dom";
 import Metrics from "./Metrics";
 import MicroserviceList from "./MicroserviceList";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
+import Timeline from "@material-ui/icons/Timeline";
 import TopToolbar from "../../common/toptoolbar";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
@@ -42,6 +45,15 @@ const styles = (theme) => ({
         borderBottomWidth: 1,
         borderBottomStyle: "solid",
         borderBottomColor: Grey[200]
+    },
+    tabBar: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        ...theme.mixins.toolbar
+    },
+    viewTracesContent: {
+        paddingLeft: theme.spacing.unit
     }
 });
 
@@ -97,16 +109,25 @@ class Cell extends React.Component {
         const tabContent = [Details, MicroserviceList, Metrics];
         const SelectedTabContent = tabContent[selectedTabIndex];
 
+        const traceSearch = {
+            cell: cellName
+        };
         return (
             <React.Fragment>
                 <TopToolbar title={`${cellName}`} subTitle="(Cell)" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
-                    <Tabs value={selectedTabIndex} indicatorColor="primary"
-                        onChange={this.handleTabChange} className={classes.tabs}>
-                        <Tab label="Details"/>
-                        <Tab label="Microservices"/>
-                        <Tab label="Metrics"/>
-                    </Tabs>
+                    <div className={classes.tabBar}>
+                        <Tabs value={selectedTabIndex} indicatorColor="primary"
+                            onChange={this.handleTabChange} className={classes.tabs}>
+                            <Tab label="Details"/>
+                            <Tab label="Microservices"/>
+                            <Tab label="Metrics"/>
+                        </Tabs>
+                        <Button className={classes.button} component={Link}
+                            to={`/tracing/search${HttpUtils.generateQueryParamString(traceSearch)}`}>
+                            <Timeline/><span className={classes.viewTracesContent}>View Traces</span>
+                        </Button>
+                    </div>
                     <SelectedTabContent innerRef={this.tabContentRef} cell={cellName}/>
                 </Paper>
             </React.Fragment>

@@ -310,7 +310,8 @@ class Metrics extends React.Component {
                     {
                         microserviceData.length > 0
                             ? (
-                                <MetricsGraphs data={microserviceData}/>
+                                <MetricsGraphs data={microserviceData}
+                                    direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
                             )
                             : (
                                 <Typography>
