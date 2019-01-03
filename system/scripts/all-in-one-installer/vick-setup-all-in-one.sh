@@ -237,11 +237,13 @@ function deploy_mysql_server_gcp () {
     gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=us-west1-c
     service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
     #if service account is zero exit
-    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
-    gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
-    gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
-    gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
+#    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
+#    gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
+#    gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
+#    gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
     gcloud -q sql instances patch ${sql_instance_name} --authorized-networks=0.0.0.0/0
+    gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
+    cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
 
     mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/.ipAddress/ {print $2}')
     config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
@@ -562,7 +564,7 @@ if [ $install_mysql == "y" ]; then
         read_control_plane_datasources_configs
         #Update the sql
         update_control_plance_sql $download_path
-        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 100))"
+        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 1000))"
     elif [ $iaas == "kubeadm" ]; then
         read_control_plane_datasources_configs
         #update the sql file
@@ -580,7 +582,7 @@ fi
 
 update_control_plane_datasources $download_path
 
-echo "ℹ️ Start to Deploying the VICK control plane\n"
+echo "ℹ️ Start to Deploying the VICK control plane"
 echo "🔧 Deploying the control plane API Manager"
 
 deploy_global_gw $download_path $iaas
