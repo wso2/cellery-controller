@@ -112,7 +112,7 @@ fi
 
 #Create new NFS share
 function create_nfs_share_gcp () {
-echo "Creating NFS share in GCP"
+echo "ℹ️ Creating NFS share in GCP"
 local nfs_share_location=$1
 local nfs_server_ip
 
@@ -143,13 +143,13 @@ echo "Read NFS connection"
     local nfs_server_ip
     local nfs_share_location
 
-    echo "Configuring NFS volume"
+    echo "ℹ️ Configuring NFS volume"
     echo
-    read -p "NFS server IP: " nfs_server_ip < /dev/tty
+    read -p "⛏️ NFS server IP: " nfs_server_ip < /dev/tty
     if [[ ! -z "${nfs_server_ip/ //}" ]]; then
         nfs_config_params["NFS_SERVER_IP"]=$nfs_server_ip
     fi
-    read -p "NFS share location: " nfs_share_location < /dev/tty
+    read -p "⛏️ NFS share location: " nfs_share_location < /dev/tty
     if [[ ! -z "${nfs_share_location/ //}" ]]; then
         nfs_config_params["NFS_SHARE_LOCATION"]=$nfs_share_location
     fi
@@ -184,7 +184,7 @@ gcloud services enable \
 CLUSTER_NAME=vick-knative
 CLUSTER_ZONE=us-west1-c
 
-echo "Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
+echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
 
 #Create K8s cluster
 gcloud -q container clusters create $CLUSTER_NAME \
@@ -261,11 +261,11 @@ function read_control_plane_datasources_configs () {
                 config_params["MYSQL_DATABASE_HOST"]=$db_hostname
         fi
     fi
-    read -p "Database user name: " db_user < /dev/tty
+    read -p "⛏️ Database user name: " db_user < /dev/tty
     if [[ ! -z "${db_user/ //}" ]]; then
             config_params["DATABASE_USERNAME"]=$db_user
     fi
-    read -s -p "Database user password: " db_passwd < /dev/tty
+    read -s -p "⛏️ Database user password: " db_passwd < /dev/tty
     if [[ ! -z "${db_passwd/ //}" ]]; then
             config_params["DATABASE_PASSWORD"]=$db_passwd
     fi
@@ -542,7 +542,7 @@ init_control_plane $download_path
 
 #Deploy/Configure NFS APIM artifact
  if [ $iaas == "GCP" ]; then
-    read -p "Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
+    read -p "⛏️ Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
 
     if [ $install_nfs == "n" ]; then
          read_nfs_connection
@@ -553,7 +553,7 @@ init_control_plane $download_path
 fi
 
 #Deploy/configure MySQL / APIM datasources
-read -p "Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
+read -p "⛏️ Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
 
 if [ $install_mysql == "y" ]; then
 
