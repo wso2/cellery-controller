@@ -26,7 +26,6 @@ import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
-import PropTypes from "prop-types";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
@@ -37,6 +36,7 @@ import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
 const graphConfig = {
     directed: true,
@@ -245,7 +245,7 @@ class Overview extends React.Component {
                 data: {...prevState.data},
                 listData: serviceInfo,
                 reloadGraph: false,
-                isOverallSummary: false,
+                selectedCell: cell,
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
@@ -287,7 +287,7 @@ class Overview extends React.Component {
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
-            isOverallSummary: true,
+            selectedCell: null,
             request: defaultState.request
         }));
     };
@@ -378,7 +378,7 @@ class Overview extends React.Component {
                 cellStats: []
             },
             healthInfo: [],
-            isOverallSummary: true,
+            selectedCell: null,
             data: {
                 nodes: null,
                 links: null
@@ -404,14 +404,15 @@ class Overview extends React.Component {
                 method: "GET"
             },
             this.props.globalState
-        ).then((response) => {
-            const result = response;
-            this.defaultState.healthInfo = this.getCellHealth(result.nodes);
+        ).then((result) => {
+            const {nodes, edges} = result;
+
+            this.defaultState.healthInfo = this.getCellHealth(nodes);
             const healthCount = this.getHealthCount(this.defaultState.healthInfo);
             const summaryContent = [
                 {
                     key: "Total",
-                    value: result.nodes.length
+                    value: nodes.length
                 },
                 {
                     key: "Successful",
@@ -427,14 +428,14 @@ class Overview extends React.Component {
                 }
             ];
             this.defaultState.summary.content = summaryContent;
-            this.defaultState.data.nodes = result.nodes;
-            this.defaultState.data.links = result.edges;
-            colorGenerator.addKeys(result.nodes);
-            const cellList = this.loadCellInfo(result.nodes);
+            this.defaultState.data.nodes = nodes;
+            this.defaultState.data.links = edges;
+            colorGenerator.addKeys(nodes);
+            const cellList = this.loadCellInfo(nodes);
             this.setState((prevState) => ({
                 data: {
-                    nodes: result.nodes,
-                    links: result.edges
+                    nodes: nodes,
+                    links: edges
                 },
                 summary: {
                     ...prevState.summary,
@@ -615,7 +616,7 @@ class Overview extends React.Component {
 
     render() {
         const {classes, theme} = this.props;
-        const {open} = this.state;
+        const {open, selectedCell} = this.state;
 
         return (
             <React.Fragment>
@@ -663,17 +664,16 @@ class Overview extends React.Component {
                                 {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
                             </IconButton>
                             <Typography color="textSecondary" className={classes.sideBarHeading}>
-                                {(this.state.isOverallSummary) ? "Overview" : "Cell Details"}
+                                {selectedCell ? "Cell Details" : "Overview"}
                             </Typography>
                         </div>
                         <Divider/>
                         <SidePanelContent
                             summary={this.state.summary}
                             request={this.state.request}
-                            isOverview={this.state.isOverallSummary}
+                            selectedCell={selectedCell}
                             open={this.state.open}
-                            listData={this.state.listData}>
-                        </SidePanelContent>
+                            listData={this.state.listData}/>
                     </Drawer>
                 </div>
             </React.Fragment>
