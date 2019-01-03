@@ -425,6 +425,7 @@ function install_nginx_ingress_gcp () {
     local download_location=$1
     #Install nginx-ingress for control plane ingress
     kubectl apply -f ${download_location}/mandatory.yaml
+    kubectl apply -f ${download_location}/cloud-generic.yaml
 }
 #-----------------------------------------------------------------------------------------------------------------------
 #Get the IaaS type form the user
@@ -467,6 +468,7 @@ control_plane_yaml=(
     "vick-apim-artifacts-persistent-volume-claim.yaml"
     "mandatory.yaml"
     "service-nodeport.yaml"
+    "cloud-generic.yaml"
     "apim-configs/gw/datasources/master-datasources.xml"
     "apim-configs/gw/user-mgt.xml"
     "apim-configs/gw/identity/identity.xml"
@@ -604,8 +606,10 @@ echo "🔧 Deploying nginx-ingress"
 
 if [ $iaas == "kubeadm" ]; then
     install_nginx_ingress_kubeadm $download_path
+elif [ $iaas == "GCP" ]; then
+    install_nginx_ingress_gcp $download_path
 fi
-#check GCP ingress
+
 echo "ℹ️ VICK installation is finished."
 echo "-=🎉=-"
 
