@@ -16,52 +16,50 @@
  * under the License.
  */
 
+import ErrorBoundary from "../common/error/ErrorBoundary";
 import {Graph} from "react-d3-graph";
-import PropTypes from "prop-types";
 import React from "react";
-
+import * as PropTypes from "prop-types";
 
 class DependencyGraph extends React.Component {
 
-    shouldComponentUpdate = (nextProps, nextState) => nextProps.reloadGraph;
+    shouldComponentUpdate = (nextProps) => nextProps.reloadGraph;
 
     render = () => {
-        if (this.props.data.nodes && this.props.data.nodes.length > 0) {
-            return (
-                <Graph
-                    id={this.props.id}
-                    data={this.props.data}
-                    config={this.props.config}
-                    onClickNode={this.props.onClickNode}
-                    onRightClickNode={this.props.onRightClickNode}
-                    onClickGraph={this.props.onClickGraph}
-                    onClickLink={this.props.onClickLink}
-                    onRightClickLink={this.props.onRightClickNode}
-                    onMouseOverNode={this.props.onMouseOverNode}
-                    onMouseOutNode={this.props.onMouseOutNode}
-                    onMouseOverLink={this.props.onMouseOverLink}
-                    onMouseOutLink={this.props.onMouseOutLink}
-                />
-            );
+        const {data, ...otherProps} = this.props;
+
+        // Finding distinct links
+        const links = [];
+        if (data.links) {
+            data.links.forEach((link) => {
+                const linkMatches = links.find(
+                    (existingEdge) => existingEdge.source === link.source && existingEdge.target === link.target);
+                if (!linkMatches) {
+                    links.push({
+                        source: link.source,
+                        target: link.target
+                    });
+                }
+            });
         }
-        return (<div>Nothing to show</div>);
+
+        let view;
+        if (data.nodes && data.nodes.length > 0) {
+            view = (
+                <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
+                    <Graph {...otherProps} data={{...data, links: links}}/>
+                </ErrorBoundary>
+            );
+        } else {
+            view = <div>No Data Available</div>;
+        }
+        return view;
     };
 
 }
 
 DependencyGraph.propTypes = {
-    id: PropTypes.string.isRequired,
     data: PropTypes.object.isRequired,
-    config: PropTypes.object.isRequired,
-    onClickNode: PropTypes.func,
-    onRightClickNode: PropTypes.func,
-    onClickGraph: PropTypes.func,
-    onClickLink: PropTypes.func,
-    onRightClickLink: PropTypes.func,
-    onMouseOverNode: PropTypes.func,
-    onMouseOutNode: PropTypes.func,
-    onMouseOverLink: PropTypes.func,
-    onMouseOutLink: PropTypes.func,
     reloadGraph: PropTypes.bool
 };
 
