@@ -29,7 +29,7 @@ import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     newMessageText: {
-        fill: "#4c4cb3",
+        fill: "#4c4cb3 !important" ,
         cursor: "pointer"
     },
     newActor: {
