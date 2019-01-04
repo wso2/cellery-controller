@@ -373,7 +373,7 @@ function deploy_istio () {
     istio_version=$2
     ISTIO_HOME=${download_location}/istio-${istio_version}
     wget https://github.com/istio/istio/releases/download/${istio_version}/istio-${istio_version}-linux.tar.gz -P ${download_location}
-    tar -xzvf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
+    tar -xzf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
     export PATH=$ISTIO_HOME/bin:$PATH
     kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
     #kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
@@ -594,7 +594,7 @@ echo "🔧Deploying SP"
 
 deploy_sp_dashboard_worker $download_path $iaas
 
-echo "🔧 Deploying Istio"
+echo "🔧 Deploying Istio version $istio_version"
 
 deploy_istio $download_path $istio_version
 
