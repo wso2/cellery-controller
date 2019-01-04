@@ -20,12 +20,12 @@ import HttpUtils from "../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";
 import TopToolbar from "../common/toptoolbar";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
@@ -39,9 +39,23 @@ class CellList extends React.Component {
         super(props);
 
         this.state = {
-            cellInfo: []
+            cellInfo: [],
+            isLoading: false
         };
+
+        props.globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
     }
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
+    };
 
     loadCellInfo = (isUserAction, queryStartTime, queryEndTime) => {
         const {globalState} = this.props;
@@ -90,7 +104,7 @@ class CellList extends React.Component {
 
     render = () => {
         const {classes, match} = this.props;
-        const {cellInfo} = this.state;
+        const {cellInfo, isLoading} = this.state;
         const columns = [
             {
                 name: "Health",
@@ -126,6 +140,9 @@ class CellList extends React.Component {
                 name: "Average Inbound Request Count (requests/s)"
             }
         ];
+        const options = {
+            filter: false
+        };
 
         // Processing data to find the required values
         const dataTableMap = {};
@@ -170,9 +187,15 @@ class CellList extends React.Component {
         return (
             <React.Fragment>
                 <TopToolbar title={"Cells"} onUpdate={this.loadCellInfo}/>
-                <Paper className={classes.root}>
-                    <DataTable columns={columns} data={tableData}/>
-                </Paper>
+                {
+                    isLoading
+                        ? null
+                        : (
+                            <Paper className={classes.root}>
+                                <DataTable columns={columns} options={options} data={tableData}/>
+                            </Paper>
+                        )
+                }
             </React.Fragment>
         );
     };

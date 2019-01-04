@@ -20,13 +20,12 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
@@ -40,17 +39,31 @@ class MicroserviceList extends React.Component {
         super(props);
 
         this.state = {
-            microserviceInfo: []
+            microserviceInfo: [],
+            isLoading: false
         };
     }
 
     componentDidMount = () => {
         const {globalState} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
+    };
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
     };
 
     update = (isUserAction, startTime, endTime) => {
@@ -105,8 +118,8 @@ class MicroserviceList extends React.Component {
     };
 
     render = () => {
-        const {classes, cell} = this.props;
-        const {microserviceInfo} = this.state;
+        const {cell} = this.props;
+        const {microserviceInfo, isLoading} = this.state;
         const columns = [
             {
                 name: "Health",
@@ -142,6 +155,9 @@ class MicroserviceList extends React.Component {
                 name: "Average Inbound Request Count (requests/s)"
             }
         ];
+        const options = {
+            filter: false
+        };
 
         // Processing data to find the required values
         const dataTableMap = {};
@@ -206,9 +222,9 @@ class MicroserviceList extends React.Component {
         }
 
         return (
-            <Paper className={classes.root}>
-                <DataTable columns={columns} data={tableData}/>
-            </Paper>
+            isLoading
+                ? null
+                : <DataTable columns={columns} options={options} data={tableData}/>
         );
     };
 

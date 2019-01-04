@@ -53,14 +53,6 @@ class NotificationUtils {
     };
 
     /**
-     * Check if the loading overlay is currently shown.
-     *
-     * @param {StateHolder} globalState The global state provided to the current component
-     * @returns {boolean} True if the loading state is currently shown
-     */
-    static isLoadingOverlayShown = (globalState) => globalState.get(StateHolder.LOADING_STATE).loadingOverlayCount > 0;
-
-    /**
      * Show a notification to the user.
      *
      * @param {string} message The message to be shown in the notification

@@ -119,6 +119,8 @@ class DependencyDiagram extends React.Component {
                             directed: true,
                             nodeHighlightBehavior: true,
                             highlightOpacity: 0.2,
+                            height: 700,
+                            width: 1100,
                             node: {
                                 fontSize: 15,
                                 highlightFontSize: 15,

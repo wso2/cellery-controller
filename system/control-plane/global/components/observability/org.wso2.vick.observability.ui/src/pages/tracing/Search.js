@@ -537,7 +537,8 @@ class Search extends React.Component {
             .filter((microservice) => selectedCells.includes(microservice.cell))
             .map((microservice) => microservice.name);
 
-        const selectedMicroservice = (filter.microservice && availableMicroservices.includes(filter.microservice))
+        const selectedMicroservice = data.cells.length === 0 || (filter.microservice
+            && availableMicroservices.includes(filter.microservice))
             ? filter.microservice
             : Search.ALL_VALUE;
 
@@ -549,7 +550,8 @@ class Search extends React.Component {
             .filter((operation) => selectedMicroservices.includes(operation.microservice))
             .map((operation) => operation.name);
 
-        const selectedOperation = (filter.operation && availableOperations.includes(filter.operation))
+        const selectedOperation = data.cells.length === 0 || (filter.operation
+            && availableOperations.includes(filter.operation))
             ? filter.operation
             : Search.ALL_VALUE;
 

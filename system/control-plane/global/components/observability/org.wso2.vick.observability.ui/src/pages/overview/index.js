@@ -26,7 +26,6 @@ import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
-import PropTypes from "prop-types";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
@@ -37,53 +36,7 @@ import classNames from "classnames";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
-
-const graphConfig = {
-    directed: true,
-    automaticRearrangeAfterDropNode: false,
-    collapsible: false,
-    height: 800,
-    highlightDegree: 1,
-    highlightOpacity: 0.2,
-    linkHighlightBehavior: false,
-    maxZoom: 8,
-    minZoom: 0.1,
-    nodeHighlightBehavior: true,
-    panAndZoom: false,
-    staticGraph: false,
-    width: 1400,
-    d3: {
-        alphaTarget: 0.05,
-        gravity: -1500,
-        linkLength: 150,
-        linkStrength: 1
-    },
-    node: {
-        color: "#d3d3d3",
-        fontColor: "black",
-        fontSize: 18,
-        fontWeight: "normal",
-        highlightColor: "red",
-        highlightFontSize: 18,
-        highlightFontWeight: "bold",
-        highlightStrokeColor: "SAME",
-        highlightStrokeWidth: 1.5,
-        labelProperty: "name",
-        mouseCursor: "pointer",
-        opacity: 1,
-        renderLabel: true,
-        size: 600,
-        strokeColor: "green",
-        strokeWidth: 2
-    },
-    link: {
-        color: "#d3d3d3",
-        opacity: 1,
-        semanticStrokeWidth: false,
-        strokeWidth: 4,
-        highlightColor: "black"
-    }
-};
+import * as PropTypes from "prop-types";
 
 const drawerWidth = 300;
 
@@ -158,42 +111,61 @@ const styles = (theme) => ({
 class Overview extends React.Component {
 
     viewGenerator = (nodeProps) => {
+        const {colorGenerator} = this.props;
+        const {selectedCell} = this.state;
+
         const nodeId = nodeProps.id;
-        const color = this.props.colorGenerator.getColor(nodeId);
+        const color = colorGenerator.getColor(nodeId);
         const state = this.getCellState(nodeId);
-        if (state === Constants.Status.Success) {
-            return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
-                <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
-            </svg>;
-        } else if (state === Constants.Status.Warning) {
-            return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
-                <g>
-                    <g>
-                        <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
-                    </g>
-                </g>
-                <g>
-                    <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
-                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
-                    <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
-                </g>
-            </svg>;
+
+        const style = {};
+        if (selectedCell && selectedCell.id === nodeId) {
+            style.stroke = "#383058";
+            style.strokeWidth = 15;
         }
-        return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
-            <g>
-                <g>
-                    <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
-                </g>
-            </g>
-            <g>
-                <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
-                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
-                <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
-            </g>
-        </svg>;
+        style.transform = "translate(15%, 10%) scale(0.8, 0.8)";
+        const cellIcon = <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"
+            style={style}/>;
+
+        let cellView;
+        if (state === Constants.Status.Success) {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    {cellIcon}
+                </svg>
+            );
+        } else if (state === Constants.Status.Warning) {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    <g>
+                        <g>
+                            {cellIcon}
+                        </g>
+                    </g>
+                    <g>
+                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                              6.1,146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
+                        <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                    </g>
+                </svg>
+            );
+        } else {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    <g>
+                        <g>
+                            {cellIcon}
+                        </g>
+                    </g>
+                    <g>
+                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                              6.1, 146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
+                        <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                    </g>
+                </svg>
+            );
+        }
+        return cellView;
     };
 
 
@@ -205,11 +177,15 @@ class Overview extends React.Component {
     onClickCell = (nodeId) => {
         const fromTime = this.state.currentTimeRange.fromTime;
         const toTime = this.state.currentTimeRange.toTime;
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
-        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+
+        const search = {
+            queryStartTime: fromTime.valueOf(),
+            queryEndTime: toTime.valueOf(),
+            timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
+        };
         HttpUtils.callObservabilityAPI(
             {
-                url: `/http-requests/cells/${nodeId}/microservices${queryParams}`,
+                url: `/http-requests/cells/${nodeId}/microservices${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState
@@ -244,8 +220,8 @@ class Overview extends React.Component {
                 },
                 data: {...prevState.data},
                 listData: serviceInfo,
-                reloadGraph: false,
-                isOverallSummary: false,
+                reloadGraph: true,
+                selectedCell: cell,
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
@@ -287,7 +263,7 @@ class Overview extends React.Component {
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
             reloadGraph: true,
-            isOverallSummary: true,
+            selectedCell: null,
             request: defaultState.request
         }));
     };
@@ -322,7 +298,6 @@ class Overview extends React.Component {
         super(props);
         this.initializeDefault();
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        graphConfig.node.viewGenerator = this.viewGenerator;
     }
 
     initializeDefault = () => {
@@ -378,7 +353,7 @@ class Overview extends React.Component {
                 cellStats: []
             },
             healthInfo: [],
-            isOverallSummary: true,
+            selectedCell: null,
             data: {
                 nodes: null,
                 links: null
@@ -394,24 +369,27 @@ class Overview extends React.Component {
 
     callOverviewInfo = (fromTime, toTime) => {
         const colorGenerator = this.props.colorGenerator;
-        let queryParams = "";
+
+        const search = {};
         if (fromTime && toTime) {
-            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
+            search.fromTime = fromTime.valueOf();
+            search.toTime = toTime.valueOf();
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: `/dependency-model/cells${queryParams}`,
+                url: `/dependency-model/cells${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState
-        ).then((response) => {
-            const result = response;
-            this.defaultState.healthInfo = this.getCellHealth(result.nodes);
+        ).then((result) => {
+            const {nodes, edges} = result;
+
+            this.defaultState.healthInfo = this.getCellHealth(nodes);
             const healthCount = this.getHealthCount(this.defaultState.healthInfo);
             const summaryContent = [
                 {
                     key: "Total",
-                    value: result.nodes.length
+                    value: nodes.length
                 },
                 {
                     key: "Successful",
@@ -427,14 +405,14 @@ class Overview extends React.Component {
                 }
             ];
             this.defaultState.summary.content = summaryContent;
-            this.defaultState.data.nodes = result.nodes;
-            this.defaultState.data.links = result.edges;
-            colorGenerator.addKeys(result.nodes);
-            const cellList = this.loadCellInfo(result.nodes);
+            this.defaultState.data.nodes = nodes;
+            this.defaultState.data.links = edges;
+            colorGenerator.addKeys(nodes);
+            const cellList = this.loadCellInfo(nodes);
             this.setState((prevState) => ({
                 data: {
-                    nodes: result.nodes,
-                    links: result.edges
+                    nodes: nodes,
+                    links: edges
                 },
                 summary: {
                     ...prevState.summary,
@@ -487,11 +465,14 @@ class Overview extends React.Component {
     };
 
     callRequestStats = (fromTime, toTime) => {
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
-        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        const search = {
+            queryStartTime: fromTime.valueOf(),
+            queryEndTime: toTime.valueOf(),
+            timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
+        };
         HttpUtils.callObservabilityAPI(
             {
-                url: `/http-requests/cells${queryParams}`,
+                url: `/http-requests/cells${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState
@@ -615,65 +596,47 @@ class Overview extends React.Component {
 
     render() {
         const {classes, theme} = this.props;
-        const {open} = this.state;
+        const {open, selectedCell} = this.state;
 
         return (
             <React.Fragment>
                 <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
-
                 <div className={classes.root}>
-                    <Paper
-                        className={classNames(classes.content, {
-                            [classes.contentShift]: open
-                        })}
-                    >
-                        <DependencyGraph
-                            id="graph-id"
-                            data={this.state.data}
-                            config={graphConfig}
-                            reloadGraph={this.state.reloadGraph}
-                            onClickNode={this.onClickCell}
-                            onClickGraph={this.onClickGraph}
-                        />
+                    <Paper className={classNames(classes.content, {
+                        [classes.contentShift]: open
+                    })}>
+                        <DependencyGraph id="graph-id" data={this.state.data} reloadGraph={this.state.reloadGraph}
+                            onClickNode={this.onClickCell} onClickGraph={this.onClickGraph}
+                            config={{
+                                node: {
+                                    viewGenerator: this.viewGenerator
+                                }
+                            }}/>
                     </Paper>
                     <div className={classNames(classes.moreDetails, {
                         [classes.moreDetailsShift]: open
                     })}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="Open drawer"
-                            onClick={this.handleDrawerOpen}
-                            className={classNames(classes.menuButton, open && classes.hide)}
-                        >
+                        <IconButton color="inherit" aria-label="Open drawer" onClick={this.handleDrawerOpen}
+                            className={classNames(classes.menuButton, open && classes.hide)}>
                             <MoreIcon/>
                         </IconButton>
                     </div>
 
-                    <Drawer
-                        className={classes.drawer}
-                        variant="persistent"
-                        anchor="right"
-                        open={open}
+                    <Drawer className={classes.drawer} variant="persistent" anchor="right" open={open}
                         classes={{
                             paper: classes.drawerPaper
-                        }}
-                    >
+                        }}>
                         <div className={classes.drawerHeader}>
                             <IconButton onClick={this.handleDrawerClose}>
                                 {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
                             </IconButton>
                             <Typography color="textSecondary" className={classes.sideBarHeading}>
-                                {(this.state.isOverallSummary) ? "Overview" : "Cell Details"}
+                                {selectedCell ? "Cell Details" : "Overview"}
                             </Typography>
                         </div>
                         <Divider/>
-                        <SidePanelContent
-                            summary={this.state.summary}
-                            request={this.state.request}
-                            isOverview={this.state.isOverallSummary}
-                            open={this.state.open}
-                            listData={this.state.listData}>
-                        </SidePanelContent>
+                        <SidePanelContent summary={this.state.summary} request={this.state.request}
+                            selectedCell={selectedCell} open={this.state.open} listData={this.state.listData}/>
                     </Drawer>
                 </div>
             </React.Fragment>

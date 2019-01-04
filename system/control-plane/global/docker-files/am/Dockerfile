@@ -18,9 +18,13 @@
 
 FROM wso2vick/wso2am:base
 
+ARG USER_HOME=/home/wso2carbon
+ARG FILES=./target/files
+
 # Copy the jar files
-COPY ./target/files/dropins/** /home/wso2carbon/wso2am-2.6.0/repository/components/dropins/
-COPY ./target/files/lib/** /home/wso2carbon/wso2am-2.6.0/repository/components/lib/
+COPY --chown=wso2carbon:wso2 ${FILES}/dropins/** ${USER_HOME}/wso2am-2.6.0/repository/components/dropins/
+COPY --chown=wso2carbon:wso2 ${FILES}/lib/** ${USER_HOME}/wso2am-2.6.0/repository/components/lib/
 
 # Copying the STS Web App
-COPY ./target/files/webapps/** /home/wso2carbon/wso2am-2.6.0/repository/deployment/server/webapps
+COPY --chown=wso2carbon:wso2 ${FILES}/webapps/** ${USER_HOME}/wso2am-2.6.0/repository/deployment/server/webapps/
+COPY --chown=wso2carbon:wso2 ${FILES}/webapps/** ${USER_HOME}/wso2-tmp/server/webapps/

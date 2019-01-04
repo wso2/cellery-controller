@@ -33,8 +33,8 @@ const styles = (theme) => ({
 });
 
 const DataTable = (props) => {
-    const {classes} = props;
-    const options = {
+    const {classes, options, columns, data} = props;
+    const defaultOptions = {
         download: false,
         selectableRows: false,
         print: false,
@@ -44,15 +44,14 @@ const DataTable = (props) => {
 
     return (
         <div className={classes.tableWrapper}>
-            <MUIDataTable data={props.data} columns={props.columns} options={options}/>
+            <MUIDataTable data={data} columns={columns} options={{...defaultOptions, ...options}}/>
         </div>
     );
 };
 
 DataTable.propTypes = {
-    data: PropTypes.arrayOf(PropTypes.arrayOf(
-        PropTypes.any
-    )).isRequired,
+    data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+    options: PropTypes.object.isRequired,
     columns: PropTypes.arrayOf(PropTypes.any).isRequired,
     classes: PropTypes.object.isRequired
 };
