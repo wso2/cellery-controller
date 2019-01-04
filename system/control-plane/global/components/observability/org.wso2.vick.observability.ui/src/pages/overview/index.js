@@ -38,53 +38,6 @@ import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
 import * as PropTypes from "prop-types";
 
-const graphConfig = {
-    directed: true,
-    automaticRearrangeAfterDropNode: false,
-    collapsible: false,
-    highlightDegree: 1,
-    highlightOpacity: 0.2,
-    linkHighlightBehavior: false,
-    maxZoom: 8,
-    minZoom: 0.1,
-    nodeHighlightBehavior: true,
-    panAndZoom: false,
-    staticGraph: false,
-    height: 700,
-    width: 1050,
-    d3: {
-        alphaTarget: 0.05,
-        gravity: -1500,
-        linkLength: 150,
-        linkStrength: 1
-    },
-    node: {
-        color: "#d3d3d3",
-        fontColor: "black",
-        fontSize: 18,
-        fontWeight: "normal",
-        highlightColor: "red",
-        highlightFontSize: 18,
-        highlightFontWeight: "bold",
-        highlightStrokeColor: "SAME",
-        highlightStrokeWidth: 1.5,
-        labelProperty: "name",
-        mouseCursor: "pointer",
-        opacity: 1,
-        renderLabel: true,
-        size: 600,
-        strokeColor: "green",
-        strokeWidth: 2
-    },
-    link: {
-        color: "#d3d3d3",
-        opacity: 1,
-        semanticStrokeWidth: false,
-        strokeWidth: 4,
-        highlightColor: "black"
-    }
-};
-
 const drawerWidth = 300;
 
 const styles = (theme) => ({
@@ -345,7 +298,6 @@ class Overview extends React.Component {
         super(props);
         this.initializeDefault();
         this.state = JSON.parse(JSON.stringify(this.defaultState));
-        graphConfig.node.viewGenerator = this.viewGenerator;
     }
 
     initializeDefault = () => {
@@ -649,44 +601,31 @@ class Overview extends React.Component {
         return (
             <React.Fragment>
                 <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
-
                 <div className={classes.root}>
-                    <Paper
-                        className={classNames(classes.content, {
-                            [classes.contentShift]: open
-                        })}
-                    >
-                        <DependencyGraph
-                            id="graph-id"
-                            data={this.state.data}
-                            config={graphConfig}
-                            reloadGraph={this.state.reloadGraph}
-                            onClickNode={this.onClickCell}
-                            onClickGraph={this.onClickGraph}
-                        />
+                    <Paper className={classNames(classes.content, {
+                        [classes.contentShift]: open
+                    })}>
+                        <DependencyGraph id="graph-id" data={this.state.data} reloadGraph={this.state.reloadGraph}
+                            onClickNode={this.onClickCell} onClickGraph={this.onClickGraph}
+                            config={{
+                                node: {
+                                    viewGenerator: this.viewGenerator
+                                }
+                            }}/>
                     </Paper>
                     <div className={classNames(classes.moreDetails, {
                         [classes.moreDetailsShift]: open
                     })}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="Open drawer"
-                            onClick={this.handleDrawerOpen}
-                            className={classNames(classes.menuButton, open && classes.hide)}
-                        >
+                        <IconButton color="inherit" aria-label="Open drawer" onClick={this.handleDrawerOpen}
+                            className={classNames(classes.menuButton, open && classes.hide)}>
                             <MoreIcon/>
                         </IconButton>
                     </div>
 
-                    <Drawer
-                        className={classes.drawer}
-                        variant="persistent"
-                        anchor="right"
-                        open={open}
+                    <Drawer className={classes.drawer} variant="persistent" anchor="right" open={open}
                         classes={{
                             paper: classes.drawerPaper
-                        }}
-                    >
+                        }}>
                         <div className={classes.drawerHeader}>
                             <IconButton onClick={this.handleDrawerClose}>
                                 {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
@@ -696,12 +635,8 @@ class Overview extends React.Component {
                             </Typography>
                         </div>
                         <Divider/>
-                        <SidePanelContent
-                            summary={this.state.summary}
-                            request={this.state.request}
-                            selectedCell={selectedCell}
-                            open={this.state.open}
-                            listData={this.state.listData}/>
+                        <SidePanelContent summary={this.state.summary} request={this.state.request}
+                            selectedCell={selectedCell} open={this.state.open} listData={this.state.listData}/>
                     </Drawer>
                 </div>
             </React.Fragment>

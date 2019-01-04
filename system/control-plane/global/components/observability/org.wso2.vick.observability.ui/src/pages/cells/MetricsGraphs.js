@@ -22,7 +22,6 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
-import PropTypes from "prop-types";
 import React from "react";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
@@ -33,6 +32,7 @@ import {
     RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = {
     root: {

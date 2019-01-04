@@ -18,7 +18,6 @@ import ColorGenerator from "../../common/color/colorGenerator";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
@@ -30,6 +29,7 @@ import Typography from "@material-ui/core/Typography/Typography";
 import withColor from "../../common/color";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     table: {

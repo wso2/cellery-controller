@@ -23,10 +23,57 @@ import * as PropTypes from "prop-types";
 
 class DependencyGraph extends React.Component {
 
+    static DEFAULT_GRAPH_CONFIG = {
+        directed: true,
+        automaticRearrangeAfterDropNode: false,
+        collapsible: false,
+        highlightDegree: 1,
+        highlightOpacity: 0.2,
+        linkHighlightBehavior: false,
+        maxZoom: 8,
+        minZoom: 0.1,
+        nodeHighlightBehavior: true,
+        panAndZoom: false,
+        staticGraph: false,
+        height: 700,
+        width: 1050,
+        d3: {
+            alphaTarget: 0.05,
+            gravity: -1500,
+            linkLength: 150,
+            linkStrength: 1
+        },
+        node: {
+            color: "#d3d3d3",
+            fontColor: "black",
+            fontSize: 18,
+            fontWeight: "normal",
+            highlightColor: "red",
+            highlightFontSize: 18,
+            highlightFontWeight: "bold",
+            highlightStrokeColor: "SAME",
+            highlightStrokeWidth: 1.5,
+            labelProperty: "name",
+            mouseCursor: "pointer",
+            opacity: 1,
+            renderLabel: true,
+            size: 600,
+            strokeColor: "green",
+            strokeWidth: 2
+        },
+        link: {
+            color: "#d3d3d3",
+            opacity: 1,
+            semanticStrokeWidth: false,
+            strokeWidth: 4,
+            highlightColor: "black"
+        }
+    };
+
     shouldComponentUpdate = (nextProps) => nextProps.reloadGraph;
 
     render = () => {
-        const {data, ...otherProps} = this.props;
+        const {data, config, ...otherProps} = this.props;
 
         // Finding distinct links
         const links = [];
@@ -47,7 +94,22 @@ class DependencyGraph extends React.Component {
         if (data.nodes && data.nodes.length > 0) {
             view = (
                 <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
-                    <Graph {...otherProps} data={{...data, links: links}}/>
+                    <Graph {...otherProps} data={{...data, links: links}} config={{
+                        ...DependencyGraph.DEFAULT_GRAPH_CONFIG,
+                        ...config,
+                        d3: {
+                            ...DependencyGraph.DEFAULT_GRAPH_CONFIG.d3,
+                            ...config.d3
+                        },
+                        node: {
+                            ...DependencyGraph.DEFAULT_GRAPH_CONFIG.node,
+                            ...config.node
+                        },
+                        link: {
+                            ...DependencyGraph.DEFAULT_GRAPH_CONFIG.link,
+                            ...config.link
+                        }
+                    }}/>
                 </ErrorBoundary>
             );
         } else {

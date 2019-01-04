@@ -23,7 +23,6 @@ import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import Popover from "@material-ui/core/Popover";
-import PropTypes from "prop-types";
 import QueryUtils from "../utils/queryUtils";
 import React from "react";
 import Refresh from "@material-ui/icons/Refresh";
@@ -33,6 +32,7 @@ import Typography from "@material-ui/core/Typography/Typography";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import withGlobalState, {StateHolder} from "../state";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     container: {

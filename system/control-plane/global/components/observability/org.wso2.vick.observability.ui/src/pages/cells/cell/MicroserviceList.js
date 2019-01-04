@@ -20,12 +20,12 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
