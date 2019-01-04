@@ -35,7 +35,7 @@ class DependencyGraph extends React.Component {
         nodeHighlightBehavior: true,
         panAndZoom: false,
         staticGraph: false,
-        height: 700,
+        height: 580,
         width: 1050,
         d3: {
             alphaTarget: 0.05,
@@ -45,7 +45,7 @@ class DependencyGraph extends React.Component {
         },
         node: {
             color: "#d3d3d3",
-            fontColor: "black",
+            fontColor: "#444",
             fontSize: 18,
             fontWeight: "normal",
             highlightColor: "red",
@@ -66,7 +66,7 @@ class DependencyGraph extends React.Component {
             opacity: 1,
             semanticStrokeWidth: false,
             strokeWidth: 4,
-            highlightColor: "black"
+            highlightColor: "#444"
         }
     };
 

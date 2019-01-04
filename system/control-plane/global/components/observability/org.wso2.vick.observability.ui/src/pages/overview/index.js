@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
+/* eslint max-lines: ["off"] */
+
+import ArrowRightAltSharp from "@material-ui/icons/ArrowRightAltSharp";
+import Button from "@material-ui/core/Button";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import Constants from "../common/constants";
 import DependencyGraph from "./DependencyGraph";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
+import Error from "@material-ui/icons/Error";
+import Fade from "@material-ui/core/Fade";
 import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../common/utils/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper";
+import Popper from "@material-ui/core/Popper";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SidePanelContent from "./SidePanelContent";
 import StateHolder from "../common/state/stateHolder";
+import SvgIcon from "@material-ui/core/SvgIcon";
 import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
@@ -105,8 +113,39 @@ const styles = (theme) => ({
         letterSpacing: 1,
         fontSize: 12,
         marginLeft: 4
+    },
+    btnLegend: {
+        float: "right",
+        position: "sticky",
+        bottom: 20,
+        marginTop: 10,
+        fontSize: 12
+    },
+    legendContent: {
+        padding: theme.spacing.unit * 2
+    },
+    legendText: {
+        display: "inline-flex",
+        marginLeft: 5,
+        fontSize: 12
+    },
+    legendIcon: {
+        verticalAlign: "middle",
+        marginLeft: 20
+    },
+    legendFirstEl: {
+        verticalAlign: "middle"
+    },
+    warning: {
+        color: "#ff9800"
     }
 });
+
+const CellIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M7,0.1L1,3.5l0,6.9l6,3.5l6-3.4l0-6.9L7,0.1z M12,9.9l-5,2.9L2,9.9l0-5.7l5-2.9l5,2.9L12,9.9z"/>
+    </SvgIcon>
+);
 
 class Overview extends React.Component {
 
@@ -120,7 +159,7 @@ class Overview extends React.Component {
 
         const style = {};
         if (selectedCell && selectedCell.id === nodeId) {
-            style.stroke = "#383058";
+            style.stroke = "#444";
             style.strokeWidth = 15;
         }
         style.transform = "translate(15%, 10%) scale(0.8, 0.8)";
@@ -361,6 +400,8 @@ class Overview extends React.Component {
             error: null,
             reloadGraph: true,
             open: true,
+            legend: null,
+            legendOpen: false,
             listData: [],
             page: 0,
             rowsPerPage: 5
@@ -594,9 +635,19 @@ class Overview extends React.Component {
         }, 1000);
     };
 
+    handleClick = (event) => {
+        const {currentTarget} = event;
+        this.setState((state) => ({
+            legend: currentTarget,
+            legendOpen: !state.legendOpen
+        }));
+    };
+
     render() {
         const {classes, theme} = this.props;
-        const {open, selectedCell} = this.state;
+        const {open, selectedCell, legend, legendOpen} = this.state;
+        const id = legendOpen ? "legend-popper" : null;
+        const percentageVal = this.props.globalState.get(StateHolder.CONFIG).percentageRangeMinValue;
 
         return (
             <React.Fragment>
@@ -612,6 +663,34 @@ class Overview extends React.Component {
                                     viewGenerator: this.viewGenerator
                                 }
                             }}/>
+                        <Button aria-describedby={id} variant="outlined" className={classes.btnLegend}
+                            onClick={this.handleClick}>Legend</Button>
+                        <Popper id={id} open={legendOpen} anchorEl={legend} placement="top-end" transition>
+                            {({TransitionProps}) => (
+                                <Fade {...TransitionProps} timeout={350}>
+                                    <Paper>
+                                        <div className={classes.legendContent}>
+                                            <CellIcon className={classes.legendFirstEl} color="action"
+                                                fontSize="small"/>
+                                            <Typography color="inherit"
+                                                className={classes.legendText}> Cell</Typography>
+                                            <ArrowRightAltSharp className={classes.legendIcon} color="action"/>
+                                            <Typography color="inherit"
+                                                className={classes.legendText}> Dependency</Typography>
+                                            <Error className={classNames(classes.legendIcon, classes.warning)}/>
+                                            <Typography color="inherit" className={classes.legendText}>
+                                                {Math.round((1 - percentageVal.warningThreshold) * 100)}%
+                                                - {Math.round((1 - percentageVal.errorThreshold) * 100)}%
+                                                Error </Typography>
+                                            <Error className={classes.legendIcon} color="error"/>
+                                            <Typography color="inherit" className={classes.legendText}>
+                                                &gt; {Math.round((1 - percentageVal.errorThreshold) * 100)}% Error
+                                            </Typography>
+                                        </div>
+                                    </Paper>
+                                </Fade>
+                            )}
+                        </Popper>
                     </Paper>
                     <div className={classNames(classes.moreDetails, {
                         [classes.moreDetailsShift]: open

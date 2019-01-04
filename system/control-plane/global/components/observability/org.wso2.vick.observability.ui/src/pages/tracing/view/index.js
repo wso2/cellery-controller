@@ -16,6 +16,7 @@
 
 import DependencyDiagram from "./DependencyDiagram";
 import ErrorBoundary from "../../common/error/ErrorBoundary";
+import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../common/utils/notificationUtils";
@@ -35,7 +36,16 @@ import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     container: {
-        padding: theme.spacing.unit * 3
+        flexGrow: 1,
+        padding: theme.spacing.unit * 3,
+        margin: theme.spacing.unit,
+        display: "flow-root"
+    },
+    tabs: {
+        marginBottom: theme.spacing.unit * 2,
+        borderBottomWidth: 1,
+        borderBottomStyle: "solid",
+        borderBottomColor: Grey[200]
     }
 });
 
@@ -163,7 +173,7 @@ class View extends React.Component {
 
     render = () => {
         const {classes, location, match} = this.props;
-        const {spans, selectedTabIndex, isLoading, errorMessage} = this.state;
+        const {spans, selectedTabIndex, isLoading, errorMessage, traceTree} = this.state;
         const selectedMicroservice = location.state ? location.state.selectedMicroservice : null;
 
         const traceId = match.params.traceId;
@@ -176,7 +186,7 @@ class View extends React.Component {
             view = (
                 <Paper className={classes.container}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
-                        onChange={this.handleTabChange}>
+                        onChange={this.handleTabChange} className={classes.tabs}>
                         <Tab label="Timeline"/>
                         <Tab label="Sequence Diagram"/>
                         <Tab label="Dependency Diagram"/>
@@ -201,7 +211,8 @@ class View extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Distributed Tracing"}/>
+                <TopToolbar title={(traceTree ? traceTree.serviceName : " ") }
+                    subTitle={` ${traceTree ? traceTree.operationName : " "}`}/>
                 {view}
             </React.Fragment>
         );

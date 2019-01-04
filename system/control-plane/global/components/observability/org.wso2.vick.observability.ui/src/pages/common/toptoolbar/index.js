@@ -49,7 +49,8 @@ const styles = (theme) => ({
     },
     subTitle: {
         marginLeft: theme.spacing.unit,
-        marginTop: theme.spacing.unit
+        marginTop: theme.spacing.unit * 1.5,
+        color: "#666"
     },
     grow: {
         flexGrow: 1
@@ -142,7 +143,7 @@ class TopToolbar extends React.Component {
                     </Typography>
                     {
                         subTitle
-                            ? <Typography variant="subtitle1" color="textSecondary" className={classes.subTitle}>
+                            ? <Typography variant="subtitle1" className={classes.subTitle}>
                                 {subTitle}
                             </Typography>
                             : null

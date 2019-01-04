@@ -43,7 +43,9 @@ import Timeline from "@material-ui/icons/Timeline";
 import Typography from "@material-ui/core/Typography";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
-import {Hint, HorizontalBarSeries, HorizontalGridLines, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
+import {
+    ChartLabel, Hint, HorizontalBarSeries, HorizontalGridLines, VerticalGridLines, XAxis, XYPlot, YAxis
+} from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
 import * as PropTypes from "prop-types";
 
@@ -362,11 +364,18 @@ class SidePanelContent extends React.Component {
                         </TableBody>
                     </Table>
                     <div className={classes.barChart}>
-                        <XYPlot yType="ordinal" stackBy="x" width={250} height={selectedCell ? 100 : 80}>
+                        <XYPlot yType="ordinal" stackBy="x" width={250} height="90">
                             <VerticalGridLines/>
                             <HorizontalGridLines/>
-                            <XAxis/>
-                            <YAxis/>
+                            <XAxis />
+                            <YAxis />
+                            <ChartLabel
+                                text="%"
+                                className="alt-x-label"
+                                includeMargin={false}
+                                xPercent={-0.15}
+                                yPercent={1.8}
+                            />
                             <HorizontalBarSeries color={successColor}
                                 data={[
                                     {
@@ -450,7 +459,7 @@ class SidePanelContent extends React.Component {
                                         <Typography className={classes.secondaryHeading}>
                                             <CheckCircleOutline className={classes.cellIcon}
                                                 style={{color: successColor}}/>
-                                            {summary.content[1].value}
+                                            &nbsp;{summary.content[1].value}
                                         </Typography>
                                     )
                             }
@@ -460,7 +469,7 @@ class SidePanelContent extends React.Component {
                                     : (
                                         <Typography className={classes.secondaryHeading}>
                                             <ErrorIcon className={classes.cellIcon} style={{color: errorColor}}/>
-                                            {summary.content[2].value}
+                                            &nbsp;{summary.content[2].value}
                                         </Typography>
                                     )
                             }

@@ -28,8 +28,8 @@ import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines, LineMarkSeries,
-    RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
+    ChartLabel, Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines,
+    LineMarkSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
 import * as PropTypes from "prop-types";
@@ -376,6 +376,13 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <XAxis/>
                                         <YAxis/>
+                                        <ChartLabel
+                                            text="%"
+                                            className="alt-x-label"
+                                            includeMargin={false}
+                                            xPercent={-0.035}
+                                            yPercent={1.61}
+                                        />
                                         {
                                             trafficData.map((dataItem, index) => (
                                                 <HorizontalBarSeries key={dataItem.title} data={[dataItem]}

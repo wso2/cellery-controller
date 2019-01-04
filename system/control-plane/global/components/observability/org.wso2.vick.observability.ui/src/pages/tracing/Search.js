@@ -38,7 +38,9 @@ import withGlobalState, {StateHolder} from "../common/state";
 
 const styles = (theme) => ({
     container: {
-        padding: theme.spacing.unit * 3
+        flexGrow: 1,
+        padding: theme.spacing.unit * 3,
+        margin: theme.spacing.unit
     },
     subheading: {
         marginBottom: theme.spacing.unit * 2

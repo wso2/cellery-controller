@@ -85,16 +85,17 @@ const styles = (theme) => ({
         paddingLeft: 0
     },
     overallDescriptionKey: {
-        fontWeight: 500,
-        color: "#5a5a5a",
-        paddingRight: "5px"
+        color: "#7c7c7c",
+        paddingRight: 5
     },
     overallDescriptionValue: {
-        color: "#7c7c7c"
+        fontWeight: 500,
+        color: "#5a5a5a"
     },
     overallDescriptionSeparator: {
         borderStyle: "solid",
         borderWidth: "0 0 0 1px",
+        borderColor: "#d4d4d4",
         marginLeft: theme.spacing.unit * 2,
         marginRight: theme.spacing.unit * 2
     }
@@ -224,19 +225,19 @@ class TimelineView extends React.Component {
         const kindsData = {
             CLIENT: {
                 name: "Client",
-                color: "#9c27b0"
+                color: "#1abc9c"
             },
             SERVER: {
                 name: "Server",
-                color: "#4caf50"
+                color: "#3498db"
             },
             PRODUCER: {
                 name: "Producer",
-                color: "#03a9f4"
+                color: "#16a085"
             },
             CONSUMER: {
                 name: "Consumer",
-                color: "#009688"
+                color: "#2980b9"
             }
         };
 

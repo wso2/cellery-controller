@@ -39,3 +39,9 @@
 .overviewSidebarListTable td {
     padding: 0
 }
+
+#graph-id-graph-wrapper > svg {
+    position: relative;
+    width: 100% !important;
+    height: 70vh !important;
+}
