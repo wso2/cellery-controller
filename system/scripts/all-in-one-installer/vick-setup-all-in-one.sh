@@ -117,15 +117,13 @@ local nfs_share_location=$1
 local nfs_server_ip
 
 gcloud beta filestore instances create nfs-server \
-    --project=knative-deep \
-    --location=us-west1-c \
     --tier=STANDARD \
     --file-share=name="${nfs_share_location}",capacity=1TB \
     --network=name="default"
 
 sleep 30
 
-nfs_server_ip=$(gcloud beta filestore instances describe nfs-server --project=knative-deep --location=us-west1-c \
+nfs_server_ip=$(gcloud beta filestore instances describe nfs-server \
 --format flattened | awk '/ipAddresses/  {print $2}')
 
 if [ -n $nfs_server_ip ]; then
@@ -168,12 +166,12 @@ function update_apim_nfs_volumes () {
 #Create K8s cluster in GCP
 #User need to configure GCP CLI in the machine
 function install_k8s_gcp () {
-gcp_project=$1
-#create GCP project
-#gcloud projects create $gcp_project --set-as-default
+local gcp_project=$1
+local gcp_compute_zone=$2
 
 #Point GCP to the new project
 gcloud config set project $gcp_project
+gcloud config set compute/zone $gcp_compute_zone
 
 #Enable required GCP APIs
 gcloud services enable \
@@ -187,8 +185,7 @@ CLUSTER_ZONE=us-west1-c
 echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
 
 #Create K8s cluster
-gcloud -q container clusters create $CLUSTER_NAME \
-  --zone=$CLUSTER_ZONE \
+gcloud -q --verbosity=error container clusters create $CLUSTER_NAME \
   --cluster-version=latest \
   --machine-type=n1-standard-4 \
   --enable-autoscaling --min-nodes=1 --max-nodes=10 \
@@ -234,7 +231,7 @@ function deploy_mysql_server_gcp () {
     local sql_instance_name=$2
     local service_account
     local mysql_server_ip
-    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=us-west1-c
+    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1
     service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
     #if service account is zero exit
 #    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
@@ -345,12 +342,12 @@ function deploy_sp_dashboard_worker () {
     #Create SP worker configmaps
     kubectl create configmap sp-worker-siddhi --from-file=${download_location}/sp-worker/siddhi -n vick-system
     kubectl create configmap sp-worker-conf --from-file=${download_location}/sp-worker/conf -n vick-system
-    kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
+    #kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
     #Create SP worker deployment
     kubectl apply -f ${download_location}/vick-sp-worker-deployment.yaml -n vick-system
     kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
     #Create SP dashboard configmaps
-    kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
+    #kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
     #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
     #Create vick dashboard deployment, service and ingress.
     kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
@@ -361,7 +358,8 @@ function init_control_plane () {
     kubectl apply -f ${download_location}/vick-ns-init.yaml
 
     HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
-    #label the node
+    #label the node if k8s provider is kubeadm
+
     kubectl label nodes $HOST_NAME disk=local
 
     #Create credentials for docker.wso2.com
@@ -431,6 +429,7 @@ function install_nginx_ingress_gcp () {
 #Get the IaaS type form the user
 iaas=$1
 gcp_project=$2
+gcp_compute_zone=$3
 
 #sanity check
 #Bash 4 / gcloud tools if GCP
@@ -511,8 +510,9 @@ declare -A nfs_config_params
 if [[ -n ${iaas/[ ]*\n/} ]]; then
     if [ $iaas == "GCP" ]; then
         echo "ℹ️ Selected k8s provider: GCP"
+        echo "ℹ️ GCP Project $gcp_project hosted in $gcp_compute_zone"
         if [ -n $gcp_project ]; then
-            install_k8s_gcp $gcp_project
+            install_k8s_gcp $gcp_project $gcp_compute_zone
         else
             echo "GCP project name is required"
             exit 0
