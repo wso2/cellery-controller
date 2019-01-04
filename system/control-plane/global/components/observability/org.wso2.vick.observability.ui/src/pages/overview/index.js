@@ -158,42 +158,61 @@ const styles = (theme) => ({
 class Overview extends React.Component {
 
     viewGenerator = (nodeProps) => {
+        const {colorGenerator} = this.props;
+        const {selectedCell} = this.state;
+
         const nodeId = nodeProps.id;
-        const color = this.props.colorGenerator.getColor(nodeId);
+        const color = colorGenerator.getColor(nodeId);
         const state = this.getCellState(nodeId);
-        if (state === Constants.Status.Success) {
-            return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
-                <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
-            </svg>;
-        } else if (state === Constants.Status.Warning) {
-            return <svg x="0px" y="0px"
-                width="50px" height="50px" viewBox="0 0 240 240">
-                <g>
-                    <g>
-                        <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
-                    </g>
-                </g>
-                <g>
-                    <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
-                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
-                    <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
-                </g>
-            </svg>;
+
+        const style = {};
+        if (selectedCell && selectedCell.id === nodeId) {
+            style.stroke = "#383058";
+            style.strokeWidth = 15;
         }
-        return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
-            <g>
-                <g>
-                    <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"/>
-                </g>
-            </g>
-            <g>
-                <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,6.1,
-                          146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
-                <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
-            </g>
-        </svg>;
+        style.transform = "translate(15%, 10%) scale(0.8, 0.8)";
+        const cellIcon = <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"
+            style={style}/>;
+
+        let cellView;
+        if (state === Constants.Status.Success) {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    {cellIcon}
+                </svg>
+            );
+        } else if (state === Constants.Status.Warning) {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    <g>
+                        <g>
+                            {cellIcon}
+                        </g>
+                    </g>
+                    <g>
+                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                              6.1,146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
+                        <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                    </g>
+                </svg>
+            );
+        } else {
+            cellView = (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    <g>
+                        <g>
+                            {cellIcon}
+                        </g>
+                    </g>
+                    <g>
+                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                              6.1, 146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
+                        <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
+                    </g>
+                </svg>
+            );
+        }
+        return cellView;
     };
 
 
@@ -205,11 +224,15 @@ class Overview extends React.Component {
     onClickCell = (nodeId) => {
         const fromTime = this.state.currentTimeRange.fromTime;
         const toTime = this.state.currentTimeRange.toTime;
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
-        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+
+        const search = {
+            queryStartTime: fromTime.valueOf(),
+            queryEndTime: toTime.valueOf(),
+            timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
+        };
         HttpUtils.callObservabilityAPI(
             {
-                url: `/http-requests/cells/${nodeId}/microservices${queryParams}`,
+                url: `/http-requests/cells/${nodeId}/microservices${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState
@@ -244,7 +267,7 @@ class Overview extends React.Component {
                 },
                 data: {...prevState.data},
                 listData: serviceInfo,
-                reloadGraph: false,
+                reloadGraph: true,
                 selectedCell: cell,
                 request: {
                     ...prevState.request,
@@ -394,13 +417,15 @@ class Overview extends React.Component {
 
     callOverviewInfo = (fromTime, toTime) => {
         const colorGenerator = this.props.colorGenerator;
-        let queryParams = "";
+
+        const search = {};
         if (fromTime && toTime) {
-            queryParams = `?fromTime=${fromTime.valueOf()}&toTime=${toTime.valueOf()}`;
+            search.fromTime = fromTime.valueOf();
+            search.toTime = toTime.valueOf();
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: `/dependency-model/cells${queryParams}`,
+                url: `/dependency-model/cells${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState
@@ -488,11 +513,14 @@ class Overview extends React.Component {
     };
 
     callRequestStats = (fromTime, toTime) => {
-        let queryParams = `?queryStartTime=${fromTime.valueOf()}&queryEndTime=${toTime.valueOf()}`;
-        queryParams += `&timeGranularity=${QueryUtils.getTimeGranularity(fromTime, toTime)}`;
+        const search = {
+            queryStartTime: fromTime.valueOf(),
+            queryEndTime: toTime.valueOf(),
+            timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
+        };
         HttpUtils.callObservabilityAPI(
             {
-                url: `/http-requests/cells${queryParams}`,
+                url: `/http-requests/cells${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             this.props.globalState

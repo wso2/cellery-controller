@@ -181,14 +181,16 @@ class View extends React.Component {
                         <Tab label="Sequence Diagram"/>
                         <Tab label="Dependency Diagram"/>
                     </Tabs>
-                    <ErrorBoundary title={"Unable to render Invalid Trace"}>
-                        {
-                            isLoading
-                                ? null
-                                : <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                    selectedMicroservice={selectedMicroservice}/>
-                        }
-                    </ErrorBoundary>
+                    {
+                        isLoading
+                            ? null
+                            : (
+                                <ErrorBoundary title={"Unable to render Invalid Trace"}>
+                                    <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                                        selectedMicroservice={selectedMicroservice}/>
+                                </ErrorBoundary>
+                            )
+                    }
                 </Paper>
             );
         } else if (errorMessage) {

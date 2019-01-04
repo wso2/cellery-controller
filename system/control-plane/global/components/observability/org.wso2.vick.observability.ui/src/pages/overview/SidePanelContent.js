@@ -232,7 +232,7 @@ class SidePanelContent extends React.Component {
                                     <Typography color="inherit" className={classes.sideBarContentTitle}>
                                         Cell:
                                     </Typography>
-                                    <Typography component={Link} to={`/cells/${selectedCell}`}
+                                    <Typography component={Link} to={`/cells/${selectedCell.id}`}
                                         className={classes.cellName}>
                                         {summary.topic}
                                     </Typography>
