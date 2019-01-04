@@ -26,6 +26,7 @@ import org.wso2.vick.observability.model.generator.internal.ServiceHolder;
 import org.wso2.vick.observability.model.generator.model.Edge;
 import org.wso2.vick.observability.model.generator.model.Model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -142,6 +143,46 @@ public class ModelManager {
             return getMergedModel(models);
         }
     }
+
+    public Model getDependencyModel(long fromTime, long toTime, String cellName) throws GraphStoreException {
+        Model graph = getGraph(fromTime, toTime);
+        List<Model> models = new ArrayList<>();
+        Set<String> processedNodes = new HashSet<>();
+        populateDependencyModel(graph, cellName, models, processedNodes);
+        return getMergedModel(models);
+    }
+
+    private void populateDependencyModel(Model graph, String cellName, List<Model> models, Set<String> processedNodes) {
+        if (!processedNodes.contains(cellName)) {
+            Model dependencyGraph = getDependencyModel(graph, cellName);
+            processedNodes.add(cellName);
+            if (dependencyGraph.getNodes().size() > 1) {
+                models.add(dependencyGraph);
+                for (Node node : dependencyGraph.getNodes()) {
+                    populateDependencyModel(graph, node.getId(), models, processedNodes);
+                }
+            } else {
+                if (models.isEmpty()) {
+                    models.add(dependencyGraph);
+                }
+            }
+        }
+    }
+
+
+    private Model getDependencyModel(Model model, String cell) {
+        Set<Node> dependedNodes = new HashSet<>();
+        Set<Edge> dependedEdges = new HashSet<>();
+        for (Edge edge : model.getEdges()) {
+            if (edge.getSource().equalsIgnoreCase(cell)) {
+                dependedEdges.add(edge);
+                dependedNodes.add(Utils.getNode(model.getNodes(), new Node(edge.getTarget(), null)));
+            }
+        }
+        dependedNodes.add(Utils.getNode(model.getNodes(), new Node(cell, null)));
+        return new Model(dependedNodes, dependedEdges);
+    }
+
 
     private Model getMergedModel(List<Model> models) {
         Set<Node> allNodes = new HashSet<>();

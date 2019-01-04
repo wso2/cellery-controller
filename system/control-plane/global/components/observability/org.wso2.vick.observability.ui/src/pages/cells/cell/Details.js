@@ -15,6 +15,7 @@
  */
 
 import ColorGenerator from "../../common/color/colorGenerator";
+import CellDependencyView from "./CellDependencyView";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
@@ -126,7 +127,7 @@ class Details extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, cell} = this.props;
         const {health} = this.state;
 
         return (
@@ -151,7 +152,7 @@ class Details extends React.Component {
                     </Typography>
                     <div className={classes.diagram}>
                         {/* TODO : Implement Cell Dependency Diagram */}
-                        Dependency Diagram
+                        <CellDependencyView cell={cell}/>
                     </div>
                 </div>
             </React.Fragment>

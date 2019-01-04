@@ -24,6 +24,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
@@ -45,6 +46,21 @@ public class DependencyModelAPI {
             return Response.ok().entity(model).build();
         } catch (GraphStoreException e) {
             log.error("Error occured while retrieving the dependency API", e);
+            return Response.serverError().entity(e).build();
+        }
+    }
+
+    @GET
+    @Path("/cells/{cellName}")
+    @Produces("application/json")
+    public Response getCellDependencyView(@PathParam("cellName") String cellName,
+                                          @DefaultValue("0") @QueryParam("fromTime") Long fromTime,
+                                          @DefaultValue("0") @QueryParam("toTime") Long toTime) {
+        try {
+            Model model = ServiceHolder.getModelManager().getDependencyModel(fromTime, toTime, cellName);
+            return Response.ok().entity(model).build();
+        } catch (GraphStoreException e) {
+            log.error("Error occured while retrieving the dependency model for cell :" + cellName, e);
             return Response.serverError().entity(e).build();
         }
     }

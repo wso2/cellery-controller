@@ -85,7 +85,7 @@ public class ModelGenerationExtension extends StreamProcessor {
             String serviceName = (String) serviceNameExecutor.execute(streamEvent);
             String operationName = (String) operationNameExecutor.execute(streamEvent);
             String spanId = (String) spanIdExecutor.execute(streamEvent);
-            if (cellName != null && !cellName.trim().equalsIgnoreCase("")
+            if (cellName != null && !cellName.isEmpty()
                     && !operationName.equalsIgnoreCase(Constants.IGNORE_OPERATION_NAME)) {
                 String spanKind = (String) spanKindExecutor.execute(streamEvent);
                 String parentId = (String) parentIdExecutor.execute(streamEvent);
@@ -94,12 +94,10 @@ public class ModelGenerationExtension extends StreamProcessor {
                 node.addService(serviceName);
                 SpanCacheInfo spanCacheInfo = setSpanInfo(spanId, node, serviceName, operationName, spanKind);
                 if (spanKind.equalsIgnoreCase(Constants.SERVER_SPAN_KIND) && spanCacheInfo.getClient() != null) {
-                    ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getServer().getNode(),
-                            serviceName + Constants.LINK_SEPARATOR + operationName,
+                    ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getServer().getNode(), serviceName,
                             spanIdEdgesCache.getIfPresent(spanCacheInfo.getSpanId()), false);
                 } else if (spanKind.equalsIgnoreCase(Constants.CLIENT_SPAN_KIND) && spanCacheInfo.getServer() != null) {
-                    ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(),
-                            serviceName + Constants.LINK_SEPARATOR + operationName,
+                    ServiceHolder.getModelManager().moveLinks(spanCacheInfo.getClient().getNode(), serviceName,
                             spanIdEdgesCache.getIfPresent(spanCacheInfo.getSpanId()), true);
                 }
 
@@ -145,8 +143,7 @@ public class ModelGenerationExtension extends StreamProcessor {
     private void addLink(SpanCacheInfo parentSpan, Node childNode, String serviceName, String operationName,
                          String spanId) {
         SpanCacheInfo.NodeInfo parentNode = getParentNode(parentSpan, childNode);
-        String linkName = parentNode.getService() + Constants.LINK_SEPARATOR + parentNode.getOperationName()
-                + Constants.LINK_SEPARATOR + serviceName + Constants.LINK_SEPARATOR + operationName;
+        String linkName = parentNode.getService() + Constants.LINK_SEPARATOR + serviceName;
         synchronized (spanId.intern()) {
             List<String> edgesCacheIfPresent = spanIdEdgesCache.getIfPresent(spanId);
             if (edgesCacheIfPresent == null) {

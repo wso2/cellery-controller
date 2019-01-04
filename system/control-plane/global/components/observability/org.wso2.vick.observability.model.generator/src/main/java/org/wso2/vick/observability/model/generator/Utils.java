@@ -40,8 +40,7 @@ public class Utils {
     }
 
     public static String getEdgePostFix(String edgeName) {
-        int index = edgeName.indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
-        index = edgeName.substring(index).indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
+        int index = edgeName.lastIndexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
         return edgeName.substring(index);
     }
 
