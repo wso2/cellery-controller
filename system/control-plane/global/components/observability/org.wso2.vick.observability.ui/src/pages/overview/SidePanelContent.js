@@ -364,7 +364,7 @@ class SidePanelContent extends React.Component {
                         </TableBody>
                     </Table>
                     <div className={classes.barChart}>
-                        <XYPlot yType="ordinal" stackBy="x" width={250} height={selectedCell ? 100 : 80}>
+                        <XYPlot yType="ordinal" stackBy="x" width={250} height="90">
                             <VerticalGridLines/>
                             <HorizontalGridLines/>
                             <XAxis />
@@ -374,7 +374,7 @@ class SidePanelContent extends React.Component {
                                 className="alt-x-label"
                                 includeMargin={false}
                                 xPercent={-0.15}
-                                yPercent={2.05}
+                                yPercent={1.8}
                             />
                             <HorizontalBarSeries color={successColor}
                                 data={[
@@ -459,7 +459,7 @@ class SidePanelContent extends React.Component {
                                         <Typography className={classes.secondaryHeading}>
                                             <CheckCircleOutline className={classes.cellIcon}
                                                 style={{color: successColor}}/>
-                                            {summary.content[1].value}
+                                            &nbsp;{summary.content[1].value}
                                         </Typography>
                                     )
                             }
@@ -469,7 +469,7 @@ class SidePanelContent extends React.Component {
                                     : (
                                         <Typography className={classes.secondaryHeading}>
                                             <ErrorIcon className={classes.cellIcon} style={{color: errorColor}}/>
-                                            {summary.content[2].value}
+                                            &nbsp;{summary.content[2].value}
                                         </Typography>
                                     )
                             }

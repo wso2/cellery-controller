@@ -173,7 +173,7 @@ class View extends React.Component {
 
     render = () => {
         const {classes, location, match} = this.props;
-        const {spans, selectedTabIndex, isLoading, errorMessage} = this.state;
+        const {spans, selectedTabIndex, isLoading, errorMessage, traceTree} = this.state;
         const selectedMicroservice = location.state ? location.state.selectedMicroservice : null;
 
         const traceId = match.params.traceId;
@@ -211,7 +211,8 @@ class View extends React.Component {
 
         return (
             <React.Fragment>
-                <TopToolbar title={"Distributed Tracing"}/>
+                <TopToolbar title={(traceTree ? traceTree.serviceName : " ") }
+                    subTitle={` ${traceTree ? traceTree.operationName : " "}`}/>
                 {view}
             </React.Fragment>
         );
