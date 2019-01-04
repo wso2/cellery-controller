@@ -15,19 +15,53 @@
  */
 
 import "./DependencyDiagram.css";
+import ArrowRightAltSharp from "@material-ui/icons/ArrowRightAltSharp";
+import Button from "@material-ui/core/Button";
 import Constants from "../../common/constants";
+import Error from "@material-ui/icons/Error";
+import Fade from "@material-ui/core/Fade";
+import FiberManualRecord from "@material-ui/icons/FiberManualRecord";
 import {Graph} from "react-d3-graph";
+import Paper from "@material-ui/core/Paper";
+import Popper from "@material-ui/core/Popper";
 import PropTypes from "prop-types";
 import React from "react";
 import Span from "../utils/span";
 import TracingUtils from "../utils/tracingUtils";
+import Typography from "@material-ui/core/Typography";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../common/color";
 
-const styles = () => ({
+const styles = (theme) => ({
     graph: {
         width: "100%",
         height: "100%"
+    },
+    btnLegend: {
+        position: "sticky",
+        bottom: 20,
+        fontSize: 12,
+        float: "right"
+    },
+    legendContent: {
+        padding: theme.spacing.unit * 2
+    },
+    legendText: {
+        display: "inline-flex",
+        marginLeft: 5,
+        fontSize: 12
+    },
+    legendHelpText: {
+        display: "inline-flex",
+        fontSize: 11,
+        marginLeft: 5
+    },
+    legendIcon: {
+        verticalAlign: "middle",
+        marginLeft: 20
+    },
+    legendFirstEl: {
+        verticalAlign: "middle"
     }
 });
 
@@ -36,9 +70,28 @@ class DependencyDiagram extends React.Component {
     static MIN_RADIUS = 60;
     static MAX_RADIUS = 120;
 
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            legend: null,
+            legendOpen: false
+        };
+    }
+
+    handleClick = (event) => {
+        const {currentTarget} = event;
+        this.setState((state) => ({
+            legend: currentTarget,
+            legendOpen: !state.legendOpen
+        }));
+    };
+
     render = () => {
         const {classes, spans, colorGenerator} = this.props;
+        const {legend, legendOpen} = this.state;
         const rootSpan = TracingUtils.getTreeRoot(spans);
+        const id = legendOpen ? "legend-popper" : null;
 
         const nodeIdList = [];
         const nodes = [];
@@ -110,71 +163,116 @@ class DependencyDiagram extends React.Component {
         return (
             nodes.length > 0 && links.length > 0
                 ? (
-                    <Graph id={"trace-dependency-graph"} className={classes.graph}
-                        data={{
-                            nodes: nodes,
-                            links: links
-                        }}
-                        config={{
-                            directed: true,
-                            nodeHighlightBehavior: true,
-                            highlightOpacity: 0.2,
-                            height: 700,
-                            width: 1100,
-                            node: {
-                                fontSize: 15,
-                                highlightFontSize: 15,
-                                viewGenerator: (node) => {
-                                    const radius = (((node.span.duration - minDuration)
-                                        * (DependencyDiagram.MAX_RADIUS - DependencyDiagram.MIN_RADIUS))
-                                        / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
+                    <React.Fragment>
+                        <Graph id={"trace-dependency-graph"} className={classes.graph}
+                            data={{
+                                nodes: nodes,
+                                links: links
+                            }}
+                            config={{
+                                directed: true,
+                                nodeHighlightBehavior: true,
+                                highlightOpacity: 0.2,
+                                height: 520,
+                                width: 1100,
+                                node: {
+                                    fontSize: 15,
+                                    highlightFontSize: 15,
+                                    viewGenerator: (node) => {
+                                        const radius = (((node.span.duration - minDuration)
+                                               * (DependencyDiagram.MAX_RADIUS - DependencyDiagram.MIN_RADIUS))
+                                               / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
 
-                                    let nodeSVGContent;
-                                    const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
-                                    if (node.span.hasError()) {
-                                        const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
+                                        let nodeSVGContent;
+                                        const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
+                                        if (node.span.hasError()) {
+                                            const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
-                                        const iconTranslation = radius * (Math.PI / 4);
-                                        const xTranslation = 150;
-                                        const yTranslation = 120 - iconTranslation - 30;
-                                        nodeSVGContent = (
-                                            <g>
+                                            const iconTranslation = radius * (Math.PI / 4);
+                                            const xTranslation = 150;
+                                            const yTranslation = 120 - iconTranslation - 30;
+                                            nodeSVGContent = (
                                                 <g>
                                                     <g>
-                                                        {circle}
+                                                        <g>
+                                                            {circle}
+                                                        </g>
+                                                    </g>
+                                                    <g transform={
+                                                        `translate(${xTranslation}, ${yTranslation})
+                                                       scale(0.4, 0.4)`
+                                                    }>
+                                                        <path stroke="#fff" strokeWidth="10" fill={errorColor}
+                                                            d="M120.5,9.6C59.1,9.6,9,59.8,9,121.3S59.1,233,120.5,
+                                                         233S232,182.8,232,121.3S181.9,9.6,120.5,9.6z"/>
+                                                        <path fill="#ffffff"
+                                                            d="M105.4,164.5h29.9v29.9h-29.9V164.5z M105.4,
+                                                    44.2h29.9v90.1h-29.9V44.2z"/>
                                                     </g>
                                                 </g>
-                                                <g transform={
-                                                    `translate(${xTranslation}, ${yTranslation}) scale(0.4, 0.4)`
-                                                }>
-                                                    <path stroke="#fff" strokeWidth="10" fill={errorColor}
-                                                        d="M120.5,9.6C59.1,9.6,9,59.8,9,121.3S59.1,233,120.5,
-                                                             233S232,182.8,232,121.3S181.9,9.6,120.5,9.6z"/>
-                                                    <path fill="#ffffff"
-                                                        d="M105.4,164.5h29.9v29.9h-29.9V164.5z M105.4,
-                                                        44.2h29.9v90.1h-29.9V44.2z"/>
-                                                </g>
-                                            </g>
+                                            );
+                                        } else {
+                                            nodeSVGContent = circle;
+                                        }
+                                        return (
+                                            <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 240 240">
+                                                {nodeSVGContent}
+                                            </svg>
                                         );
-                                    } else {
-                                        nodeSVGContent = circle;
                                     }
-                                    return (
-                                        <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 240 240">
-                                            {nodeSVGContent}
-                                        </svg>
-                                    );
+                                },
+                                link: {
+                                    strokeWidth: 3,
+                                    highlightColor: "#444"
+                                },
+                                d3: {
+                                    gravity: -200
                                 }
-                            },
-                            link: {
-                                strokeWidth: 3,
-                                highlightColor: "#444"
-                            },
-                            d3: {
-                                gravity: -200
-                            }
-                        }}
-                    />
+                            }}
+                        />
+                        <Button
+                            aria-describedby={id}
+                            variant="outlined"
+                            className={classes.btnLegend}
+                            onClick={this.handleClick}
+                        >
+                            Legend
+                        </Button>
+                        <Popper id={id} open={legendOpen} anchorEl={legend}
+                            placement="top-end"
+                            disablePortal={false}
+                            transition>
+                            {({TransitionProps}) => (
+                                <Fade {...TransitionProps} timeout={350}>
+                                    <Paper>
+                                        <div className={classes.legendContent}>
+                                            <div>
+                                                <FiberManualRecord className={classes.legendFirstEl}
+                                                    color="action"/>
+                                                <Typography color="inherit"
+                                                    className={classes.legendText}> Microservice/System
+                                                    component </Typography>
+                                                <Typography color="textSecondary"
+                                                    className={classes.legendHelpText}> (Radius
+                                                    proportional to the request duration)</Typography>
+                                            </div>
+                                            <div>
+                                                <ArrowRightAltSharp className={classes.legendFirstEl}
+                                                    color="action"/>
+                                                <Typography color="inherit"
+                                                    className={classes.legendText}> Dependency
+                                                </Typography>
+                                                <Error className={classes.legendIcon} color="error"/>
+                                                <Typography color="inherit" className={classes.legendText}>
+                                                    Error
+                                                </Typography>
+                                            </div>
+                                        </div>
+                                    </Paper>
+                                </Fade>
+                            )}
+                        </Popper>
+                    </React.Fragment>
                 )
                 : null
         );

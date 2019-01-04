@@ -35,7 +35,7 @@ class DependencyGraph extends React.Component {
         nodeHighlightBehavior: true,
         panAndZoom: false,
         staticGraph: false,
-        height: 700,
+        height: 580,
         width: 1050,
         d3: {
             alphaTarget: 0.05,
