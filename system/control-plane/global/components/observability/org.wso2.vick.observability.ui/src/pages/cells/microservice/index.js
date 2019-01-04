@@ -113,7 +113,7 @@ class Microservice extends React.Component {
         };
         return (
             <React.Fragment>
-                <TopToolbar title={`${microserviceName}`} subTitle="(Microservice)" onUpdate={this.handleOnUpdate}/>
+                <TopToolbar title={`${microserviceName}`} subTitle="- Microservice" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <div className={classes.tabBar}>
                         <Tabs value={selectedTabIndex} indicatorColor="primary"

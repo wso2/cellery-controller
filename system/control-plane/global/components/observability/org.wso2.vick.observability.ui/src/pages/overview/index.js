@@ -159,7 +159,7 @@ class Overview extends React.Component {
 
         const style = {};
         if (selectedCell && selectedCell.id === nodeId) {
-            style.stroke = "#383058";
+            style.stroke = "#444";
             style.strokeWidth = 15;
         }
         style.transform = "translate(15%, 10%) scale(0.8, 0.8)";

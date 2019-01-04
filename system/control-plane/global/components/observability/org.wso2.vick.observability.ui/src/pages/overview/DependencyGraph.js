@@ -45,7 +45,7 @@ class DependencyGraph extends React.Component {
         },
         node: {
             color: "#d3d3d3",
-            fontColor: "black",
+            fontColor: "#444",
             fontSize: 18,
             fontWeight: "normal",
             highlightColor: "red",
@@ -66,7 +66,7 @@ class DependencyGraph extends React.Component {
             opacity: 1,
             semanticStrokeWidth: false,
             strokeWidth: 4,
-            highlightColor: "black"
+            highlightColor: "#444"
         }
     };
 
