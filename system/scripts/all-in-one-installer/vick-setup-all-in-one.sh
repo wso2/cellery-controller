@@ -290,7 +290,6 @@ function update_control_plane_datasources () {
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
-        #sed -i "s/$param/${config_params[$param]}/g" ${download_location}/status-dashboard/conf/deployment.yaml
     done
 }
 
@@ -354,7 +353,9 @@ function deploy_sp_dashboard_worker () {
     #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
     #Create vick dashboard deployment, service and ingress.
     kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
+    kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
 }
+
 function init_control_plane () {
     local download_location=$1
     #Setup VICK namespace, create service account and the docker registry credentials
@@ -466,6 +467,7 @@ control_plane_yaml=(
     "vick-sp-persistent-volumes.yaml"
     "vick-sp-worker-deployment.yaml"
     "vick-sp-worker-service.yaml"
+    "vick-sp-worker-ingress.yaml"
     "vick-apim-artifacts-persistent-volumes.yaml"
     "vick-apim-artifacts-persistent-volume-claim.yaml"
     "mandatory.yaml"
@@ -490,11 +492,10 @@ control_plane_yaml=(
     "apim-configs/pub-store/resources/api_templates/velocity_template.xml"
     "apim-configs/pub-store/api-manager.xml"
     "apim-configs/pub-store/log4j.properties"
-    "sp-worker/bin/carbon.sh"
-    "sp-worker/siddhi/tracer-app.siddhi"
+    "sp-worker/siddhi/tracing-app.siddhi"
+    "sp-worker/siddhi/istio-telemetry-app.siddhi"
     "sp-worker/siddhi/telemetry-app.siddhi"
     "sp-worker/conf/deployment.yaml"
-    "status-dashboard/conf/deployment.yaml"
     "mysql/dbscripts/init.sql"
 )
 
