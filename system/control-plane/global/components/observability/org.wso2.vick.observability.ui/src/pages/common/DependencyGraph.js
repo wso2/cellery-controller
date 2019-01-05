@@ -74,7 +74,7 @@ class DependencyGraph extends React.Component {
 
     render = () => {
         const {data, config, ...otherProps} = this.props;
-
+        console.log(data);
         // Finding distinct links
         const links = [];
         if (data.links) {

@@ -85,8 +85,8 @@ class CellDependencyView extends React.Component {
         super(props);
         this.state = {
             data: {
-                nodes: {},
-                links: {}
+                nodes: [],
+                links: []
             }
         };
         graphConfig.node.viewGenerator = this.viewGenerator;
@@ -163,9 +163,8 @@ class CellDependencyView extends React.Component {
                     id="cell-dependency-graph"
                     data={this.state.data}
                     config={graphConfig}
-                    reloadGraph={true}
+                    reloadGraph={this.state.reload}
                     onClickNode={this.onClickCell}
-                    onClickGraph={this.onClickGraph}
                 />
             </React.Fragment>
         )

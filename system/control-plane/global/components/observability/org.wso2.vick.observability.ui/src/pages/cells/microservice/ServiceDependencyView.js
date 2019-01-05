@@ -84,8 +84,8 @@ class ServiceDependencyView extends React.Component {
         super(props);
         this.state = {
             data: {
-                nodes: {},
-                links: {}
+                nodes: [],
+                links: []
             }
         };
     }
@@ -163,7 +163,6 @@ class ServiceDependencyView extends React.Component {
                     config={graphConfig}
                     reloadGraph={true}
                     onClickNode={this.onClickCell}
-                    onClickGraph={this.onClickGraph}
                 />
             </React.Fragment>
         )
