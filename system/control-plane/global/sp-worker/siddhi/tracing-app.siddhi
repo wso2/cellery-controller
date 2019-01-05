@@ -50,30 +50,30 @@ define function extractFromServiceName[javascript] return string {
 -- Storing Zipkin data received for Tracing
 --
 
-from ZipkinStreamIn
-select
-    traceId,
-    id as spanId,
-    parentId,
-    "" as namespace,
-    extractFromServiceName(serviceName, 1) as cell,
-    extractFromServiceName(serviceName, 2) as serviceName,
-    "" as pod,
-    name as operationName,
-    kind,
-    timestamp as startTime,
-    duration,
-    tags
-insert into ProcessedZipkinStream;
-
-from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
-select *
-update or insert into DistributedTracingTable
-    set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
-        DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,
-        DistributedTracingTable.tags = tags
-    on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
-        and DistributedTracingTable.kind == kind;
+--from ZipkinStreamIn
+--select
+--    traceId,
+--    id as spanId,
+--    parentId,
+--    "" as namespace,
+--    extractFromServiceName(serviceName, 1) as cell,
+--    extractFromServiceName(serviceName, 2) as serviceName,
+--    "" as pod,
+--    name as operationName,
+--    kind,
+--    timestamp as startTime,
+--    duration,
+--    tags
+--insert into ProcessedZipkinStream;
+--
+--from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
+--select *
+--update or insert into DistributedTracingTable
+--    set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
+--        DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,
+--        DistributedTracingTable.tags = tags
+--    on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
+--        and DistributedTracingTable.kind == kind;
 
 --
 -- Filling additional data from Telemetry
@@ -117,7 +117,7 @@ select
     "{}" as tags
 insert into ProcessedTelemetryDataStream;
 
-from ProcessedTelemetryDataStream[(not traceId is null) and (not spanId is null)]
+from ProcessedTelemetryDataStream[(not traceId is null) and (not spanId is null)]#window.time(5 sec)
 update or insert into DistributedTracingTable
     set DistributedTracingTable.namespace = namespace, DistributedTracingTable.cell = cell,
         DistributedTracingTable.serviceName = serviceName, DistributedTracingTable.pod = pod

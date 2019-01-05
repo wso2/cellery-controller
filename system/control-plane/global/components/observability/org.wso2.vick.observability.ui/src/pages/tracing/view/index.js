@@ -182,7 +182,7 @@ class View extends React.Component {
         const SelectedTabContent = tabContent[selectedTabIndex];
 
         let view;
-        if (spans && spans.length) {
+        if (isLoading || (spans && spans.length)) {
             view = (
                 <Paper className={classes.container}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
