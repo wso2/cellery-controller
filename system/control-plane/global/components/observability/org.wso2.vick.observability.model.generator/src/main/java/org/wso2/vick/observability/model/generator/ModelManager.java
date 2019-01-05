@@ -99,8 +99,12 @@ public class ModelManager {
 
     public void addLink(Node parent, Node child, String serviceName) {
         try {
-            this.dependencyGraph.addEdge(parent, child, Utils.generateEdgeName(parent.getId(), child.getId(),
-                    serviceName));
+            if (!parent.equals(child)) {
+                this.dependencyGraph.addEdge(parent, child, Utils.generateEdgeName(parent.getId(), child.getId(),
+                        serviceName));
+            } else {
+                parent.addEdge(serviceName);
+            }
         } catch (Exception ignored) {
         }
     }
@@ -176,13 +180,65 @@ public class ModelManager {
         for (Edge edge : model.getEdges()) {
             if (edge.getSource().equalsIgnoreCase(cell)) {
                 dependedEdges.add(edge);
-                dependedNodes.add(Utils.getNode(model.getNodes(), new Node(edge.getTarget(), null)));
+                dependedNodes.add(Utils.getNode(model.getNodes(), new Node(edge.getTarget())));
             }
         }
-        dependedNodes.add(Utils.getNode(model.getNodes(), new Node(cell, null)));
+        dependedNodes.add(Utils.getNode(model.getNodes(), new Node(cell)));
         return new Model(dependedNodes, dependedEdges);
     }
 
+    public Model getDependencyModel(long fromTime, long toTime, String cellName, String serviceName)
+            throws GraphStoreException {
+        Model graph = getGraph(fromTime, toTime);
+        Node cell = Utils.getNode(graph.getNodes(), new Node(cellName));
+        Model serviceModel = null;
+        if (cell != null) {
+            String qualifiedServiceName = Utils.getQualifiedServiceName(cellName, serviceName);
+            serviceModel = getDependencyModel(cell, serviceName);
+            for (Edge edge : graph.getEdges()) {
+                String edgeServiceName = Utils.getEdgeServiceName(edge.getEdgeString());
+                String[] services = Utils.getServices(edgeServiceName);
+                if (services[0].equalsIgnoreCase(serviceName) && !services[0].equalsIgnoreCase(services[1])) {
+                    Node dependedCell = Utils.getNode(graph.getNodes(),
+                            new Node(edge.getTarget()));
+                    if (dependedCell != null) {
+                        Model dependentCellModel = getDependencyModel(dependedCell, services[1]);
+                        serviceModel.mergeModel(dependentCellModel,
+                                new Edge(Utils.generateEdgeName(qualifiedServiceName,
+                                        Utils.getQualifiedServiceName(dependedCell.getId(), services[1]), "")));
+                    }
+                }
+            }
+        }
+        if (serviceModel == null) {
+            serviceModel = new Model(new HashSet<>(), new HashSet<>());
+        }
+        return serviceModel;
+    }
+
+    private Model getDependencyModel(Node cell, String serviceName) {
+        Set<Node> nodes = new HashSet<>();
+        Set<Edge> edges = new HashSet<>();
+        String qualifiedServiceName = Utils.getQualifiedServiceName(cell.getId(), serviceName);
+        nodes.add(new Node(qualifiedServiceName));
+        for (String edge : cell.getEdges()) {
+            String[] sourceTarget = edge.split(Constants.LINK_SEPARATOR);
+            if (sourceTarget[0].trim().equalsIgnoreCase(serviceName) &&
+                    !sourceTarget[0].trim().equalsIgnoreCase(sourceTarget[1])) {
+                String qualifiedTargetServiceName = Utils.getQualifiedServiceName(cell.getId(),
+                        sourceTarget[1].trim());
+                nodes.add(new Node(qualifiedTargetServiceName));
+                edges.add(new Edge(Utils.generateEdgeName(qualifiedServiceName, qualifiedTargetServiceName,
+                        "")));
+                Model nextLevelModel = getDependencyModel(cell, sourceTarget[1]);
+                if (nextLevelModel.getNodes().size() > 1) {
+                    nodes.addAll(nextLevelModel.getNodes());
+                    edges.addAll(nextLevelModel.getEdges());
+                }
+            }
+        }
+        return new Model(nodes, edges);
+    }
 
     private Model getMergedModel(List<Model> models) {
         Set<Node> allNodes = new HashSet<>();

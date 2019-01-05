@@ -44,7 +44,7 @@ public class DependencyModelAPI {
         try {
             Model model = ServiceHolder.getModelManager().getGraph(fromTime, toTime);
             return Response.ok().entity(model).build();
-        } catch (GraphStoreException e) {
+        } catch (Throwable e) {
             log.error("Error occured while retrieving the dependency API", e);
             return Response.serverError().entity(e).build();
         }
@@ -59,8 +59,24 @@ public class DependencyModelAPI {
         try {
             Model model = ServiceHolder.getModelManager().getDependencyModel(fromTime, toTime, cellName);
             return Response.ok().entity(model).build();
-        } catch (GraphStoreException e) {
+        } catch (Throwable e) {
             log.error("Error occured while retrieving the dependency model for cell :" + cellName, e);
+            return Response.serverError().entity(e).build();
+        }
+    }
+
+    @GET
+    @Path("/cells/{cellName}/microservices/{serviceName}")
+    @Produces("application/json")
+    public Response getMicroServiceDependencyView(@PathParam("cellName") String cellName,
+                                                  @PathParam("serviceName") String serviceName,
+                                                  @DefaultValue("0") @QueryParam("fromTime") Long fromTime,
+                                                  @DefaultValue("0") @QueryParam("toTime") Long toTime) {
+        try {
+            Model model = ServiceHolder.getModelManager().getDependencyModel(fromTime, toTime, cellName, serviceName);
+            return Response.ok().entity(model).build();
+        } catch (Throwable e) {
+            log.error("Error occured while retrieving the dependency model for service :" + serviceName, e);
             return Response.serverError().entity(e).build();
         }
     }

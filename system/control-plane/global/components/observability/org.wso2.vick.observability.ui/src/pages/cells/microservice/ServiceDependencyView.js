@@ -57,7 +57,6 @@ const graphConfig = {
         fontColor: "black",
         fontSize: 18,
         fontWeight: "normal",
-        highlightColor: "red",
         highlightFontSize: 18,
         highlightFontWeight: "bold",
         highlightStrokeColor: "SAME",
@@ -67,7 +66,7 @@ const graphConfig = {
         opacity: 1,
         renderLabel: true,
         size: 600,
-        strokeColor: "green",
+        strokeColor: "black",
         strokeWidth: 2
     },
     link: {
@@ -79,7 +78,7 @@ const graphConfig = {
     }
 };
 
-class CellDependencyView extends React.Component {
+class ServiceDependencyView extends React.Component {
 
     constructor(props) {
         super(props);
@@ -89,7 +88,6 @@ class CellDependencyView extends React.Component {
                 links: {}
             }
         };
-        graphConfig.node.viewGenerator = this.viewGenerator;
     }
 
     componentDidMount = () => {
@@ -103,7 +101,7 @@ class CellDependencyView extends React.Component {
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
-        const {globalState, cell} = this.props;
+        const {globalState, cell, service} = this.props;
         const self = this;
 
         const search = {
@@ -116,15 +114,24 @@ class CellDependencyView extends React.Component {
         }
         HttpUtils.callObservabilityAPI(
             {
-                url: `/dependency-model/cells/${cell}${HttpUtils.generateQueryParamString(search)}`,
+                url: `/dependency-model/cells/${cell}/microservices/${service}${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
             globalState
         ).then((data) => {
-            console.log(data);
+            let nodes = [];
+            data.nodes.map( function(node) {
+                nodes.push(
+                        {
+                            id: node.id,
+                            color: self.props.colorGenerator.getColor(node.id.split(":")[0])
+                        });
+            });
+            console.log(data.nodes);
+            console.log(nodes);
             self.setState({
                 data: {
-                    nodes: data.nodes,
+                    nodes: nodes,
                     links: data.edges
                 }
             });
@@ -135,21 +142,12 @@ class CellDependencyView extends React.Component {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
-                    "Failed to load cell dependency view",
+                    "Failed to load service dependency view",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
             }
         });
-    };
-
-    viewGenerator = (nodeProps) => {
-        const nodeId = nodeProps.id;
-        const color = this.props.colorGenerator.getColor(nodeId);
-        return <svg x="0px" y="0px"
-                    width="50px" height="50px" viewBox="0 0 240 240">
-            <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
-        </svg>;
     };
 
     onClickCell = (nodeId) => {
@@ -160,7 +158,7 @@ class CellDependencyView extends React.Component {
         return (
             <React.Fragment>
                 <DependencyGraph
-                    id="cell-dependency-graph"
+                    id="service-dependency-graph"
                     data={this.state.data}
                     config={graphConfig}
                     reloadGraph={true}
@@ -173,11 +171,12 @@ class CellDependencyView extends React.Component {
 
 }
 
-CellDependencyView.propTypes = {
+ServiceDependencyView.propTypes = {
     classes: PropTypes.object.isRequired,
     cell: PropTypes.string.isRequired,
+    service: PropTypes.string.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(withColor(withGlobalState(CellDependencyView)));
+export default withStyles(styles, {withTheme: true})(withColor(withGlobalState(ServiceDependencyView)));

@@ -21,6 +21,7 @@ import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
+import ServiceDependencyView from "./ServiceDependencyView";
 import StateHolder from "../../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -126,7 +127,7 @@ class Details extends React.Component {
     };
 
     render() {
-        const {classes, cell} = this.props;
+        const {classes, cell, microservice} = this.props;
         const {health} = this.state;
         return (
             <React.Fragment>
@@ -159,7 +160,7 @@ class Details extends React.Component {
                         Dependencies
                     </Typography>
                     <div className={classes.diagram}>
-                        Dependency Diagram
+                        <ServiceDependencyView cell={cell} service={microservice}/>
                     </div>
                 </div>
             </React.Fragment>

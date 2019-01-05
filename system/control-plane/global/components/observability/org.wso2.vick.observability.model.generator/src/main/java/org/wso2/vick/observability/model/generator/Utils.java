@@ -68,4 +68,16 @@ public class Utils {
         }
         return null;
     }
+
+    public static String getQualifiedServiceName(String cellName, String serviceName) {
+        return cellName + Constants.CELL_SERVICE_NAME_SEPARATOR + serviceName;
+    }
+
+    public static String getEdgeServiceName(String edgeString) {
+        return edgeString.split(Constants.EDGE_NAME_CONNECTOR)[2];
+    }
+
+    public static String[] getServices(String serviceName) {
+        return serviceName.split(Constants.LINK_SEPARATOR);
+    }
 }
