@@ -22,17 +22,17 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
-import PropTypes from "prop-types";
 import React from "react";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines, LineMarkSeries,
-    RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
+    ChartLabel, Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines,
+    LineMarkSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = {
     root: {
@@ -98,7 +98,7 @@ class MetricsGraphs extends React.Component {
     }
 
     calculateMetrics = () => {
-        const {colorGenerator, data} = this.props;
+        const {colorGenerator, data, direction} = this.props;
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
@@ -158,7 +158,7 @@ class MetricsGraphs extends React.Component {
         const trafficData = ["2xx", "3xx", "4xx", "5xx"]
             .map((datum) => ({
                 x: totalRequestsCount === 0 ? 0 : httpResponseGroupCounts[datum] * 100 / totalRequestsCount,
-                y: "Out",
+                y: direction,
                 title: (datum === "2xx" ? "OK" : datum),
                 count: httpResponseGroupCounts[datum]
             }));
@@ -376,6 +376,13 @@ class MetricsGraphs extends React.Component {
                                         <HorizontalGridLines/>
                                         <XAxis/>
                                         <YAxis/>
+                                        <ChartLabel
+                                            text="%"
+                                            className="alt-x-label"
+                                            includeMargin={false}
+                                            xPercent={-0.035}
+                                            yPercent={1.61}
+                                        />
                                         {
                                             trafficData.map((dataItem, index) => (
                                                 <HorizontalBarSeries key={dataItem.title} data={[dataItem]}
@@ -660,7 +667,8 @@ MetricsGraphs.propTypes = {
         totalResponseSizeBytes: PropTypes.number.isRequired,
         totalResponseTimeMilliSec: PropTypes.number.isRequired,
         requestCount: PropTypes.number.isRequired
-    })).isRequired
+    })).isRequired,
+    direction: PropTypes.string.isRequired
 };
 
 export default withStyles(styles)(withColor(MetricsGraphs));

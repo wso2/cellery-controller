@@ -27,10 +27,10 @@ import ExpansionPanel from "@material-ui/core/ExpansionPanel";
 import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
 import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
 import Grey from "@material-ui/core/colors/grey";
+import HttpUtils from "../common/utils/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import {Link} from "react-router-dom";
 import MUIDataTable from "mui-datatables";
-import PropTypes from "prop-types";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";
 import SvgIcon from "@material-ui/core/SvgIcon";
@@ -44,17 +44,12 @@ import Typography from "@material-ui/core/Typography";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    Hint,
-    HorizontalBarSeries,
-    HorizontalGridLines,
-    VerticalGridLines,
-    XAxis,
-    XYPlot,
-    YAxis
+    ChartLabel, Hint, HorizontalBarSeries, HorizontalGridLines, VerticalGridLines, XAxis, XYPlot, YAxis
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
-const styles = (theme) => ({
+const styles = () => ({
     drawerContent: {
         padding: 20
     },
@@ -172,7 +167,7 @@ class SidePanelContent extends React.Component {
     }
 
     render = () => {
-        const {classes, summary, request, isOverview, colorGenerator, globalState, listData} = this.props;
+        const {classes, summary, request, selectedCell, colorGenerator, globalState, listData} = this.props;
         const {trafficTooltip} = this.state;
         const options = {
             download: false,
@@ -201,15 +196,22 @@ class SidePanelContent extends React.Component {
             },
             {
                 options: {
-                    customBodyRender: (value) => <Typography component={Link} className={classes.sidebarListTableText}
-                        to={`/cells/${value}`}>{value}</Typography>
+                    customBodyRender: (datum) => {
+                        const {cell, microservice} = datum;
+                        return (
+                            <Typography component={Link} className={classes.sidebarListTableText}
+                                to={`/cells/${cell}${microservice ? `/microservices/${microservice}` : ""}`}>
+                                {microservice ? microservice : cell}
+                            </Typography>
+                        );
+                    }
                 }
             },
             {
                 options: {
-                    customBodyRender: (value) => (
-                        // TODO : Change the to URL specific cell trace search
-                        <IconButton size="small" color="inherit" component={Link} to="/tracing/search">
+                    customBodyRender: (datum) => (
+                        <IconButton size="small" color="inherit" component={Link}
+                            to={`/tracing/search${HttpUtils.generateQueryParamString(datum)}`}>
                             <Timeline/>
                         </IconButton>
                     )
@@ -217,114 +219,164 @@ class SidePanelContent extends React.Component {
             }
         ];
 
-        const BarSeries = HorizontalBarSeries;
-
+        const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
+        const warningColor = colorGenerator.getColor(ColorGenerator.WARNING);
+        const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
+        const unknownColor = colorGenerator.getColor(ColorGenerator.UNKNOWN);
         return (
             <div className={classes.drawerContent}>
                 <div className={classes.sidebarContainer}>
-                    {isOverview === true
-                        ? null
-                        : <div className={classes.cellNameContainer}>
-                            <CellIcon className={classes.titleIcon} fontSize="small"/>
-                            <Typography color="inherit"
-                                className={classes.sideBarContentTitle}> Cell:</Typography>
-                            {/* TODO : Change the to URL cell value and cell name to selected cell*/}
-                            <Typography component={Link} to={"/cells/cell1"} className={classes.cellName}>
-                                {summary.topic}</Typography>
-                        </div>
+                    {
+                        selectedCell
+                            ? (
+                                <div className={classes.cellNameContainer}>
+                                    <CellIcon className={classes.titleIcon} fontSize="small"/>
+                                    <Typography color="inherit" className={classes.sideBarContentTitle}>
+                                        Cell:
+                                    </Typography>
+                                    <Typography component={Link} to={`/cells/${selectedCell.id}`}
+                                        className={classes.cellName}>
+                                        {summary.topic}
+                                    </Typography>
+                                </div>
+                            )
+                            : null
                     }
                     <HttpTrafficIcon className={classes.titleIcon} fontSize="small"/>
-                    <Typography color="inherit" className={classes.sideBarContentTitle}>
-                        HTTP Traffic
-                    </Typography>
-
+                    <Typography color="inherit" className={classes.sideBarContentTitle}>HTTP Traffic</Typography>
                     <Table className={classes.table}>
                         <TableHead>
                             <TableRow>
                                 <TableCell className={classes.sidebarTableCell}>Requests/s</TableCell>
-                                {request.statusCodes[1].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}><Avatar
-                                        className={classes.avatar}
-                                        style={{
-                                            backgroundColor: colorGenerator.getColor(ColorGenerator.SUCCESS)
-                                        }}>OK</Avatar></TableCell>}
-                                {request.statusCodes[2].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}><Avatar
-                                        className={classes.avatar}
-                                        style={{
-                                            backgroundColor: colorGenerator.getColor(ColorGenerator.CLIENT_ERROR)
-                                        }}>3xx</Avatar></TableCell>}
-                                {request.statusCodes[3].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}><Avatar
-                                        className={classes.avatar}
-                                        style={{
-                                            backgroundColor: colorGenerator.getColor(ColorGenerator.WARNING)
-                                        }}>4xx</Avatar></TableCell>}
-                                {request.statusCodes[4].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}><Avatar
-                                        className={classes.avatar}
-                                        style={{
-                                            backgroundColor: colorGenerator.getColor(ColorGenerator.ERROR)
-                                        }}>5xx</Avatar></TableCell>}
-                                {request.statusCodes[5].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}><Avatar
-                                        className={classes.avatar}
-                                        style={{
-                                            backgroundColor: colorGenerator.getColor(ColorGenerator.UNKNOWN)
-                                        }}>xxx</Avatar></TableCell>}
+                                {
+                                    request.statusCodes[1].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                <Avatar className={classes.avatar}
+                                                    style={{backgroundColor: successColor}}>
+                                                    OK
+                                                </Avatar>
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[2].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                <Avatar className={classes.avatar}
+                                                    style={{backgroundColor: successColor}}>
+                                                    3xx
+                                                </Avatar>
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[3].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                <Avatar className={classes.avatar}
+                                                    style={{backgroundColor: warningColor}}>
+                                                    4xx
+                                                </Avatar>
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[4].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                <Avatar className={classes.avatar}
+                                                    style={{backgroundColor: errorColor}}>
+                                                    5xx
+                                                </Avatar>
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[5].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                <Avatar className={classes.avatar}
+                                                    style={{backgroundColor: unknownColor}}>
+                                                    xxx
+                                                </Avatar>
+                                            </TableCell>
+                                        )
+                                }
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell
-                                    className={classes.sidebarTableCell}>
-                                    {request.statusCodes[0].value}</TableCell>
-                                {request.statusCodes[1].value === 0
-                                    ? null
-                                    : <TableCell className={classes.sidebarTableCell}>
-                                        {request.statusCodes[1].value}%</TableCell>}
-                                {request.statusCodes[2].value === 0
-                                    ? null
-                                    : <TableCell
-                                        className={classes.sidebarTableCell}>
-                                        {request.statusCodes[2].value}%</TableCell>}
-                                {request.statusCodes[3].value === 0
-                                    ? null
-                                    : <TableCell
-                                        className={classes.sidebarTableCell}>
-                                        {request.statusCodes[3].value}%</TableCell>}
-                                {request.statusCodes[4].value === 0
-                                    ? null
-                                    : <TableCell
-                                        className={classes.sidebarTableCell}>
-                                        {request.statusCodes[4].value}%</TableCell>}
-                                {request.statusCodes[5].value === 0
-                                    ? null
-                                    : <TableCell
-                                        className={classes.sidebarTableCell}>
-                                        {request.statusCodes[5].value}%</TableCell>}
+                                <TableCell className={classes.sidebarTableCell}>
+                                    {request.statusCodes[0].value}
+                                </TableCell>
+                                {
+                                    request.statusCodes[1].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                {request.statusCodes[1].value}%
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[2].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                {request.statusCodes[2].value}%
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[3].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                {request.statusCodes[3].value}%
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[4].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                {request.statusCodes[4].value}%
+                                            </TableCell>
+                                        )
+                                }
+                                {
+                                    request.statusCodes[5].value === 0
+                                        ? null
+                                        : (
+                                            <TableCell className={classes.sidebarTableCell}>
+                                                {request.statusCodes[5].value}%
+                                            </TableCell>
+                                        )
+                                }
                             </TableRow>
                         </TableBody>
                     </Table>
                     <div className={classes.barChart}>
-                        <XYPlot
-                            yType="ordinal"
-                            stackBy="x"
-                            width={250}
-                            height={isOverview === true
-                                ? 80
-                                : 100}>
+                        <XYPlot yType="ordinal" stackBy="x" width={250} height="90">
                             <VerticalGridLines/>
                             <HorizontalGridLines/>
-                            <XAxis/>
-                            <YAxis/>
-                            <BarSeries
-                                color={colorGenerator.getColor(ColorGenerator.SUCCESS)}
+                            <XAxis />
+                            <YAxis />
+                            <ChartLabel
+                                text="%"
+                                className="alt-x-label"
+                                includeMargin={false}
+                                xPercent={-0.15}
+                                yPercent={1.8}
+                            />
+                            <HorizontalBarSeries color={successColor}
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[1].value, title: request.statusCodes[1].key,
@@ -332,10 +384,9 @@ class SidePanelContent extends React.Component {
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                             />
-                            <BarSeries
-                                color={colorGenerator.getColor(ColorGenerator.CLIENT_ERROR)}
+                            <HorizontalBarSeries color={errorColor}
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[2].value, title: request.statusCodes[2].key,
@@ -343,10 +394,9 @@ class SidePanelContent extends React.Component {
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                             />
-                            <BarSeries
-                                color={colorGenerator.getColor(ColorGenerator.WARNING)}
+                            <HorizontalBarSeries color={warningColor}
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[3].value, title: request.statusCodes[3].key,
@@ -354,10 +404,9 @@ class SidePanelContent extends React.Component {
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                             />
-                            <BarSeries
-                                color={colorGenerator.getColor(ColorGenerator.ERROR)}
+                            <HorizontalBarSeries color={errorColor}
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[4].value, title: request.statusCodes[4].key,
@@ -365,10 +414,9 @@ class SidePanelContent extends React.Component {
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                             />
-                            <BarSeries
-                                color={colorGenerator.getColor(ColorGenerator.UNKNOWN)}
+                            <HorizontalBarSeries color={unknownColor}
                                 data={[
                                     {
                                         y: "Total", x: request.statusCodes[5].value, title: request.statusCodes[5].key,
@@ -376,49 +424,71 @@ class SidePanelContent extends React.Component {
                                     }
                                 ]}
                                 onValueMouseOver={(v) => this.setState({trafficTooltip: v})}
-                                onSeriesMouseOut={(v) => this.setState({trafficTooltip: false})}
+                                onSeriesMouseOut={() => this.setState({trafficTooltip: false})}
                             />
-                            {trafficTooltip && <Hint value={trafficTooltip}>
-                                <div className="rv-hint__content">
-                                    {`${trafficTooltip.title} :
-                                    ${trafficTooltip.percentage}% (${trafficTooltip.count})`}
-                                </div>
-                            </Hint>}
+                            {
+                                trafficTooltip
+                                    ? (
+                                        <Hint value={trafficTooltip}>
+                                            <div className="rv-hint__content">
+                                                {`${trafficTooltip.title} :
+                                                ${trafficTooltip.percentage}% (${trafficTooltip.count})`}
+                                            </div>
+                                        </Hint>
+                                    )
+                                    : null
+                            }
                         </XYPlot>
                     </div>
                 </div>
                 <div className={classes.sidebarContainer}>
-                    {isOverview === true
-                        ? <CellsIcon className={classes.titleIcon} fontSize="small"/>
-                        : <MicroserviceIcon className={classes.titleIcon} fontSize="small"/>}
+                    {
+                        selectedCell
+                            ? <MicroserviceIcon className={classes.titleIcon} fontSize="small"/>
+                            : <CellsIcon className={classes.titleIcon} fontSize="small"/>
+                    }
                     <Typography color="inherit" className={classes.sideBarContentTitle}>
-                        {isOverview === true
-                            ? "Cells"
-                            : "Microservices"} ({summary.content[0].value})
+                        {selectedCell ? "Microservices" : "Cells"} ({summary.content[0].value})
                     </Typography>
                     <ExpansionPanel className={classes.panel}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}
-                            className={classes.expansionSum}>
-                            {summary.content[1].value === 0
-                                ? null
-                                : <Typography className={classes.secondaryHeading}><CheckCircleOutline
-                                    className={classes.cellIcon}
-                                    style={{
-                                        color: colorGenerator.getColor(ColorGenerator.SUCCESS)
-                                    }}/> {summary.content[1].value}
-                                </Typography>}
-                            {summary.content[2].value === 0
-                                ? null
-                                : <Typography className={classes.secondaryHeading}><ErrorIcon
-                                    className={classes.cellIcon}
-                                    style={{
-                                        color: colorGenerator.getColor(ColorGenerator.ERROR)
-                                    }}/> {summary.content[2].value}
-                                </Typography>}
+                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>} className={classes.expansionSum}>
+                            {
+                                summary.content[1].value === 0
+                                    ? null
+                                    : (
+                                        <Typography className={classes.secondaryHeading}>
+                                            <CheckCircleOutline className={classes.cellIcon}
+                                                style={{color: successColor}}/>
+                                            &nbsp;{summary.content[1].value}
+                                        </Typography>
+                                    )
+                            }
+                            {
+                                summary.content[2].value === 0
+                                    ? null
+                                    : (
+                                        <Typography className={classes.secondaryHeading}>
+                                            <ErrorIcon className={classes.cellIcon} style={{color: errorColor}}/>
+                                            &nbsp;{summary.content[2].value}
+                                        </Typography>
+                                    )
+                            }
                         </ExpansionPanelSummary>
                         <ExpansionPanelDetails className={classes.panelDetails}>
                             <div className="overviewSidebarListTable">
-                                <MUIDataTable columns={columns} data={listData} options={options}/>
+                                <MUIDataTable columns={columns} options={options}
+                                    data={listData.map((datum) => [
+                                        datum[0],
+                                        {
+                                            cell: selectedCell ? selectedCell.id : datum[1],
+                                            microservice: selectedCell ? datum[1] : null
+
+                                        },
+                                        {
+                                            cell: selectedCell ? selectedCell.id : datum[2],
+                                            microservice: selectedCell ? datum[2] : null
+                                        }
+                                    ])}/>
                             </div>
                         </ExpansionPanelDetails>
                     </ExpansionPanel>
@@ -434,7 +504,9 @@ SidePanelContent.propTypes = {
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     summary: PropTypes.object.isRequired,
     request: PropTypes.object.isRequired,
-    isOverview: PropTypes.bool.isRequired,
+    selectedCell: PropTypes.shape({
+        id: PropTypes.string.isRequired
+    }),
     listData: PropTypes.arrayOf(PropTypes.any).isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired
 };

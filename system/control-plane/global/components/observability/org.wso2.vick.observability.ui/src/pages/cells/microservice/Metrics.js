@@ -19,7 +19,6 @@ import HttpUtils from "../../common/utils/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
 import MetricsGraphs from "../MetricsGraphs";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
@@ -27,6 +26,7 @@ import StateHolder from "../../common/state/stateHolder";
 import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     filters: {
@@ -63,17 +63,31 @@ class Metrics extends React.Component {
                 availableCells: [],
                 availableMicroservices: [] // Filtered based on the selected cell
             },
-            microserviceData: []
+            microserviceData: [],
+            isLoading: false
         };
     }
 
     componentDidMount = () => {
         const {globalState} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
+    };
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
     };
 
     update = (isUserAction, startTime, endTime, selectedTypeOverride, selectedCellOverride,
@@ -256,76 +270,84 @@ class Metrics extends React.Component {
 
     render = () => {
         const {classes, cell, microservice} = this.props;
-        const {selectedType, selectedCell, selectedMicroservice, microserviceData, metadata} = this.state;
+        const {selectedType, selectedCell, selectedMicroservice, microserviceData, metadata, isLoading} = this.state;
 
         const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
 
         return (
-            <React.Fragment>
-                <div className={classes.filters}>
-                    <FormControl className={classes.formControl}>
-                        <InputLabel htmlFor="selected-type">Type</InputLabel>
-                        <Select value={selectedType}
-                            onChange={this.getFilterChangeHandler("selectedType")}
-                            inputProps={{
-                                name: "selected-type",
-                                id: "selected-type"
-                            }}>
-                            <option value={Metrics.INBOUND}>{Metrics.INBOUND}</option>
-                            <option value={Metrics.OUTBOUND}>{Metrics.OUTBOUND}</option>
-                        </Select>
-                    </FormControl>
-                    <FormControl className={classes.formControl}>
-                        <InputLabel htmlFor="selected-cell">{targetSourcePrefix} Cell</InputLabel>
-                        <Select value={selectedCell}
-                            onChange={this.getFilterChangeHandler("selectedCell")}
-                            inputProps={{
-                                name: "selected-cell",
-                                id: "selected-cell"
-                            }}>
-                            <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
-                            {
-                                metadata.availableCells.map((cell) => (<option key={cell} value={cell}>{cell}</option>))
-                            }
-                        </Select>
-                    </FormControl>
-                    <FormControl className={classes.formControl}>
-                        <InputLabel htmlFor="selected-microservice">{targetSourcePrefix} Microservice</InputLabel>
-                        <Select value={selectedMicroservice}
-                            onChange={this.getFilterChangeHandler("selectedMicroservice")}
-                            inputProps={{
-                                name: "selected-microservice",
-                                id: "selected-microservice"
-                            }}>
-                            <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
-                            {
-                                metadata.availableMicroservices.map((microservice) => (
-                                    <option key={microservice} value={microservice}>{microservice}</option>
-                                ))
-                            }
-                        </Select>
-                    </FormControl>
-                </div>
-                <div className={classes.graphs}>
-                    {
-                        microserviceData.length > 0
-                            ? (
-                                <MetricsGraphs data={microserviceData}/>
-                            )
-                            : (
-                                <Typography>
+            isLoading
+                ? null
+                : (
+                    <React.Fragment>
+                        <div className={classes.filters}>
+                            <FormControl className={classes.formControl}>
+                                <InputLabel htmlFor="selected-type">Type</InputLabel>
+                                <Select value={selectedType}
+                                    onChange={this.getFilterChangeHandler("selectedType")}
+                                    inputProps={{
+                                        name: "selected-type",
+                                        id: "selected-type"
+                                    }}>
+                                    <option value={Metrics.INBOUND}>{Metrics.INBOUND}</option>
+                                    <option value={Metrics.OUTBOUND}>{Metrics.OUTBOUND}</option>
+                                </Select>
+                            </FormControl>
+                            <FormControl className={classes.formControl}>
+                                <InputLabel htmlFor="selected-cell">{targetSourcePrefix} Cell</InputLabel>
+                                <Select value={selectedCell}
+                                    onChange={this.getFilterChangeHandler("selectedCell")}
+                                    inputProps={{
+                                        name: "selected-cell",
+                                        id: "selected-cell"
+                                    }}>
+                                    <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
                                     {
-                                        selectedType === Metrics.INBOUND
-                                            ? "No Requests from the selected microservice "
-                                                + `to the "${cell}" cell's "${microservice}" microservice`
-                                            : `No Requests from the "${cell}" cell's "${microservice}" microservice `
-                                                + "to the selected microservice"
+                                        metadata.availableCells.map(
+                                            (cell) => (<option key={cell} value={cell}>{cell}</option>))
                                     }
-                                </Typography>
-                            )
-                    }
-                </div>
-            </React.Fragment>
+                                </Select>
+                            </FormControl>
+                            <FormControl className={classes.formControl}>
+                                <InputLabel htmlFor="selected-microservice">
+                                    {targetSourcePrefix} Microservice
+                                </InputLabel>
+                                <Select value={selectedMicroservice}
+                                    onChange={this.getFilterChangeHandler("selectedMicroservice")}
+                                    inputProps={{
+                                        name: "selected-microservice",
+                                        id: "selected-microservice"
+                                    }}>
+                                    <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
+                                    {
+                                        metadata.availableMicroservices.map((microservice) => (
+                                            <option key={microservice} value={microservice}>{microservice}</option>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
+                        </div>
+                        <div className={classes.graphs}>
+                            {
+                                microserviceData.length > 0
+                                    ? (
+                                        <MetricsGraphs data={microserviceData}
+                                            direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
+                                    )
+                                    : (
+                                        <Typography>
+                                            {
+                                                selectedType === Metrics.INBOUND
+                                                    ? "No Requests from the selected microservice "
+                                                        + `to the "${cell}" cell's "${microservice}" microservice`
+                                                    : `No Requests from the "${cell}" cell's "${microservice}" `
+                                                        + "microservice to the selected microservice"
+                                            }
+                                        </Typography>
+                                    )
+                            }
+                        </div>
+                    </React.Fragment>
+                )
         );
     };
 
