@@ -114,16 +114,18 @@ fi
 function create_nfs_share_gcp () {
 echo "ℹ️ Creating NFS share in GCP"
 local nfs_share_location=$1
+local gcp_compute_zone=$2
 local nfs_server_ip
 
 gcloud beta filestore instances create nfs-server \
+    --location=$gcp_compute_zone \
     --tier=STANDARD \
     --file-share=name="${nfs_share_location}",capacity=1TB \
     --network=name="default"
 
 sleep 30
 
-nfs_server_ip=$(gcloud beta filestore instances describe nfs-server \
+nfs_server_ip=$(gcloud beta filestore instances describe nfs-server --location=$gcp_compute_zone \
 --format flattened | awk '/ipAddresses/  {print $2}')
 
 if [ -n $nfs_server_ip ]; then
@@ -229,9 +231,10 @@ function deploy_mysql_server () {
 function deploy_mysql_server_gcp () {
     local download_location=$1
     local sql_instance_name=$2
+    local gcp_compute_zone=$3
     local service_account
     local mysql_server_ip
-    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1
+    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=$gcp_compute_zone
     service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
     #if service account is zero exit
 #    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
@@ -242,7 +245,7 @@ function deploy_mysql_server_gcp () {
     gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
     cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
 
-    mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/.ipAddress/ {print $2}')
+    mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name}  --format flattened | awk '/.ipAddress/ {print $2}')
     config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
 }
 
@@ -287,7 +290,7 @@ function update_control_plane_datasources () {
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/status-dashboard/conf/deployment.yaml
+        #sed -i "s/$param/${config_params[$param]}/g" ${download_location}/status-dashboard/conf/deployment.yaml
     done
 }
 
@@ -551,7 +554,7 @@ init_control_plane $download_path
     if [ $install_nfs == "n" ]; then
          read_nfs_connection
     else
-        create_nfs_share_gcp "data"
+        create_nfs_share_gcp "data" $gcp_compute_zone
     fi
     update_apim_nfs_volumes $download_path
 fi
@@ -566,7 +569,7 @@ if [ $install_mysql == "y" ]; then
         read_control_plane_datasources_configs
         #Update the sql
         update_control_plance_sql $download_path
-        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 1000))"
+        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 1000))" $gcp_compute_zone
     elif [ $iaas == "kubeadm" ]; then
         read_control_plane_datasources_configs
         #update the sql file
