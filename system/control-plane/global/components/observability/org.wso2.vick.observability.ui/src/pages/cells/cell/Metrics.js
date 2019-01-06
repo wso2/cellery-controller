@@ -212,8 +212,8 @@ class Metrics extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
-        const {selectedType, selectedCell, cells, cellData, cell, isLoading} = this.state;
+        const {classes, cell} = this.props;
+        const {selectedType, selectedCell, cells, cellData, isLoading} = this.state;
 
         const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
 

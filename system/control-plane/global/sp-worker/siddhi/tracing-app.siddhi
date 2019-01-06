@@ -50,30 +50,30 @@ define function extractFromServiceName[javascript] return string {
 -- Storing Zipkin data received for Tracing
 --
 
---from ZipkinStreamIn
---select
---    traceId,
---    id as spanId,
---    parentId,
---    "" as namespace,
---    extractFromServiceName(serviceName, 1) as cell,
---    extractFromServiceName(serviceName, 2) as serviceName,
---    "" as pod,
---    name as operationName,
---    kind,
---    timestamp as startTime,
---    duration,
---    tags
---insert into ProcessedZipkinStream;
---
---from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
---select *
---update or insert into DistributedTracingTable
---    set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
---        DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,
---        DistributedTracingTable.tags = tags
---    on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
---        and DistributedTracingTable.kind == kind;
+from ZipkinStreamIn
+select
+    traceId,
+    id as spanId,
+    parentId,
+    "" as namespace,
+    extractFromServiceName(serviceName, 1) as cell,
+    extractFromServiceName(serviceName, 2) as serviceName,
+    "" as pod,
+    name as operationName,
+    kind,
+    timestamp as startTime,
+    duration,
+    tags
+insert into ProcessedZipkinStream;
+
+from ProcessedZipkinStream#tracing:dependencyTree(cell, serviceName, operationName, spanId, parentId, kind, tags)
+select *
+update or insert into DistributedTracingTable
+    set DistributedTracingTable.parentId = parentId, DistributedTracingTable.operationName = operationName,
+        DistributedTracingTable.startTime = startTime, DistributedTracingTable.duration = duration,
+        DistributedTracingTable.tags = tags
+    on DistributedTracingTable.traceId == traceId and DistributedTracingTable.spanId == spanId
+        and DistributedTracingTable.kind == kind;
 
 --
 -- Filling additional data from Telemetry
@@ -88,7 +88,7 @@ select
     ifThenElse(contextReporterKind == "inbound", destinationCell, sourceCell) as cell,
     ifThenElse(contextReporterKind == "inbound", destinationVICKService, sourceVICKService) as serviceName,
     ifThenElse(contextReporterKind == "inbound", destinationPod, sourcePod) as pod
-insert into ExtractedTelemetryStream;
+insert into ProcessedTelemetryDataStream;
 
 -- Extracting information for remote service
 from TelemetryStreamIn
@@ -99,9 +99,9 @@ select
     ifThenElse(contextReporterKind == "inbound", sourceCell, destinationCell) as cell,
     ifThenElse(contextReporterKind == "inbound", sourceVICKService, destinationVICKService) as serviceName,
     ifThenElse(contextReporterKind == "inbound", sourcePod, destinationPod) as pod
-insert into ExtractedTelemetryStream;
+insert into ProcessedTelemetryDataStream;
 
-from ExtractedTelemetryStream[serviceName != ""]
+from ProcessedTelemetryDataStream[(not serviceName is null) and (serviceName != "")]
 select
     cast(map:get(requestHeadersMap, "x-b3-traceid"), "string") as traceId,
     cast(map:get(requestHeadersMap, "x-b3-spanid"), "string") as spanId,
@@ -115,9 +115,27 @@ select
     0L as startTime,
     0L as duration,
     "{}" as tags
-insert into ProcessedTelemetryDataStream;
+insert into ExtractedTelemetryDataStream;
 
-from ProcessedTelemetryDataStream[(not traceId is null) and (not spanId is null)]#window.time(5 sec)
+from every(e1=ExtractedTelemetryDataStream) ->
+    not ExtractedTelemetryDataStream[e1.traceId == e2.traceId and e1.spanId == e2.spanId and e1.kind == e2.kind] for 1 minute
+    or e2=ExtractedTelemetryDataStream[e1.traceId == e2.traceId and e1.spanId == e2.spanId and e1.kind == e2.kind] within 1 minute
+select
+    e1.traceId,
+    e1.spanId,
+    e1.parentId,
+    ifThenElse(e1.namespace is null, e2.namespace, e1.namespace) as namespace,
+    ifThenElse(e1.cell is null, e2.cell, e1.cell) as cell,
+    ifThenElse(e1.serviceName is null, e2.serviceName, e1.serviceName) as serviceName,
+    ifThenElse(e1.pod is null, e2.pod, e1.pod) as pod,
+    e1.operationName,
+    e1.kind,
+    e1.startTime,
+    e1.duration,
+    e1.tags
+insert into UniqueTelemetryDataStream;
+
+from UniqueTelemetryDataStream[(not traceId is null) and (not spanId is null)]
 update or insert into DistributedTracingTable
     set DistributedTracingTable.namespace = namespace, DistributedTracingTable.cell = cell,
         DistributedTracingTable.serviceName = serviceName, DistributedTracingTable.pod = pod
