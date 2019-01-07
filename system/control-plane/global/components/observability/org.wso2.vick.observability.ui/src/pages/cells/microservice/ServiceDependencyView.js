@@ -58,6 +58,7 @@ const graphConfig = {
         fontSize: 18,
         fontWeight: "normal",
         highlightFontSize: 18,
+        highlightColor: "SAME",
         highlightFontWeight: "bold",
         highlightStrokeColor: "SAME",
         highlightStrokeWidth: 1.5,
@@ -170,7 +171,6 @@ class ServiceDependencyView extends React.Component {
                 id="service-dependency-graph"
                 data={this.state.data}
                 config={graphConfig}
-                reloadGraph={true}
                 onClickNode={this.onClickCell}
             />
         </React.Fragment>

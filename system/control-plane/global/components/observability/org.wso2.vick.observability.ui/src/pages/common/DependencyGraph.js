@@ -70,7 +70,6 @@ class DependencyGraph extends React.Component {
         }
     };
 
-    shouldComponentUpdate = (nextProps) => nextProps.reloadGraph;
 
     render = () => {
         const {data, config, ...otherProps} = this.props;
@@ -83,7 +82,8 @@ class DependencyGraph extends React.Component {
                 if (!linkMatches) {
                     links.push({
                         source: link.source,
-                        target: link.target
+                        target: link.target,
+                        edgeString: link.edgeString
                     });
                 }
             });

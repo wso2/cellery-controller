@@ -18,7 +18,6 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import ServiceDependencyView from "./ServiceDependencyView";
 import StateHolder from "../../common/state/stateHolder";
@@ -67,11 +66,6 @@ class Details extends React.Component {
         const {globalState} = this.props;
 
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-        this.update(
-            true,
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf(),
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf()
-        );
     };
 
     componentWillUnmount = () => {
