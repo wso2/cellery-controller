@@ -15,15 +15,15 @@
  */
 
 import DependencyGraph from "../../common/DependencyGraph";
+import HttpUtils from "../../common/utils/httpUtils";
+import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
+import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
+import StateHolder from "../../common/state/stateHolder";
+import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../common/color";
-import StateHolder from "../../common/state/stateHolder";
-import QueryUtils from "../../common/utils/queryUtils";
-import NotificationUtils from "../../common/utils/notificationUtils";
-import HttpUtils from "../../common/utils/httpUtils";
-import withGlobalState from "../../common/state";
 
 const styles = () => ({
     graph: {
@@ -106,29 +106,39 @@ class ServiceDependencyView extends React.Component {
 
         const search = {
             fromTime: queryStartTime.valueOf(),
-            toTime: queryEndTime.valueOf(),
+            toTime: queryEndTime.valueOf()
         };
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Dependency Graph", globalState);
         }
+        let url = `/dependency-model/cells/${cell}/microservices/${service}`;
+        url += `${HttpUtils.generateQueryParamString(search)}`;
         HttpUtils.callObservabilityAPI(
             {
-                url: `/dependency-model/cells/${cell}/microservices/${service}${HttpUtils.generateQueryParamString(search)}`,
+                url: url,
                 method: "GET"
             },
             globalState
         ).then((data) => {
-            let nodes = [];
-            data.nodes.map( function(node) {
+            const nodes = [];
+            data.nodes.forEach((node) => {
                 nodes.push(
-                        {
-                            id: node.id,
-                            color: self.props.colorGenerator.getColor(node.id.split(":")[0])
-                        });
+                    {
+                        id: node.id,
+                        color: self.props.colorGenerator.getColor(node.id.split(":")[0])
+                    });
             });
-            console.log(data.nodes);
-            console.log(nodes);
+
+            /*
+             * Data.nodes.map((node) => {
+             *     nodes.push(
+             *         {
+             *             id: node.id,
+             *             color: self.props.colorGenerator.getColor(node.id.split(":")[0])
+             *         });
+             * });
+             */
             self.setState({
                 data: {
                     nodes: nodes,
@@ -151,22 +161,20 @@ class ServiceDependencyView extends React.Component {
     };
 
     onClickCell = (nodeId) => {
-        //TODO: redirect to another cell view.
+        // TODO: redirect to another cell view.
     };
 
-    render = () => {
-        return (
-            <React.Fragment>
-                <DependencyGraph
-                    id="service-dependency-graph"
-                    data={this.state.data}
-                    config={graphConfig}
-                    reloadGraph={true}
-                    onClickNode={this.onClickCell}
-                />
-            </React.Fragment>
-        )
-    };
+    render = () => (
+        <React.Fragment>
+            <DependencyGraph
+                id="service-dependency-graph"
+                data={this.state.data}
+                config={graphConfig}
+                reloadGraph={true}
+                onClickNode={this.onClickCell}
+            />
+        </React.Fragment>
+    );
 
 }
 

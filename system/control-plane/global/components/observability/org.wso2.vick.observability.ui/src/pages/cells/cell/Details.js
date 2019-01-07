@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import ColorGenerator from "../../common/color/colorGenerator";
 import CellDependencyView from "./CellDependencyView";
+import ColorGenerator from "../../common/color/colorGenerator";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
