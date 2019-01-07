@@ -17,7 +17,6 @@ package org.wso2.vick.observability.api;
 
 import org.apache.log4j.Logger;
 import org.wso2.vick.observability.api.internal.ServiceHolder;
-import org.wso2.vick.observability.model.generator.exception.GraphStoreException;
 import org.wso2.vick.observability.model.generator.model.Model;
 
 import javax.ws.rs.DefaultValue;
