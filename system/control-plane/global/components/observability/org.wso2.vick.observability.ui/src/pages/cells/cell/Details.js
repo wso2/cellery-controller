@@ -160,7 +160,6 @@ class Details extends React.Component {
                                 Dependencies
                             </Typography>
                             <div className={classes.diagram}>
-                                {/* TODO : Implement Cell Dependency Diagram */}
                                 <CellDependencyView cell={cell}/>
                             </div>
                         </div>
