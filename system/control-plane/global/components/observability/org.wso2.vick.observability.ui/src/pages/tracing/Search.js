@@ -24,7 +24,6 @@ import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import NotificationUtils from "../common/utils/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import QueryUtils from "../common/utils/queryUtils";
 import React from "react";
 import SearchResult from "./SearchResult";
@@ -35,6 +34,7 @@ import TopToolbar from "../common/toptoolbar";
 import Typography from "@material-ui/core/Typography/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withGlobalState, {StateHolder} from "../common/state";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     container: {
@@ -92,6 +92,10 @@ class Search extends React.Component {
                 availableMicroservices: [],
                 availableOperations: []
             },
+            tagsTempInput: {
+                content: "",
+                errorMessage: ""
+            },
             isLoading: false,
             hasSearchCompleted: false,
             searchResults: []
@@ -129,7 +133,7 @@ class Search extends React.Component {
 
     render = () => {
         const {classes} = this.props;
-        const {data, filter, metaData, isLoading, hasSearchCompleted, searchResults} = this.state;
+        const {data, filter, metaData, isLoading, hasSearchCompleted, searchResults, tagsTempInput} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
@@ -189,12 +193,21 @@ class Search extends React.Component {
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid container justify={"flex-start"} spacing={24}>
+                    <Grid container justify={"flex-start"} spacing={24} className={classes.searchForm}>
                         <Grid item xs={6}>
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
-                                    onChange={this.handleTagsChange} onDelete={this.handleTagsChange}
-                                    placeholder={"Eg: http.status_code=200"}
+                                    onAdd={this.handleTagAdd} onDelete={this.handleTagRemove}
+                                    onBeforeAdd={(chip) => Boolean(Search.parseChip(chip))}
+                                    error={Boolean(tagsTempInput.errorMessage)}
+                                    helperText={tagsTempInput.errorMessage} placeholder={"Eg: http.status_code=200"}
+                                    onUpdateInput={this.handleTagsTempInputUpdate} inputValue={tagsTempInput.content}
+                                    onBlur={() => this.setState({
+                                        tagsTempInput: {
+                                            content: "",
+                                            errorMessage: ""
+                                        }
+                                    })}
                                 />
                             </FormControl>
                         </Grid>
@@ -402,49 +415,64 @@ class Search extends React.Component {
         }));
     };
 
+    handleTagsTempInputUpdate = (event) => {
+        const value = event.currentTarget.value;
+        this.setState({
+            tagsTempInput: {
+                content: value,
+                errorMessage: !value || Search.parseChip(value)
+                    ? ""
+                    : "Invalid tag filter format. Expected \"tagKey=tagValue\""
+            }
+        });
+    };
+
     /**
-     * Handle the tags changing in the search.
+     * Handle a tag being added to the tag filter.
      *
-     * @param {Array.<string>} chips The chips in the tag search input
+     * @param {string} chip The chip representing the tag that was added
      */
-    handleTagsChange = (chips) => {
-        const parseChip = (chip) => {
-            const chipContent = chip.split("=");
-            let tag = null;
-            if (chipContent.length === 2) {
-                tag = {
-                    key: chipContent[0].trim(),
-                    value: chipContent[1].trim()
-                };
-            }
-            return tag;
-        };
-
-        // Generating tags object
-        let tags;
-        if (typeof chips === "string") { // Delete tag
-            tags = {...this.state.filter.tags};
-            const tag = parseChip(chips);
-            if (tag) {
-                Reflect.deleteProperty(tags, tag.key);
-            }
-        } else { // Tag change
-            tags = {};
-            for (let i = 0; i < chips.length; i++) {
-                const tag = parseChip(chips[i]);
-                if (tag) {
-                    tags[tag.key] = tag.value;
+    handleTagAdd = (chip) => {
+        const tag = Search.parseChip(chip);
+        if (tag) {
+            this.setState((prevState) => ({
+                ...prevState,
+                filter: {
+                    ...prevState.filter,
+                    tags: {
+                        ...prevState.filter.tags,
+                        [tag.key]: tag.value
+                    }
+                },
+                tagsTempInput: {
+                    ...prevState.tagsTempInput,
+                    content: "",
+                    errorMessage: ""
                 }
-            }
+            }));
         }
+    };
 
-        this.setState((prevState) => ({
-            ...prevState,
-            filter: {
-                ...prevState.filter,
-                tags: tags
-            }
-        }));
+    /**
+     * Handle a tag being removed from the tag filter.
+     *
+     * @param {string} chip The chip representing the tag that was removed
+     */
+    handleTagRemove = (chip) => {
+        const tag = Search.parseChip(chip);
+        if (tag) {
+            this.setState((prevState) => {
+                const newTags = {...prevState.filter.tags};
+                Reflect.deleteProperty(newTags, tag.key);
+                return {
+                    ...prevState,
+                    filter: {
+                        ...prevState.filter,
+                        tags: newTags
+                    }
+                };
+            });
+        }
     };
 
     search = (isUserAction) => {
@@ -578,6 +606,20 @@ class Search extends React.Component {
                 availableOperations: availableOperations
             }
         };
+    };
+
+    static parseChip = (chip) => {
+        let tag = null;
+        if (chip) {
+            const chipContent = chip.split("=");
+            if (chipContent.length === 2 && chipContent[0] && chipContent[1]) {
+                tag = {
+                    key: chipContent[0].trim(),
+                    value: chipContent[1].trim()
+                };
+            }
+        }
+        return tag;
     };
 
 }
