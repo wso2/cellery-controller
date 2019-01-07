@@ -70,10 +70,15 @@ select
     e1.destinationNamespace,
     e1.destinationCell,
     e1.destinationVICKService,
-    e1.requestPath,
-    e1.requestMethod,
-    e1.httpResponseGroup,
-    e1.responseTimeMilliSec,
-    e1.requestSizeBytes,
-    e1.responseSizeBytes
+    ifThenElse(e1.requestPath is null, e2.requestPath, e1.requestPath) as requestPath,
+    ifThenElse(e1.requestMethod is null, e2.requestMethod, e1.requestMethod) as requestMethod,
+    ifThenElse(e1.httpResponseGroup is null, e2.httpResponseGroup, e1.httpResponseGroup) as httpResponseGroup,
+    ifThenElse(e1.responseTimeMilliSec is null, e2.responseTimeMilliSec, e1.responseTimeMilliSec) as responseTimeMilliSec,
+    ifThenElse(e1.requestSizeBytes is null, e2.requestSizeBytes, e1.requestSizeBytes) as requestSizeBytes,
+    ifThenElse(e1.responseSizeBytes is null, e2.responseSizeBytes, e1.responseSizeBytes) as responseSizeBytes
+insert into SanitizedRequestsStream;
+
+from SanitizedRequestsStream[(not requestPath is null) and (not requestMethod is null)
+                             and (not httpResponseGroup is null) and (not responseTimeMilliSec is null)
+                             and (not requestSizeBytes is null) and (not responseSizeBytes is null)]
 insert into ProcessedRequestsStream;

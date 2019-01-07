@@ -248,7 +248,7 @@ class DateRangePicker extends React.Component {
                             </Grid>
                         </Grid>
                         <Grid container>
-                            <Grid item xs={2}></Grid>
+                            <Grid item xs={2}/>
                             <Grid item xs={10}>
                                 <Button variant="outlined" size="small" color="primary"
                                     disabled={Boolean(fromErrorMessage || toErrorMessage)}

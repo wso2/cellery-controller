@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import AccessTime from "@material-ui/icons/AccessTime";
 import Constants from "../common/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
@@ -62,13 +63,22 @@ const styles = (theme) => ({
         marginLeft: theme.spacing.unit,
         fontSize: "normal"
     },
-    traceSubHeader: {
-        backgroundColor: "#929292",
-        color: "#ffffff",
-        textAlign: "right",
-        fontWeight: 400,
-        fontSize: "small",
-        padding: theme.spacing.unit
+    duration: {
+        color: "#444",
+        fontStyle: "italic",
+        padding: Number(theme.spacing.unit) / 2
+    },
+    durationIcon: {
+        verticalAlign: "-webkit-baseline-middle",
+        paddingLeft: theme.spacing.unit * 2,
+        color: "#666"
+    },
+    tagCellName: {
+        color: "#666",
+        paddingLeft: Number(theme.spacing.unit) / 2
+    },
+    tagServiceName: {
+        color: "#222"
     },
     traceContent: {
         padding: theme.spacing.unit
@@ -76,19 +86,19 @@ const styles = (theme) => ({
     serviceTag: {
         borderStyle: "solid",
         borderWidth: "thin",
-        borderColor: "#000000",
+        borderColor: "#c9c9c9",
         margin: theme.spacing.unit,
         display: "inline-block"
     },
     serviceTagColor: {
         height: "100%",
-        width: theme.spacing.unit * 2,
+        width: theme.spacing.unit,
         display: "table-cell"
     },
     serviceTagContent: {
         padding: theme.spacing.unit,
         display: "table-cell",
-        fontSize: "small"
+        fontSize: 12
     }
 });
 
@@ -196,9 +206,14 @@ class SearchResult extends React.Component {
                                                 <span className={classes.rootStartTime}>
                                                     {moment(result.rootStartTime).format(Constants.Pattern.DATE_TIME)}
                                                 </span>
+                                                <span className={classes.durationIcon}>
+                                                    <AccessTime varient="inherit" fontSize="small"/>
+                                                </span>
+                                                <span className={classes.duration}>
+                                                    {result.rootDuration / 1000} s
+                                                </span>
                                             </Grid>
                                         </Grid>
-                                        <div className={classes.traceSubHeader}>{result.rootDuration / 1000} s</div>
                                         <div className={classes.traceContent}>
                                             {
                                                 result.services
@@ -222,7 +237,12 @@ class SearchResult extends React.Component {
                                                                     .getColor(service.cellNameKey)
                                                             }}/>
                                                             <div className={classes.serviceTagContent}>
-                                                                {service.serviceName} ({service.count})
+                                                                <span className={classes.tagCellName}>
+                                                                    {service.cellNameKey
+                                                                        ? `${service.cellNameKey}: `
+                                                                        : null} </span>
+                                                                <span className={classes.tagServiceName}>
+                                                                    {service.serviceName} ({service.count})</span>
                                                             </div>
                                                         </div>
                                                     ))

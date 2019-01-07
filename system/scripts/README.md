@@ -1,1 +1,0 @@
-VICK deployment scripts

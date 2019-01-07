@@ -112,20 +112,20 @@ fi
 
 #Create new NFS share
 function create_nfs_share_gcp () {
-echo "Creating NFS share in GCP"
+echo "ℹ️ Creating NFS share in GCP"
 local nfs_share_location=$1
+local gcp_compute_zone=$2
 local nfs_server_ip
 
 gcloud beta filestore instances create nfs-server \
-    --project=knative-deep \
-    --location=us-west1-c \
+    --location=$gcp_compute_zone \
     --tier=STANDARD \
     --file-share=name="${nfs_share_location}",capacity=1TB \
     --network=name="default"
 
 sleep 30
 
-nfs_server_ip=$(gcloud beta filestore instances describe nfs-server --project=knative-deep --location=us-west1-c \
+nfs_server_ip=$(gcloud beta filestore instances describe nfs-server --location=$gcp_compute_zone \
 --format flattened | awk '/ipAddresses/  {print $2}')
 
 if [ -n $nfs_server_ip ]; then
@@ -143,13 +143,13 @@ echo "Read NFS connection"
     local nfs_server_ip
     local nfs_share_location
 
-    echo "Configuring NFS volume"
+    echo "ℹ️ Configuring NFS volume"
     echo
-    read -p "NFS server IP: " nfs_server_ip < /dev/tty
+    read -p "⛏️ NFS server IP: " nfs_server_ip < /dev/tty
     if [[ ! -z "${nfs_server_ip/ //}" ]]; then
         nfs_config_params["NFS_SERVER_IP"]=$nfs_server_ip
     fi
-    read -p "NFS share location: " nfs_share_location < /dev/tty
+    read -p "⛏️ NFS share location: " nfs_share_location < /dev/tty
     if [[ ! -z "${nfs_share_location/ //}" ]]; then
         nfs_config_params["NFS_SHARE_LOCATION"]=$nfs_share_location
     fi
@@ -168,12 +168,12 @@ function update_apim_nfs_volumes () {
 #Create K8s cluster in GCP
 #User need to configure GCP CLI in the machine
 function install_k8s_gcp () {
-gcp_project=$1
-#create GCP project
-#gcloud projects create $gcp_project --set-as-default
+local gcp_project=$1
+local gcp_compute_zone=$2
 
 #Point GCP to the new project
 gcloud config set project $gcp_project
+gcloud config set compute/zone $gcp_compute_zone
 
 #Enable required GCP APIs
 gcloud services enable \
@@ -184,11 +184,10 @@ gcloud services enable \
 CLUSTER_NAME=vick-knative
 CLUSTER_ZONE=us-west1-c
 
-echo "Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
+echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
 
 #Create K8s cluster
-gcloud -q container clusters create $CLUSTER_NAME \
-  --zone=$CLUSTER_ZONE \
+gcloud -q --verbosity=error container clusters create $CLUSTER_NAME \
   --cluster-version=latest \
   --machine-type=n1-standard-4 \
   --enable-autoscaling --min-nodes=1 --max-nodes=10 \
@@ -232,18 +231,21 @@ function deploy_mysql_server () {
 function deploy_mysql_server_gcp () {
     local download_location=$1
     local sql_instance_name=$2
+    local gcp_compute_zone=$3
     local service_account
     local mysql_server_ip
-    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=us-west1-c
+    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=$gcp_compute_zone
     service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
     #if service account is zero exit
-    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
-    gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
-    gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
-    gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
+#    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
+#    gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
+#    gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
+#    gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
     gcloud -q sql instances patch ${sql_instance_name} --authorized-networks=0.0.0.0/0
+    gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
+    cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
 
-    mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/.ipAddress/ {print $2}')
+    mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name}  --format flattened | awk '/.ipAddress/ {print $2}')
     config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
 }
 
@@ -261,11 +263,11 @@ function read_control_plane_datasources_configs () {
                 config_params["MYSQL_DATABASE_HOST"]=$db_hostname
         fi
     fi
-    read -p "Database user name: " db_user < /dev/tty
+    read -p "⛏️ Database user name: " db_user < /dev/tty
     if [[ ! -z "${db_user/ //}" ]]; then
             config_params["DATABASE_USERNAME"]=$db_user
     fi
-    read -s -p "Database user password: " db_passwd < /dev/tty
+    read -s -p "⛏️ Database user password: " db_passwd < /dev/tty
     if [[ ! -z "${db_passwd/ //}" ]]; then
             config_params["DATABASE_PASSWORD"]=$db_passwd
     fi
@@ -288,7 +290,6 @@ function update_control_plane_datasources () {
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
         sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/status-dashboard/conf/deployment.yaml
     done
 }
 
@@ -343,23 +344,26 @@ function deploy_sp_dashboard_worker () {
     #Create SP worker configmaps
     kubectl create configmap sp-worker-siddhi --from-file=${download_location}/sp-worker/siddhi -n vick-system
     kubectl create configmap sp-worker-conf --from-file=${download_location}/sp-worker/conf -n vick-system
-    kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
+    #kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
     #Create SP worker deployment
     kubectl apply -f ${download_location}/vick-sp-worker-deployment.yaml -n vick-system
     kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
     #Create SP dashboard configmaps
-    kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
+    #kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
     #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
     #Create vick dashboard deployment, service and ingress.
     kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
+    kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
 }
+
 function init_control_plane () {
     local download_location=$1
     #Setup VICK namespace, create service account and the docker registry credentials
     kubectl apply -f ${download_location}/vick-ns-init.yaml
 
     HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
-    #label the node
+    #label the node if k8s provider is kubeadm
+
     kubectl label nodes $HOST_NAME disk=local
 
     #Create credentials for docker.wso2.com
@@ -371,7 +375,7 @@ function deploy_istio () {
     istio_version=$2
     ISTIO_HOME=${download_location}/istio-${istio_version}
     wget https://github.com/istio/istio/releases/download/${istio_version}/istio-${istio_version}-linux.tar.gz -P ${download_location}
-    tar -xzvf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
+    tar -xzf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
     export PATH=$ISTIO_HOME/bin:$PATH
     kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
     #kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
@@ -423,11 +427,13 @@ function install_nginx_ingress_gcp () {
     local download_location=$1
     #Install nginx-ingress for control plane ingress
     kubectl apply -f ${download_location}/mandatory.yaml
+    kubectl apply -f ${download_location}/cloud-generic.yaml
 }
 #-----------------------------------------------------------------------------------------------------------------------
 #Get the IaaS type form the user
 iaas=$1
 gcp_project=$2
+gcp_compute_zone=$3
 
 #sanity check
 #Bash 4 / gcloud tools if GCP
@@ -461,10 +467,12 @@ control_plane_yaml=(
     "vick-sp-persistent-volumes.yaml"
     "vick-sp-worker-deployment.yaml"
     "vick-sp-worker-service.yaml"
+    "vick-sp-worker-ingress.yaml"
     "vick-apim-artifacts-persistent-volumes.yaml"
     "vick-apim-artifacts-persistent-volume-claim.yaml"
     "mandatory.yaml"
     "service-nodeport.yaml"
+    "cloud-generic.yaml"
     "apim-configs/gw/datasources/master-datasources.xml"
     "apim-configs/gw/user-mgt.xml"
     "apim-configs/gw/identity/identity.xml"
@@ -484,11 +492,10 @@ control_plane_yaml=(
     "apim-configs/pub-store/resources/api_templates/velocity_template.xml"
     "apim-configs/pub-store/api-manager.xml"
     "apim-configs/pub-store/log4j.properties"
-    "sp-worker/bin/carbon.sh"
-    "sp-worker/siddhi/tracer-app.siddhi"
+    "sp-worker/siddhi/tracing-app.siddhi"
+    "sp-worker/siddhi/istio-telemetry-app.siddhi"
     "sp-worker/siddhi/telemetry-app.siddhi"
     "sp-worker/conf/deployment.yaml"
-    "status-dashboard/conf/deployment.yaml"
     "mysql/dbscripts/init.sql"
 )
 
@@ -507,8 +514,9 @@ declare -A nfs_config_params
 if [[ -n ${iaas/[ ]*\n/} ]]; then
     if [ $iaas == "GCP" ]; then
         echo "ℹ️ Selected k8s provider: GCP"
+        echo "ℹ️ GCP Project $gcp_project hosted in $gcp_compute_zone"
         if [ -n $gcp_project ]; then
-            install_k8s_gcp $gcp_project
+            install_k8s_gcp $gcp_project $gcp_compute_zone
         else
             echo "GCP project name is required"
             exit 0
@@ -542,18 +550,18 @@ init_control_plane $download_path
 
 #Deploy/Configure NFS APIM artifact
  if [ $iaas == "GCP" ]; then
-    read -p "Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
+    read -p "⛏️ Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
 
     if [ $install_nfs == "n" ]; then
          read_nfs_connection
     else
-        create_nfs_share_gcp "data"
+        create_nfs_share_gcp "data" $gcp_compute_zone
     fi
     update_apim_nfs_volumes $download_path
 fi
 
 #Deploy/configure MySQL / APIM datasources
-read -p "Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
+read -p "⛏️ Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
 
 if [ $install_mysql == "y" ]; then
 
@@ -562,7 +570,7 @@ if [ $install_mysql == "y" ]; then
         read_control_plane_datasources_configs
         #Update the sql
         update_control_plance_sql $download_path
-        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 100))"
+        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 1000))" $gcp_compute_zone
     elif [ $iaas == "kubeadm" ]; then
         read_control_plane_datasources_configs
         #update the sql file
@@ -580,7 +588,7 @@ fi
 
 update_control_plane_datasources $download_path
 
-echo "ℹ️ Start to Deploying the VICK control plane\n"
+echo "ℹ️ Start to Deploying the VICK control plane"
 echo "🔧 Deploying the control plane API Manager"
 
 deploy_global_gw $download_path $iaas
@@ -590,7 +598,7 @@ echo "🔧Deploying SP"
 
 deploy_sp_dashboard_worker $download_path $iaas
 
-echo "🔧 Deploying Istio"
+echo "🔧 Deploying Istio version $istio_version"
 
 deploy_istio $download_path $istio_version
 
@@ -602,8 +610,10 @@ echo "🔧 Deploying nginx-ingress"
 
 if [ $iaas == "kubeadm" ]; then
     install_nginx_ingress_kubeadm $download_path
+elif [ $iaas == "GCP" ]; then
+    install_nginx_ingress_gcp $download_path
 fi
-#check GCP ingress
+
 echo "ℹ️ VICK installation is finished."
 echo "-=🎉=-"
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -90,26 +89,6 @@ describe("NotificationUtils", () => {
             const loadingState = state.get(StateHolder.LOADING_STATE);
             expect(loadingState.loadingOverlayCount).toBe(213);
             expect(loadingState.message).toBeNull();
-        });
-    });
-
-    describe("isLoadingOverlayShown()", () => {
-        it("should return true if the overlay is currently shown", () => {
-            state.set(StateHolder.LOADING_STATE, {
-                loadingOverlayCount: 3,
-                message: "Initial Test Message 3"
-            });
-
-            expect(NotificationUtils.isLoadingOverlayShown(state)).toBe(true);
-        });
-
-        it("should return false if the overlay is currently not shown", () => {
-            state.set(StateHolder.LOADING_STATE, {
-                loadingOverlayCount: 0,
-                message: 0
-            });
-
-            expect(NotificationUtils.isLoadingOverlayShown(state)).toBe(false);
         });
     });
 

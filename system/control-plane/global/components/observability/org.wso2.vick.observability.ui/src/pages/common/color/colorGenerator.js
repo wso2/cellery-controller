@@ -36,7 +36,7 @@ class ColorGenerator {
 
     constructor() {
         this.colorMap = {
-            [ColorGenerator.VICK]: "#a53288",
+            [ColorGenerator.VICK]: "#ababab",
             [ColorGenerator.ISTIO]: "#434da1",
             [ColorGenerator.UNKNOWN]: "#71736f",
             [ColorGenerator.SUCCESS]: Green[500],
