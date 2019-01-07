@@ -81,7 +81,7 @@ class SequenceDiagram extends React.Component {
                             style={this.state.clicked
                                 ? {color: "#3e51b5", cursor: "pointer", textDecoration: "underline"}
                                 : {}}>
-                       Cell level diagram
+                       Cells
                         </Typography>
                     </li>
                     <li>
@@ -90,7 +90,7 @@ class SequenceDiagram extends React.Component {
                     <li>
                         <Typography color="textSecondary" className={classes.subtitle}
                             style={this.state.clicked ? {} : {display: "none"}}>
-                       Services level diagram for {this.state.cellClicked} cell [{this.state.callIdClicked}]
+                        {this.state.cellClicked} cell [{this.state.callIdClicked}] - Services
                         </Typography>
                     </li>
 
