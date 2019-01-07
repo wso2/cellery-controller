@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import ErrorBoundary from "../common/error/ErrorBoundary";
+import ErrorBoundary from "./error/ErrorBoundary";
 import {Graph} from "react-d3-graph";
 import React from "react";
 import * as PropTypes from "prop-types";
@@ -70,11 +70,9 @@ class DependencyGraph extends React.Component {
         }
     };
 
-    shouldComponentUpdate = (nextProps) => nextProps.reloadGraph;
 
     render = () => {
         const {data, config, ...otherProps} = this.props;
-
         // Finding distinct links
         const links = [];
         if (data.links) {
@@ -84,7 +82,8 @@ class DependencyGraph extends React.Component {
                 if (!linkMatches) {
                     links.push({
                         source: link.source,
-                        target: link.target
+                        target: link.target,
+                        edgeString: link.edgeString
                     });
                 }
             });

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import CellDependencyView from "./CellDependencyView";
 import ColorGenerator from "../../common/color/colorGenerator";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
@@ -65,13 +65,7 @@ class Details extends React.Component {
 
     componentDidMount = () => {
         const {globalState} = this.props;
-
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-        this.update(
-            true,
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf(),
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf()
-        );
     };
 
     componentWillUnmount = () => {
@@ -139,7 +133,7 @@ class Details extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, cell} = this.props;
         const {health, isLoading} = this.state;
 
         return (
@@ -167,7 +161,7 @@ class Details extends React.Component {
                             </Typography>
                             <div className={classes.diagram}>
                                 {/* TODO : Implement Cell Dependency Diagram */}
-                                Dependency Diagram
+                                <CellDependencyView cell={cell}/>
                             </div>
                         </div>
                     </React.Fragment>

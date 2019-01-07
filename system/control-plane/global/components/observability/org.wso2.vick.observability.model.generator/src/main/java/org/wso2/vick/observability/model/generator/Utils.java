@@ -40,8 +40,7 @@ public class Utils {
     }
 
     public static String getEdgePostFix(String edgeName) {
-        int index = edgeName.indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
-        index = edgeName.substring(index).indexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
+        int index = edgeName.lastIndexOf(Constants.LINK_SEPARATOR) + Constants.LINK_SEPARATOR.length();
         return edgeName.substring(index);
     }
 
@@ -68,5 +67,17 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    public static String getQualifiedServiceName(String cellName, String serviceName) {
+        return cellName + Constants.CELL_SERVICE_NAME_SEPARATOR + serviceName;
+    }
+
+    public static String getEdgeServiceName(String edgeString) {
+        return edgeString.split(Constants.EDGE_NAME_CONNECTOR)[2];
+    }
+
+    public static String[] getServices(String serviceName) {
+        return serviceName.split(Constants.LINK_SEPARATOR);
     }
 }

@@ -21,7 +21,7 @@ import Button from "@material-ui/core/Button";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import Constants from "../common/constants";
-import DependencyGraph from "./DependencyGraph";
+import DependencyGraph from "../common/DependencyGraph";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Error from "@material-ui/icons/Error";
