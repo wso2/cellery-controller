@@ -147,7 +147,7 @@ class CellDependencyView extends React.Component {
         const nodeId = nodeProps.id;
         const color = this.props.colorGenerator.getColor(nodeId);
         return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
+                    width="50px" height="50px" viewBox="0 0 240 240">
             <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
         </svg>;
     };
@@ -156,20 +156,26 @@ class CellDependencyView extends React.Component {
         // TODO: redirect to another cell view.
     };
 
-    render = () => (
-        <React.Fragment>
-            <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
-                <DependencyGraph
-                    id="cell-dependency-graph"
-                    data={this.state.data}
-                    config={graphConfig}
-                    reloadGraph={this.state.reload}
-                    onClickNode={this.onClickCell}
-                />
-            </ErrorBoundary>
-        </React.Fragment>
-    );
-
+    render = () => {
+        let view;
+        let dependedNodeCount = this.state.data.nodes.length;
+        if (dependedNodeCount > 1) {
+            view = (
+                <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
+                    <DependencyGraph
+                        id="cell-dependency-graph"
+                        data={this.state.data}
+                        config={graphConfig}
+                        reloadGraph={this.state.reload}
+                        onClickNode={this.onClickCell}
+                    />
+                </ErrorBoundary>
+            );
+        } else {
+            view = <div>No depended cells exists for cell - {this.props.cell}</div>;
+        }
+        return view;
+    }
 }
 
 CellDependencyView.propTypes = {
