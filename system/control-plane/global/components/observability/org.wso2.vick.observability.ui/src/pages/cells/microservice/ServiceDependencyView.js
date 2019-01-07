@@ -156,19 +156,25 @@ class ServiceDependencyView extends React.Component {
         // TODO: redirect to another cell view.
     };
 
-    render = () => (
-        <React.Fragment>
-            <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
-                <DependencyGraph
-                    id="service-dependency-graph"
-                    data={this.state.data}
-                    config={graphConfig}
-                    onClickNode={this.onClickCell}
-                />
-            </ErrorBoundary>
-        </React.Fragment>
-    );
-
+    render = () => {
+        let view;
+        let dependedNodeCount = this.state.data.nodes.length;
+        if (dependedNodeCount > 1) {
+            view = (
+                <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
+                    <DependencyGraph
+                        id="service-dependency-graph"
+                        data={this.state.data}
+                        config={graphConfig}
+                        onClickNode={this.onClickCell}
+                    />
+                </ErrorBoundary>
+            );
+        } else {
+            view = <div>No depended services exists for service - {this.props.service}</div>;
+        }
+        return view;
+    }
 }
 
 ServiceDependencyView.propTypes = {
