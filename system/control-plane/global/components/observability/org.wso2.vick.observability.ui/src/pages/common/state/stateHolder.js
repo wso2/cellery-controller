@@ -166,7 +166,7 @@ class StateHolder {
         return new Promise((resolve) => {
             // TODO : Load configuration from server
             self.set(StateHolder.CONFIG, {
-                observabilityAPIURL: "http://localhost:9123/api",
+                observabilityAPIURL: "http://wso2sp-observability-api/api",
                 percentageRangeMinValue: {
                     errorThreshold: 0.5,
                     warningThreshold: 0.7
