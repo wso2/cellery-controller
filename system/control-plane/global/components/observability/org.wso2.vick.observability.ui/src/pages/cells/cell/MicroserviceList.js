@@ -172,8 +172,7 @@ class MicroserviceList extends React.Component {
             }
         };
         const isMicroserviceRelevant = (consideredCell, microservice) => (
-            !Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(microservice)
-                && !Constants.Cell.GATEWAY_NAME_PATTERN.test(microservice) && consideredCell === cell
+            !Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(microservice) && consideredCell === cell
         );
         for (const microserviceDatum of microserviceInfo) {
             if (isMicroserviceRelevant(microserviceDatum.sourceCell, microserviceDatum.sourceMicroservice)) {
