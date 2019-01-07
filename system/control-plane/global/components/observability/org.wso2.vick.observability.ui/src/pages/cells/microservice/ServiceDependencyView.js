@@ -171,7 +171,7 @@ class ServiceDependencyView extends React.Component {
                 </ErrorBoundary>
             );
         } else {
-            view = <div>No depended services exists for service - {this.props.cell}</div>;
+            view = <div>No depended services exists for service - {this.props.service}</div>;
         }
         return view;
     }
