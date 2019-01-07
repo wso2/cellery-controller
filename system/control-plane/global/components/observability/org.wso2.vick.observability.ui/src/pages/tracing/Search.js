@@ -410,10 +410,14 @@ class Search extends React.Component {
     handleTagsChange = (chips) => {
         const parseChip = (chip) => {
             const chipContent = chip.split("=");
-            return {
-                key: chipContent[0].trim(),
-                value: chipContent[1].trim()
-            };
+            let tag = null;
+            if (chipContent.length === 2) {
+                tag = {
+                    key: chipContent[0].trim(),
+                    value: chipContent[1].trim()
+                };
+            }
+            return tag;
         };
 
         // Generating tags object
@@ -421,12 +425,16 @@ class Search extends React.Component {
         if (typeof chips === "string") { // Delete tag
             tags = {...this.state.filter.tags};
             const tag = parseChip(chips);
-            Reflect.deleteProperty(tags, tag.key);
+            if (tag) {
+                Reflect.deleteProperty(tags, tag.key);
+            }
         } else { // Tag change
             tags = {};
             for (let i = 0; i < chips.length; i++) {
                 const tag = parseChip(chips[i]);
-                tags[tag.key] = tag.value;
+                if (tag) {
+                    tags[tag.key] = tag.value;
+                }
             }
         }
 
