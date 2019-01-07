@@ -38,20 +38,20 @@ const styles = (theme) => ({
         paddingTop: 0,
         margin: Number(theme.spacing.unit)
     },
-    tabs: {
+    tabBar: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
         marginBottom: theme.spacing.unit * 2,
         borderBottomWidth: 1,
         borderBottomStyle: "solid",
         borderBottomColor: Grey[200]
     },
-    tabBar: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        ...theme.mixins.toolbar
-    },
     viewTracesContent: {
         paddingLeft: theme.spacing.unit
+    },
+    traceButton: {
+        fontSize: 12
     }
 });
 
@@ -121,7 +121,7 @@ class Cell extends React.Component {
                             <Tab label="Microservices"/>
                             <Tab label="Metrics"/>
                         </Tabs>
-                        <Button className={classes.button} component={Link}
+                        <Button className={classes.traceButton} component={Link} size="small"
                             to={`/tracing/search${HttpUtils.generateQueryParamString(traceSearch)}`}>
                             <Timeline/><span className={classes.viewTracesContent}>View Traces</span>
                         </Button>

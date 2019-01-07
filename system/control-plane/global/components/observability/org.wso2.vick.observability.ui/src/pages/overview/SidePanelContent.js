@@ -40,6 +40,7 @@ import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Timeline from "@material-ui/icons/Timeline";
+import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import withGlobalState from "../common/state";
 import {withStyles} from "@material-ui/core/styles";
@@ -115,6 +116,12 @@ const styles = () => ({
     },
     barChart: {
         marginTop: 20
+    },
+    titleDivider: {
+        height: 1,
+        border: "none",
+        flexShrink: 0,
+        backgroundColor: "#d1d1d1"
     }
 });
 
@@ -210,10 +217,12 @@ class SidePanelContent extends React.Component {
             {
                 options: {
                     customBodyRender: (datum) => (
-                        <IconButton size="small" color="inherit" component={Link}
-                            to={`/tracing/search${HttpUtils.generateQueryParamString(datum)}`}>
-                            <Timeline/>
-                        </IconButton>
+                        <Tooltip title="View Traces">
+                            <IconButton size="small" color="inherit" component={Link}
+                                to={`/tracing/search${HttpUtils.generateQueryParamString(datum)}`}>
+                                <Timeline/>
+                            </IconButton>
+                        </Tooltip>
                     )
                 }
             }
@@ -244,6 +253,7 @@ class SidePanelContent extends React.Component {
                     }
                     <HttpTrafficIcon className={classes.titleIcon} fontSize="small"/>
                     <Typography color="inherit" className={classes.sideBarContentTitle}>HTTP Traffic</Typography>
+                    <hr className={classes.titleDivider}/>
                     <Table className={classes.table}>
                         <TableHead>
                             <TableRow>
