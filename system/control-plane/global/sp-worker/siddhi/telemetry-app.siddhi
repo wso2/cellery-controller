@@ -9,33 +9,25 @@ define stream TelemetryStreamIn(sourceNamespace string, sourceCell string, sourc
                                 requestSizeBytes long, responseCode long, responseDurationNanoSec int,
                                 responseSizeBytes long);
 
-define stream ProcessedRequestsStream(sourceNamespace string, sourceCell string, sourceVICKService string,
-                                      destinationNamespace string, destinationCell string,
-                                      destinationVICKService string, requestPath string, requestMethod string,
-                                      httpResponseGroup string, responseTimeMilliSec double, requestSizeBytes long,
-                                      responseSizeBytes long);
+define stream ProcessedRequestsStream(sourceCell string, sourceVICKService string, destinationCell string,
+                                      destinationVICKService string, httpResponseGroup string,
+                                      responseTimeMilliSec double, requestSizeBytes long, responseSizeBytes long);
 
-@store(type="rdbms", datasource="VICK_OBSERVABILITY_DB")
+@store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="sourceCell:253, sourceVICKService:253, destinationCell:253, destinationVICKService: 253, httpResponseGroup:3")
 @purge(enable="false")
 define aggregation RequestAggregation from ProcessedRequestsStream
 select
-    sourceNamespace,
     sourceCell,
     sourceVICKService,
-    destinationNamespace,
     destinationCell,
     destinationVICKService,
-    requestPath,
-    requestMethod,
     httpResponseGroup,
     sum(responseTimeMilliSec) as totalResponseTimeMilliSec,
     sum(requestSizeBytes) as totalRequestSizeBytes,
     sum(responseSizeBytes) as totalResponseSizeBytes,
     count() as requestCount
 group by
-    sourceNamespace, sourceCell, sourceVICKService,
-    destinationNamespace, destinationCell, destinationVICKService,
-    requestPath, requestMethod, httpResponseGroup
+    sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup
 aggregate every sec...year;
 
 --
@@ -44,16 +36,12 @@ aggregate every sec...year;
 
 from TelemetryStreamIn
 select
-    sourceNamespace,
     sourceCell,
     sourceVICKService,
-    destinationNamespace,
     destinationCell,
     destinationVICKService,
     contextReporterKind,
     cast(map:get(requestHeadersMap, "x-request-id"), "string") as requestId,
-    requestPath,
-    requestMethod,
     str:concat(convert(cast(responseCode, "int") / 100, "string"), "xx") as httpResponseGroup,
     convert(responseDurationNanoSec, "double") / 1000000 as responseTimeMilliSec,
     ifThenElse(requestSizeBytes is null, 0L, requestSizeBytes) as requestSizeBytes,
@@ -64,21 +52,16 @@ from every(e1=ProcessedTelemetryStream) ->
     not ProcessedTelemetryStream[e1.requestId == e2.requestId] for 1 minute
     or e2=ProcessedTelemetryStream[e1.requestId == e2.requestId] within 1 minute
 select
-    e1.sourceNamespace,
     e1.sourceCell,
     e1.sourceVICKService,
-    e1.destinationNamespace,
     e1.destinationCell,
     e1.destinationVICKService,
-    ifThenElse(e1.requestPath is null, e2.requestPath, e1.requestPath) as requestPath,
-    ifThenElse(e1.requestMethod is null, e2.requestMethod, e1.requestMethod) as requestMethod,
     ifThenElse(e1.httpResponseGroup is null, e2.httpResponseGroup, e1.httpResponseGroup) as httpResponseGroup,
     ifThenElse(e1.responseTimeMilliSec is null, e2.responseTimeMilliSec, e1.responseTimeMilliSec) as responseTimeMilliSec,
     ifThenElse(e1.requestSizeBytes is null, e2.requestSizeBytes, e1.requestSizeBytes) as requestSizeBytes,
     ifThenElse(e1.responseSizeBytes is null, e2.responseSizeBytes, e1.responseSizeBytes) as responseSizeBytes
 insert into SanitizedRequestsStream;
 
-from SanitizedRequestsStream[(not requestPath is null) and (not requestMethod is null)
-                             and (not httpResponseGroup is null) and (not responseTimeMilliSec is null)
+from SanitizedRequestsStream[(not httpResponseGroup is null) and (not responseTimeMilliSec is null)
                              and (not requestSizeBytes is null) and (not responseSizeBytes is null)]
 insert into ProcessedRequestsStream;
