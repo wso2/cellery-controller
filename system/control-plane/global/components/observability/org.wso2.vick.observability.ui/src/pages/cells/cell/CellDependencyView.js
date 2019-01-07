@@ -15,6 +15,7 @@
  */
 
 import DependencyGraph from "../../common/DependencyGraph";
+import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
@@ -146,7 +147,7 @@ class CellDependencyView extends React.Component {
         const nodeId = nodeProps.id;
         const color = this.props.colorGenerator.getColor(nodeId);
         return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
+                    width="50px" height="50px" viewBox="0 0 240 240">
             <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
         </svg>;
     };
@@ -157,13 +158,15 @@ class CellDependencyView extends React.Component {
 
     render = () => (
         <React.Fragment>
-            <DependencyGraph
-                id="cell-dependency-graph"
-                data={this.state.data}
-                config={graphConfig}
-                reloadGraph={this.state.reload}
-                onClickNode={this.onClickCell}
-            />
+            <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
+                <DependencyGraph
+                    id="cell-dependency-graph"
+                    data={this.state.data}
+                    config={graphConfig}
+                    reloadGraph={this.state.reload}
+                    onClickNode={this.onClickCell}
+                />
+            </ErrorBoundary>
         </React.Fragment>
     );
 

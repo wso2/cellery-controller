@@ -15,6 +15,7 @@
  */
 
 import DependencyGraph from "../../common/DependencyGraph";
+import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
@@ -111,7 +112,7 @@ class ServiceDependencyView extends React.Component {
         };
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Cell Dependency Graph", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Service Dependency Graph", globalState);
         }
         let url = `/dependency-model/cells/${cell}/microservices/${service}`;
         url += `${HttpUtils.generateQueryParamString(search)}`;
@@ -130,16 +131,6 @@ class ServiceDependencyView extends React.Component {
                         color: self.props.colorGenerator.getColor(node.id.split(":")[0])
                     });
             });
-
-            /*
-             * Data.nodes.map((node) => {
-             *     nodes.push(
-             *         {
-             *             id: node.id,
-             *             color: self.props.colorGenerator.getColor(node.id.split(":")[0])
-             *         });
-             * });
-             */
             self.setState({
                 data: {
                     nodes: nodes,
@@ -167,12 +158,14 @@ class ServiceDependencyView extends React.Component {
 
     render = () => (
         <React.Fragment>
-            <DependencyGraph
-                id="service-dependency-graph"
-                data={this.state.data}
-                config={graphConfig}
-                onClickNode={this.onClickCell}
-            />
+            <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
+                <DependencyGraph
+                    id="service-dependency-graph"
+                    data={this.state.data}
+                    config={graphConfig}
+                    onClickNode={this.onClickCell}
+                />
+            </ErrorBoundary>
         </React.Fragment>
     );
 
