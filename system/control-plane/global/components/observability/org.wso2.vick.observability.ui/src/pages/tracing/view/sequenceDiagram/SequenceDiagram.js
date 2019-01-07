@@ -15,7 +15,7 @@
  */
 
 import "./SequenceDiagram.css";
-import Button from "@material-ui/core/Button";
+import ChevronRight from "@material-ui/icons/ChevronRight";
 import Constants from "../../../common/constants";
 import React from "react";
 import Span from "../../utils/span";
@@ -29,43 +29,39 @@ import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     newMessageText: {
-        fill: "#4c4cb3 !important" ,
+        fill: "#4c4cb3 !important",
         cursor: "pointer"
-    },
-    newActor: {
-        stroke: "#4c4cb3"
-    },
-    newActor2: {
-        stroke: "#009688"
     },
     subtitle: {
         fontWeight: 400,
-        fontSize: "1.2rem",
-        marginTop: theme.spacing.unit * 3
+        fontSize: "1.0rem"
     },
     mermaid: {
-        padding: "20px"
+        padding: 10
     },
-    backButton: {
-        margin: theme.spacing.unit
+    navigation: {
+        paddingTop: 20,
+        paddingBottom: 5,
+        marginLeft: 12
     }
 });
 
 class SequenceDiagram extends React.Component {
 
     static GLOBAL = "global";
+    static GLOBAL_GATEWAY = "global gateway";
 
     constructor(props) {
         super(props);
         this.state = {
             config: "",
-            heading: "Cell - Level Sequence",
             spanData: "sequenceDiagram \n",
             copyArr: [],
             clicked: false,
             cellName: null,
             clonedArray: [],
-            cellClicked: "global"
+            cellClicked: "global",
+            callIdClicked: ""
         };
 
         this.mermaidDivRef = React.createRef();
@@ -79,14 +75,27 @@ class SequenceDiagram extends React.Component {
         const {classes} = this.props;
         return (
             <div>
-                <Typography color="textSecondary" className={classes.subtitle}>
-                    {this.state.heading}
-                </Typography>
-                <Button color="primary" style={this.state.clicked ? {} : {display: "none"}}
-                    onClick={this.addCells} className={classes.backButton}>
-                    &lt;&lt; Back to Cell-level Diagram
-                </Button>
-                <div>{this.state.cellName}</div>
+                <ul id="navigation" className={classes.navigation}>
+                    <li>
+                        <Typography color="textSecondary" className={classes.subtitle} onClick={this.addCells}
+                            style={this.state.clicked
+                                ? {color: "#3e51b5", cursor: "pointer", textDecoration: "underline"}
+                                : {}}>
+                       Cell level diagram
+                        </Typography>
+                    </li>
+                    <li>
+                        <ChevronRight color="action" style={this.state.clicked ? {} : {display: "none"}}/>
+                    </li>
+                    <li>
+                        <Typography color="textSecondary" className={classes.subtitle}
+                            style={this.state.clicked ? {} : {display: "none"}}>
+                       Services level diagram for {this.state.cellClicked} cell [{this.state.callIdClicked}]
+                        </Typography>
+                    </li>
+
+                </ul>
+                <br/>
                 <div className={classes.mermaid} ref={this.mermaidDivRef}>
                     {this.state.config}
                 </div>
@@ -110,7 +119,6 @@ class SequenceDiagram extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         const collectionsMessage = this.mermaidDivRef.current.getElementsByClassName("messageText");
         const collectionsActor = this.mermaidDivRef.current.getElementsByClassName("actor");
-
         if (this.state.config !== prevState.config) {
             this.mermaidDivRef.current.removeAttribute("data-processed");
             mermaid.init(this.mermaidDivRef.current);
@@ -151,7 +159,7 @@ class SequenceDiagram extends React.Component {
         let actorStyle;
         if (serviceClicked) {
             cellName = this.state.cellClicked;
-            if (cellName === "global") {
+            if (cellName === SequenceDiagram.GLOBAL) {
                 color = colorGenerator.getColor(ColorGenerator.VICK);
             } else {
                 color = colorGenerator.getColor(SequenceDiagram.addDash(cellName));
@@ -159,7 +167,7 @@ class SequenceDiagram extends React.Component {
             actorStyle = `
                 stroke: ${color};
                 stroke-width: 3;
-                fill: #f5f5f5`;
+                fill: #ffffff`;
 
             for (let i = 0; i < elementArray.length; i += 2) {
                 elementArray[i].style = actorStyle;
@@ -169,7 +177,7 @@ class SequenceDiagram extends React.Component {
             for (let i = 1; i < elementArray.length; i += 2) {
                 if (elementArray[i].firstElementChild !== null) {
                     const cellName = SequenceDiagram.addDash(elementArray[i].firstElementChild.innerHTML);
-                    if (cellName === "global") {
+                    if (cellName === SequenceDiagram.addDash(SequenceDiagram.GLOBAL_GATEWAY)) {
                         color = colorGenerator.getColor(ColorGenerator.VICK);
                     } else {
                         color = colorGenerator.getColor(cellName);
@@ -177,7 +185,7 @@ class SequenceDiagram extends React.Component {
                     actorStyle = `
                 stroke: ${color};
                 stroke-width: 3;
-                fill: #f5f5f5`;
+                fill: #ffffff`;
                     // Index of i-1 is given to set the style to the respective SVG `rect` element.
                     elementArray[i - 1].style = actorStyle;
                 }
@@ -195,6 +203,7 @@ class SequenceDiagram extends React.Component {
         });
     }
 
+
     /**
      * Adds the service calls made for a particular cell to the diagram.
      *
@@ -206,7 +215,8 @@ class SequenceDiagram extends React.Component {
         const treeRoot = this.state.clonedArray[SequenceDiagram.findSpanIndexCall(this.state.clonedArray, callId)];
         const parentName = treeRoot.cell.name;
         this.setState({
-            cellClicked: parentName
+            cellClicked: parentName,
+            callIdClicked: callId
         });
         data2 += `activate ${SequenceDiagram.removeDash(treeRoot.serviceName)}\n`;
         let j = 0;
@@ -234,7 +244,6 @@ class SequenceDiagram extends React.Component {
         data2 += `deactivate ${SequenceDiagram.removeDash(treeRoot.serviceName)}\n`;
         this.setState({
             config: data2,
-            heading: "Service - Level Sequence",
             clicked: true
         });
     }
@@ -272,8 +281,7 @@ class SequenceDiagram extends React.Component {
             }
         }
         this.setState({
-            clicked: false,
-            heading: "Cell - Level Sequence"
+            clicked: false
         });
     }
 
@@ -288,8 +296,8 @@ class SequenceDiagram extends React.Component {
         const cellArray = [];
         for (let i = 0; i < spanArray.length; i++) {
             if ((spanArray[i].serviceName.includes(SequenceDiagram.GLOBAL))) {
-                if (!cellArray.includes(SequenceDiagram.GLOBAL)) {
-                    cellArray.push(SequenceDiagram.GLOBAL);
+                if (!cellArray.includes(SequenceDiagram.GLOBAL_GATEWAY)) {
+                    cellArray.push(SequenceDiagram.GLOBAL_GATEWAY);
                 }
             }
             if (spanArray[i].cell) {
@@ -314,7 +322,7 @@ class SequenceDiagram extends React.Component {
         for (let i = 0; i < array.length; i++) {
             dataText += `participant ${array[i]}\n`;
         }
-        dataText += `activate ${SequenceDiagram.GLOBAL}\n`;
+        dataText += `activate ${SequenceDiagram.GLOBAL_GATEWAY}\n`;
         return dataText + this.addCellConnections();
     }
 
@@ -333,7 +341,7 @@ class SequenceDiagram extends React.Component {
             let childCellName;
             if (span.parent !== null) {
                 if (span.parent.cell === null) {
-                    parentCellName = SequenceDiagram.GLOBAL;
+                    parentCellName = SequenceDiagram.GLOBAL_GATEWAY;
                 } else {
                     parentCellName = span.parent.cell.name;
                 }
@@ -352,7 +360,7 @@ class SequenceDiagram extends React.Component {
             if (span.cell) {
                 let parentCellName = "";
                 if (span.parent.cell === null) {
-                    parentCellName = SequenceDiagram.GLOBAL;
+                    parentCellName = SequenceDiagram.GLOBAL_GATEWAY;
                 } else {
                     parentCellName = span.parent.cell.name;
                 }
@@ -363,7 +371,7 @@ class SequenceDiagram extends React.Component {
                 }
             }
         });
-        dataText += `deactivate ${SequenceDiagram.GLOBAL}`;
+        dataText += `deactivate ${SequenceDiagram.GLOBAL_GATEWAY}`;
         return dataText;
     }
 

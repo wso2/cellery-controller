@@ -27,3 +27,8 @@
 text.actor {
     font-size: 15px;
 }
+
+li {
+    display: block;
+    float: left;
+}
