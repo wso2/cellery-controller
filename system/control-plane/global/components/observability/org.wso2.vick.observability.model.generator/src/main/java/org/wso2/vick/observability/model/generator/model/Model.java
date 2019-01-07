@@ -18,6 +18,7 @@
 package org.wso2.vick.observability.model.generator.model;
 
 import org.wso2.vick.observability.model.generator.Node;
+
 import java.util.Set;
 
 /**
@@ -38,5 +39,11 @@ public class Model {
 
     public Set<Edge> getEdges() {
         return edges;
+    }
+
+    public void mergeModel(Model anotherModel, Edge connectorEdge) {
+        nodes.addAll(anotherModel.nodes);
+        edges.addAll(anotherModel.edges);
+        edges.add(connectorEdge);
     }
 }

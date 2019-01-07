@@ -18,8 +18,8 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
-import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
+import ServiceDependencyView from "./ServiceDependencyView";
 import StateHolder from "../../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -66,11 +66,6 @@ class Details extends React.Component {
         const {globalState} = this.props;
 
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-        this.update(
-            true,
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf(),
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf()
-        );
     };
 
     componentWillUnmount = () => {
@@ -139,7 +134,7 @@ class Details extends React.Component {
     };
 
     render() {
-        const {classes, cell} = this.props;
+        const {classes, cell, microservice} = this.props;
         const {health, isLoading} = this.state;
         return (
             isLoading
@@ -175,7 +170,7 @@ class Details extends React.Component {
                                 Dependencies
                             </Typography>
                             <div className={classes.diagram}>
-                                Dependency Diagram
+                                <ServiceDependencyView cell={cell} service={microservice}/>
                             </div>
                         </div>
                     </React.Fragment>
