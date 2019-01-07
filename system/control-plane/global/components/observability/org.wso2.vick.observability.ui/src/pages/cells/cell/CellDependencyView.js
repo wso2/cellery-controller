@@ -17,11 +17,13 @@
 import DependencyGraph from "../../common/DependencyGraph";
 import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../common/utils/httpUtils";
+import Info from "@material-ui/icons/InfoOutlined";
 import NotificationUtils from "../../common/utils/notificationUtils";
 import PropTypes from "prop-types";
 import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
+import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../common/color";
@@ -30,6 +32,15 @@ const styles = () => ({
     graph: {
         width: "100%",
         height: "100%"
+    },
+    info: {
+        display: "inline-flex"
+    },
+    infoIcon: {
+        verticalAlign: "middle",
+        display: "inline-flex",
+        fontSize: 18,
+        marginRight: 4
     }
 });
 
@@ -55,14 +66,14 @@ const graphConfig = {
     },
     node: {
         color: "#d3d3d3",
-        fontColor: "black",
-        fontSize: 18,
+        fontColor: "#555",
+        fontSize: 16,
         fontWeight: "normal",
         highlightColor: "red",
-        highlightFontSize: 18,
+        highlightFontSize: 16,
         highlightFontWeight: "bold",
         highlightStrokeColor: "SAME",
-        highlightStrokeWidth: 1.5,
+        highlightStrokeWidth: 1,
         labelProperty: "name",
         mouseCursor: "pointer",
         opacity: 1,
@@ -76,7 +87,7 @@ const graphConfig = {
         opacity: 1,
         semanticStrokeWidth: false,
         strokeWidth: 4,
-        highlightColor: "black"
+        highlightColor: "#777"
     }
 };
 
@@ -158,7 +169,9 @@ class CellDependencyView extends React.Component {
 
     render = () => {
         let view;
-        let dependedNodeCount = this.state.data.nodes.length;
+        const dependedNodeCount = this.state.data.nodes.length;
+        const {classes} = this.props;
+
         if (dependedNodeCount > 1) {
             view = (
                 <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
@@ -172,10 +185,14 @@ class CellDependencyView extends React.Component {
                 </ErrorBoundary>
             );
         } else {
-            view = <div>No depended cells exists for cell - {this.props.cell}</div>;
+            view = <div> <Info className={classes.infoIcon} color="action"/>
+                <Typography variant="subtitle2" color="textSecondary" className={classes.info}>
+                    No depended cells exists for cell - {this.props.cell}
+                </Typography></div>;
         }
         return view;
     }
+
 }
 
 CellDependencyView.propTypes = {

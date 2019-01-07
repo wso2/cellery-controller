@@ -56,3 +56,9 @@ code {
 .rdtDays {
     font-size: 14px;
 }
+
+/* anchor */
+
+a {
+    color: #333
+}
