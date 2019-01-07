@@ -18,6 +18,7 @@ import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../common/utils/httpUtils";
 import {Link} from "react-router-dom";
 import NotificationUtils from "../../common/utils/notificationUtils";
+import QueryUtils from "../../common/utils/queryUtils";
 import React from "react";
 import ServiceDependencyView from "./ServiceDependencyView";
 import StateHolder from "../../common/state/stateHolder";
@@ -64,8 +65,13 @@ class Details extends React.Component {
 
     componentDidMount = () => {
         const {globalState} = this.props;
-
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+
+        this.update(
+            true,
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
+            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
+        );
     };
 
     componentWillUnmount = () => {
@@ -137,44 +143,46 @@ class Details extends React.Component {
         const {classes, cell, microservice} = this.props;
         const {health, isLoading} = this.state;
         return (
-            isLoading
-                ? null
-                : (
-                    <React.Fragment>
-                        <Table className={classes.table}>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell className={classes.tableCell}>
-                                        <Typography color="textSecondary">
-                                            Health
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell className={classes.tableCell}>
-                                        <HealthIndicator value={health}/>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={classes.tableCell}>
-                                        <Typography color="textSecondary">
-                                            Cell
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell className={classes.tableCell}>
-                                        <Link to={`/cells/${cell}`}>{cell}</Link>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        <div className={classes.dependencies}>
-                            <Typography color="textSecondary" className={classes.subtitle}>
-                                Dependencies
-                            </Typography>
-                            <div className={classes.diagram}>
-                                <ServiceDependencyView cell={cell} service={microservice}/>
-                            </div>
-                        </div>
-                    </React.Fragment>
-                )
+            <React.Fragment>
+                {
+                    isLoading
+                        ? null
+                        : (
+                            <Table className={classes.table}>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography color="textSecondary">
+                                                Health
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell}>
+                                            <HealthIndicator value={health}/>
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={classes.tableCell}>
+                                            <Typography color="textSecondary">
+                                                Cell
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell className={classes.tableCell}>
+                                            <Link to={`/cells/${cell}`}>{cell}</Link>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        )
+                }
+                <div className={classes.dependencies}>
+                    <Typography color="textSecondary" className={classes.subtitle}>
+                        Dependencies
+                    </Typography>
+                    <div className={classes.diagram}>
+                        <ServiceDependencyView cell={cell} service={microservice}/>
+                    </div>
+                </div>
+            </React.Fragment>
         );
     }
 
