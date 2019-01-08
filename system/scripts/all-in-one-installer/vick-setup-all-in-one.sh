@@ -451,7 +451,7 @@ istio_version="1.0.2"
 download_path="tmp-wso2"
 git_base_url="https://raw.githubusercontent.com/wso2/product-vick/master"
 
-control_plane_base_url="${git_base_url}/system/control-plane/global"
+control_plane_base_url="${git_base_url}/system/control-plane/global/k8s-artifacts"
 control_plane_yaml=(
     "mysql-deployment.yaml"
     "mysql-persistent-volume-claim.yaml"
