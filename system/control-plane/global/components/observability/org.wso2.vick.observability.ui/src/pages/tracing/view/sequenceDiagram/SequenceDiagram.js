@@ -90,7 +90,7 @@ class SequenceDiagram extends React.Component {
                     <li>
                         <Typography color="textSecondary" className={classes.subtitle}
                             style={this.state.clicked ? {} : {display: "none"}}>
-                        {this.state.cellClicked} cell [{this.state.callIdClicked}] - Services
+                            {this.state.cellClicked} cell [{this.state.callIdClicked}] - Services
                         </Typography>
                     </li>
 
