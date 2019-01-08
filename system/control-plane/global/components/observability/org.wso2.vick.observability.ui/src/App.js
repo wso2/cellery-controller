@@ -17,18 +17,18 @@
  */
 
 import AppLayout from "./AppLayout";
-import Cells from "./pages/cells";
-import {ColorProvider} from "./pages/common/color";
-import ErrorBoundary from "./pages/common/error/ErrorBoundary";
-import NotFound from "./pages/common/error/NotFound";
-import Overview from "./pages/overview";
+import Cells from "./components/cells";
+import {ColorProvider} from "./components/common/color";
+import ErrorBoundary from "./components/common/error/ErrorBoundary";
+import NotFound from "./components/common/error/NotFound";
+import Overview from "./components/overview";
 import React from "react";
-import SignIn from "./pages/SignIn";
-import SystemMetrics from "./pages/systemMetrics";
-import Tracing from "./pages/tracing";
+import SignIn from "./components/SignIn";
+import SystemMetrics from "./components/systemMetrics";
+import Tracing from "./components/tracing";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
 import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
-import withGlobalState, {StateHolder, StateProvider} from "./pages/common/state";
+import withGlobalState, {StateHolder, StateProvider} from "./components/common/state";
 import * as PropTypes from "prop-types";
 
 class StatelessProtectedPortal extends React.Component {

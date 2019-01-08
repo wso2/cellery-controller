@@ -19,7 +19,7 @@
 import {StateHolder} from "../state";
 
 /**
- * Common utilities.
+ * Authentication/Authorization related utilities.
  */
 class AuthUtils {
 
