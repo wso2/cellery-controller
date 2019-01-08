@@ -24,50 +24,52 @@
 #cat vick-setup-all-in-one.sh | bash -s -- GCP proj-vick
 
 function install_k8s_kubeadm () {
-    K8S_VERSION=$1
-    UBUNTU_VERSION=$(cat /etc/lsb-release | sed -n '/DISTRIB_RELEASE/p' | awk -F'=' '{print $2}')
+local K8S_VERSION=$1
 
-    #if you get an error similar to
-    #'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
-    sudo swapoff -a
-    # install some utils
-    sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    #Install Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    if [ $UBUNTU_VERSION == "16.04" ]; then
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
-    elif [ $UBUNTU_VERSION == "18.04" ]; then
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-    else
-        #default tested version
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
-    fi
-    sudo apt-get update -qq
-    sudo apt-get install -y docker.io
-    #Install NFS client
-    sudo apt-get install -y nfs-common
-    #Enable docker service
-    sudo systemctl enable docker.service
-    #Update the apt source list
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] http://apt.kubernetes.io/ kubernetes-xenial main"
-    #Install K8s components
-    echo "⚙️ Installing kubeadm\n"
-    sudo apt-get install -y kubelet=$K8S_VERSION kubeadm=$K8S_VERSION kubectl=$K8S_VERSION
+localUBUNTU_VERSION=$(cat /etc/lsb-release | sed -n '/DISTRIB_RELEASE/p' | awk -F'=' '{print $2}')
+
+#if you get an error similar to
+#'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
+sudo swapoff -a
+# install some utils
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+#Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+if [ $UBUNTU_VERSION == "16.04" ]; then
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+elif [ $UBUNTU_VERSION == "18.04" ]; then
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+else
+    #default tested version
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+fi
+sudo apt-get update -qq
+sudo apt-get install -y docker.io
+#Install NFS client
+sudo apt-get install -y nfs-common
+#Enable docker service
+sudo systemctl enable docker.service
+#Update the apt source list
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] http://apt.kubernetes.io/ kubernetes-xenial main"
+#Install K8s components
+echo "⚙️ Installing kubeadm"
+sudo apt-get install -y kubelet=$K8S_VERSION kubeadm=$K8S_VERSION kubectl=$K8S_VERSION
     sudo apt-mark hold kubelet kubeadm kubectl
 }
 
 function configure_k8s_kubeadm () {
 local node_type=$1
+
 if [ -z $node_type ]; then
     node_type="master"
 fi
 
 if [ $node_type == "master" ]; then
     #Initialize the k8s cluster
-    echo "⚙️ Installing k8s using kubeadm\n"
+    echo "⚙️ Installing k8s using kubeadm"
     sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-
+    #Wait till k8s cluster initialization.
     sleep 60
 
     #Create .kube file if it does not exists
@@ -112,17 +114,17 @@ fi
 
 #Create new NFS share
 function create_nfs_share_gcp () {
-echo "ℹ️ Creating NFS share in GCP"
 local nfs_share_location=$1
 local gcp_compute_zone=$2
 local nfs_server_ip
 
+echo "ℹ️ Creating NFS share in GCP"
 gcloud beta filestore instances create nfs-server \
     --location=$gcp_compute_zone \
     --tier=STANDARD \
     --file-share=name="${nfs_share_location}",capacity=1TB \
     --network=name="default"
-
+#Wati till NFS server creation finished.
 sleep 30
 
 nfs_server_ip=$(gcloud beta filestore instances describe nfs-server --location=$gcp_compute_zone \
@@ -132,37 +134,37 @@ if [ -n $nfs_server_ip ]; then
     nfs_config_params["NFS_SERVER_IP"]=$nfs_server_ip
     nfs_config_params["NFS_SHARE_LOCATION"]="/${nfs_share_location}"
 else
-    echo "Error in NFS share creation"
+    echo "🙅 Error in NFS share creation"
     exit 0
 fi
 }
 
 #Read NFS connection details form the user
 function read_nfs_connection () {
-echo "Read NFS connection"
-    local nfs_server_ip
-    local nfs_share_location
+local nfs_server_ip
+local nfs_share_location
 
-    echo "ℹ️ Configuring NFS volume"
-    echo
-    read -p "⛏️ NFS server IP: " nfs_server_ip < /dev/tty
-    if [[ ! -z "${nfs_server_ip/ //}" ]]; then
-        nfs_config_params["NFS_SERVER_IP"]=$nfs_server_ip
-    fi
-    read -p "⛏️ NFS share location: " nfs_share_location < /dev/tty
-    if [[ ! -z "${nfs_share_location/ //}" ]]; then
-        nfs_config_params["NFS_SHARE_LOCATION"]=$nfs_share_location
-    fi
-    echo
+echo "ℹ️ Configuring NFS volume"
+echo
+read -p "⛏️ NFS server IP: " nfs_server_ip < /dev/tty
+if [[ ! -z "${nfs_server_ip/ //}" ]]; then
+    nfs_config_params["NFS_SERVER_IP"]=$nfs_server_ip
+fi
+read -p "⛏️ NFS share location: " nfs_share_location < /dev/tty
+if [[ ! -z "${nfs_share_location/ //}" ]]; then
+    nfs_config_params["NFS_SHARE_LOCATION"]=$nfs_share_location
+fi
+echo
 }
 
 #Update APIM PVs
 function update_apim_nfs_volumes () {
- local download_location=$1
-    for param in "${!nfs_config_params[@]}"
-    do
-        sed -i "s|$param|${nfs_config_params[$param]}|g" ${download_location}/vick-apim-artifacts-persistent-volumes.yaml
-    done
+local download_location=$1
+
+for param in "${!nfs_config_params[@]}"
+do
+    sed -i "s|$param|${nfs_config_params[$param]}|g" ${download_location}/vick-apim-artifacts-persistent-volumes.yaml
+done
 }
 
 #Create K8s cluster in GCP
@@ -181,10 +183,9 @@ gcloud services enable \
   container.googleapis.com \
   containerregistry.googleapis.com
 
-CLUSTER_NAME=vick-knative
-CLUSTER_ZONE=us-west1-c
+CLUSTER_NAME=cellery-runtime
 
-echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $CLUSTER_ZONE"
+echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $gcp_compute_zone"
 
 #Create K8s cluster
 gcloud -q --verbosity=error container clusters create $CLUSTER_NAME \
@@ -195,7 +196,7 @@ gcloud -q --verbosity=error container clusters create $CLUSTER_NAME \
   --scopes=service-control,service-management,compute-rw,storage-ro,cloud-platform,logging-write,monitoring-write,pubsub,datastore \
   --num-nodes=1
 
-#Wait for 60 seconds
+#Wait for 60 seconds to finish the k8s cluster creation.
 sleep 60s
 
 #Grant cluster-admin permissions to the current user
@@ -206,228 +207,235 @@ echo "Grant K8s cluster admin persmission to user $K8S_ADMIN"
 kubectl create clusterrolebinding cluster-admin-binding \
 --clusterrole=cluster-admin \
 --user=$(gcloud config get-value core/account)
-
 }
 
 function deploy_mysql_server () {
-    local download_location=$1
-    #Create folders required by the mysql PVC
-    if [ -d /mnt/mysql ]; then
-        sudo mv /mnt/mysql "/mnt/mysql.$(date +%s)"
-    fi
-    sudo mkdir -p /mnt/mysql
-    #Change the folder ownership to mysql server user.
-    sudo chown 999:999 /mnt/mysql
+local download_location=$1
+#Create folders required by the mysql PVC
+if [ -d /mnt/mysql ]; then
+    sudo mv /mnt/mysql "/mnt/mysql.$(date +%s)"
+fi
+sudo mkdir -p /mnt/mysql
+#Change the folder ownership to mysql server user.
+sudo chown 999:999 /mnt/mysql
 
-    kubectl create configmap mysql-dbscripts --from-file=${download_location}/mysql/dbscripts/ -n vick-system
-    kubectl apply -f ${download_location}/mysql-persistent-volumes-local.yaml -n vick-system
-    kubectl apply -f ${download_location}/mysql-persistent-volume-claim.yaml -n vick-system
-    kubectl apply -f ${download_location}/mysql-deployment.yaml -n vick-system
-    #Wait till the mysql deployment availability
-    kubectl wait deployment/wso2apim-with-analytics-mysql-deployment --for condition=available --timeout=6000s -n vick-system
-    kubectl apply -f ${download_location}/mysql-service.yaml -n vick-system
+kubectl create configmap mysql-dbscripts --from-file=${download_location}/mysql/dbscripts/ -n vick-system
+kubectl apply -f ${download_location}/mysql-persistent-volumes-local.yaml -n vick-system
+kubectl apply -f ${download_location}/mysql-persistent-volume-claim.yaml -n vick-system
+kubectl apply -f ${download_location}/mysql-deployment.yaml -n vick-system
+#Wait till the mysql deployment availability
+kubectl wait deployment/wso2apim-with-analytics-mysql-deployment --for condition=available --timeout=6000s -n vick-system
+kubectl apply -f ${download_location}/mysql-service.yaml -n vick-system
 }
 
 function deploy_mysql_server_gcp () {
-    local download_location=$1
-    local sql_instance_name=$2
-    local gcp_compute_zone=$3
-    local service_account
-    local mysql_server_ip
-    gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=$gcp_compute_zone
-    service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
-    #if service account is zero exit
-#    gsutil -q mb --retention 600s -l us-west1 gs://vickdb
-#    gsutil cp ${download_location}/mysql/dbscripts/init.sql gs://vickdb/init.sql
-#    gsutil acl ch -u ${service_account}:R gs://vickdb/init.sql
-#    gcloud -q sql import sql ${sql_instance_name} gs://vickdb/init.sql
-    gcloud -q sql instances patch ${sql_instance_name} --authorized-networks=0.0.0.0/0
-    gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
-    cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
+local download_location=$1
+local sql_instance_name=$2
+local gcp_compute_zone=$3
+local service_account
+local mysql_server_ip
 
-    mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name}  --format flattened | awk '/.ipAddress/ {print $2}')
-    config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
+gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=$gcp_compute_zone
+service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
+gcloud -q sql instances patch ${sql_instance_name} --authorized-networks=0.0.0.0/0 --database-flags character_set_server=latin1
+#Wait till finish the MySQL server restart after the patching
+sleep 60
+gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
+#Wait till the credential update sync.
+sleep 30
+cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
+
+mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name}  --format flattened | awk '/.ipAddress/ {print $2}')
+config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
 }
 
 #Configure remote mysql server endpoint in control plane configuration files.
 function read_control_plane_datasources_configs () {
-    local db_user
-    local db_passwd
-    local db_hostname="wso2apim-with-analytics-rdbms-service"
+local db_user
+local db_passwd
+local db_hostname="wso2apim-with-analytics-rdbms-service"
 
-    if [ $iaas == "kubeadm" ]; then
-    echo "Configuring remote MySQL server"
-    #read -p "Database host name: " db_hostname < /dev/tty
-        if [[ ! -z "${db_hostname/ //}" ]]; then
-                echo "Db Hostname ${db_hostname}"
-                config_params["MYSQL_DATABASE_HOST"]=$db_hostname
-        fi
+if [ $iaas == "kubeadm" ]; then
+echo "Configuring remote MySQL server"
+#read -p "Database host name: " db_hostname < /dev/tty
+    if [[ ! -z "${db_hostname/ //}" ]]; then
+            echo "Db Hostname ${db_hostname}"
+            config_params["MYSQL_DATABASE_HOST"]=$db_hostname
     fi
-    read -p "⛏️ Database user name: " db_user < /dev/tty
-    if [[ ! -z "${db_user/ //}" ]]; then
-            config_params["DATABASE_USERNAME"]=$db_user
-    fi
-    read -s -p "⛏️ Database user password: " db_passwd < /dev/tty
-    if [[ ! -z "${db_passwd/ //}" ]]; then
-            config_params["DATABASE_PASSWORD"]=$db_passwd
-    fi
+fi
+read -p "⛏️ Database user name: " db_user < /dev/tty
+if [[ ! -z "${db_user/ //}" ]]; then
+        config_params["DATABASE_USERNAME"]=$db_user
+fi
+read -s -p "⛏️ Database user password: " db_passwd < /dev/tty
+if [[ ! -z "${db_passwd/ //}" ]]; then
+        config_params["DATABASE_PASSWORD"]=$db_passwd
+fi
 }
 
 function update_control_plance_sql () {
 local download_location=$1
-    for param in "${!config_params[@]}"
-    do
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/mysql/dbscripts/init.sql
-    done
 
+for param in "${!config_params[@]}"
+do
+    sed -i "s/$param/${config_params[$param]}/g" ${download_location}/mysql/dbscripts/init.sql
+done
 }
 
 #Update pub-store/gw/sp worker/ sp dashboard datasources
 function update_control_plane_datasources () {
-    local download_location=$1
-    for param in "${!config_params[@]}"
-    do
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
-        sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
-    done
+local download_location=$1
+
+for param in "${!config_params[@]}"
+do
+    sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/pub-store/datasources/master-datasources.xml
+    sed -i "s/$param/${config_params[$param]}/g" ${download_location}/apim-configs/gw/datasources/master-datasources.xml
+    sed -i "s/$param/${config_params[$param]}/g" ${download_location}/sp-worker/conf/deployment.yaml
+done
 }
 
 function deploy_global_gw () {
+local download_location=$1
+local iaas=$2
 
-    local download_location=$1
-    local iaas=$2
-
-    if [ $iaas == "kubeadm" ] || [ $iaas == "k8s" ]; then
-        #Create folders required by the APIM GW PVC
-        if [ -d /mnt/apim_repository_deployment_server ]; then
-            sudo mv /mnt/apim_repository_deployment_server "/mnt/apim_repository_deployment_server.$(date +%s)"
-        fi
-        #Create folders required by the APIM PVC
-        sudo mkdir -p /mnt/apim_repository_deployment_server
-        sudo chown 802:802 /mnt/apim_repository_deployment_server
-        #Create apim local volumes and volume claims
-        kubectl apply -f ${download_location}/vick-apim-persistent-volumes-local.yaml -n vick-system
-        kubectl apply -f ${download_location}/vick-apim-persistent-volume-claim-local.yaml -n vick-system
-    elif [ $iaas == "GCP" ]; then
-        #Create apim NFS volumes and volume claims
-        kubectl apply -f ${download_location}/vick-apim-artifacts-persistent-volumes.yaml -n vick-system
-        kubectl apply -f ${download_location}/vick-apim-artifacts-persistent-volume-claim.yaml -n vick-system
+if [ $iaas == "kubeadm" ] || [ $iaas == "k8s" ]; then
+    #Create folders required by the APIM GW PVC
+    if [ -d /mnt/apim_repository_deployment_server ]; then
+        sudo mv /mnt/apim_repository_deployment_server "/mnt/apim_repository_deployment_server.$(date +%s)"
     fi
+    #Create folders required by the APIM PVC
+    sudo mkdir -p /mnt/apim_repository_deployment_server
+    sudo chown 802:802 /mnt/apim_repository_deployment_server
+    #Create apim local volumes and volume claims
+    kubectl apply -f ${download_location}/vick-apim-persistent-volumes-local.yaml -n vick-system
+    kubectl apply -f ${download_location}/vick-apim-persistent-volume-claim-local.yaml -n vick-system
+elif [ $iaas == "GCP" ]; then
+    #Create apim NFS volumes and volume claims
+    kubectl apply -f ${download_location}/vick-apim-artifacts-persistent-volumes.yaml -n vick-system
+    kubectl apply -f ${download_location}/vick-apim-artifacts-persistent-volume-claim.yaml -n vick-system
+fi
 
-    #Create the gw config maps
-    kubectl create configmap gw-conf --from-file=${download_location}/apim-configs/gw -n vick-system
-    kubectl create configmap gw-conf-datasources --from-file=${download_location}/apim-configs/gw/datasources/ -n vick-system
-    #Create KM config maps
-    kubectl create configmap conf-identity --from-file=${download_location}/apim-configs/gw/identity -n vick-system
-    kubectl create configmap apim-template --from-file=${download_location}/apim-configs/gw/resources/api_templates -n vick-system
-    kubectl create configmap apim-tomcat --from-file=${download_location}/apim-configs/gw/tomcat -n vick-system
-    kubectl create configmap apim-security --from-file=${download_location}/apim-configs/gw/security -n vick-system
+#Create the gw config maps
+kubectl create configmap gw-conf --from-file=${download_location}/apim-configs/gw -n vick-system
+kubectl create configmap gw-conf-datasources --from-file=${download_location}/apim-configs/gw/datasources/ -n vick-system
+#Create KM config maps
+kubectl create configmap conf-identity --from-file=${download_location}/apim-configs/gw/identity -n vick-system
+kubectl create configmap apim-template --from-file=${download_location}/apim-configs/gw/resources/api_templates -n vick-system
+kubectl create configmap apim-tomcat --from-file=${download_location}/apim-configs/gw/tomcat -n vick-system
+kubectl create configmap apim-security --from-file=${download_location}/apim-configs/gw/security -n vick-system
 
-    #Create gateway deployment and the service
-    kubectl apply -f ${download_location}/vick-apim-gw.yaml -n vick-system
-     #Wait till the gateway deployment availability
-    kubectl wait deployment/gateway --for condition=available --timeout=6000s -n vick-system
-    #Create gateway ingress
-    kubectl apply -f ${download_location}/vick-apim-gw-ingress.yaml -n vick-system
+#Create gateway deployment and the service
+kubectl apply -f ${download_location}/vick-apim-gw.yaml -n vick-system
+ #Wait till the gateway deployment availability
+kubectl wait deployment/gateway --for condition=available --timeout=6000s -n vick-system
+#Create gateway ingress
+kubectl apply -f ${download_location}/vick-apim-gw-ingress.yaml -n vick-system
 }
 
 function deploy_global_pubstore () {
     local download_location=$1
-    #Create pubstore ingress
-    #pubstore ingress is pointed to gatway service. In the future pubstore ingress will be pointed to pubstore service.
-    kubectl apply -f ${download_location}/vick-apim-pub-store-ingress.yaml -n vick-system
+
+#Create pubstore ingress
+#pubstore ingress is pointed to gatway service. In the future pubstore ingress will be pointed to pubstore service.
+kubectl apply -f ${download_location}/vick-apim-pub-store-ingress.yaml -n vick-system
 }
 
 function deploy_sp_dashboard_worker () {
-    local download_location=$1
-    #Create SP worker configmaps
-    kubectl create configmap sp-worker-siddhi --from-file=${download_location}/sp-worker/siddhi -n vick-system
-    kubectl create configmap sp-worker-conf --from-file=${download_location}/sp-worker/conf -n vick-system
-    #kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
-    #Create SP worker deployment
-    kubectl apply -f ${download_location}/vick-sp-worker-deployment.yaml -n vick-system
-    kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
-    #Create SP dashboard configmaps
-    #kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
-    #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
-    #Create vick dashboard deployment, service and ingress.
-    kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
-    kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
+local download_location=$1
+
+#Create SP worker configmaps
+kubectl create configmap sp-worker-siddhi --from-file=${download_location}/sp-worker/siddhi -n vick-system
+kubectl create configmap sp-worker-conf --from-file=${download_location}/sp-worker/conf -n vick-system
+#kubectl create configmap sp-worker-bin --from-file=${download_location}/sp-worker/bin -n vick-system
+#Create SP worker deployment
+kubectl apply -f ${download_location}/vick-sp-worker-deployment.yaml -n vick-system
+kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
+#Create SP dashboard configmaps
+#kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
+#kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
+#Create vick dashboard deployment, service and ingress.
+kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
+kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
 }
 
 function init_control_plane () {
-    local download_location=$1
-    #Setup VICK namespace, create service account and the docker registry credentials
-    kubectl apply -f ${download_location}/vick-ns-init.yaml
+local download_location=$1
 
-    HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
-    #label the node if k8s provider is kubeadm
+#Setup VICK namespace, create service account and the docker registry credentials
+kubectl apply -f ${download_location}/vick-ns-init.yaml
 
-    kubectl label nodes $HOST_NAME disk=local
+HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
+#label the node if k8s provider is kubeadm
 
-    #Create credentials for docker.wso2.com
-    #kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
+kubectl label nodes $HOST_NAME disk=local
+
+#Create credentials for docker.wso2.com
+#kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
 }
 
 function deploy_istio () {
-    local download_location=$1
-    istio_version=$2
-    ISTIO_HOME=${download_location}/istio-${istio_version}
-    wget https://github.com/istio/istio/releases/download/${istio_version}/istio-${istio_version}-linux.tar.gz -P ${download_location}
-    tar -xzf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
-    export PATH=$ISTIO_HOME/bin:$PATH
-    kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
-    #kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
-    #kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo-auth.yaml
-    kubectl apply -f ${download_location}/istio-demo-vick.yaml
-    kubectl wait deployment/istio-pilot --for condition=available --timeout=6000s -n istio-system
-    #Enabling Istio injection
-    kubectl label namespace default istio-injection=enabled
+local download_location=$1
+local istio_version=$2
+
+ISTIO_HOME=${download_location}/istio-${istio_version}
+wget https://github.com/istio/istio/releases/download/${istio_version}/istio-${istio_version}-linux.tar.gz -P ${download_location}
+tar -xzf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
+export PATH=$ISTIO_HOME/bin:$PATH
+kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
+#kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
+#kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo-auth.yaml
+kubectl apply -f ${download_location}/istio-demo-vick.yaml
+kubectl wait deployment/istio-pilot --for condition=available --timeout=6000s -n istio-system
+#Enabling Istio injection
+kubectl label namespace default istio-injection=enabled
 }
 
 function deploy_vick_crds () {
-    local download_location=$1
-    #Install VICK crds
-    kubectl apply -f ${download_location}/vick.yaml
+local download_location=$1
+
+#Install VICK crds
+kubectl apply -f ${download_location}/vick.yaml
 }
 
 function create_artifact_folder () {
  local tmp_folder=$1
- if [ -d $tmp_folder ]; then
-        mv $tmp_folder ${tmp_folder}.$(date +%s)
-    fi
 
-    mkdir ${tmp_folder}
+if [ -d $tmp_folder ]; then
+    mv $tmp_folder ${tmp_folder}.$(date +%s)
+fi
+
+mkdir ${tmp_folder}
 }
+
 function download_vick_artifacts () {
+local base_url=$1
+local download_path=$2
+local yaml_list=("$@")
 
-    local base_url=$1
-    local download_path=$2
-    yaml_list=("$@")
-
-    for file_path in "${yaml_list[@]}"
-    do
-      dir_name=""
-      if [[ $file_path =~ / ]]; then
-        dir_name=${file_path%/*}
-      fi
-      wget "$base_url/$file_path" -P "$download_path/$dir_name" -a vick-setup.log
-    done
+for file_path in "${yaml_list[@]}"
+do
+  dir_name=""
+  if [[ $file_path =~ / ]]; then
+    dir_name=${file_path%/*}
+  fi
+  wget "$base_url/$file_path" -P "$download_path/$dir_name" -a vick-setup.log
+done
 }
 
 function install_nginx_ingress_kubeadm () {
-    local download_location=$1
-    #Install nginx-ingress for control plane ingress
-    kubectl apply -f ${download_location}/mandatory.yaml
-    kubectl apply -f ${download_location}/service-nodeport.yaml
+local download_location=$1
+
+#Install nginx-ingress for control plane ingress
+kubectl apply -f ${download_location}/mandatory.yaml
+kubectl apply -f ${download_location}/service-nodeport.yaml
 }
 
 function install_nginx_ingress_gcp () {
-    local download_location=$1
-    #Install nginx-ingress for control plane ingress
-    kubectl apply -f ${download_location}/mandatory.yaml
-    kubectl apply -f ${download_location}/cloud-generic.yaml
+local download_location=$1
+
+#Install nginx-ingress for control plane ingress
+kubectl apply -f ${download_location}/mandatory.yaml
+kubectl apply -f ${download_location}/cloud-generic.yaml
 }
 #-----------------------------------------------------------------------------------------------------------------------
 #Get the IaaS type form the user
@@ -594,7 +602,7 @@ echo "🔧 Deploying the control plane API Manager"
 deploy_global_gw $download_path $iaas
 deploy_global_pubstore $download_path
 
-echo "🔧Deploying SP"
+echo "🔧Deploying Stream Processor"
 
 deploy_sp_dashboard_worker $download_path $iaas
 
@@ -606,7 +614,7 @@ echo "🔧 Deploying VICK CRDs"
 
 deploy_vick_crds $download_path
 
-echo "🔧 Deploying nginx-ingress"
+echo "🔧 Deploying ingress-nginx"
 
 if [ $iaas == "kubeadm" ]; then
     install_nginx_ingress_kubeadm $download_path
