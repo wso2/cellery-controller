@@ -18,7 +18,7 @@ import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
-import HttpUtils from "../../utils/common/httpUtils";
+import HttpUtils from "../../utils/api/httpUtils";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";

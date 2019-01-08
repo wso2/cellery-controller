@@ -15,7 +15,7 @@
  */
 
 import FormControl from "@material-ui/core/FormControl";
-import HttpUtils from "../../../utils/common/httpUtils";
+import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
 import MetricsGraphs from "../MetricsGraphs";
 import NotificationUtils from "../../../utils/common/notificationUtils";

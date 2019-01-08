@@ -16,7 +16,7 @@
 
 import DependencyGraph from "../../common/DependencyGraph";
 import ErrorBoundary from "../../common/error/ErrorBoundary";
-import HttpUtils from "../../../utils/common/httpUtils";
+import HttpUtils from "../../../utils/api/httpUtils";
 import Info from "@material-ui/icons/InfoOutlined";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import PropTypes from "prop-types";

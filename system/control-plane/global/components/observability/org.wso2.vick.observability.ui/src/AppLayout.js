@@ -20,7 +20,7 @@
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
-import AuthUtils from "./utils/common/authUtils";
+import AuthUtils from "./utils/api/authUtils";
 import CheckCircle from "@material-ui/icons/CheckCircle";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";

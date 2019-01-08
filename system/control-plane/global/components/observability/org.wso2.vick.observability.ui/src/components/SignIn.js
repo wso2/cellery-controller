@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import AuthUtils from "../utils/common/authUtils";
+import AuthUtils from "../utils/api/authUtils";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";

@@ -27,7 +27,7 @@ import Drawer from "@material-ui/core/Drawer";
 import Error from "@material-ui/icons/Error";
 import Fade from "@material-ui/core/Fade";
 import Grey from "@material-ui/core/colors/grey";
-import HttpUtils from "../../utils/common/httpUtils";
+import HttpUtils from "../../utils/api/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
 import NotificationUtils from "../../utils/common/notificationUtils";
