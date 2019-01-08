@@ -26,7 +26,7 @@
 function install_k8s_kubeadm () {
 local K8S_VERSION=$1
 
-localUBUNTU_VERSION=$(cat /etc/lsb-release | sed -n '/DISTRIB_RELEASE/p' | awk -F'=' '{print $2}')
+local UBUNTU_VERSION=$(cat /etc/lsb-release | sed -n '/DISTRIB_RELEASE/p' | awk -F'=' '{print $2}')
 
 #if you get an error similar to
 #'[ERROR Swap]: running with swap on is not supported. Please disable swap', disable swap:
