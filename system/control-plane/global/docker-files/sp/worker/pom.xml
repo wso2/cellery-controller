@@ -86,6 +86,10 @@
             <artifactId>siddhi-io-http</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.extension.siddhi.store.rdbms</groupId>
+            <artifactId>siddhi-store-rdbms</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.vick</groupId>
             <artifactId>org.wso2.vick.observability.api</artifactId>
         </dependency>

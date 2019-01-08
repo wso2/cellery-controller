@@ -234,6 +234,11 @@
                 <version>${siddhi.io.http.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.extension.siddhi.store.rdbms</groupId>
+                <artifactId>siddhi-store-rdbms</artifactId>
+                <version>${siddhi.store.rdbms.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.vick</groupId>
                 <artifactId>org.wso2.vick.observability.api</artifactId>
                 <version>${vick.version}</version>
@@ -320,6 +325,7 @@
 
         <!-- SP Worker Connectors -->
         <siddhi.io.http.version>1.0.41</siddhi.io.http.version>
+        <siddhi.store.rdbms.version>4.0.49</siddhi.store.rdbms.version>
 
         <!-- Docker Repository Name -->
         <docker.repo.name>wso2vick</docker.repo.name>
