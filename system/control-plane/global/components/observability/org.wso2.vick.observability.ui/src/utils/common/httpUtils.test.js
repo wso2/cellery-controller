@@ -19,7 +19,7 @@
 
 import AuthUtils from "./authUtils";
 import HttpUtils from "./httpUtils";
-import {StateHolder} from "../state";
+import {StateHolder} from "../../components/common/state";
 import axios from "axios";
 
 jest.mock("axios");

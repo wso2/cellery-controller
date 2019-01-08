@@ -16,10 +16,10 @@
 
 import "./SequenceDiagram.css";
 import ChevronRight from "@material-ui/icons/ChevronRight";
-import Constants from "../../../common/constants";
+import Constants from "../../../../utils/constants";
 import React from "react";
-import Span from "../../utils/span";
-import TracingUtils from "../../utils/tracingUtils";
+import Span from "../../../../utils/tracing/span";
+import TracingUtils from "../../../../utils/tracing/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import interact from "interactjs";
 import mermaid from "mermaid";

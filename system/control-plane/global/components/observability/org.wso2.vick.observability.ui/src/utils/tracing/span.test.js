@@ -16,7 +16,7 @@
 
 /* eslint max-lines: ["off"] */
 
-import Constants from "../../common/constants";
+import Constants from "../constants";
 import Span from "./span";
 
 describe("Span", () => {

@@ -16,11 +16,11 @@
 
 import DependencyGraph from "../../common/DependencyGraph";
 import ErrorBoundary from "../../common/error/ErrorBoundary";
-import HttpUtils from "../../common/utils/httpUtils";
+import HttpUtils from "../../../utils/common/httpUtils";
 import Info from "@material-ui/icons/InfoOutlined";
-import NotificationUtils from "../../common/utils/notificationUtils";
+import NotificationUtils from "../../../utils/common/notificationUtils";
 import PropTypes from "prop-types";
-import QueryUtils from "../../common/utils/queryUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import Typography from "@material-ui/core/Typography/Typography";

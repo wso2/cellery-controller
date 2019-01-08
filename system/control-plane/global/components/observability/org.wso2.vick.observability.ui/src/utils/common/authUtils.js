@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import {StateHolder} from "../state";
+import {StateHolder} from "../../components/common/state";
 
 /**
  * Authentication/Authorization related utilities.

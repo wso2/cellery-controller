@@ -20,7 +20,7 @@
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
-import AuthUtils from "./components/common/utils/authUtils";
+import AuthUtils from "./utils/common/authUtils";
 import CheckCircle from "@material-ui/icons/CheckCircle";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
@@ -42,7 +42,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import NotificationUtils from "./components/common/utils/notificationUtils";
+import NotificationUtils from "./utils/common/notificationUtils";
 import React from "react";
 import Settings from "@material-ui/icons/SettingsOutlined";
 import Snackbar from "@material-ui/core/Snackbar/Snackbar";

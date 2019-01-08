@@ -15,7 +15,7 @@
  */
 
 import Checkbox from "@material-ui/core/Checkbox";
-import Constants from "../../../common/constants";
+import Constants from "../../../../utils/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid";
 import Input from "@material-ui/core/Input/Input";
@@ -25,9 +25,9 @@ import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
-import Span from "../../utils/span";
+import Span from "../../../../utils/tracing/span";
 import TimelineView from "./TimelineView";
-import TracingUtils from "../../utils/tracingUtils";
+import TracingUtils from "../../../../utils/tracing/tracingUtils";
 import withStyles from "@material-ui/core/styles/withStyles";
 
 const styles = (theme) => ({

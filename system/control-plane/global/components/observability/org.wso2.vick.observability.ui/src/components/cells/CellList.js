@@ -16,9 +16,9 @@
 
 import DataTable from "../common/DataTable";
 import HealthIndicator from "../common/HealthIndicator";
-import HttpUtils from "../common/utils/httpUtils";
+import HttpUtils from "../../utils/common/httpUtils";
 import {Link} from "react-router-dom";
-import NotificationUtils from "../common/utils/notificationUtils";
+import NotificationUtils from "../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";

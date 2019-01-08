@@ -15,7 +15,7 @@
  */
 
 import NotificationUtils from "./notificationUtils";
-import StateHolder from "../state/stateHolder";
+import StateHolder from "../../components/common/state/stateHolder";
 
 describe("NotificationUtils", () => {
     let state;

@@ -20,7 +20,7 @@ import "react-datetime/css/react-datetime.css";
 import Button from "@material-ui/core/Button/Button";
 import Checkbox from "@material-ui/core/Checkbox/Checkbox";
 import Collapse from "@material-ui/core/Collapse";
-import Constants from "../constants";
+import Constants from "../../../utils/constants";
 import Datetime from "react-datetime";
 import Divider from "@material-ui/core/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
@@ -28,7 +28,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel/FormControlLabe
 import Grid from "@material-ui/core/Grid/Grid";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import PropTypes from "prop-types";
-import QueryUtils from "../utils/queryUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import TextField from "@material-ui/core/TextField/TextField";
 import Typography from "@material-ui/core/Typography/Typography";

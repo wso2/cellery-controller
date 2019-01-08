@@ -23,7 +23,7 @@ import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import Popover from "@material-ui/core/Popover";
-import QueryUtils from "../utils/queryUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Refresh from "@material-ui/icons/Refresh";
 import Select from "@material-ui/core/Select/Select";

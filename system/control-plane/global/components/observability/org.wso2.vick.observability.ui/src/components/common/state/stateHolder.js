@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import AuthUtils from "../utils/authUtils";
+import AuthUtils from "../../../utils/common/authUtils";
 
 /**
  * Configuration holder.

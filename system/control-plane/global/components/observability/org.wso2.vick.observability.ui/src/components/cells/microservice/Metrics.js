@@ -15,11 +15,11 @@
  */
 
 import FormControl from "@material-ui/core/FormControl";
-import HttpUtils from "../../common/utils/httpUtils";
+import HttpUtils from "../../../utils/common/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
 import MetricsGraphs from "../MetricsGraphs";
-import NotificationUtils from "../../common/utils/notificationUtils";
-import QueryUtils from "../../common/utils/queryUtils";
+import NotificationUtils from "../../../utils/common/notificationUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";

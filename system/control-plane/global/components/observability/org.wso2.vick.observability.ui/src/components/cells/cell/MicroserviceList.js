@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import Constants from "../../common/constants";
+import Constants from "../../../utils/constants";
 import DataTable from "../../common/DataTable";
 import HealthIndicator from "../../common/HealthIndicator";
-import HttpUtils from "../../common/utils/httpUtils";
+import HttpUtils from "../../../utils/common/httpUtils";
 import {Link} from "react-router-dom";
-import NotificationUtils from "../../common/utils/notificationUtils";
-import QueryUtils from "../../common/utils/queryUtils";
+import NotificationUtils from "../../../utils/common/notificationUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
 import withGlobalState from "../../common/state";

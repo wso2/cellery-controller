@@ -15,7 +15,7 @@
  * under the License.
  */
 
-import {StateHolder} from "../state";
+import {StateHolder} from "../../components/common/state";
 
 class NotificationUtils {
 

@@ -15,7 +15,7 @@
  */
 
 import AccessTime from "@material-ui/icons/AccessTime";
-import Constants from "../common/constants";
+import Constants from "../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
 import PropTypes from "prop-types";
