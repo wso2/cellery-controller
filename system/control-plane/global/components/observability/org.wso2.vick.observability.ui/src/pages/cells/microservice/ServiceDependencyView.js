@@ -168,9 +168,9 @@ class ServiceDependencyView extends React.Component {
     };
 
     render = () => {
-        let view;
-        const dependedNodeCount = this.state.data.nodes.length;
         const {classes} = this.props;
+        const dependedNodeCount = this.state.data.nodes.length;
+        let view;
 
         if (dependedNodeCount > 1) {
             view = (

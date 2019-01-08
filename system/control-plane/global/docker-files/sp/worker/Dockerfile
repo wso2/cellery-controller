@@ -22,6 +22,7 @@ ARG VICK_TARGET_FILES=./target/files
 
 # Remove connectors with bugs (The connectors with fixes are copied with the "libs" directory)
 RUN rm ${WSO2_SERVER_HOME}/lib/siddhi-io-http-1.0.39.jar
+RUN rm ${WSO2_SERVER_HOME}/lib/siddhi-store-rdbms-4.0.35.jar
 
 # Copy the osgified jars
 COPY --chown=wso2carbon:wso2 ${VICK_TARGET_FILES}/lib/*.jar ${WSO2_SERVER_HOME}/lib/

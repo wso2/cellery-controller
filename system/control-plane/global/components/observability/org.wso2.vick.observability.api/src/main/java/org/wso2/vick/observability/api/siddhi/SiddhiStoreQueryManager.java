@@ -33,19 +33,16 @@ public class SiddhiStoreQueryManager {
             "cell string, serviceName string, pod string, operationName string, kind string, startTime long, " +
             "duration long, tags string);";
     private static final String REQUEST_AGGREGATION_DEFINITION = "define stream ProcessedRequestsStream(" +
-            "sourceNamespace string, sourceCell string, sourceVICKService string, destinationNamespace string, " +
-            "destinationCell string, destinationVICKService string, requestPath string, requestMethod string, " +
+            "sourceCell string, sourceVICKService string, destinationCell string, destinationVICKService string, " +
             "httpResponseGroup string, responseTimeMilliSec double, requestSizeBytes long, responseSizeBytes long);" +
             "@store(type=\"rdbms\", datasource=\"VICK_OBSERVABILITY_DB\")\n" +
             "@purge(enable=\"false\")\n" +
             "define aggregation RequestAggregation from ProcessedRequestsStream\n" +
-            "select sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
-            "destinationVICKService, requestPath, requestMethod, httpResponseGroup, " +
+            "select sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup, " +
             "sum(responseTimeMilliSec) as totalResponseTimeMilliSec, sum(requestSizeBytes) as totalRequestSizeBytes," +
             "sum(responseSizeBytes) as totalResponseSizeBytes, " +
             "count() as requestCount\n" +
-            "group by sourceNamespace, sourceCell, sourceVICKService, destinationNamespace, destinationCell, " +
-            "destinationVICKService, requestPath, requestMethod, httpResponseGroup\n" +
+            "group by sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup\n" +
             "aggregate every sec...year;";
     private static final String SIDDHI_APP = DISTRIBUTED_TRACING_TABLE_DEFINITION + "\n" +
             REQUEST_AGGREGATION_DEFINITION;

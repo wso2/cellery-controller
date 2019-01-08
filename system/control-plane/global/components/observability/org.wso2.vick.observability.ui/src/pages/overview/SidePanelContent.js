@@ -374,7 +374,7 @@ class SidePanelContent extends React.Component {
                         </TableBody>
                     </Table>
                     <div className={classes.barChart}>
-                        <XYPlot yType="ordinal" stackBy="x" width={250} height="90">
+                        <XYPlot yType="ordinal" stackBy="x" width={250} height={90}>
                             <VerticalGridLines/>
                             <HorizontalGridLines/>
                             <XAxis />
