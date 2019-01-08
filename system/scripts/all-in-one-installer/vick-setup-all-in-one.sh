@@ -481,7 +481,11 @@ control_plane_yaml=(
     "mandatory.yaml"
     "service-nodeport.yaml"
     "cloud-generic.yaml"
-    "apim-configs/gw/datasources/master-datasources.xml"
+)
+
+control_plane_configs_base_url="${git_base_url}/system/control-plane/global"
+control_plane_configs=(
+"apim-configs/gw/datasources/master-datasources.xml"
     "apim-configs/gw/user-mgt.xml"
     "apim-configs/gw/identity/identity.xml"
     "apim-configs/gw/tomcat/catalina-server.xml"
@@ -548,6 +552,7 @@ create_artifact_folder $download_path
 echo "🕷️ Downloading vick artifacts to ${download_path}"
 
 download_vick_artifacts $control_plane_base_url $download_path "${control_plane_yaml[@]}"
+download_vick_artifacts $control_plane_configs_base_url $download_path "${control_plane_configs[@]}"
 download_vick_artifacts $crd_base_url  $download_path "${crd_yaml[@]}"
 download_vick_artifacts $istio_base_url $download_path "${istio_yaml[@]}"
 
