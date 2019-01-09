@@ -18,7 +18,6 @@ import AccessTime from "@material-ui/icons/AccessTime";
 import Constants from "../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import TablePagination from "@material-ui/core/TablePagination/TablePagination";
 import Typography from "@material-ui/core/Typography/Typography";
@@ -26,6 +25,7 @@ import moment from "moment";
 import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     trace: {
