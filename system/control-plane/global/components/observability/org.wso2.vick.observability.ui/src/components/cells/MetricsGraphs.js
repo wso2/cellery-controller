@@ -22,6 +22,7 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../../utils/constants";
 import Grid from "@material-ui/core/Grid";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
+import QueryUtils from "../../utils/common/queryUtils";
 import React from "react";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
@@ -32,6 +33,7 @@ import {
     LineMarkSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../common/color";
+import withGlobalState, {StateHolder} from "../common/state";
 import * as PropTypes from "prop-types";
 
 const styles = {
@@ -98,7 +100,7 @@ class MetricsGraphs extends React.Component {
     }
 
     calculateMetrics = () => {
-        const {colorGenerator, data, direction} = this.props;
+        const {colorGenerator, globalState, data, direction} = this.props;
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
@@ -201,17 +203,19 @@ class MetricsGraphs extends React.Component {
                 requestCount: 0
             });
         };
+        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime));
         for (let i = 0; i < aggregatedData.length; i++) {
             const datum = aggregatedData[i];
 
-            if (i > 0 && timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
+            if (i === 0 || timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
                 addEmptyTimeSeriesPoint(datum.timestamp - 1000);
             }
             timeSeriesData.push(datum);
-            if (i < aggregatedData.length - 1 && aggregatedData[i + 1].timestamp > datum.timestamp + 1000) {
+            if (i === aggregatedData.length - 1 || aggregatedData[i + 1].timestamp > datum.timestamp + 1000) {
                 addEmptyTimeSeriesPoint(datum.timestamp + 1000);
             }
         }
+        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime));
 
         // Preparing data for the Request Volume Line Chart
         const reqVolumeData = timeSeriesData.map((datum) => ({
@@ -542,13 +546,13 @@ class MetricsGraphs extends React.Component {
                                                 this.setState({
                                                     lastDrawLocationDurationChart: {
                                                         bottom: lastDrawLocationDurationChart.bottom
-                                                        + (area.top - area.bottom),
+                                                            + (area.top - area.bottom),
                                                         left: lastDrawLocationDurationChart.left
-                                                        - (area.right - area.left),
+                                                            - (area.right - area.left),
                                                         right: lastDrawLocationDurationChart.right
-                                                        - (area.right - area.left),
+                                                            - (area.right - area.left),
                                                         top: lastDrawLocationDurationChart.top
-                                                        + (area.top - area.bottom)
+                                                            + (area.top - area.bottom)
                                                     }
                                                 });
                                             }}/>
@@ -630,10 +634,10 @@ class MetricsGraphs extends React.Component {
                                                 this.setState({
                                                     lastDrawLocationSizeChart: {
                                                         bottom: lastDrawLocationSizeChart.bottom
-                                                        + (area.top - area.bottom),
+                                                            + (area.top - area.bottom),
                                                         left: lastDrawLocationSizeChart.left - (area.right - area.left),
                                                         right: lastDrawLocationSizeChart.right
-                                                        - (area.right - area.left),
+                                                            - (area.right - area.left),
                                                         top: lastDrawLocationSizeChart.top + (area.top - area.bottom)
                                                     }
                                                 });
@@ -660,6 +664,7 @@ class MetricsGraphs extends React.Component {
 MetricsGraphs.propTypes = {
     classes: PropTypes.object.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
+    globalState: PropTypes.instanceOf(StateHolder).isRequired,
     data: PropTypes.arrayOf(PropTypes.shape({
         timestamp: PropTypes.number.isRequired,
         httpResponseGroup: PropTypes.string.isRequired,
@@ -671,4 +676,4 @@ MetricsGraphs.propTypes = {
     direction: PropTypes.string.isRequired
 };
 
-export default withStyles(styles)(withColor(MetricsGraphs));
+export default withStyles(styles)(withColor(withGlobalState(MetricsGraphs)));
