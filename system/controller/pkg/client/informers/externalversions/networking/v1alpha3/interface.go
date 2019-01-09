@@ -28,6 +28,10 @@ import (
 type Interface interface {
 	// EnvoyFilters returns a EnvoyFilterInformer.
 	EnvoyFilters() EnvoyFilterInformer
+	// Gateways returns a GatewayInformer.
+	Gateways() GatewayInformer
+	// VirtualServices returns a VirtualServiceInformer.
+	VirtualServices() VirtualServiceInformer
 }
 
 type version struct {
@@ -44,4 +48,14 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // EnvoyFilters returns a EnvoyFilterInformer.
 func (v *version) EnvoyFilters() EnvoyFilterInformer {
 	return &envoyFilterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Gateways returns a GatewayInformer.
+func (v *version) Gateways() GatewayInformer {
+	return &gatewayInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// VirtualServices returns a VirtualServiceInformer.
+func (v *version) VirtualServices() VirtualServiceInformer {
+	return &virtualServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

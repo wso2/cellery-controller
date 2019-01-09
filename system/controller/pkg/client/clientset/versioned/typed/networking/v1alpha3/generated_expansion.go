@@ -21,3 +21,7 @@
 package v1alpha3
 
 type EnvoyFilterExpansion interface{}
+
+type GatewayExpansion interface{}
+
+type VirtualServiceExpansion interface{}

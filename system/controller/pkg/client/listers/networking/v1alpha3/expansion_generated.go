@@ -27,3 +27,19 @@ type EnvoyFilterListerExpansion interface{}
 // EnvoyFilterNamespaceListerExpansion allows custom methods to be added to
 // EnvoyFilterNamespaceLister.
 type EnvoyFilterNamespaceListerExpansion interface{}
+
+// GatewayListerExpansion allows custom methods to be added to
+// GatewayLister.
+type GatewayListerExpansion interface{}
+
+// GatewayNamespaceListerExpansion allows custom methods to be added to
+// GatewayNamespaceLister.
+type GatewayNamespaceListerExpansion interface{}
+
+// VirtualServiceListerExpansion allows custom methods to be added to
+// VirtualServiceLister.
+type VirtualServiceListerExpansion interface{}
+
+// VirtualServiceNamespaceListerExpansion allows custom methods to be added to
+// VirtualServiceNamespaceLister.
+type VirtualServiceNamespaceListerExpansion interface{}

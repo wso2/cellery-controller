@@ -23,8 +23,8 @@ const (
 	filterInsertPositionFirst = "FIRST"
 	filterInsertPositionLast  = "LAST"
 
-	filterListenerTypeInbound  = "SIDECAR_INBOUND"
-	filterListenerTypeOutbound  = "SIDECAR_OUTBOUND"
+	filterListenerTypeInbound  = "ANY"
+	filterListenerTypeOutbound  = "ANY"
 
 	HTTPProtocol = "HTTP"
 	baseFilterName = "envoy.ext_authz"

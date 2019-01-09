@@ -24,9 +24,11 @@ const (
 
 	tokenServiceServicePortInboundName  = "grpc-inbound"
 	tokenServiceServicePortOutboundName = "grpc-outbound"
+	tokenServiceServicePortJWKSName = "http-jwks"
 
 	tokenServiceContainerInboundPort  = 8080
 	tokenServiceContainerOutboundPort = 8081
+	tokenServiceContainerJWKSPort = 8090
 
 	tokenServiceConfigKey  = "sts-config"
 	tokenServiceConfigFile = "sts.json"

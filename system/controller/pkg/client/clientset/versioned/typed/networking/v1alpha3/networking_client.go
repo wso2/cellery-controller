@@ -30,6 +30,8 @@ import (
 type NetworkingV1alpha3Interface interface {
 	RESTClient() rest.Interface
 	EnvoyFiltersGetter
+	GatewaysGetter
+	VirtualServicesGetter
 }
 
 // NetworkingV1alpha3Client is used to interact with features provided by the networking group.
@@ -39,6 +41,14 @@ type NetworkingV1alpha3Client struct {
 
 func (c *NetworkingV1alpha3Client) EnvoyFilters(namespace string) EnvoyFilterInterface {
 	return newEnvoyFilters(c, namespace)
+}
+
+func (c *NetworkingV1alpha3Client) Gateways(namespace string) GatewayInterface {
+	return newGateways(c, namespace)
+}
+
+func (c *NetworkingV1alpha3Client) VirtualServices(namespace string) VirtualServiceInterface {
+	return newVirtualServices(c, namespace)
 }
 
 // NewForConfig creates a new NetworkingV1alpha3Client for the given config.

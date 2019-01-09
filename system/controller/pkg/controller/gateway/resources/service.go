@@ -37,12 +37,44 @@ func CreateGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{{
-				Name:       controller.HTTPServiceName,
-				Protocol:   corev1.ProtocolTCP,
-				Port:       gatewayServicePort,
-				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
-			}},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       controller.HTTPServiceName,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       gatewayServicePort,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+				},
+			},
+			Selector: createGatewayLabels(gateway),
+		},
+	}
+}
+
+func CreateGatewayK8sServiceEnvoy(gateway *v1alpha1.Gateway) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GatewayK8sServiceName(gateway),
+			Namespace: gateway.Namespace,
+			Labels:    createGatewayLabels(gateway),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateGatewayOwnerRef(gateway),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http2",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       80,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+				},
+				{
+					Name:       "https",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       443,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
+				},
+			},
 			Selector: createGatewayLabels(gateway),
 		},
 	}

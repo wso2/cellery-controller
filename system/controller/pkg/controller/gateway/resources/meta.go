@@ -51,6 +51,14 @@ func GatewayK8sServiceName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-service"
 }
 
+func IstioGatewayName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name
+}
+
+func IstioVSName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name
+}
+
 func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
 	return GatewayK8sServiceName(gateway) + "." + gateway.Namespace
 }

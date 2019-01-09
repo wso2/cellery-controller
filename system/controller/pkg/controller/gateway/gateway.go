@@ -36,8 +36,10 @@ import (
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	istioinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
+	istionetworklisters "github.com/wso2/product-vick/system/controller/pkg/client/listers/networking/v1alpha3"
 	listers "github.com/wso2/product-vick/system/controller/pkg/client/listers/vick/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
@@ -47,13 +49,15 @@ import (
 )
 
 type gatewayHandler struct {
-	kubeClient       kubernetes.Interface
-	vickClient       vickclientset.Interface
-	deploymentLister appsv1listers.DeploymentLister
-	k8sServiceLister corev1listers.ServiceLister
-	configMapLister  corev1listers.ConfigMapLister
-	gatewayLister    listers.GatewayLister
-	gatewayConfig    config.Gateway
+	kubeClient         kubernetes.Interface
+	vickClient         vickclientset.Interface
+	deploymentLister   appsv1listers.DeploymentLister
+	k8sServiceLister   corev1listers.ServiceLister
+	istioGatewayLister istionetworklisters.GatewayLister
+	istioVSLister      istionetworklisters.VirtualServiceLister
+	configMapLister    corev1listers.ConfigMapLister
+	gatewayLister      listers.GatewayLister
+	gatewayConfig      config.Gateway
 }
 
 func NewController(
@@ -62,17 +66,21 @@ func NewController(
 	systemConfigMapInformer corev1informers.ConfigMapInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
+	istioGatewayInformer istioinformers.GatewayInformer,
+	istioVSInformer istioinformers.VirtualServiceInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer vickinformers.GatewayInformer,
 ) *controller.Controller {
 
 	h := &gatewayHandler{
-		kubeClient:       kubeClient,
-		vickClient:       vickClient,
-		deploymentLister: deploymentInformer.Lister(),
-		k8sServiceLister: k8sServiceInformer.Lister(),
-		configMapLister:  configMapInformer.Lister(),
-		gatewayLister:    gatewayInformer.Lister(),
+		kubeClient:         kubeClient,
+		vickClient:         vickClient,
+		deploymentLister:   deploymentInformer.Lister(),
+		k8sServiceLister:   k8sServiceInformer.Lister(),
+		istioGatewayLister: istioGatewayInformer.Lister(),
+		istioVSLister:      istioVSInformer.Lister(),
+		configMapLister:    configMapInformer.Lister(),
+		gatewayLister:      gatewayInformer.Lister(),
 	}
 	c := controller.New(h, "Gateway")
 
@@ -138,6 +146,14 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
+	if err := h.handleIstioGateway(gateway); err != nil {
+		return err
+	}
+
+	if err := h.handleIstioVirtualService(gateway); err != nil {
+		return err
+	}
+
 	h.updateOwnerCell(gateway)
 
 	return nil
@@ -166,7 +182,7 @@ func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
+		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeploymentEnvoy(gateway, h.gatewayConfig))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
@@ -188,7 +204,7 @@ func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	k8sService, err := h.k8sServiceLister.Services(gateway.Namespace).Get(resources.GatewayK8sServiceName(gateway))
 	if errors.IsNotFound(err) {
-		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sService(gateway))
+		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sServiceEnvoy(gateway))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway service %v", err)
 			return err
@@ -199,6 +215,38 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	glog.Infof("Gateway service created %+v", k8sService)
 
 	gateway.Status.HostName = k8sService.Name
+
+	return nil
+}
+
+func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
+	istioGateway, err := h.istioGatewayLister.Gateways(gateway.Namespace).Get(resources.IstioGatewayName(gateway))
+	if errors.IsNotFound(err) {
+		istioGateway, err = h.vickClient.NetworkingV1alpha3().Gateways(gateway.Namespace).Create(resources.CreateIstioGateway(gateway))
+		if err != nil {
+			glog.Errorf("Failed to create Gateway service %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Istio gateway created %+v", istioGateway)
+
+	return nil
+}
+
+func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) error {
+	istioVS, err := h.istioVSLister.VirtualServices(gateway.Namespace).Get(resources.IstioVSName(gateway))
+	if errors.IsNotFound(err) {
+		istioVS, err = h.vickClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(resources.CreateIstioVirtualService(gateway))
+		if err != nil {
+			glog.Errorf("Failed to create Gateway service %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Istio virtual service created %+v", istioVS)
 
 	return nil
 }
