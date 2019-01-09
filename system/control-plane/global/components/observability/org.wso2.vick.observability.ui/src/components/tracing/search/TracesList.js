@@ -15,7 +15,7 @@
  */
 
 import AccessTime from "@material-ui/icons/AccessTime";
-import Constants from "../../utils/constants";
+import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
@@ -24,7 +24,7 @@ import Typography from "@material-ui/core/Typography/Typography";
 import moment from "moment";
 import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
-import withColor, {ColorGenerator} from "../common/color";
+import withColor, {ColorGenerator} from "../../common/color";
 import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
@@ -102,7 +102,7 @@ const styles = (theme) => ({
     }
 });
 
-class SearchResult extends React.PureComponent {
+class TracesList extends React.PureComponent {
 
     constructor(props) {
         super(props);
@@ -129,7 +129,7 @@ class SearchResult extends React.PureComponent {
     /**
      * Load the trace page.
      *
-     * @param {Event} event Event for the click event
+     * @param {MouseEvent} event Event for the click event
      * @param {string} traceId The trace ID of the selected trace
      * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
      * @param {string} microservice The microservice name if a microservice was selected
@@ -275,7 +275,7 @@ class SearchResult extends React.PureComponent {
 
 }
 
-SearchResult.propTypes = {
+TracesList.propTypes = {
     classes: PropTypes.any.isRequired,
     history: PropTypes.shape({
         push: PropTypes.func.isRequired
@@ -299,4 +299,4 @@ SearchResult.propTypes = {
     }).isRequired
 };
 
-export default withStyles(styles)(withRouter(withColor(SearchResult)));
+export default withStyles(styles)(withRouter(withColor(TracesList)));
