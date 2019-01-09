@@ -17,11 +17,13 @@
 #
 # ------------------------------------------------------------------------
 
-#Deploy VICK with kubeadm K8s provider.
-#cat vick-setup-all-in-one.sh | bash -s -- kubeadm
+#How to deploy VICK with kubeadm K8s provider.
+# cat vick-setup-all-in-one.sh | bash -s -- <k8s Provier>
+# cat vick-setup-all-in-one.sh | bash -s -- kubeadm
 
-#Deploy VICK with GCP K8s provier.
-#cat vick-setup-all-in-one.sh | bash -s -- GCP proj-vick
+#How to deploy VICK with GCP K8s provider.
+# cat vick-setup-all-in-one.sh | bash -s -- <k8s Provier> <GCP Project ID> <GCP Compute Zone>
+# Eg. cat vick-setup-all-in-one.sh | bash -s -- GCP proj-vick us-west1-c
 
 function install_k8s_kubeadm () {
 local K8S_VERSION=$1

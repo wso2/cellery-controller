@@ -22,11 +22,11 @@ curl https://raw.githubusercontent.com/wso2/product-vick/master/system/scripts/a
 ### Deploy VICK into GCP K8s provider.
 
 ```
-curl <vick-all-in-one script url> |bash -s -- <K8s provider> <GCP project name>
+curl <vick-all-in-one script url> | bash -s -- <K8s provider> <GCP Project ID> <GCP Compute Zone> 
 ```
 
 ```
-curl https://raw.githubusercontent.com/wso2/product-vick/master/system/scripts/all-in-one-installer/vick-setup-all-in-one.sh | |bash -s -- GCP proj-vick
+curl https://raw.githubusercontent.com/wso2/product-vick/master/system/scripts/all-in-one-installer/vick-setup-all-in-one.sh | bash -s -- GCP proj-vick us-west1-c
 ```
 
 ### Deploy VICK into vanilla K8s provider.
