@@ -17,5 +17,5 @@ spec:
     spec:
       containers:
       - name: vick-controller
-        image: wso2vick/vick-controller:latest
+        image: wso2vick/vick-controller:envoy-cell-gw
       serviceAccountName: vick-controller
