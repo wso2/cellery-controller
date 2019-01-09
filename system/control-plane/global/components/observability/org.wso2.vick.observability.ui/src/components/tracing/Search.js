@@ -98,7 +98,10 @@ class Search extends React.Component {
             },
             isLoading: false,
             hasSearchCompleted: false,
-            searchResults: []
+            searchResults: {
+                rootSpans: [],
+                spanCounts: []
+            }
         };
     }
 
@@ -271,7 +274,7 @@ class Search extends React.Component {
                         hasSearchCompleted && !isLoading
                             ? (
                                 <div className={classes.resultContainer}>
-                                    <SearchResult data={searchResults}/>
+                                    <SearchResult searchResults={searchResults}/>
                                 </div>
                             )
                             : null
@@ -510,46 +513,25 @@ class Search extends React.Component {
             },
             globalState
         ).then((data) => {
-            const rootSpans = data.rootSpans
-                .map((dataItem) => ({
-                    traceId: dataItem[0],
-                    rootCellName: dataItem[1],
-                    rootServiceName: dataItem[2],
-                    rootOperationName: dataItem[3],
-                    rootStartTime: dataItem[4],
-                    rootDuration: dataItem[5]
-                }))
-                .reduce((accumulator, dataItem) => {
-                    accumulator[dataItem.traceId] = dataItem;
-                    return accumulator;
-                }, {});
-            const searchResults = data.spanCounts
-                .map((dataItem) => ({
-                    traceId: dataItem[0],
-                    cellNameKey: dataItem[1],
-                    serviceName: dataItem[2],
-                    count: dataItem[3]
-                }))
-                .reduce((accumulator, dataItem) => {
-                    if (accumulator[dataItem.traceId]) {
-                        if (!accumulator[dataItem.traceId].services) {
-                            accumulator[dataItem.traceId].services = [];
-                        }
-                        accumulator[dataItem.traceId].services.push(dataItem);
-                    }
-                    return accumulator;
-                }, rootSpans);
-
-            const searchResultsArray = [];
-            for (const traceId in searchResults) {
-                if (searchResults.hasOwnProperty(traceId)) {
-                    searchResultsArray.push(searchResults[traceId]);
-                }
-            }
             self.setState((prevState) => ({
                 ...prevState,
                 hasSearchCompleted: true,
-                searchResults: searchResultsArray
+                searchResults: {
+                    rootSpans: data.rootSpans.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        rootCellName: dataItem[1],
+                        rootServiceName: dataItem[2],
+                        rootOperationName: dataItem[3],
+                        rootStartTime: dataItem[4],
+                        rootDuration: dataItem[5]
+                    })),
+                    spanCounts: data.spanCounts.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        cellName: dataItem[1],
+                        serviceName: dataItem[2],
+                        count: dataItem[3]
+                    }))
+                }
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
