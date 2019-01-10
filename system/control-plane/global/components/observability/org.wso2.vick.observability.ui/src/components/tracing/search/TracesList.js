@@ -153,7 +153,7 @@ class TracesList extends React.PureComponent {
 
         // Merging the span counts and root span information
         const rootSpans = searchResults.rootSpans.reduce((accumulator, dataItem) => {
-            accumulator[dataItem.traceId] = dataItem;
+            accumulator[dataItem.traceId] = {...dataItem};
             return accumulator;
         }, {});
         const processedSearchResults = searchResults.spanCounts.reduce((accumulator, dataItem) => {
@@ -161,7 +161,7 @@ class TracesList extends React.PureComponent {
                 if (!accumulator[dataItem.traceId].services) {
                     accumulator[dataItem.traceId].services = [];
                 }
-                accumulator[dataItem.traceId].services.push(dataItem);
+                accumulator[dataItem.traceId].services.push({...dataItem});
             }
             return accumulator;
         }, rootSpans);

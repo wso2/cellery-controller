@@ -63,7 +63,7 @@ const styles = (theme) => ({
     }
 });
 
-class Index extends React.Component {
+class TraceSearch extends React.Component {
 
     static ALL_VALUE = "All";
 
@@ -79,9 +79,9 @@ class Index extends React.Component {
                 operations: []
             },
             filter: {
-                cell: queryParams.cell ? queryParams.cell : Index.ALL_VALUE,
-                microservice: queryParams.microservice ? queryParams.microservice : Index.ALL_VALUE,
-                operation: queryParams.operation ? queryParams.operation : Index.ALL_VALUE,
+                cell: queryParams.cell ? queryParams.cell : TraceSearch.ALL_VALUE,
+                microservice: queryParams.microservice ? queryParams.microservice : TraceSearch.ALL_VALUE,
+                operation: queryParams.operation ? queryParams.operation : TraceSearch.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
                 minDuration: queryParams.minDuration ? queryParams.minDuration : "",
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
@@ -163,8 +163,8 @@ class Index extends React.Component {
                                     <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
                                     <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
                                         inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={Index.ALL_VALUE} value={Index.ALL_VALUE}>
-                                            {Index.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(data.cells)}
                                     </Select>
@@ -175,8 +175,8 @@ class Index extends React.Component {
                                     <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
                                     <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
                                         inputProps={{name: "microservice", id: "microservice"}}>
-                                        <MenuItem key={Index.ALL_VALUE} value={Index.ALL_VALUE}>
-                                            {Index.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableMicroservices)}
                                     </Select>
@@ -187,8 +187,8 @@ class Index extends React.Component {
                                     <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
                                     <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
                                         inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={Index.ALL_VALUE} value={Index.ALL_VALUE}>
-                                            {Index.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableOperations)}
                                     </Select>
@@ -201,7 +201,7 @@ class Index extends React.Component {
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
                                     onAdd={this.handleTagAdd} onDelete={this.handleTagRemove}
-                                    onBeforeAdd={(chip) => Boolean(Index.parseChip(chip))}
+                                    onBeforeAdd={(chip) => Boolean(TraceSearch.parseChip(chip))}
                                     error={Boolean(tagsTempInput.errorMessage)}
                                     helperText={tagsTempInput.errorMessage} placeholder={"Eg: http.status_code=200"}
                                     onUpdateInput={this.handleTagsTempInputUpdate} inputValue={tagsTempInput.content}
@@ -423,7 +423,7 @@ class Index extends React.Component {
         this.setState({
             tagsTempInput: {
                 content: value,
-                errorMessage: !value || Index.parseChip(value)
+                errorMessage: !value || TraceSearch.parseChip(value)
                     ? ""
                     : "Invalid tag filter format. Expected \"tagKey=tagValue\""
             }
@@ -436,7 +436,7 @@ class Index extends React.Component {
      * @param {string} chip The chip representing the tag that was added
      */
     handleTagAdd = (chip) => {
-        const tag = Index.parseChip(chip);
+        const tag = TraceSearch.parseChip(chip);
         if (tag) {
             this.setState((prevState) => ({
                 ...prevState,
@@ -462,7 +462,7 @@ class Index extends React.Component {
      * @param {string} chip The chip representing the tag that was removed
      */
     handleTagRemove = (chip) => {
-        const tag = Index.parseChip(chip);
+        const tag = TraceSearch.parseChip(chip);
         if (tag) {
             this.setState((prevState) => {
                 const newTags = {...prevState.filter.tags};
@@ -488,7 +488,7 @@ class Index extends React.Component {
         // Build search object
         const search = {};
         const addSearchParam = (key, value) => {
-            if (value && value !== Index.ALL_VALUE) {
+            if (value && value !== TraceSearch.ALL_VALUE) {
                 search[key] = value;
             }
         };
@@ -552,7 +552,7 @@ class Index extends React.Component {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
-        const selectedCells = (filter.cell === Index.ALL_VALUE ? data.cells : [filter.cell]);
+        const selectedCells = (filter.cell === TraceSearch.ALL_VALUE ? data.cells : [filter.cell]);
         const availableMicroservices = data.microservices
             .filter((microservice) => selectedCells.includes(microservice.cell))
             .map((microservice) => microservice.name);
@@ -560,10 +560,10 @@ class Index extends React.Component {
         const selectedMicroservice = data.cells.length === 0 || (filter.microservice
             && availableMicroservices.includes(filter.microservice))
             ? filter.microservice
-            : Index.ALL_VALUE;
+            : TraceSearch.ALL_VALUE;
 
         // Finding the available operations to be selected
-        const selectedMicroservices = (selectedMicroservice === Index.ALL_VALUE
+        const selectedMicroservices = (selectedMicroservice === TraceSearch.ALL_VALUE
             ? availableMicroservices
             : [selectedMicroservice]);
         const availableOperations = data.operations
@@ -573,7 +573,7 @@ class Index extends React.Component {
         const selectedOperation = data.cells.length === 0 || (filter.operation
             && availableOperations.includes(filter.operation))
             ? filter.operation
-            : Index.ALL_VALUE;
+            : TraceSearch.ALL_VALUE;
 
         return {
             ...state,
@@ -606,7 +606,7 @@ class Index extends React.Component {
 
 }
 
-Index.propTypes = {
+TraceSearch.propTypes = {
     classes: PropTypes.object.isRequired,
     history: PropTypes.shape({
         replace: PropTypes.func.isRequired
@@ -620,4 +620,4 @@ Index.propTypes = {
     globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(withGlobalState(Index));
+export default withStyles(styles)(withGlobalState(TraceSearch));

@@ -178,29 +178,4 @@ describe("ColorGenerator", () => {
             expect(colorGenerator.getColorForPercentage(1, globalState)).toBe(successColor);
         });
     });
-
-    describe("regenerateNewColorScheme()", () => {
-        const keyCount = 200;
-        let keyList;
-
-        beforeEach(() => {
-            keyList = [];
-            for (const key of INITIAL_KEYS) {
-                keyList.push(key);
-            }
-            for (let i = 0; i < keyCount; i++) {
-                keyList.push(`key${i}`);
-            }
-        });
-
-        it("should generate colors for all the existing colors", () => {
-            const colorGenerator = new ColorGenerator();
-            colorGenerator.addKeys(keyList);
-            const spy = jest.spyOn(colorGenerator, "generateColors");
-            colorGenerator.regenerateNewColorScheme();
-
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(keyList.length);
-        });
-    });
 });

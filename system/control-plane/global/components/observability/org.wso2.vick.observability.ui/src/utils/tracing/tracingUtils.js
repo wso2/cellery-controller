@@ -46,13 +46,13 @@ class TracingUtils {
                     rootSpanIndex = 1;
                 }
             } else {
-                throw Error("Invalid Trace: Expected 1 root span, found two non-sibling root spans candidates.");
+                throw Error("Invalid Trace: Expected 1 root span, but found two non-sibling root spans.");
             }
             rootSpan = rootSpanCandidates[rootSpanIndex];
             rootSpanCandidates[0].sibling = rootSpanCandidates[1];
             rootSpanCandidates[1].sibling = rootSpanCandidates[0];
         } else {
-            throw Error(`Invalid Trace: Expected 1 root span, found ${rootSpanCandidates.length} spans`);
+            throw Error(`Invalid Trace: Expected 1 root span, but found ${rootSpanCandidates.length} root spans`);
         }
 
         // Fixing siblings kinds

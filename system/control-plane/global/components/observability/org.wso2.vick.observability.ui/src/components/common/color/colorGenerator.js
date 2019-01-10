@@ -34,17 +34,31 @@ class ColorGenerator {
     static ERROR = "ERROR";
     static CLIENT_ERROR = "CLIENT_ERROR";
 
+    /** @private **/
+    static LOCAL_STORAGE_ITEM = "colorMap";
+
     constructor() {
-        this.colorMap = {
-            [ColorGenerator.VICK]: "#ababab",
-            [ColorGenerator.ISTIO]: "#434da1",
-            [ColorGenerator.UNKNOWN]: "#71736f",
-            [ColorGenerator.SUCCESS]: Green[500],
-            [ColorGenerator.WARNING]: Yellow[800],
-            [ColorGenerator.ERROR]: Red[500],
-            [ColorGenerator.CLIENT_ERROR]: Blue[500]
-        };
+        this.loadColorMap();
+        this.initializeMainColors();
+        this.listeners = [];
     }
+
+    /**
+     * Initialize the main colors in the color scheme.
+     */
+    initializeMainColors = () => {
+        if (!this.colorMap || typeof this.colorMap !== "object") {
+            this.colorMap = {};
+        }
+
+        this.colorMap[ColorGenerator.VICK] = "#ababab";
+        this.colorMap[ColorGenerator.ISTIO] = "#434da1";
+        this.colorMap[ColorGenerator.UNKNOWN] = "#71736f";
+        this.colorMap[ColorGenerator.SUCCESS] = Green[500];
+        this.colorMap[ColorGenerator.WARNING] = Yellow[800];
+        this.colorMap[ColorGenerator.ERROR] = Red[500];
+        this.colorMap[ColorGenerator.CLIENT_ERROR] = Blue[500];
+    };
 
     /**
      * Add a list of keys to the current exiting keys.
@@ -59,6 +73,7 @@ class ColorGenerator {
         for (let i = 0; i < newKeys.length; i++) {
             self.colorMap[newKeys[i]] = colors[i];
         }
+        this.persistColorMap();
     };
 
     /**
@@ -97,21 +112,6 @@ class ColorGenerator {
     };
 
     /**
-     * Regenerate a new color scheme for the existing keys.
-     * This will remove all the previous colors used and generate a new set of colors.
-     */
-    regenerateNewColorScheme = () => {
-        const keyCount = Object.keys(this.colorMap).length;
-        const colors = this.generateColors(keyCount);
-
-        let i = 0;
-        for (const key of Object.keys(this.colorMap)) {
-            this.colorMap[key] = colors[i];
-            i += 1;
-        }
-    };
-
-    /**
      * Generate a set of colors.
      *
      * @private
@@ -136,7 +136,63 @@ class ColorGenerator {
             }
         }
         return newColors;
-    }
+    };
+
+    /**
+     * Reset the color scheme in memory and in persistent storage.
+     */
+    resetColors = () => {
+        localStorage.removeItem(ColorGenerator.LOCAL_STORAGE_ITEM);
+        this.initializeMainColors();
+        this.notify();
+    };
+
+    /**
+     * Add a listener to listen to color map changes.
+     *
+     * @param {Function} callback Callback to be called upon color map changes.
+     */
+    addListener = (callback) => {
+        this.listeners.push(callback);
+    };
+
+    /**
+     * Remove a listener which was added before to listen to color map changes.
+     *
+     * @param {Function} callback The callback to be removed
+     */
+    removeListener = (callback) => {
+        const removeIndex = this.listeners.indexOf(callback);
+        this.listeners.splice(removeIndex, 1);
+    };
+
+    /**
+     * Notify the listeners about the color map change.
+     *
+     * @private
+     */
+    notify = () => {
+        this.listeners.forEach((listener) => listener());
+    };
+
+    /**
+     * Persist the color map in a persistent storage.
+     * The Browser local storage is currently used.
+     *
+     * @private
+     */
+    persistColorMap = () => {
+        localStorage.setItem(ColorGenerator.LOCAL_STORAGE_ITEM, JSON.stringify(this.colorMap));
+    };
+
+    /**
+     * Load the color man stored in a persistent storage.
+     *
+     * @private
+     */
+    loadColorMap = () => {
+        this.colorMap = JSON.parse(localStorage.getItem(ColorGenerator.LOCAL_STORAGE_ITEM));
+    };
 
 }
 

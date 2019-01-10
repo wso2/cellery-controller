@@ -21,7 +21,6 @@ import "./TimelineView.css";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import Constants from "../../../../utils/constants";
-import PropTypes from "prop-types";
 import React from "react";
 import ReactDOM from "react-dom";
 import Span from "../../../../utils/tracing/span";
@@ -35,6 +34,7 @@ import interact from "interactjs";
 import vis from "vis";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     spanLabelContainer: {
@@ -135,6 +135,10 @@ class TimelineView extends React.Component {
             minTime: 0,
             maxTime: Number.MAX_VALUE
         };
+    }
+
+    componentDidUpdate() {
+        this.drawTimeline();
     }
 
     componentWillUnmount = () => {
