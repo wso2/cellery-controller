@@ -367,7 +367,7 @@ class AppLayout extends React.Component {
                             <MenuIcon/>
                         </IconButton>
                         <Typography variant="h6" color="inherit" className={classes.grow}>
-                            WSO2 VICK Observability
+                            Cellery Observability
                         </Typography>
                         {
                             globalState.get(StateHolder.USER)

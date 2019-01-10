@@ -1,7 +1,7 @@
 {
   "name": "org.wso2.vick.observability.ui",
   "version": "0.1.0",
-  "description": "WSO2 VICK Observability Portal",
+  "description": "Cellery Observability Portal",
   "author": "WSO2 Org",
   "license": "Apache-2.0",
   "scripts": {

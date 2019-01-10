@@ -45,6 +45,7 @@ const Constants = {
         SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN: /^async\sext_authz\segress$/
     },
     ComponentType: {
+        COMPONENTS: "COMPONENTS",
         VICK: "VICK",
         ISTIO: "Istio",
         MICROSERVICE: "Microservice"

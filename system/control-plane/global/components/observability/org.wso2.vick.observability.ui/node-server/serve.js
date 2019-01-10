@@ -40,5 +40,5 @@ const server = app.listen(webPortalPort, () => {
     const host = server.address().address;
     const port = server.address().port;
 
-    console.log("WSO2 VICK Observability Portal listening at http://%s:%s", host, port);
+    console.log("Cellery Observability Portal listening at http://%s:%s", host, port);
 });

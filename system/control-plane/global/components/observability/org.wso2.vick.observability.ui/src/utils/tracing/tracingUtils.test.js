@@ -704,12 +704,12 @@ describe("TracingUtils", () => {
 
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
-            expect(employeeServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
+            expect(employeeServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENTS);
             expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
-            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
+            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.ComponentType.COMPONENTS);
             expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
             expect(istioMixerServerSpan.cell).toBeNull();
@@ -723,18 +723,18 @@ describe("TracingUtils", () => {
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToReviewsServiceClientSpan.componentType)
-                .toBe(Constants.ComponentType.MICROSERVICE);
+                .toBe(Constants.ComponentType.COMPONENTS);
             expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
-            expect(reviewsServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
+            expect(reviewsServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENTS);
             expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToStockOptionsCellClientSpan.componentType)
-                .toBe(Constants.ComponentType.MICROSERVICE);
+                .toBe(Constants.ComponentType.COMPONENTS);
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
@@ -749,7 +749,7 @@ describe("TracingUtils", () => {
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.ComponentType.MICROSERVICE);
+            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENTS);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
     });

@@ -65,7 +65,7 @@ class Cell extends React.Component {
 
         this.tabs = [
             "details",
-            "microservices",
+            "components",
             "metrics"
         ];
         const queryParams = HttpUtils.parseQueryParams(props.location.search);
@@ -118,7 +118,7 @@ class Cell extends React.Component {
                         <Tabs value={selectedTabIndex} indicatorColor="primary"
                             onChange={this.handleTabChange} className={classes.tabs}>
                             <Tab label="Details"/>
-                            <Tab label="Microservices"/>
+                            <Tab label="Components"/>
                             <Tab label="Metrics"/>
                         </Tabs>
                         <Button className={classes.traceButton} component={Link} size="small"

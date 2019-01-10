@@ -109,7 +109,7 @@ class MicroserviceList extends React.Component {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
-                    "Failed to load microservice information",
+                    "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
@@ -128,7 +128,7 @@ class MicroserviceList extends React.Component {
                 }
             },
             {
-                name: "Microservice",
+                name: "Component",
                 options: {
                     customBodyRender: (value) => <Link to={`/cells/${cell}/microservices/${value}`}>{value}</Link>
                 }

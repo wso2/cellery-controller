@@ -309,7 +309,7 @@ class Metrics extends React.Component {
                             </FormControl>
                             <FormControl className={classes.formControl}>
                                 <InputLabel htmlFor="selected-microservice">
-                                    {targetSourcePrefix} Microservice
+                                    {targetSourcePrefix} Component
                                 </InputLabel>
                                 <Select value={selectedMicroservice}
                                     onChange={this.getFilterChangeHandler("selectedMicroservice")}
@@ -337,10 +337,10 @@ class Metrics extends React.Component {
                                         <Typography>
                                             {
                                                 selectedType === Metrics.INBOUND
-                                                    ? "No Requests from the selected microservice "
-                                                        + `to the "${cell}" cell's "${microservice}" microservice`
+                                                    ? "No Requests from the selected component "
+                                                        + `to the "${cell}" cell's "${microservice}" component`
                                                     : `No Requests from the "${cell}" cell's "${microservice}" `
-                                                        + "microservice to the selected microservice"
+                                                        + "component to the selected component"
                                             }
                                         </Typography>
                                     )

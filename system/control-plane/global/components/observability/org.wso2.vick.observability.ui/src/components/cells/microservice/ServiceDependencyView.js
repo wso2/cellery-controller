@@ -186,7 +186,7 @@ class ServiceDependencyView extends React.Component {
         } else {
             view = <div> <Info className={classes.infoIcon} color="action"/>
                 <Typography variant="subtitle2" color="textSecondary" className={classes.info}>
-                    No depended services exists for service - {this.props.service}
+                    No depended services exists for component - {this.props.service}
                 </Typography></div>;
         }
         return view;

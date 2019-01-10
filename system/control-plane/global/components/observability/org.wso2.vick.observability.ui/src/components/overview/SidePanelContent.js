@@ -458,7 +458,7 @@ class SidePanelContent extends React.Component {
                             : <CellsIcon className={classes.titleIcon} fontSize="small"/>
                     }
                     <Typography color="inherit" className={classes.sideBarContentTitle}>
-                        {selectedCell ? "Microservices" : "Cells"} ({summary.content[0].value})
+                        {selectedCell ? "Components" : "Cells"} ({summary.content[0].value})
                     </Typography>
                     <ExpansionPanel className={classes.panel}>
                         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>} className={classes.expansionSum}>
