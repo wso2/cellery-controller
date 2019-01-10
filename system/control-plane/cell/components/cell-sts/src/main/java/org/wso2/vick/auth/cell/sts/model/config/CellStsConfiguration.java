@@ -33,6 +33,28 @@ public class CellStsConfiguration {
 
     private String cellName;
 
+    private String globalJWKEndpoint;
+
+    /**
+     * Get the global JWKS endpoint
+     * @return Global JWKS endpoint
+     */
+    public String getGlobalJWKEndpoint() {
+
+        return globalJWKEndpoint;
+    }
+
+    /**
+     * Set global JWKS endpoint.
+     * @param globalJWKEndpoint.
+     * @return CellStsConfiguration.
+     */
+    public CellStsConfiguration setGlobalJWKEndpoint(String globalJWKEndpoint) {
+
+        this.globalJWKEndpoint = globalJWKEndpoint;
+        return this;
+    }
+
     public String getStsEndpoint() {
         return stsEndpoint;
     }

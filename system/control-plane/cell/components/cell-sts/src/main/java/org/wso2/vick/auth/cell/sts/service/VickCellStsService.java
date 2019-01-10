@@ -18,10 +18,7 @@
  */
 package org.wso2.vick.auth.cell.sts.service;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
@@ -32,37 +29,56 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.vick.auth.cell.sts.CellStsUtils;
+import org.wso2.vick.auth.cell.sts.Constants;
+import org.wso2.vick.auth.cell.sts.STSTokenGenerator;
 import org.wso2.vick.auth.cell.sts.context.store.UserContextStore;
+import org.wso2.vick.auth.cell.sts.exception.CellSTSRequestValidationFailedException;
+import org.wso2.vick.auth.cell.sts.exception.TokenValidationFailureException;
 import org.wso2.vick.auth.cell.sts.model.CellStsRequest;
 import org.wso2.vick.auth.cell.sts.model.CellStsResponse;
 import org.wso2.vick.auth.cell.sts.model.RequestDestination;
 import org.wso2.vick.auth.cell.sts.model.config.CellStsConfiguration;
-import org.wso2.vick.sts.core.VickSTSConstants;
+import org.wso2.vick.auth.cell.sts.validators.CellSTSRequestValidator;
+import org.wso2.vick.auth.cell.sts.validators.DefaultCellSTSReqValidator;
+import org.wso2.vick.auth.cell.sts.validators.SelfContainedTokenValidator;
+import org.wso2.vick.auth.cell.sts.validators.TokenValidator;
 
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 public class VickCellStsService {
 
-    private static final String VICK_AUTH_SUBJECT_HEADER = "x-vick-auth-subject";
     private static final String VICK_AUTH_SUBJECT_CLAIMS_HEADER = "x-vick-auth-subject-claims";
     private static final String AUTHORIZATION_HEADER_NAME = "authorization";
     private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
-    private static final String STS_RESPONSE_TOKEN_PARAM = "token";
+    private static TokenValidator tokenValidator = new SelfContainedTokenValidator();
+    private static CellSTSRequestValidator requestValidator = new DefaultCellSTSReqValidator(Collections.EMPTY_LIST);
 
     private static final Logger log = LoggerFactory.getLogger(VickCellStsService.class);
 
     private UserContextStore userContextStore;
-    private CellStsConfiguration cellStsConfiguration;
+    private UserContextStore localContextStore;
 
+    private static CellStsConfiguration cellStsConfiguration;
 
     public VickCellStsService(CellStsConfiguration stsConfig,
-                              UserContextStore contextStore) throws VickCellSTSException {
-        userContextStore = contextStore;
+                              UserContextStore contextStore, UserContextStore localContextStore)
+            throws VickCellSTSException {
+
+        this.userContextStore = contextStore;
         cellStsConfiguration = stsConfig;
+        this.localContextStore = localContextStore;
 
         setHttpClientProperties();
     }
@@ -72,39 +88,97 @@ public class VickCellStsService {
 
         // Extract the requestId
         String requestId = cellStsRequest.getRequestId();
-
         JWTClaimsSet jwtClaims;
-        if (userContextStore.containsKey(requestId)) {
-            // User context is already available in the cell local context store. Load the user context from the store.
-            log.debug("User context JWT found in context store. Loading user claims using context for requestId:{}",
-                    requestId);
-            jwtClaims = getUserClaimsFromContextStore(requestId);
-        } else {
-            // User context is not available in the cell local context store. This means we have intercepted a service
-            // call from the Cell Gateway into a service. We need to extract the user claims from the JWT sent in
-            // authorization header and store it in our user context store.
-            log.debug("User context JWT not found in context store for requestId:{}. " +
-                    "Extracting the user context JWT from the authorization header", requestId);
-            String jwt = getUserContextJwt(cellStsRequest);
-            jwtClaims = extractUserClaimsFromJwt(jwt);
+        String jwt;
 
-            // We store the JWT sent in the authorization header against the request Id
-            userContextStore.put(requestId, jwt);
-            log.debug("User context JWT added to context store for requestId:{}", requestId);
+        try {
+            boolean authenticationRequired = requestValidator.isAuthenticationRequired(cellStsRequest);
+            if (!authenticationRequired) {
+                return;
+            }
+            log.debug("Authentication is required for the request ID: {} ", requestId);
+        } catch (CellSTSRequestValidationFailedException e) {
+            throw new VickCellSTSException("Error while evaluating authentication requirement", e);
         }
 
+        String callerCell = cellStsRequest.getSource().getCellName();
+        log.debug("Caller cell : {}", callerCell);
+
+        jwt = getUserContextJwt(cellStsRequest);
+        log.debug("Incoming JWT : " + jwt);
+
+        if (isRequestToMicroGateway(cellStsRequest)) {
+            log.debug("Request to micro-gateway intercepted");
+            jwtClaims = handleRequestToMicroGW(cellStsRequest, requestId, jwt);
+        } else {
+            jwtClaims = handleInternalRequest(cellStsRequest, requestId, jwt);
+        }
         Map<String, String> headersToSet = new HashMap<>();
-        headersToSet.put(VICK_AUTH_SUBJECT_HEADER, jwtClaims.getSubject());
+
+        headersToSet.put(Constants.VICK_AUTH_SUBJECT_HEADER, jwtClaims.getSubject());
+        log.debug("Set {} to: {}", Constants.VICK_AUTH_SUBJECT_HEADER, jwtClaims.getSubject());
+
         headersToSet.put(VICK_AUTH_SUBJECT_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
+        log.debug("Set {} to : {}", VICK_AUTH_SUBJECT_CLAIMS_HEADER, new PlainJWT(jwtClaims).serialize());
 
         cellStsResponse.addResponseHeaders(headersToSet);
+
+    }
+
+    private JWTClaimsSet handleInternalRequest(CellStsRequest cellStsRequest, String requestId, String jwt) throws
+            VickCellSTSException {
+
+        JWTClaimsSet jwtClaims;
+        log.debug("Call from a workload to workload within cell {} ; Source workload {} ; Destination workload",
+                cellStsRequest.getSource().getCellName(), cellStsRequest.getSource().getWorkload(),
+                cellStsRequest.getDestination().getWorkload());
+
+        try {
+            if (localContextStore.get(requestId) == null) {
+                log.debug("Initial entrace to cell from gateway. No cached token found.");
+                validateInboundToken(cellStsRequest, jwt);
+                localContextStore.put(requestId, jwt);
+            } else {
+                if (!StringUtils.equalsIgnoreCase(localContextStore.get(requestId), jwt)) {
+                    throw new VickCellSTSException("Intra cell STS token is tampered.");
+                }
+            }
+            jwtClaims = extractUserClaimsFromJwt(jwt);
+        } catch (TokenValidationFailureException e) {
+            throw new VickCellSTSException("Error while validating locally issued token.", e);
+        }
+        return jwtClaims;
+    }
+
+    private JWTClaimsSet handleRequestToMicroGW(CellStsRequest cellStsRequest, String requestId, String jwt) throws
+            VickCellSTSException {
+
+        JWTClaimsSet jwtClaims;
+        log.debug("Incoming request to cell gateway {} from {}", CellStsUtils.getMyCellName(),
+                cellStsRequest.getSource());
+        try {
+            log.debug("Validating incoming JWT {}", jwt);
+            validateInboundToken(cellStsRequest, jwt);
+            userContextStore.put(requestId, jwt);
+            jwtClaims = extractUserClaimsFromJwt(jwt);
+
+        } catch (TokenValidationFailureException e) {
+            throw new VickCellSTSException("Error while validating JWT token", e);
+        }
+        return jwtClaims;
+    }
+
+    private void validateInboundToken(CellStsRequest cellStsRequest, String token) throws
+            TokenValidationFailureException {
+
+        tokenValidator.validateToken(token, cellStsRequest);
     }
 
     private String getUserContextJwt(CellStsRequest cellStsRequest) {
+
         String authzHeaderValue = getAuthorizationHeaderValue(cellStsRequest);
         return extractJwtFromAuthzHeader(authzHeaderValue);
     }
-
 
     public void handleOutboundRequest(CellStsRequest cellStsRequest,
                                       CellStsResponse cellStsResponse) throws VickCellSTSException {
@@ -123,7 +197,11 @@ public class VickCellStsService {
                 throw new VickCellSTSException("No JWT token received from the STS endpoint: "
                         + cellStsConfiguration.getStsEndpoint());
             }
+            log.debug("Attaching jwt to outbound request : {}", stsToken);
             // Set the authorization header
+            if (cellStsRequest.getRequestHeaders().get(Constants.VICK_AUTH_SUBJECT_HEADER) != null) {
+                log.info("Found user in outgoing request");
+            }
             cellStsResponse.addResponseHeader(AUTHORIZATION_HEADER_NAME, BEARER_HEADER_VALUE_PREFIX + stsToken);
         }
     }
@@ -149,6 +227,7 @@ public class VickCellStsService {
     }
 
     private String extractJwtFromAuthzHeader(String authzHeader) {
+
         if (StringUtils.isBlank(authzHeader)) {
             return null;
         }
@@ -157,8 +236,8 @@ public class VickCellStsService {
         return split.length > 1 ? split[1] : null;
     }
 
-
     private JWTClaimsSet getJWTClaims(String jwt) throws VickCellSTSException {
+
         try {
             return SignedJWT.parse(jwt).getJWTClaimsSet();
         } catch (java.text.ParseException e) {
@@ -171,77 +250,108 @@ public class VickCellStsService {
         try {
             // Check for a stored user context
             String requestId = request.getRequestId();
-            String stsEndpoint = cellStsConfiguration.getStsEndpoint();
             // This is the original JWT sent to the cell gateway.
-            String jwt = userContextStore.get(requestId);
+            String jwt;
 
-            // Check whether the outbound call is Inter Cell or Intra Cell
-            if (isIntraCellCall(request)) {
-                // We first try to reuse a JWT token cached within the cell.
-                if (StringUtils.isBlank(jwt)) {
-                    log.debug("No JWT was found in the user context store for requestId:{}. " +
-                            "Calling the Global STS endpoint {} to get a JWT for inter cell communication. " +
-                            "Destination:{}.", requestId, stsEndpoint, request.getDestination());
-                    return getTokenFromGlobalSTS(CellStsUtils.getMyCellName());
-                } else {
-                    // We found a JWT cached in the user context store. We are going to reuse it.
-                    log.debug("Found a valid JWT in user context store for requestId:{}. Reusing it.", requestId);
-                    return jwt;
-                }
+            if (isRequestFromMicroGateway(request)) {
+                log.debug("Request with ID: {} from micro gateway to {} workload of cell {}", requestId, request
+                        .getDestination().getWorkload(), request.getDestination().getCellName());
+                jwt = userContextStore.get(requestId);
+                return getTokenFromLocalSTS(jwt, CellStsUtils.getMyCellName());
+            } else if (isIntraCellCall(request) && localContextStore.get(requestId) != null) {
+                log.debug("Intra cell request with ID: {} from source workload {} to destination workload {} within " +
+                        "cell {}", requestId, request.getSource().getWorkload(), request.getDestination().getWorkload());
+                return localContextStore.get(requestId);
+            } else if (!isIntraCellCall(request) && localContextStore.get(requestId) != null) {
+                jwt = localContextStore.get(requestId);
+                return getTokenFromLocalSTS(jwt, request.getDestination().getCellName());
             } else {
-                // This is an inter cell call. So I need to get a token within the audience set to my destination cell.
-                String destinationCell = request.getDestination().getCellName();
-                log.debug("Requesting a JWT token from the global STS:{} to talk to inter cell communication. " +
-                        "Destination:{}", stsEndpoint, request.getDestination());
-                return getTokenFromGlobalSTS(destinationCell, jwt);
+                log.debug("Request initiated within cell {} to {}", request.getSource().getCellName(), request
+                        .getDestination().toString());
+                return getTokenFromLocalSTS(CellStsUtils.getMyCellName());
             }
-
-        } catch (UnirestException e) {
-            throw new VickCellSTSException("Error while obtaining the STS token.", e);
+        } finally {
+            // do nothing
         }
     }
 
     private boolean isIntraCellCall(CellStsRequest cellStsRequest) throws VickCellSTSException {
+
         String currentCell = CellStsUtils.getMyCellName();
         String destinationCell = cellStsRequest.getDestination().getCellName();
 
         return StringUtils.equals(currentCell, destinationCell);
     }
 
-    private String getTokenFromGlobalSTS(String audience) throws UnirestException {
-        return getTokenFromGlobalSTS(audience, null);
+    private boolean isRequestFromMicroGateway(CellStsRequest cellStsRequest) throws VickCellSTSException {
+
+        String workload = cellStsRequest.getSource().getWorkload();
+        if (StringUtils.isNotEmpty(workload) && workload.startsWith(CellStsUtils.getMyCellName() +
+                "--gateway-deployment-")) {
+            return true;
+        }
+        return false;
     }
 
-    private String getTokenFromGlobalSTS(String audience, String userContextJwt) throws UnirestException {
+    private boolean isRequestToMicroGateway(CellStsRequest cellStsRequest) throws VickCellSTSException {
 
-        String stsEndpointUrl = cellStsConfiguration.getStsEndpoint();
-        String username = cellStsConfiguration.getUsername();
-        String password = cellStsConfiguration.getPassword();
-        String cellName = cellStsConfiguration.getCellName();
+        String workload = cellStsRequest.getDestination().getWorkload();
+        return (StringUtils.isNotEmpty(workload) && workload.startsWith(CellStsUtils.getMyCellName() +
+                "--gateway-service"));
+    }
 
-        HttpResponse<JsonNode> apiResponse =
-                Unirest.post(stsEndpointUrl)
-                        .basicAuth(username, password)
-                        .field(VickSTSConstants.VickSTSRequest.SUBJECT, cellName)
-                        .field(VickSTSConstants.VickSTSRequest.USER_CONTEXT_JWT, userContextJwt)
-                        .field(VickSTSConstants.VickSTSRequest.AUDIENCE, audience)
-                        .asJson();
+    private String getTokenFromLocalSTS(String audience) throws VickCellSTSException {
 
-        log.debug("Response from the STS:\nstatus:{}\nbody:{}",
-                apiResponse.getStatus(), apiResponse.getBody().toString());
+        return STSTokenGenerator.generateToken(audience, null);
+    }
 
-        if (apiResponse.getStatus() == 200) {
-            Object stsTokenValue = apiResponse.getBody().getObject().get(STS_RESPONSE_TOKEN_PARAM);
-            return stsTokenValue != null ? stsTokenValue.toString() : null;
-        } else {
-            log.error("Error from STS endpoint. statusCode= " + apiResponse.getStatus() + ", " +
-                    "statusMessage=" + apiResponse.getStatusText());
-            return null;
-        }
+    private String getTokenFromLocalSTS(String jwt, String audience) throws VickCellSTSException {
+
+        String token = STSTokenGenerator.generateToken(jwt, audience,
+                CellStsUtils.getIssuerName(CellStsUtils.getMyCellName()));
+        return token;
     }
 
     private void setHttpClientProperties() throws VickCellSTSException {
+
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+
+                return null;
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                // Do nothing
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                // Do nothing
+            }
+        }
+        };
+
         try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            throw new VickCellSTSException("Error while initializing SSL context");
+        }
+
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+
+                return true;
+            }
+        };
+
+        // Install the all-trusting host verifier
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+        try {
+
             // TODO add the correct certs for hostname verification..
             Unirest.setHttpClient(HttpClients.custom()
                     .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, (x509Certificates, s) -> true).build())
@@ -251,5 +361,10 @@ public class VickCellStsService {
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             throw new VickCellSTSException("Error initializing the http client.", e);
         }
+    }
+
+    public static CellStsConfiguration getCellStsConfiguration() {
+
+        return cellStsConfiguration;
     }
 }

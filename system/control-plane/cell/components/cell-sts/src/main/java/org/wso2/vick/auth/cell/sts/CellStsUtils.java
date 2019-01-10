@@ -55,4 +55,15 @@ public class CellStsUtils {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(configJson);
     }
+
+    /**
+     * Returns the issuer name.
+     * @param cellName  Name of the cell.
+     * @return Issuer name of the respective cell.
+     */
+    public static String getIssuerName(String cellName) {
+
+        return cellName + "--sts-service";
+    }
+
 }
