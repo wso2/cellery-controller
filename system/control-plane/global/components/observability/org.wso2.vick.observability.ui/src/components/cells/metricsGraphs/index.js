@@ -16,15 +16,18 @@
 
 /* eslint max-lines: ["off"] */
 
+import Button from "@material-ui/core/Button/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
-import Constants from "../../utils/constants";
+import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
-import QueryUtils from "../../utils/common/queryUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
+import Timeline from "@material-ui/icons/Timeline";
 import Tooltip from "@material-ui/core/Tooltip";
+import TraceDialog from "./TraceDialog";
 import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
@@ -32,11 +35,11 @@ import {
     ChartLabel, Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines,
     LineMarkSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
-import withColor, {ColorGenerator} from "../common/color";
-import withGlobalState, {StateHolder} from "../common/state";
+import withColor, {ColorGenerator} from "../../common/color";
+import withGlobalState, {StateHolder} from "../../common/state";
 import * as PropTypes from "prop-types";
 
-const styles = {
+const styles = (theme) => ({
     root: {
         flexGrow: 1
     },
@@ -45,7 +48,9 @@ const styles = {
         border: "1px solid #eee"
     },
     cardHeader: {
-        borderBottom: "1px solid #eee"
+        borderBottom: "1px solid #eee",
+        paddingTop: theme.spacing.unit,
+        paddingBottom: theme.spacing.unit
     },
     title: {
         fontSize: 16,
@@ -73,12 +78,22 @@ const styles = {
     },
     info: {
         color: "#999",
-        marginTop: 8,
         marginRight: 27,
-        fontSize: 18
-
+        fontSize: 18,
+        verticalAlign: "middle"
+    },
+    traceButton: {
+        fontSize: 12,
+        verticalAlign: "middle",
+        marginRight: theme.spacing.unit
+    },
+    viewTracesContent: {
+        paddingLeft: theme.spacing.unit
+    },
+    cardActions: {
+        marginTop: theme.spacing.unit / 4
     }
-};
+});
 
 const FlexibleWidthXYPlot = makeWidthFlexible(XYPlot);
 
@@ -95,8 +110,11 @@ class MetricsGraphs extends React.Component {
             durationTooltip: false,
             lastDrawLocationVolumeChart: null,
             lastDrawLocationDurationChart: null,
-            lastDrawLocationSizeChart: null
+            lastDrawLocationSizeChart: null,
+            open: false
         };
+
+        this.traceDialogRef = React.createRef();
     }
 
     calculateMetrics = () => {
@@ -259,6 +277,12 @@ class MetricsGraphs extends React.Component {
         };
     };
 
+    handleClickOpen = () => {
+        if (this.traceDialogRef.current && this.traceDialogRef.current.handleClickOpen) {
+            this.traceDialogRef.current.handleClickOpen();
+        }
+    };
+
     render = () => {
         const {classes, colorGenerator} = this.props;
         const {
@@ -285,6 +309,13 @@ class MetricsGraphs extends React.Component {
             </Tooltip>
         );
 
+        const traceBtn = (
+            <Tooltip title="View traces for the selected time range">
+                <Button className={classes.traceButton} onClick={this.handleClickOpen} variant="outlined">
+                    <Timeline color="action"/><span className={classes.viewTracesContent}>View Traces</span>
+                </Button>
+            </Tooltip>
+        );
         return (
             <div className={classes.root}>
                 <Grid container spacing={24}>
@@ -384,7 +415,7 @@ class MetricsGraphs extends React.Component {
                                             text="%"
                                             className="alt-x-label"
                                             includeMargin={false}
-                                            xPercent={-0.035}
+                                            xPercent={-0.04}
                                             yPercent={1.61}
                                         />
                                         {
@@ -433,13 +464,18 @@ class MetricsGraphs extends React.Component {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid item md={6} sm={12} xs={12}>
+                    <Grid item sm={12}>
                         <Card className={classes.card}>
                             <CardHeader title="Request Volume" className={classes.cardHeader}
                                 classes={{
-                                    title: classes.title
+                                    title: classes.title,
+                                    action: classes.cardActions
                                 }}
-                                action={zoomHintToolTip}
+                                action={ lastDrawLocationVolumeChart
+                                    ? <React.Fragment>{traceBtn}<TraceDialog innerRef={this.traceDialogRef}
+                                        selectedArea={lastDrawLocationVolumeChart}/>{zoomHintToolTip}
+                                    </React.Fragment>
+                                    : zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -501,13 +537,19 @@ class MetricsGraphs extends React.Component {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid item md={6} sm={12} xs={12}>
+                    <Grid item sm={12}>
                         <Card className={classes.card}>
                             <CardHeader title="Request Duration" className={classes.cardHeader}
                                 classes={{
-                                    title: classes.title
+                                    title: classes.title,
+                                    action: classes.cardActions
                                 }}
-                                action={zoomHintToolTip}
+                                action={ lastDrawLocationDurationChart
+                                    ? <React.Fragment>{traceBtn}<TraceDialog innerRef={this.traceDialogRef}
+                                        selectedArea={lastDrawLocationDurationChart}/> {zoomHintToolTip}
+                                    </React.Fragment>
+                                    : zoomHintToolTip}
+
                             />
                             <CardContent className={classes.content}>
                                 <div>
@@ -568,13 +610,17 @@ class MetricsGraphs extends React.Component {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid item md={6} sm={12} xs={12}>
+                    <Grid item sm={12}>
                         <Card className={classes.card}>
                             <CardHeader title="Request/Response Size" className={classes.cardHeader}
                                 classes={{
-                                    title: classes.title
+                                    title: classes.title,
+                                    action: classes.cardActions
                                 }}
-                                action={zoomHintToolTip}
+                                action={ lastDrawLocationSizeChart
+                                    ? <React.Fragment>{traceBtn} <TraceDialog innerRef={this.traceDialogRef}
+                                        selectedArea={lastDrawLocationSizeChart}/>{zoomHintToolTip}</React.Fragment>
+                                    : zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
                                 <div>

@@ -17,6 +17,7 @@
 const Constants = {
     Pattern: {
         DATE_TIME: "DD MMM YYYY, hh:mm A",
+        GRAPH_DATE_TIME: "DD MMM YYYY, hh:mm:ss",
         Query: {
             SECONDS: "second(?:s)?",
             MINUTES: "minute(?:s)?",

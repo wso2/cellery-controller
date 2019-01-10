@@ -17,14 +17,14 @@
 import FormControl from "@material-ui/core/FormControl";
 import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
-import MetricsGraphs from "../MetricsGraphs";
+import MetricsGraphs from "../metricsGraphs";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
 import Typography from "@material-ui/core/Typography/Typography";
-import withGlobalState from "../../common/state";
+import withGlobalState from "../../common/state/index";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
 
