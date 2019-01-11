@@ -17,14 +17,16 @@
 #
 # ------------------------------------------------------------------------
 
-#How to deploy VICK with kubeadm K8s provider.
+# How to deploy VICK with kubeadm K8s provider.
 # cat vick-setup-all-in-one.sh | bash -s -- <k8s Provier>
 # cat vick-setup-all-in-one.sh | bash -s -- kubeadm
-
-#How to deploy VICK with GCP K8s provider.
+#
+# How to deploy VICK with GCP K8s provider.
 # cat vick-setup-all-in-one.sh | bash -s -- <k8s Provier> <GCP Project ID> <GCP Compute Zone>
 # Eg. cat vick-setup-all-in-one.sh | bash -s -- GCP proj-vick us-west1-c
-
+#
+# User can override the addition configs via cellery.env
+#
 function install_k8s_kubeadm () {
 local K8S_VERSION=$1
 
@@ -174,9 +176,16 @@ done
 function install_k8s_gcp () {
 local gcp_project=$1
 local gcp_compute_zone=$2
+local gcp_k8s_cluster_name=$3
+local k8s_version=$4
+local gcp_k8s_cluster_machine_type=$5
+local gcp_cluster_min_nodes=$6
+local gcp_k8s_cluster_max_nodes=$7
+local gcp_k8s_cluster_num_nodes=$8
 
 #Point GCP to the new project
 gcloud config set project $gcp_project
+#gcloud config set compute/region REGION
 gcloud config set compute/zone $gcp_compute_zone
 
 #Enable required GCP APIs
@@ -185,18 +194,16 @@ gcloud services enable \
   container.googleapis.com \
   containerregistry.googleapis.com
 
-CLUSTER_NAME=cellery-runtime
-
-echo "ℹ️ Creating K8s cluster $CLUSTER_NAM in in zone $gcp_compute_zone"
+echo "ℹ️ Creating K8s cluster $gcp_k8s_cluster_name in zone $gcp_compute_zone"
 
 #Create K8s cluster
-gcloud -q --verbosity=error container clusters create $CLUSTER_NAME \
-  --cluster-version=latest \
-  --machine-type=n1-standard-4 \
-  --enable-autoscaling --min-nodes=1 --max-nodes=10 \
+gcloud -q --verbosity=error container clusters create $gcp_k8s_cluster_name \
+  --cluster-version=$k8s_version \
+  --machine-type=$gcp_k8s_cluster_machine_type \
+  --enable-autoscaling --min-nodes=$gcp_cluster_min_nodes --max-nodes=$gcp_k8s_cluster_max_nodes \
   --enable-autorepair \
   --scopes=service-control,service-management,compute-rw,storage-ro,cloud-platform,logging-write,monitoring-write,pubsub,datastore \
-  --num-nodes=1
+  --num-nodes=$gcp_k8s_cluster_num_nodes
 
 #Wait for 60 seconds to finish the k8s cluster creation.
 sleep 60s
@@ -204,7 +211,7 @@ sleep 60s
 #Grant cluster-admin permissions to the current user
 K8S_ADMIN=$(gcloud config get-value core/account)
 
-echo "Grant K8s cluster admin persmission to user $K8S_ADMIN"
+echo "ℹ️ Grant k8s cluster admin permission to user $K8S_ADMIN"
 
 kubectl create clusterrolebinding cluster-admin-binding \
 --clusterrole=cluster-admin \
@@ -234,18 +241,21 @@ function deploy_mysql_server_gcp () {
 local download_location=$1
 local sql_instance_name=$2
 local gcp_compute_zone=$3
+local gcp_sql_tire=$4
 local service_account
 local mysql_server_ip
 
-gcloud -q sql instances create ${sql_instance_name} --tier=db-n1-standard-1 --gce-zone=$gcp_compute_zone
+gcloud -q sql instances create ${sql_instance_name} --tier=${gcp_sql_tire} --gce-zone=${gcp_compute_zone}
 service_account=$(gcloud beta sql instances describe ${sql_instance_name} --format flattened | awk '/serviceAccountEmailAddress/ {print $2}')
+#TODO remove after the key length fix
 gcloud -q sql instances patch ${sql_instance_name} --authorized-networks=0.0.0.0/0 --database-flags character_set_server=latin1
 #Wait till finish the MySQL server restart after the patching
 sleep 60
+echo "⚙️ Setting MySQL server root user password."
 gcloud sql users set-password root --instance=${sql_instance_name} --prompt-for-password --host=%
 #Wait till the credential update sync.
 sleep 30
-cat tmp-wso2/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
+cat ${download_location}/mysql/dbscripts/init.sql | gcloud sql connect ${sql_instance_name} --user=root
 
 mysql_server_ip=$(gcloud beta sql instances describe ${sql_instance_name}  --format flattened | awk '/.ipAddress/ {print $2}')
 config_params["MYSQL_DATABASE_HOST"]=$mysql_server_ip
@@ -362,17 +372,19 @@ kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
 
 function init_control_plane () {
 local download_location=$1
+local iaas=$2
 
 #Setup VICK namespace, create service account and the docker registry credentials
 kubectl apply -f ${download_location}/vick-ns-init.yaml
 
-HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
-#label the node if k8s provider is kubeadm
-
-kubectl label nodes $HOST_NAME disk=local
-
-#Create credentials for docker.wso2.com
-#kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
+if [ $iaas == "kubeadm" ]; then
+    HOST_NAME=$(hostname | tr '[:upper:]' '[:lower:]')
+    #label the node if k8s provider is kubeadm
+    kubectl label nodes $HOST_NAME disk=local
+    #Create credentials for docker.wso2.com
+    #kubectl create secret docker-registry wso2creds --docker-server=docker.wso2.com --docker-username=$DOCKER_REG_USER \
+    # --docker-password=$DOCKER_REG_PASSWD --docker-email=$DOCKER_REG_USER_EMAIL -n vick-system
+fi
 }
 
 function deploy_istio () {
@@ -384,8 +396,6 @@ wget https://github.com/istio/istio/releases/download/${istio_version}/istio-${i
 tar -xzf ${download_location}/istio-${istio_version}-linux.tar.gz -C ${download_location}
 export PATH=$ISTIO_HOME/bin:$PATH
 kubectl apply -f $ISTIO_HOME/install/kubernetes/helm/istio/templates/crds.yaml
-#kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo.yaml
-#kubectl apply -f $ISTIO_HOME/install/kubernetes/istio-demo-auth.yaml
 kubectl apply -f ${download_location}/istio-demo-vick.yaml
 kubectl wait deployment/istio-pilot --for condition=available --timeout=6000s -n istio-system
 #Enabling Istio injection
@@ -439,19 +449,63 @@ local download_location=$1
 kubectl apply -f ${download_location}/mandatory.yaml
 kubectl apply -f ${download_location}/cloud-generic.yaml
 }
+
+function read_configs_envs () {
+if [ -f cellery.env ]; then
+    source ./cellery.env
+fi
+
+#Initialize the IaaS specific configurations.
+if [[ -n ${IAAS/[ ]*\n/} ]]; then
+    iaas=$IAAS
+    download_path=${DOWNLOAD_PATH:-tmp-wso2}
+    git_base_url=${GIT_BASE_URL:-https://raw.githubusercontent.com/wso2/product-vick/master}
+    istio_version=${ISTIO_VERSION:-1.0.2}
+    if [ $iaas == "kubeadm" ]; then
+        k8s_version=${K8S_VERSION:-1.11.3-00}
+        flannel_version=${FLANNEL_VERSION:-0.10.0}
+    elif [ $iaas == "GCP" ]; then
+        k8s_version=${K8S_VERSION:-1.11.2-gke.26}
+        gcp_project=${GCP_PROJECT:-myc-ellery}
+        gcp_compute_region=${GCP_COMPUTE_REGION:-us-west1}
+        gcp_compute_zone=${GCP_COMPUTE_ZONE:-us-west1-c}
+        gcp_k8s_cluster_name=${GCP_K8S_CLUSTER_NAME:-cellery-k8s}
+        #GCP_K8S_CLUSTER_VERSION=latest
+        gcp_k8s_cluster_machine_type=${GCP_K8S_CLUSTER_MACHINE_TYPE:-n1-standard-4}
+        gcp_k8s_cluster_num_nodes=${GCP_K8S_CLUSTER_NUM_NODES:-1}
+        gcp_cluster_min_nodes=${GCP_K8S_CLUSTER_MIN_NODES:-1}
+        gcp_k8s_cluster_max_nodes=${GCP_K8S_CLUSTER_MAX_NODES:-3}
+        gcp_sql_tire=${GCP_SQL_TIER:-db-n1-standard-1}
+    fi
+fi
+}
 #-----------------------------------------------------------------------------------------------------------------------
-#Get the IaaS type form the user
-iaas=$1
-gcp_project=$2
-gcp_compute_zone=$3
 
-#sanity check
-#Bash 4 / gcloud tools if GCP
+#TODO Bash 4 / gnu sed / gcloud tools if GCP
 
-k8s_version="1.11.3-00"
-istio_version="1.0.2"
-download_path="tmp-wso2"
-git_base_url="https://raw.githubusercontent.com/wso2/product-vick/master"
+#Read IaaS configurations via environment variables.
+read_configs_envs
+
+#Read parameter from the STDIN as bash positional parameters and set IaaS, GCP Project and GCP Compute Zone
+if [[ -n ${1/[ ]*\n/} ]]; then
+    iaas=$1
+fi
+if [[ -n ${2/[ ]*\n/} ]]; then
+    gcp_project=$2
+fi
+if [[ -n ${3/[ ]*\n/} ]]; then
+    echo "3 $3"
+    gcp_compute_zone=$3
+fi
+
+echo $iaas
+echo $gcp_project
+echo $gcp_compute_zone
+
+#k8s_version="1.11.3-00"
+#istio_version="1.0.2"
+#download_path="tmp-wso2"
+#git_base_url="https://raw.githubusercontent.com/wso2/product-vick/master"
 
 control_plane_base_url="${git_base_url}/system/control-plane/global/k8s-artifacts"
 control_plane_yaml=(
@@ -530,7 +584,14 @@ if [[ -n ${iaas/[ ]*\n/} ]]; then
         echo "ℹ️ Selected k8s provider: GCP"
         echo "ℹ️ GCP Project $gcp_project hosted in $gcp_compute_zone"
         if [ -n $gcp_project ]; then
-            install_k8s_gcp $gcp_project $gcp_compute_zone
+            install_k8s_gcp $gcp_project \
+                            $gcp_compute_zone \
+                            $gcp_k8s_cluster_name \
+                            $k8s_version \
+                            $gcp_k8s_cluster_machine_type \
+                            $gcp_cluster_min_nodes \
+                            $gcp_k8s_cluster_max_nodes \
+                            $gcp_k8s_cluster_num_nodes
         else
             echo "GCP project name is required"
             exit 0
@@ -538,20 +599,20 @@ if [[ -n ${iaas/[ ]*\n/} ]]; then
     elif [ $iaas == "kubeadm" ]; then
         echo "ℹ️ Selected k8s provider: kubeadm"
         install_k8s_kubeadm $k8s_version
-        #configure master node
+        #configure k8s master node
         configure_k8s_kubeadm
     else
         echo "Installation script supported k8s providers are GCP and Kubeadm."
         exit 0
     fi
 else
-    echo "Installing VICK into an existing K8s cluster"
+    echo "Installing VICK into an existing k8s cluster"
 fi
 
 #Create temporary foldr to download vick artifacts
 create_artifact_folder $download_path
 
-echo "🕷️ Downloading vick artifacts to ${download_path}"
+echo "🕷️ Downloading VICK artifacts to ${download_path}"
 
 download_vick_artifacts $control_plane_base_url $download_path "${control_plane_yaml[@]}"
 download_vick_artifacts $control_plane_configs_base_url $download_path "${control_plane_configs[@]}"
@@ -561,11 +622,14 @@ download_vick_artifacts $istio_base_url $download_path "${istio_yaml[@]}"
 #Init control plane
 echo "🔧 Creating vick-system namespace and the service account"
 
-init_control_plane $download_path
+init_control_plane $download_path $iaas
 
 #Deploy/Configure NFS APIM artifact
  if [ $iaas == "GCP" ]; then
     read -p "⛏️ Do you want to deploy a NFS server [Y/n]: " install_nfs < /dev/tty
+    if [[ -z ${install_nfs/[ ]*\n/} ]]; then
+        install_nfs="Y"
+    fi
 
     if [ $install_nfs == "n" ]; then
          read_nfs_connection
@@ -577,7 +641,9 @@ fi
 
 #Deploy/configure MySQL / APIM datasources
 read -p "⛏️ Do you want to deploy MySQL server [y/N]: " install_mysql < /dev/tty
-
+if [[ -z ${install_mysql/[ ]*\n/} ]]; then
+        install_mysql="N"
+    fi
 if [ $install_mysql == "y" ]; then
 
     if [ $iaas == "GCP" ]; then
@@ -585,7 +651,10 @@ if [ $install_mysql == "y" ]; then
         read_control_plane_datasources_configs
         #Update the sql
         update_control_plance_sql $download_path
-        deploy_mysql_server_gcp $download_path "vick-mysql-$((1 + RANDOM % 1000))" $gcp_compute_zone
+        deploy_mysql_server_gcp $download_path \
+                                "vick-mysql-$((1 + RANDOM % 1000))" \
+                                $gcp_compute_zone \
+                                $gcp_sql_tire
     elif [ $iaas == "kubeadm" ]; then
         read_control_plane_datasources_configs
         #update the sql file
