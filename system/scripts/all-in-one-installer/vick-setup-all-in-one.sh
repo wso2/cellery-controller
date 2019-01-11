@@ -483,24 +483,20 @@ fi
 
 #TODO Bash 4 / gnu sed / gcloud tools if GCP
 
-#Read IaaS configurations via environment variables.
-read_configs_envs
-
 #Read parameter from the STDIN as bash positional parameters and set IaaS, GCP Project and GCP Compute Zone
 if [[ -n ${1/[ ]*\n/} ]]; then
     iaas=$1
-fi
-if [[ -n ${2/[ ]*\n/} ]]; then
-    gcp_project=$2
-fi
-if [[ -n ${3/[ ]*\n/} ]]; then
-    echo "3 $3"
-    gcp_compute_zone=$3
+    if [ iaas == "GCP" ]; then
+        if [[ -n ${2/[ ]*\n/} ]]; then
+            gcp_project=$2
+        fi
+        if [[ -n ${3/[ ]*\n/} ]]; then
+            gcp_compute_zone=$3
+        fi
 fi
 
-echo $iaas
-echo $gcp_project
-echo $gcp_compute_zone
+#Read IaaS configurations via environment variables.
+read_configs_envs
 
 #k8s_version="1.11.3-00"
 #istio_version="1.0.2"
