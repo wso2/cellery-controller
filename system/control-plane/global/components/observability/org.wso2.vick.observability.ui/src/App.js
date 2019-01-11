@@ -91,13 +91,13 @@ const theme = createMuiTheme({
 const App = () => (
     <MuiThemeProvider theme={theme}>
         <ErrorBoundary>
-            <ColorProvider>
-                <StateProvider>
-                    <BrowserRouter>
+            <BrowserRouter>
+                <ColorProvider>
+                    <StateProvider>
                         <ProtectedPortal/>
-                    </BrowserRouter>
-                </StateProvider>
-            </ColorProvider>
+                    </StateProvider>
+                </ColorProvider>
+            </BrowserRouter>
         </ErrorBoundary>
     </MuiThemeProvider>
 );

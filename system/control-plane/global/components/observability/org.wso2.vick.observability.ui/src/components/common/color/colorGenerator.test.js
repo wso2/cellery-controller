@@ -30,7 +30,11 @@ describe("ColorGenerator", () => {
         }
     };
 
+    const clearPersistedData = () => localStorage.removeItem("colorMap");
+
     describe("constructor()", () => {
+        afterEach(clearPersistedData);
+
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
@@ -40,6 +44,8 @@ describe("ColorGenerator", () => {
     });
 
     describe("addKeys()", () => {
+        afterEach(clearPersistedData);
+
         const KEY_1 = "key1";
         const KEY_2 = "key2";
         const KEY_3 = "key3";
@@ -92,6 +98,8 @@ describe("ColorGenerator", () => {
             }
         });
 
+        afterEach(clearPersistedData);
+
         it("should return colors different to one another", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
@@ -143,6 +151,8 @@ describe("ColorGenerator", () => {
     });
 
     describe("getColorForPercentage()", () => {
+        afterEach(clearPersistedData);
+
         const globalState = new StateHolder();
         const colorGenerator = new ColorGenerator();
         globalState.set(StateHolder.CONFIG, {
