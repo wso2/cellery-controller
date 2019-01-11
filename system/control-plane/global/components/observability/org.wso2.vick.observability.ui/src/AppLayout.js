@@ -27,6 +27,7 @@ import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import CloseIcon from "@material-ui/icons/Close";
 import Collapse from "@material-ui/core/Collapse";
+import ColorGenerator from "./components/common/color/colorGenerator";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
@@ -34,6 +35,7 @@ import Error from "@material-ui/icons/Error";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import FileCopy from "@material-ui/icons/FileCopyOutlined";
+import FormatColorFillOutlined from "@material-ui/icons/FormatColorFillOutlined";
 import IconButton from "@material-ui/core/IconButton";
 import Info from "@material-ui/icons/Info";
 import InputBase from "@material-ui/core/InputBase";
@@ -61,6 +63,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import Warning from "@material-ui/icons/Warning";
 import classNames from "classnames";
+import withColor from "./components/common/color";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withGlobalState, {StateHolder} from "./components/common/state";
@@ -341,6 +344,10 @@ class AppLayout extends React.Component {
         );
     };
 
+    resetColorScheme = () => {
+        this.props.colorGenerator.resetColors();
+    };
+
     render = () => {
         const {classes, children, theme, globalState} = this.props;
         const {open, userInfo, loadingState, selectedIndex, popoverEl, showCopyText} = this.state;
@@ -369,6 +376,11 @@ class AppLayout extends React.Component {
                             globalState.get(StateHolder.USER)
                                 ? (
                                     <div>
+                                        <Tooltip title="Change cell colors" placement="bottom">
+                                            <IconButton onClick={this.resetColorScheme} color="inherit">
+                                                <FormatColorFillOutlined/>
+                                            </IconButton>
+                                        </Tooltip>
                                         <Tooltip title="Get shareable dashboard link" placement="bottom">
                                             <IconButton
                                                 color="inherit" aria-owns={popoverOpen ? "share-dashboard" : undefined}
@@ -619,10 +631,11 @@ AppLayout.propTypes = {
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     history: PropTypes.any.isRequired,
     location: PropTypes.shape({
         pathname: PropTypes.string.isRequired
     })
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(AppLayout)));
+export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(withColor(AppLayout))));
