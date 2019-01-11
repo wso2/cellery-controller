@@ -33,8 +33,10 @@ import Drawer from "@material-ui/core/Drawer";
 import Error from "@material-ui/icons/Error";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
+import FileCopy from "@material-ui/icons/FileCopyOutlined";
 import IconButton from "@material-ui/core/IconButton";
 import Info from "@material-ui/icons/Info";
+import InputBase from "@material-ui/core/InputBase";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -43,6 +45,8 @@ import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import NotificationUtils from "./utils/common/notificationUtils";
+import Paper from "@material-ui/core/Paper/Paper";
+import Popover from "@material-ui/core/Popover";
 import React from "react";
 import Settings from "@material-ui/icons/SettingsOutlined";
 import Snackbar from "@material-ui/core/Snackbar/Snackbar";
@@ -176,6 +180,22 @@ const styles = (theme) => ({
     },
     snackbarMessage: {
         paddingLeft: theme.spacing.unit
+    },
+    popoverContent: {
+        margin: theme.spacing.unit * 3
+    },
+    copyContainer: {
+        marginTop: theme.spacing.unit * 2,
+        boxShadow: "none",
+        border: "1px solid #eee"
+    },
+    copyInput: {
+        margin: theme.spacing.unit,
+        flex: 1
+    },
+    iconButton: {
+        marginLeft: theme.spacing.unit,
+        marginRight: theme.spacing.unit
     }
 });
 
@@ -242,6 +262,18 @@ c-0.2,0-0.4-0.2-0.4-0.4v-0.1c0-0.2,0.2-0.4,0.4-0.4h11.4C13.1,12.8,13.3,13,13.3,1
     </SvgIcon>
 );
 
+const ShareIcon = (props) => (
+    <SvgIcon viewBox="0 0 14 14" {...props}>
+        <path d="M13.8,5L9.9,1.7C9.8,1.5,9.6,1.5,9.4,1.6C9.2,1.7,9.1,1.8,9.1,2.1v1.7c-3,0.2-4.5,1.7-5.2,3C3.2,8,3.1,9.2,3.1,9.6
+c0,0.1,0,0.1,0,0.2l0,0l0,0.2c0,0.2,0.3,0.4,0.5,0.4c0.3,0,0.5-0.2,0.5-0.5l0-0.1c0.1-2,3.7-2.5,5-2.7v1.6c0,0.2,0.1,0.4,0.3,0.5
+c0.2,0.1,0.4,0.1,0.6-0.1l3.8-3.3C13.9,5.7,14,5.5,14,5.4S13.9,5.1,13.8,5z M13.6,5.2L13.6,5.2L13.6,5.2L13.6,5.2z M10,6.1
+C9.9,6,9.7,6,9.6,6c0,0,0,0,0,0C9.4,6,6.7,6.1,4.9,7.2C5.6,6,6.9,4.8,9.6,4.8c0.1,0,0.3-0.1,0.4-0.2c0.1-0.1,0.2-0.2,0.2-0.4V3.2
+l2.5,2.2l-2.5,2.2V6.5C10.1,6.4,10.1,6.2,10,6.1z M12.3,8.8v1.8c0,0.8-0.6,1.4-1.3,1.4H1.7c-0.7,0-1.3-0.6-1.3-1.4V5.1
+c0-0.8,0.6-1.4,1.3-1.4h3.1C5,3.7,5.2,4,5.2,4.3c0,0.3-0.2,0.5-0.5,0.5h-3c-0.2,0-0.3,0.1-0.3,0.3v5.6c0,0.2,0.1,0.3,0.3,0.3H11
+c0.2,0,0.3-0.1,0.3-0.3V8.8c0-0.3,0.2-0.5,0.5-0.5C12.1,8.3,12.3,8.6,12.3,8.8z"/>
+    </SvgIcon>
+);
+
 class AppLayout extends React.Component {
 
     constructor(props) {
@@ -270,8 +302,11 @@ class AppLayout extends React.Component {
             notificationState: {
                 ...notificationState
             },
-            selectedIndex: selectedIndex
+            selectedIndex: selectedIndex,
+            popoverEl: null,
+            showCopyText: false
         };
+        this.popoverInputRef = React.createRef();
     }
 
     handleUserInfoMenuOpen = (event) => {
@@ -328,6 +363,28 @@ class AppLayout extends React.Component {
         NotificationUtils.closeNotification(this.props.globalState);
     };
 
+    handlePopoverClick = (event) => {
+        this.setState({
+            popoverEl: event.currentTarget
+        });
+    };
+
+    handlePopoverClose = () => {
+        this.setState({
+            popoverEl: null
+        });
+    };
+
+    copyLink = () => {
+        if (this.popoverInputRef.current) {
+            this.popoverInputRef.current.select();
+            document.execCommand("copy");
+            this.setState({
+                showCopyText: true
+            });
+        }
+    };
+
     generateSnackbarMessage = () => {
         const {classes} = this.props;
         const {notificationState} = this.state;
@@ -357,8 +414,10 @@ class AppLayout extends React.Component {
 
     render = () => {
         const {classes, children, theme, globalState} = this.props;
-        const {open, userInfo, loadingState, selectedIndex} = this.state;
+        const {open, userInfo, loadingState, selectedIndex, popoverEl, showCopyText} = this.state;
         const userInfoOpen = Boolean(userInfo);
+        const popoverOpen = Boolean(popoverEl);
+
         return (
             <div className={classes.root}>
                 <CssBaseline/>
@@ -381,11 +440,49 @@ class AppLayout extends React.Component {
                             globalState.get(StateHolder.USER)
                                 ? (
                                     <div>
+                                        <Tooltip title="Get shareable dashboard link" placement="bottom">
+                                            <IconButton
+                                                color="inherit" aria-owns={popoverOpen ? "share-dashboard" : undefined}
+                                                aria-haspopup="true" variant="contained"
+                                                onClick={this.handlePopoverClick}>
+                                                <ShareIcon/>
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Popover
+                                            id="share-dashboard" open={popoverOpen}
+                                            anchorEl={popoverEl} onClose={this.handlePopoverClose}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "right"
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}>
+                                            <div className={classes.popoverContent}>
+                                                <Typography color="textSecondary" variant="subtitle2" gutterBottom
+                                                    className={classes.typography}>Share Dashboard</Typography>
+                                                <Divider/>
+                                                <Paper className={classes.copyContainer} elevation={1}>
+                                                    {/* TODO: replace InputBase value to dashboard URL*/}
+                                                    <InputBase className={classes.copyInput}
+                                                        placeholder="Sharable Link" value="http://cellery-dashboard/"
+                                                        inputRef={this.popoverInputRef}/>
+                                                    <Tooltip title="Copied!" disableFocusListener={false}
+                                                        disableHoverListener={false} placement="top"
+                                                        disableTouchListener={false} open={showCopyText}
+                                                        onClose={() => this.setState({showCopyText: false})}>
+                                                        <IconButton color="primary" className={classes.iconButton}
+                                                            aria-label="Copy" onClick={this.copyLink}>
+                                                            <FileCopy/>
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Paper>
+                                            </div>
+                                        </Popover>
                                         <IconButton
-                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
-                                            aria-haspopup="true"
-                                            onClick={this.handleUserInfoMenuOpen}
-                                            color="inherit">
+                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined} color="inherit"
+                                            aria-haspopup="true" onClick={this.handleUserInfoMenuOpen}>
                                             <AccountCircle/>
                                         </IconButton>
                                         <Menu id="user-info-appbar" anchorEl={userInfo}
