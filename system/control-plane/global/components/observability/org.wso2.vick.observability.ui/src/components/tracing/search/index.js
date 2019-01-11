@@ -172,7 +172,7 @@ class TraceSearch extends React.Component {
                             </Grid>
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
+                                    <InputLabel htmlFor="microservice" shrink={true}>Component</InputLabel>
                                     <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
                                         inputProps={{name: "microservice", id: "microservice"}}>
                                         <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>

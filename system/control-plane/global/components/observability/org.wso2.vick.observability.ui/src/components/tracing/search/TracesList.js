@@ -147,8 +147,33 @@ class TracesList extends React.PureComponent {
         });
     };
 
+    /**
+     * Get the suitable color for Component.
+     *
+     * @param {Object} component The name of the Component
+     * @returns {string} The suitable color for the component
+     */
+    getColorForComponent = (component) => {
+        const {colorGenerator} = this.props;
+        let colorKey = ColorGenerator.UNKNOWN;
+        if (component.cellName) {
+            if (Constants.Cell.GATEWAY_NAME_PATTERN.test(component.serviceName)) {
+                colorKey = ColorGenerator.VICK;
+            } else {
+                colorKey = component.cellName;
+            }
+        } else if (Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component.serviceName)) {
+            colorKey = ColorGenerator.VICK;
+        } else if (Constants.System.ISTIO_MIXER_NAME_PATTERN.test(component.serviceName)) {
+            colorKey = ColorGenerator.ISTIO;
+        } else if (component.serviceName) {
+            colorKey = component.serviceName;
+        }
+        return colorGenerator.getColor(colorKey);
+    };
+
     render = () => {
-        const {classes, searchResults, colorGenerator} = this.props;
+        const {classes, searchResults} = this.props;
         const {rowsPerPage, page} = this.state;
 
         // Merging the span counts and root span information
@@ -243,8 +268,7 @@ class TracesList extends React.PureComponent {
                                                                 (event) => this.loadTracePage(event, result.traceId,
                                                                     service.cellName, service.serviceName)}>
                                                             <div className={classes.serviceTagColor} style={{
-                                                                backgroundColor: colorGenerator
-                                                                    .getColor(service.cellName)
+                                                                backgroundColor: this.getColorForComponent(service)
                                                             }}/>
                                                             <div className={classes.serviceTagContent}>
                                                                 <span className={classes.tagCellName}>
