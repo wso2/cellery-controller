@@ -16,11 +16,11 @@
  */
 
 import NotFound from "../common/error/NotFound";
-import PropTypes from "prop-types";
 import React from "react";
-import Search from "./Search";
+import Search from "./search";
 import View from "./view";
 import {Redirect, Route, Switch, withRouter} from "react-router-dom";
+import * as PropTypes from "prop-types";
 
 const Tracing = ({match, location}) => (
     <Switch>

@@ -135,9 +135,6 @@ const styles = (theme) => ({
     },
     legendFirstEl: {
         verticalAlign: "middle"
-    },
-    warning: {
-        color: "#ff9800"
     }
 });
 
@@ -148,6 +145,15 @@ const CellIcon = (props) => (
 );
 
 class Overview extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.initializeDefault();
+        this.state = {
+            ...JSON.parse(JSON.stringify(this.defaultState)),
+            isLoading: true
+        };
+    }
 
     viewGenerator = (nodeProps) => {
         const {colorGenerator} = this.props;
@@ -182,8 +188,9 @@ class Overview extends React.Component {
                         </g>
                     </g>
                     <g>
-                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
-                              6.1,146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#ff9800"/>
+                        <path stroke="#fff" strokeWidth="3" fill={colorGenerator.getColor(ColorGenerator.WARNING)}
+                            d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                               6.1,146.5,6.1z" />
                         <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
                     </g>
                 </svg>
@@ -197,8 +204,9 @@ class Overview extends React.Component {
                         </g>
                     </g>
                     <g>
-                        <path d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
-                              6.1, 146.5,6.1z" stroke="#fff" strokeWidth="3" fill="#F44336"/>
+                        <path stroke="#fff" strokeWidth="3" fill={colorGenerator.getColor(ColorGenerator.ERROR)}
+                            d="M146.5,6.1c-23.6,0-42.9,19.3-42.9,42.9s19.3,42.9,42.9,42.9s42.9-19.3,42.9-42.9S170.1,
+                               6.1, 146.5,6.1z"/>
                         <path fill="#ffffff" d="M144.6,56.9h7.9v7.9h-7.9V56.9z M144.6,25.2h7.9V49h-7.9V25.2z"/>
                     </g>
                 </svg>
@@ -207,21 +215,24 @@ class Overview extends React.Component {
         return cellView;
     };
 
-
     getCellState = (nodeId) => {
         const healthInfo = this.defaultState.healthInfo.find((element) => element.nodeId === nodeId);
         return healthInfo.status;
     };
 
-    onClickCell = (nodeId) => {
-        const fromTime = this.state.currentTimeRange.fromTime;
-        const toTime = this.state.currentTimeRange.toTime;
+    onClickCell = (nodeId, isUserAction) => {
+        const {globalState} = this.props;
+        const fromTime = QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime);
+        const toTime = QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime);
 
         const search = {
             queryStartTime: fromTime.valueOf(),
             queryEndTime: toTime.valueOf(),
             timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
         };
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay(`Loading ${nodeId} Cell Information`, globalState);
+        }
         HttpUtils.callObservabilityAPI(
             {
                 url: `/http-requests/cells/${nodeId}/microservices${HttpUtils.generateQueryParamString(search)}`,
@@ -259,15 +270,25 @@ class Overview extends React.Component {
                 },
                 data: {...prevState.data},
                 listData: serviceInfo,
-                reloadGraph: true,
                 selectedCell: cell,
                 request: {
                     ...prevState.request,
                     statusCodes: statusCodeContent
                 }
             }));
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
         }).catch((error) => {
             this.setState({error: error});
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    `Failed to load ${nodeId} Cell Dependencies`,
+                    NotificationUtils.Levels.ERROR,
+                    globalState
+                );
+            }
         });
     };
 
@@ -301,7 +322,6 @@ class Overview extends React.Component {
             ...prevState,
             summary: defaultState.summary,
             listData: this.loadCellInfo(defaultState.data.nodes),
-            reloadGraph: true,
             selectedCell: null,
             request: defaultState.request
         }));
@@ -332,12 +352,6 @@ class Overview extends React.Component {
         });
         return serviceInfo;
     };
-
-    constructor(props) {
-        super(props);
-        this.initializeDefault();
-        this.state = JSON.parse(JSON.stringify(this.defaultState));
-    }
 
     initializeDefault = () => {
         this.defaultState = {
@@ -398,7 +412,6 @@ class Overview extends React.Component {
                 links: null
             },
             error: null,
-            reloadGraph: true,
             open: true,
             legend: null,
             legendOpen: false,
@@ -408,25 +421,30 @@ class Overview extends React.Component {
         };
     };
 
-    callOverviewInfo = (fromTime, toTime) => {
-        const colorGenerator = this.props.colorGenerator;
+    callOverviewInfo = (isUserAction, fromTime, toTime) => {
+        const {colorGenerator, globalState} = this.props;
+        const {selectedCell} = this.state;
+        const self = this;
 
         const search = {};
         if (fromTime && toTime) {
             search.fromTime = fromTime.valueOf();
             search.toTime = toTime.valueOf();
         }
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Dependencies", globalState);
+        }
         HttpUtils.callObservabilityAPI(
             {
                 url: `/dependency-model/cells${HttpUtils.generateQueryParamString(search)}`,
                 method: "GET"
             },
-            this.props.globalState
+            globalState
         ).then((result) => {
             const {nodes, edges} = result;
 
-            this.defaultState.healthInfo = this.getCellHealth(nodes);
-            const healthCount = this.getHealthCount(this.defaultState.healthInfo);
+            self.defaultState.healthInfo = self.getCellHealth(nodes);
+            const healthCount = self.getHealthCount(self.defaultState.healthInfo);
             const summaryContent = [
                 {
                     key: "Total",
@@ -445,12 +463,12 @@ class Overview extends React.Component {
                     value: healthCount.warning
                 }
             ];
-            this.defaultState.summary.content = summaryContent;
-            this.defaultState.data.nodes = nodes;
-            this.defaultState.data.links = edges;
+            self.defaultState.summary.content = summaryContent;
+            self.defaultState.data.nodes = nodes;
+            self.defaultState.data.links = edges;
             colorGenerator.addKeys(nodes);
-            const cellList = this.loadCellInfo(nodes);
-            this.setState((prevState) => ({
+            const cellList = self.loadCellInfo(nodes);
+            self.setState((prevState) => ({
                 data: {
                     nodes: nodes,
                     links: edges
@@ -459,10 +477,25 @@ class Overview extends React.Component {
                     ...prevState.summary,
                     content: summaryContent
                 },
-                listData: cellList
+                listData: cellList,
+                isLoading: false // From this point onwards the underlying content is always shown in the overlay
             }));
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+            if (selectedCell) {
+                self.onClickCell(selectedCell.id, isUserAction);
+            }
         }).catch((error) => {
-            this.setState({error: error});
+            self.setState({error: error});
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load Cell Dependencies",
+                    NotificationUtils.Levels.ERROR,
+                    globalState
+                );
+            }
         });
     };
 
@@ -505,12 +538,16 @@ class Overview extends React.Component {
         return healthInfo;
     };
 
-    callRequestStats = (fromTime, toTime) => {
+    loadOverviewOnTimeUpdate = (isUserAction, fromTime, toTime) => {
+        const {globalState} = this.props;
         const search = {
             queryStartTime: fromTime.valueOf(),
             queryEndTime: toTime.valueOf(),
             timeGranularity: QueryUtils.getTimeGranularity(fromTime, toTime)
         };
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Loading Cell Metadata", globalState);
+        }
         HttpUtils.callObservabilityAPI(
             {
                 url: `/http-requests/cells${HttpUtils.generateQueryParamString(search)}`,
@@ -530,9 +567,20 @@ class Overview extends React.Component {
                     statusCodes: statusCodeContent
                 }
             }));
-            this.callOverviewInfo(fromTime, toTime);
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+            this.callOverviewInfo(isUserAction, fromTime, toTime);
         }).catch((error) => {
             this.setState({error: error});
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to load Cell Metadata",
+                    NotificationUtils.Levels.ERROR,
+                    globalState
+                );
+            }
         });
     };
 
@@ -615,26 +663,6 @@ class Overview extends React.Component {
         return total;
     };
 
-    loadOverviewOnTimeUpdate = (isUserAction, startTime, endTime) => {
-        const {globalState} = this.props;
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Overview", globalState);
-            this.setState((prevState) => ({
-                ...prevState,
-                currentTimeRange: {
-                    fromTime: startTime,
-                    toTime: endTime
-                }
-            }));
-            this.callRequestStats(startTime, endTime);
-        }
-        setTimeout(() => {
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }, 1000);
-    };
-
     handleClick = (event) => {
         const {currentTarget} = event;
         this.setState((state) => ({
@@ -644,80 +672,94 @@ class Overview extends React.Component {
     };
 
     render() {
-        const {classes, theme} = this.props;
-        const {open, selectedCell, legend, legendOpen} = this.state;
+        const {classes, theme, colorGenerator} = this.props;
+        const {open, selectedCell, legend, legendOpen, isLoading} = this.state;
         const id = legendOpen ? "legend-popper" : null;
         const percentageVal = this.props.globalState.get(StateHolder.CONFIG).percentageRangeMinValue;
 
         return (
             <React.Fragment>
                 <TopToolbar title={"Overview"} onUpdate={this.loadOverviewOnTimeUpdate}/>
-                <div className={classes.root}>
-                    <Paper className={classNames(classes.content, {
-                        [classes.contentShift]: open
-                    })}>
-                        <DependencyGraph id="graph-id" data={this.state.data} reloadGraph={this.state.reloadGraph}
-                            onClickNode={this.onClickCell} onClickGraph={this.onClickGraph}
-                            config={{
-                                node: {
-                                    viewGenerator: this.viewGenerator
-                                }
-                            }}/>
-                        <Button aria-describedby={id} variant="outlined" className={classes.btnLegend}
-                            onClick={this.handleClick}>Legend</Button>
-                        <Popper id={id} open={legendOpen} anchorEl={legend} placement="top-end" transition>
-                            {({TransitionProps}) => (
-                                <Fade {...TransitionProps} timeout={350}>
-                                    <Paper>
-                                        <div className={classes.legendContent}>
-                                            <CellIcon className={classes.legendFirstEl} color="action"
-                                                fontSize="small"/>
-                                            <Typography color="inherit"
-                                                className={classes.legendText}> Cell</Typography>
-                                            <ArrowRightAltSharp className={classes.legendIcon} color="action"/>
-                                            <Typography color="inherit"
-                                                className={classes.legendText}> Dependency</Typography>
-                                            <Error className={classNames(classes.legendIcon, classes.warning)}/>
-                                            <Typography color="inherit" className={classes.legendText}>
-                                                {Math.round((1 - percentageVal.warningThreshold) * 100)}%
-                                                - {Math.round((1 - percentageVal.errorThreshold) * 100)}%
-                                                Error </Typography>
-                                            <Error className={classes.legendIcon} color="error"/>
-                                            <Typography color="inherit" className={classes.legendText}>
-                                                &gt; {Math.round((1 - percentageVal.errorThreshold) * 100)}% Error
-                                            </Typography>
-                                        </div>
-                                    </Paper>
-                                </Fade>
-                            )}
-                        </Popper>
-                    </Paper>
-                    <div className={classNames(classes.moreDetails, {
-                        [classes.moreDetailsShift]: open
-                    })}>
-                        <IconButton color="inherit" aria-label="Open drawer" onClick={this.handleDrawerOpen}
-                            className={classNames(classes.menuButton, open && classes.hide)}>
-                            <MoreIcon/>
-                        </IconButton>
-                    </div>
+                {
+                    isLoading
+                        ? null
+                        : (
+                            <div className={classes.root}>
+                                <Paper className={classNames(classes.content, {
+                                    [classes.contentShift]: open
+                                })}>
+                                    <DependencyGraph id="graph-id" data={this.state.data}
+                                        onClickNode={(nodeId) => this.onClickCell(nodeId, true)}
+                                        onClickGraph={this.onClickGraph}
+                                        config={{
+                                            node: {
+                                                viewGenerator: this.viewGenerator
+                                            }
+                                        }}/>
+                                    <Button aria-describedby={id} variant="outlined" className={classes.btnLegend}
+                                        onClick={this.handleClick}>Legend</Button>
+                                    <Popper id={id} open={legendOpen} anchorEl={legend} placement="top-end" transition>
+                                        {({TransitionProps}) => (
+                                            <Fade {...TransitionProps} timeout={350}>
+                                                <Paper>
+                                                    <div className={classes.legendContent}>
+                                                        <CellIcon className={classes.legendFirstEl} color="action"
+                                                            fontSize="small"/>
+                                                        <Typography color="inherit"
+                                                            className={classes.legendText}> Cell</Typography>
+                                                        <ArrowRightAltSharp className={classes.legendIcon}
+                                                            color="action"/>
+                                                        <Typography color="inherit"
+                                                            className={classes.legendText}> Dependency</Typography>
+                                                        <Error className={classes.legendIcon}
+                                                            style={{
+                                                                color: colorGenerator.getColor(ColorGenerator.WARNING)
+                                                            }}/>
+                                                        <Typography color="inherit" className={classes.legendText}>
+                                                            {Math.round((1 - percentageVal.warningThreshold) * 100)}%
+                                                            - {Math.round((1 - percentageVal.errorThreshold) * 100)}%
+                                                            Error </Typography>
+                                                        <Error className={classes.legendIcon} color="error"/>
+                                                        <Typography color="inherit" className={classes.legendText}>
+                                                            &gt;
+                                                            {Math.round((1 - percentageVal.errorThreshold) * 100)}%
+                                                            Error
+                                                        </Typography>
+                                                    </div>
+                                                </Paper>
+                                            </Fade>
+                                        )}
+                                    </Popper>
+                                </Paper>
+                                <div className={classNames(classes.moreDetails, {
+                                    [classes.moreDetailsShift]: open
+                                })}>
+                                    <IconButton color="inherit" aria-label="Open drawer" onClick={this.handleDrawerOpen}
+                                        className={classNames(classes.menuButton, open && classes.hide)}>
+                                        <MoreIcon/>
+                                    </IconButton>
+                                </div>
 
-                    <Drawer className={classes.drawer} variant="persistent" anchor="right" open={open}
-                        classes={{
-                            paper: classes.drawerPaper
-                        }}>
-                        <div className={classes.drawerHeader}>
-                            <IconButton onClick={this.handleDrawerClose}>
-                                {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
-                            </IconButton>
-                            <Typography color="textSecondary" className={classes.sideBarHeading}>
-                                {selectedCell ? "Cell Details" : "Overview"}
-                            </Typography>
-                        </div>
-                        <Divider/>
-                        <SidePanelContent summary={this.state.summary} request={this.state.request}
-                            selectedCell={selectedCell} open={this.state.open} listData={this.state.listData}/>
-                    </Drawer>
-                </div>
+                                <Drawer className={classes.drawer} variant="persistent" anchor="right" open={open}
+                                    classes={{
+                                        paper: classes.drawerPaper
+                                    }}>
+                                    <div className={classes.drawerHeader}>
+                                        <IconButton onClick={this.handleDrawerClose}>
+                                            {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
+                                        </IconButton>
+                                        <Typography color="textSecondary" className={classes.sideBarHeading}>
+                                            {selectedCell ? "Cell Details" : "Overview"}
+                                        </Typography>
+                                    </div>
+                                    <Divider/>
+                                    <SidePanelContent summary={this.state.summary} request={this.state.request}
+                                        selectedCell={selectedCell} open={this.state.open}
+                                        listData={this.state.listData}/>
+                                </Drawer>
+                            </div>
+                        )
+                }
             </React.Fragment>
         );
     }
@@ -732,4 +774,3 @@ Overview.propTypes = {
 };
 
 export default withStyles(styles, {withTheme: true})(withGlobalState(withColor(Overview)));
-

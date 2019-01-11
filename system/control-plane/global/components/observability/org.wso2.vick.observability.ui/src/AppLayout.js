@@ -127,9 +127,17 @@ const styles = (theme) => ({
         padding: theme.spacing.unit * 3,
         minHeight: "100%"
     },
-    progressOverlay: {
+    progressOverlayContainer: {
         position: "absolute",
         zIndex: 9999,
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%"
+    },
+    progressOverlay: {
+        position: "relative",
+        display: "grid",
         top: 0,
         left: 0,
         width: "100%",
@@ -391,7 +399,6 @@ class AppLayout extends React.Component {
                                             }}
                                             open={userInfoOpen}
                                             onClose={this.handleUserInfoMenuClose}>
-                                            {/* TODO: Implement user login */}
                                             <MenuItem onClick={this.handleUserInfoMenuClose}>
                                                 Profile - {globalState.get(StateHolder.USER)}
                                             </MenuItem>
@@ -410,7 +417,7 @@ class AppLayout extends React.Component {
                         }
                     </Toolbar>
                 </AppBar>
-                <Drawer variant="permanent"
+                <Drawer variant="permanent" open={open}
                     className={classNames(classes.drawer, {
                         [classes.drawerOpen]: open,
                         [classes.drawerClose]: !open
@@ -420,8 +427,7 @@ class AppLayout extends React.Component {
                             [classes.drawerOpen]: open,
                             [classes.drawerClose]: !open
                         })
-                    }}
-                    open={open}>
+                    }}>
                     <div className={classes.toolbar}>
                         <IconButton onClick={this.handleDrawerClose}>
                             {theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>}
@@ -544,13 +550,16 @@ class AppLayout extends React.Component {
                     </List>
                 </Drawer>
                 <main className={classes.content}>
-                    <div className={classes.progressOverlay} style={{
-                        display: loadingState.isLoading ? "grid" : "none"
+                    <div className={classes.progressOverlayContainer} style={{
+                        display: loadingState.isLoading ? "block" : "none"
                     }}>
-                        <div className={classes.progress}>
-                            <CircularProgress className={classes.progressIndicator} thickness={4.5} size={45}/>
-                            <div className={classes.progressContent}>
-                                {loadingState.message ? loadingState.message : "Loading"}...
+                        <div className={classes.toolbar}/>
+                        <div className={classes.progressOverlay}>
+                            <div className={classes.progress}>
+                                <CircularProgress className={classes.progressIndicator} thickness={4.5} size={45}/>
+                                <div className={classes.progressContent}>
+                                    {loadingState.message ? loadingState.message : "Loading"}...
+                                </div>
                             </div>
                         </div>
                     </div>

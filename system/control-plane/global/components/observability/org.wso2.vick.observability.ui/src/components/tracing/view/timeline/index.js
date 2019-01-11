@@ -61,10 +61,6 @@ class Timeline extends React.PureComponent {
         this.timelineViewRef.current.drawTimeline();
     };
 
-    componentDidUpdate = () => {
-        this.timelineViewRef.current.drawTimeline();
-    };
-
     handleServiceTypeChange = (event) => {
         const serviceType = event.target.value;
         this.setState({

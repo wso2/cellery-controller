@@ -15,6 +15,8 @@
  */
 
 import AuthUtils from "../../../utils/api/authUtils";
+import Constants from "../../../utils/constants";
+import moment from "moment";
 
 /**
  * Configuration holder.
@@ -33,7 +35,34 @@ class StateHolder {
      */
     state = {};
 
-    constructor() {
+    /**
+     * Initialize the State Holder.
+     *
+     * @param {Object} queryParams The query params object in the current location
+     */
+    constructor(queryParams = "") {
+        // Parsing the overrides to the global filter provided as Query Params
+        let filterStartTime = null;
+        if (queryParams.globalFilterStartTime) {
+            const parsedFilterStartTime = moment(queryParams.globalFilterStartTime).format(Constants.Pattern.DATE_TIME);
+            if (parsedFilterStartTime !== "Invalid date") {
+                filterStartTime = parsedFilterStartTime;
+            }
+        }
+        let filterEndTime = null;
+        if (queryParams.globalFilterEndTime) {
+            const parsedFilterEndTime = moment(queryParams.globalFilterEndTime).format(Constants.Pattern.DATE_TIME);
+            if (parsedFilterEndTime !== "Invalid date") {
+                filterEndTime = parsedFilterEndTime;
+            }
+        }
+        const isGlobalAutoRefreshEnabled = !queryParams.hasOwnProperty("globalAutoRefresh")
+            || queryParams.globalAutoRefresh === true || queryParams.globalAutoRefresh === "true";
+
+        /*
+         * Initializing the initial state
+         * This is a raw state which will be modified later for storing the values and metadata
+         */
         const rawState = {
             [StateHolder.USER]: AuthUtils.getAuthenticatedUser(),
             [StateHolder.LOADING_STATE]: {
@@ -47,10 +76,10 @@ class StateHolder {
             },
             [StateHolder.CONFIG]: {},
             [StateHolder.GLOBAL_FILTER]: {
-                startTime: "now - 24 hours",
-                endTime: "now",
-                dateRangeNickname: "Last 24 hours",
-                refreshInterval: 30 * 1000 // 30 milli-seconds
+                startTime: filterStartTime ? filterStartTime : "now - 24 hours",
+                endTime: filterEndTime ? filterEndTime : "now",
+                dateRangeNickname: filterStartTime || filterEndTime ? null : "Last 24 hours",
+                refreshInterval: isGlobalAutoRefreshEnabled ? 30 * 1000 : -1
             }
         };
 

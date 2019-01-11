@@ -18,22 +18,22 @@ import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
-import HttpUtils from "../../utils/api/httpUtils";
+import HttpUtils from "../../../utils/api/httpUtils";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
-import NotificationUtils from "../../utils/common/notificationUtils";
+import NotificationUtils from "../../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
-import QueryUtils from "../../utils/common/queryUtils";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
-import SearchResult from "./SearchResult";
 import Select from "@material-ui/core/Select/Select";
-import Span from "../../utils/tracing/span";
+import Span from "../../../utils/tracing/span";
 import TextField from "@material-ui/core/TextField/TextField";
-import TopToolbar from "../common/toptoolbar";
+import TopToolbar from "../../common/toptoolbar";
+import TracesList from "./TracesList";
 import Typography from "@material-ui/core/Typography/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
-import withGlobalState, {StateHolder} from "../common/state";
+import withGlobalState, {StateHolder} from "../../common/state";
 import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
@@ -63,7 +63,7 @@ const styles = (theme) => ({
     }
 });
 
-class Search extends React.Component {
+class TraceSearch extends React.Component {
 
     static ALL_VALUE = "All";
 
@@ -79,9 +79,9 @@ class Search extends React.Component {
                 operations: []
             },
             filter: {
-                cell: queryParams.cell ? queryParams.cell : Search.ALL_VALUE,
-                microservice: queryParams.microservice ? queryParams.microservice : Search.ALL_VALUE,
-                operation: queryParams.operation ? queryParams.operation : Search.ALL_VALUE,
+                cell: queryParams.cell ? queryParams.cell : TraceSearch.ALL_VALUE,
+                microservice: queryParams.microservice ? queryParams.microservice : TraceSearch.ALL_VALUE,
+                operation: queryParams.operation ? queryParams.operation : TraceSearch.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
                 minDuration: queryParams.minDuration ? queryParams.minDuration : "",
                 minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
@@ -98,7 +98,10 @@ class Search extends React.Component {
             },
             isLoading: false,
             hasSearchCompleted: false,
-            searchResults: []
+            searchResults: {
+                rootSpans: [],
+                spanCounts: []
+            }
         };
     }
 
@@ -160,8 +163,8 @@ class Search extends React.Component {
                                     <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
                                     <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
                                         inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
-                                            {Search.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(data.cells)}
                                     </Select>
@@ -169,11 +172,11 @@ class Search extends React.Component {
                             </Grid>
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="microservice" shrink={true}>Microservice</InputLabel>
+                                    <InputLabel htmlFor="microservice" shrink={true}>Component</InputLabel>
                                     <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
                                         inputProps={{name: "microservice", id: "microservice"}}>
-                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
-                                            {Search.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableMicroservices)}
                                     </Select>
@@ -184,8 +187,8 @@ class Search extends React.Component {
                                     <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
                                     <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
                                         inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={Search.ALL_VALUE} value={Search.ALL_VALUE}>
-                                            {Search.ALL_VALUE}
+                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
+                                            {TraceSearch.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableOperations)}
                                     </Select>
@@ -198,7 +201,7 @@ class Search extends React.Component {
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
                                     onAdd={this.handleTagAdd} onDelete={this.handleTagRemove}
-                                    onBeforeAdd={(chip) => Boolean(Search.parseChip(chip))}
+                                    onBeforeAdd={(chip) => Boolean(TraceSearch.parseChip(chip))}
                                     error={Boolean(tagsTempInput.errorMessage)}
                                     helperText={tagsTempInput.errorMessage} placeholder={"Eg: http.status_code=200"}
                                     onUpdateInput={this.handleTagsTempInputUpdate} inputValue={tagsTempInput.content}
@@ -271,7 +274,7 @@ class Search extends React.Component {
                         hasSearchCompleted && !isLoading
                             ? (
                                 <div className={classes.resultContainer}>
-                                    <SearchResult data={searchResults}/>
+                                    <TracesList searchResults={searchResults}/>
                                 </div>
                             )
                             : null
@@ -420,7 +423,7 @@ class Search extends React.Component {
         this.setState({
             tagsTempInput: {
                 content: value,
-                errorMessage: !value || Search.parseChip(value)
+                errorMessage: !value || TraceSearch.parseChip(value)
                     ? ""
                     : "Invalid tag filter format. Expected \"tagKey=tagValue\""
             }
@@ -433,7 +436,7 @@ class Search extends React.Component {
      * @param {string} chip The chip representing the tag that was added
      */
     handleTagAdd = (chip) => {
-        const tag = Search.parseChip(chip);
+        const tag = TraceSearch.parseChip(chip);
         if (tag) {
             this.setState((prevState) => ({
                 ...prevState,
@@ -459,7 +462,7 @@ class Search extends React.Component {
      * @param {string} chip The chip representing the tag that was removed
      */
     handleTagRemove = (chip) => {
-        const tag = Search.parseChip(chip);
+        const tag = TraceSearch.parseChip(chip);
         if (tag) {
             this.setState((prevState) => {
                 const newTags = {...prevState.filter.tags};
@@ -485,7 +488,7 @@ class Search extends React.Component {
         // Build search object
         const search = {};
         const addSearchParam = (key, value) => {
-            if (value && value !== Search.ALL_VALUE) {
+            if (value && value !== TraceSearch.ALL_VALUE) {
                 search[key] = value;
             }
         };
@@ -510,46 +513,25 @@ class Search extends React.Component {
             },
             globalState
         ).then((data) => {
-            const rootSpans = data.rootSpans
-                .map((dataItem) => ({
-                    traceId: dataItem[0],
-                    rootCellName: dataItem[1],
-                    rootServiceName: dataItem[2],
-                    rootOperationName: dataItem[3],
-                    rootStartTime: dataItem[4],
-                    rootDuration: dataItem[5]
-                }))
-                .reduce((accumulator, dataItem) => {
-                    accumulator[dataItem.traceId] = dataItem;
-                    return accumulator;
-                }, {});
-            const searchResults = data.spanCounts
-                .map((dataItem) => ({
-                    traceId: dataItem[0],
-                    cellNameKey: dataItem[1],
-                    serviceName: dataItem[2],
-                    count: dataItem[3]
-                }))
-                .reduce((accumulator, dataItem) => {
-                    if (accumulator[dataItem.traceId]) {
-                        if (!accumulator[dataItem.traceId].services) {
-                            accumulator[dataItem.traceId].services = [];
-                        }
-                        accumulator[dataItem.traceId].services.push(dataItem);
-                    }
-                    return accumulator;
-                }, rootSpans);
-
-            const searchResultsArray = [];
-            for (const traceId in searchResults) {
-                if (searchResults.hasOwnProperty(traceId)) {
-                    searchResultsArray.push(searchResults[traceId]);
-                }
-            }
             self.setState((prevState) => ({
                 ...prevState,
                 hasSearchCompleted: true,
-                searchResults: searchResultsArray
+                searchResults: {
+                    rootSpans: data.rootSpans.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        rootCellName: dataItem[1],
+                        rootServiceName: dataItem[2],
+                        rootOperationName: dataItem[3],
+                        rootStartTime: dataItem[4],
+                        rootDuration: dataItem[5]
+                    })),
+                    spanCounts: data.spanCounts.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        cellName: dataItem[1],
+                        serviceName: dataItem[2],
+                        count: dataItem[3]
+                    }))
+                }
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
@@ -570,7 +552,7 @@ class Search extends React.Component {
         const {data, filter, metaData} = state;
 
         // Finding the available microservices to be selected
-        const selectedCells = (filter.cell === Search.ALL_VALUE ? data.cells : [filter.cell]);
+        const selectedCells = (filter.cell === TraceSearch.ALL_VALUE ? data.cells : [filter.cell]);
         const availableMicroservices = data.microservices
             .filter((microservice) => selectedCells.includes(microservice.cell))
             .map((microservice) => microservice.name);
@@ -578,10 +560,10 @@ class Search extends React.Component {
         const selectedMicroservice = data.cells.length === 0 || (filter.microservice
             && availableMicroservices.includes(filter.microservice))
             ? filter.microservice
-            : Search.ALL_VALUE;
+            : TraceSearch.ALL_VALUE;
 
         // Finding the available operations to be selected
-        const selectedMicroservices = (selectedMicroservice === Search.ALL_VALUE
+        const selectedMicroservices = (selectedMicroservice === TraceSearch.ALL_VALUE
             ? availableMicroservices
             : [selectedMicroservice]);
         const availableOperations = data.operations
@@ -591,7 +573,7 @@ class Search extends React.Component {
         const selectedOperation = data.cells.length === 0 || (filter.operation
             && availableOperations.includes(filter.operation))
             ? filter.operation
-            : Search.ALL_VALUE;
+            : TraceSearch.ALL_VALUE;
 
         return {
             ...state,
@@ -624,7 +606,7 @@ class Search extends React.Component {
 
 }
 
-Search.propTypes = {
+TraceSearch.propTypes = {
     classes: PropTypes.object.isRequired,
     history: PropTypes.shape({
         replace: PropTypes.func.isRequired
@@ -638,4 +620,4 @@ Search.propTypes = {
     globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
-export default withStyles(styles)(withGlobalState(Search));
+export default withStyles(styles)(withGlobalState(TraceSearch));
