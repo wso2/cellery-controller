@@ -16,25 +16,29 @@
  * under the License.
  */
 
-/* eslint max-len: ["off"] */
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
 import AuthUtils from "./utils/api/authUtils";
+import CellsIcon from "./icons/CellsIcon";
 import CheckCircle from "@material-ui/icons/CheckCircle";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import CloseIcon from "@material-ui/icons/Close";
 import Collapse from "@material-ui/core/Collapse";
+import ColorGenerator from "./components/common/color/colorGenerator";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Error from "@material-ui/icons/Error";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
+import FileCopy from "@material-ui/icons/FileCopyOutlined";
+import FormatColorFillOutlined from "@material-ui/icons/FormatColorFillOutlined";
 import IconButton from "@material-ui/core/IconButton";
 import Info from "@material-ui/icons/Info";
+import InputBase from "@material-ui/core/InputBase";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -42,17 +46,24 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
+import MetricsIcon from "./icons/MetricsIcon";
+import NodeIcon from "./icons/NodeIcon";
 import NotificationUtils from "./utils/common/notificationUtils";
+import OverviewIcon from "./icons/OverviewIcon";
+import Paper from "@material-ui/core/Paper/Paper";
+import PodIcon from "./icons/PodIcon";
+import Popover from "@material-ui/core/Popover";
 import React from "react";
 import Settings from "@material-ui/icons/SettingsOutlined";
+import ShareIcon from "./icons/ShareIcon";
 import Snackbar from "@material-ui/core/Snackbar/Snackbar";
-import SvgIcon from "@material-ui/core/SvgIcon";
 import Timeline from "@material-ui/icons/Timeline";
 import Toolbar from "@material-ui/core/Toolbar";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import Warning from "@material-ui/icons/Warning";
 import classNames from "classnames";
+import withColor from "./components/common/color";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
 import withGlobalState, {StateHolder} from "./components/common/state";
@@ -176,71 +187,24 @@ const styles = (theme) => ({
     },
     snackbarMessage: {
         paddingLeft: theme.spacing.unit
+    },
+    popoverContent: {
+        margin: theme.spacing.unit * 3
+    },
+    copyContainer: {
+        marginTop: theme.spacing.unit * 2,
+        boxShadow: "none",
+        border: "1px solid #eee"
+    },
+    copyInput: {
+        margin: theme.spacing.unit,
+        flex: 1
+    },
+    iconButton: {
+        marginLeft: theme.spacing.unit,
+        marginRight: theme.spacing.unit
     }
 });
-
-const OverviewIcon = (props) => (
-    <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path d="M12.5,0.8H1.5c-0.7,0-1.2,0.6-1.2,1.2v7.4c0,0.7,0.6,1.2,1.2,1.2h4.3v1.2H4.5v1.2h4.9v-1.2H8.2v-1.2h4.3
-c0.7,0,1.2-0.6,1.2-1.2V2.1C13.8,1.4,13.2,0.8,12.5,0.8z M12.5,9.5H1.5V2.1h11.1V9.5z M10,9L7.9,7.8V5.5L10,4.3L12,5.5v2.4L10,9z
- M9.1,7.2L10,7.7l0.9-0.5v-1L10,5.7L9.1,6.2V7.2z M8,6.8L5.5,5.4l0.4-0.6l2.5,1.4L8,6.8z M4,7.2L1.9,6V3.7L4,2.5L6,3.7V6L4,7.2z
- M3.1,5.4L4,5.9l0.9-0.5v-1L4,3.8L3.1,4.3V5.4z"/>
-    </SvgIcon>
-);
-
-const CellsIcon = (props) => (
-    <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path d="M10.7,13.7l-3.1-1.8V8.4l3.1-1.8l3.1,1.8v3.6L10.7,13.7z M7,7.5L3.8,5.7V2L7,0.2L10.2,2v3.6L7,7.5z M5.1,4.9 l1.9,1l1.9
--1V 2.8L7,1.8l-1.9,1V4.9z M3.4,13.8L0.2,12V8.4l3.2-1.8l3.2,1.8V12L3.4,13.8z M8.8,11.2l1.9,1l1.9-1V9.1l-1.9 -1l-1.9,
-1V11.2z M1.5,11.2l1.9,1l1.9-1V9.1l-1.9-1l-1.9,1V11.2z"/>
-    </SvgIcon>
-);
-const PodIcon = (props) => (
-    <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path
-            d="M13.4,3.3C13.4,3.3,13.3,3.2,13.4,3.3c-0.1-0.3-0.3-0.4-0.4-0.4L7.2,0.1c-0.2-0.1-0.3-0.1-0.5,0L0.9,2.9 C0.7,3,0.6,3.2
-,0.6,3.5v7.1c0,0.2,0.1,0.4,0.3,0.5l5.7,2.8l0,0l0,0l0.2,0c0,0,0.1,0,0,0l6-2.9c0.2-0.1,0.3-0.3,0.3-0.5L13.4,3.3 L13.4
-,3.3z M6.4,6.7v5.8l-4.6-2.2V4.4L6.4,6.7z M11.5,3.5L7,5.6L2.5,3.5L7,1.3L11.5,3.5z M12.2,4.4v5.8l-4.7,2.3V6.7L12.2,4.
-4z"/>
-    </SvgIcon>
-);
-
-const NodeIcon = (props) => (
-    <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path d="M12.4099731,2.5299683c0,0.2200317-0.1799927,0.4000244-0.3999634,0.4000244H6.2299805
-c-0.2199707,0-0.3999634-0.1799927-0.3999634-0.4000244c0-0.2199707,0.1799927-0.3999634,0.3999634-0.3999634h5.7800293
-C12.2299805,2.1300049,12.4099731,2.3099976,12.4099731,2.5299683z M6.2299805,7.0100098h5.7800293
-c0.2199707,0,0.3999634-0.1800537,0.3999634-0.4000244s-0.1799927-0.4000244-0.3999634-0.4000244H6.2299805
-c-0.2199707,0-0.3999634,0.1800537-0.3999634,0.4000244S6.0100098,7.0100098,6.2299805,7.0100098z M14,12.3800049
-c0,0.8599854-0.7000122,1.5599976-1.5499878,1.5599976c-0.6799927,0-1.2700195-0.4400024-1.4700317-1.0599976H8.460022
-C8.2600098,13.5,7.6799927,13.9400024,7,13.9400024S5.7399902,13.5,5.539978,12.8800049H3.0200195
-C2.8200073,13.5,2.2299805,13.9400024,1.5499878,13.9400024C0.7000122,13.9400024,0,13.2399902,0,12.3800049
-c0-0.8500366,0.7000122-1.5500488,1.5499878-1.5500488c0.6799927,0,1.2600098,0.4400024,1.4700317,1.0500488H5.539978
-c0.1600342-0.4800415,0.5400391-0.8500366,1.0300293-0.9800415V9.8299561c0-0.2799683,0.2299805-0.5,0.5-0.5
-c0.2799683,0,0.5,0.2200317,0.5,0.5v1.1100464c0.4199829,0.1599731,0.75,0.5100098,0.8900146,0.9400024h2.5199585
-c0.210022-0.6100464,0.7900391-1.0500488,1.4700317-1.0500488C13.2999878,10.8299561,14,11.5299683,14,12.3800049z
- M2.1099854,12.3800049c0-0.3000488-0.25-0.5500488-0.5599976-0.5500488C1.25,11.8299561,1,12.0799561,1,12.3800049
-c0,0.3099976,0.25,0.5599976,0.5499878,0.5599976C1.8599854,12.9400024,2.1099854,12.6900024,2.1099854,12.3800049z M13,12.3800049
-c0-0.3000488-0.25-0.5500488-0.5499878-0.5500488c-0.3099976,0-0.5599976,0.25-0.5599976,0.5500488
-c0,0.3099976,0.25,0.5599976,0.5599976,0.5599976C12.75,12.9400024,13,12.6900024,13,12.3800049z M3.0800171,1.6300049
-c-0.5,0-0.9100342,0.3999634-0.9100342,0.8999634s0.4100342,0.9100342,0.9100342,0.9100342s0.8999634-0.4100342,0.8999634-0.9100342
-S3.5800171,1.6300049,3.0800171,1.6300049z M3.0800171,7.5199585c0.5,0,0.8999634-0.4099731,0.8999634-0.9099731
-S3.5800171,5.7000122,3.0800171,5.7000122S2.1699829,6.1099854,2.1699829,6.6099854S2.5800171,7.5199585,3.0800171,7.5199585z
- M14,0.7999878v3.2799683v0.9900513v3.2699585c0,0.4500122-0.3599854,0.8000488-0.7999878,0.8000488H0.7999878
-C0.3599854,9.1400146,0,8.789978,0,8.3399658V5.0700073V4.0799561V0.7999878C0,0.3599854,0.3599854,0,0.7999878,0h12.4000244
-C13.6400146,0,14,0.3599854,14,0.7999878z M13,5.0799561H1v3.0600586h12V5.0799561z M1,4.0700073h12V1H1V4.0700073z"/>
-    </SvgIcon>
-);
-
-const MetricsIcon = (props) => (
-    <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path d="M1.6,12.5h2.2c0.3,0,0.6-0.3,0.6-0.6V7.1c0-0.3-0.3-0.6-0.6-0.6H1.6C1.3,6.5,1,6.8,1,7.1v4.8C1,12.3,1.3,12.5,1.6,12.5z
- M2,7.5h1.4v4H2V7.5z M6,12.6h2.2c0.3,0,0.6-0.3,0.6-0.6V1c0-0.3-0.3-0.6-0.6-0.6H6C5.7,0.3,5.4,0.6,5.4,1v11
-C5.4,12.3,5.7,12.6,6,12.6z M6.4,1.3h1.5v10.3H6.4V1.3z M10.4,12.6h2.2c0.3,0,0.6-0.3,0.6-0.6V4.5c0-0.3-0.3-0.6-0.6-0.6h-2.2
-c-0.3,0-0.6,0.3-0.6,0.6V12C9.8,12.3,10.1,12.6,10.4,12.6z M10.8,4.9h1.4v6.7h-1.4V4.9z M13.3,13.2v0.1c0,0.2-0.2,0.4-0.4,0.4H1.5
-c-0.2,0-0.4-0.2-0.4-0.4v-0.1c0-0.2,0.2-0.4,0.4-0.4h11.4C13.1,12.8,13.3,13,13.3,13.2z"/>
-    </SvgIcon>
-);
 
 class AppLayout extends React.Component {
 
@@ -270,8 +234,11 @@ class AppLayout extends React.Component {
             notificationState: {
                 ...notificationState
             },
-            selectedIndex: selectedIndex
+            selectedIndex: selectedIndex,
+            popoverEl: null,
+            showCopyText: false
         };
+        this.popoverInputRef = React.createRef();
     }
 
     handleUserInfoMenuOpen = (event) => {
@@ -328,6 +295,28 @@ class AppLayout extends React.Component {
         NotificationUtils.closeNotification(this.props.globalState);
     };
 
+    handlePopoverClick = (event) => {
+        this.setState({
+            popoverEl: event.currentTarget
+        });
+    };
+
+    handlePopoverClose = () => {
+        this.setState({
+            popoverEl: null
+        });
+    };
+
+    copyLink = () => {
+        if (this.popoverInputRef.current) {
+            this.popoverInputRef.current.select();
+            document.execCommand("copy");
+            this.setState({
+                showCopyText: true
+            });
+        }
+    };
+
     generateSnackbarMessage = () => {
         const {classes} = this.props;
         const {notificationState} = this.state;
@@ -355,10 +344,16 @@ class AppLayout extends React.Component {
         );
     };
 
+    resetColorScheme = () => {
+        this.props.colorGenerator.resetColors();
+    };
+
     render = () => {
         const {classes, children, theme, globalState} = this.props;
-        const {open, userInfo, loadingState, selectedIndex} = this.state;
+        const {open, userInfo, loadingState, selectedIndex, popoverEl, showCopyText} = this.state;
         const userInfoOpen = Boolean(userInfo);
+        const popoverOpen = Boolean(popoverEl);
+
         return (
             <div className={classes.root}>
                 <CssBaseline/>
@@ -381,11 +376,54 @@ class AppLayout extends React.Component {
                             globalState.get(StateHolder.USER)
                                 ? (
                                     <div>
+                                        <Tooltip title="Change cell colors" placement="bottom">
+                                            <IconButton onClick={this.resetColorScheme} color="inherit">
+                                                <FormatColorFillOutlined/>
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Get shareable dashboard link" placement="bottom">
+                                            <IconButton
+                                                color="inherit" aria-owns={popoverOpen ? "share-dashboard" : undefined}
+                                                aria-haspopup="true" variant="contained"
+                                                onClick={this.handlePopoverClick}>
+                                                <ShareIcon/>
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Popover
+                                            id="share-dashboard" open={popoverOpen}
+                                            anchorEl={popoverEl} onClose={this.handlePopoverClose}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "right"
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right"
+                                            }}>
+                                            <div className={classes.popoverContent}>
+                                                <Typography color="textSecondary" variant="subtitle2" gutterBottom
+                                                    className={classes.typography}>Share Dashboard</Typography>
+                                                <Divider/>
+                                                <Paper className={classes.copyContainer} elevation={1}>
+                                                    {/* TODO: replace InputBase value to dashboard URL*/}
+                                                    <InputBase className={classes.copyInput}
+                                                        placeholder="Sharable Link" value="http://cellery-dashboard/"
+                                                        inputRef={this.popoverInputRef}/>
+                                                    <Tooltip title="Copied!" disableFocusListener={false}
+                                                        disableHoverListener={false} placement="top"
+                                                        disableTouchListener={false} open={showCopyText}
+                                                        onClose={() => this.setState({showCopyText: false})}>
+                                                        <IconButton color="primary" className={classes.iconButton}
+                                                            aria-label="Copy" onClick={this.copyLink}>
+                                                            <FileCopy/>
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Paper>
+                                            </div>
+                                        </Popover>
                                         <IconButton
-                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined}
-                                            aria-haspopup="true"
-                                            onClick={this.handleUserInfoMenuOpen}
-                                            color="inherit">
+                                            aria-owns={userInfoOpen ? "user-info-appbar" : undefined} color="inherit"
+                                            aria-haspopup="true" onClick={this.handleUserInfoMenuOpen}>
                                             <AccountCircle/>
                                         </IconButton>
                                         <Menu id="user-info-appbar" anchorEl={userInfo}
@@ -593,10 +631,11 @@ AppLayout.propTypes = {
     children: PropTypes.any.isRequired,
     theme: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
+    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     history: PropTypes.any.isRequired,
     location: PropTypes.shape({
         pathname: PropTypes.string.isRequired
     })
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(AppLayout)));
+export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(withColor(AppLayout))));

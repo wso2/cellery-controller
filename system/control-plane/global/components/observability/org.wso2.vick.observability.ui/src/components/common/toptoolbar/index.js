@@ -17,10 +17,8 @@
 import ArrowBack from "@material-ui/icons/ArrowBack";
 import Button from "@material-ui/core/Button";
 import CalendarToday from "@material-ui/icons/CalendarTodayOutlined";
-import ColorGenerator from "../color/colorGenerator";
 import DateRangePicker from "./DateRangePicker";
 import FormControl from "@material-ui/core/FormControl/FormControl";
-import FormatColorFillOutlined from "@material-ui/icons/FormatColorFillOutlined";
 import IconButton from "@material-ui/core/IconButton/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
@@ -32,7 +30,6 @@ import Select from "@material-ui/core/Select/Select";
 import Toolbar from "@material-ui/core/Toolbar/Toolbar";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography/Typography";
-import withColor from "../color";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import withGlobalState, {StateHolder} from "../state";
@@ -153,9 +150,6 @@ class TopToolbar extends React.Component {
                             : null
                     }
                     <div className={classes.grow}/>
-                    <IconButton onClick={this.resetColorScheme}>
-                        <FormatColorFillOutlined/>
-                    </IconButton>
                     {
                         onUpdate
                             ? (
@@ -364,10 +358,6 @@ class TopToolbar extends React.Component {
         }
     };
 
-    resetColorScheme = () => {
-        this.props.colorGenerator.resetColors();
-    };
-
 }
 
 TopToolbar.propTypes = {
@@ -376,7 +366,6 @@ TopToolbar.propTypes = {
     subTitle: PropTypes.string,
     classes: PropTypes.any.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
-    colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     history: PropTypes.shape({
         goBack: PropTypes.func.isRequired
     }),
@@ -385,4 +374,4 @@ TopToolbar.propTypes = {
     }).isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(withColor(TopToolbar))));
+export default withStyles(styles, {withTheme: true})(withRouter(withGlobalState(TopToolbar)));
