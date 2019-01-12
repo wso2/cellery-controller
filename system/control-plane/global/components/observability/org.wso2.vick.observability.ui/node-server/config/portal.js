@@ -18,8 +18,7 @@
 
 // Configuration loaded into the React App
 const configuration = {
-    siddhiAppEndpointURL: process.env.SIDDHI_APP_ENDPOINT_URL || "http://wso2sp-worker.vick-system:8080",
-    siddhiStoreAPIURL: process.env.SIDDHI_STORE_API_URL || "http://wso2sp-worker.vick-system:9443/stores/query",
+    observabilityAPIURL: "http://wso2sp-observability-api/api",
     percentageRangeMinValue: {
         errorThreshold: 0.5,
         warningThreshold: 0.7
