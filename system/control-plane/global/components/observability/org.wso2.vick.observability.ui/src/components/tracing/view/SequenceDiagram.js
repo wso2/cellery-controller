@@ -42,7 +42,11 @@ const styles = (theme) => ({
     navigation: {
         paddingTop: 20,
         paddingBottom: 5,
-        marginLeft: 12
+        marginLeft: 50
+    },
+    navList: {
+        display: "block",
+        float: "left"
     }
 });
 
@@ -75,26 +79,26 @@ class SequenceDiagram extends React.Component {
         const {classes} = this.props;
         return (
             <div>
-                <ul id="navigation" className={classes.navigation}>
-                    <li>
+                <div className={classes.navigation}>
+                    <span className={classes.navList}>
                         <Typography color="textSecondary" className={classes.subtitle} onClick={this.addCells}
                             style={this.state.clicked
                                 ? {color: "#3e51b5", cursor: "pointer", textDecoration: "underline"}
                                 : {}}>
                        Cells
                         </Typography>
-                    </li>
-                    <li>
+                    </span>
+                    <span className={classes.navList}>
                         <ChevronRight color="action" style={this.state.clicked ? {} : {display: "none"}}/>
-                    </li>
-                    <li>
+                    </span>
+                    <span className={classes.navList}>
                         <Typography color="textSecondary" className={classes.subtitle}
                             style={this.state.clicked ? {} : {display: "none"}}>
                             {this.state.cellClicked} cell [{this.state.callIdClicked}] - Services
                         </Typography>
-                    </li>
+                    </span>
 
-                </ul>
+                </div>
                 <br/>
                 <div className={classes.mermaid} ref={this.mermaidDivRef}>
                     {this.state.config}
