@@ -55,7 +55,7 @@ const styles = (theme) => ({
     }
 });
 
-class Microservice extends React.Component {
+class Component extends React.Component {
 
     constructor(props) {
         super(props);
@@ -102,18 +102,18 @@ class Microservice extends React.Component {
         const {selectedTabIndex} = this.state;
 
         const cellName = match.params.cellName;
-        const microserviceName = match.params.microserviceName;
+        const componentName = match.params.componentName;
 
         const tabContent = [Details, K8sObjects, Metrics];
         const SelectedTabContent = tabContent[selectedTabIndex];
 
         const traceSearch = {
             cell: cellName,
-            microservice: microserviceName
+            component: componentName
         };
         return (
             <React.Fragment>
-                <TopToolbar title={`${microserviceName}`} subTitle="- Component" onUpdate={this.handleOnUpdate}/>
+                <TopToolbar title={`${componentName}`} subTitle="- Component" onUpdate={this.handleOnUpdate}/>
                 <Paper className={classes.root}>
                     <div className={classes.tabBar}>
                         <Tabs value={selectedTabIndex} indicatorColor="primary"
@@ -127,7 +127,7 @@ class Microservice extends React.Component {
                             <Timeline/><span className={classes.viewTracesContent}>View Traces</span>
                         </Button>
                     </div>
-                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} microservice={microserviceName}/>
+                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} component={componentName}/>
                 </Paper>
             </React.Fragment>
         );
@@ -135,13 +135,12 @@ class Microservice extends React.Component {
 
 }
 
-
-Microservice.propTypes = {
+Component.propTypes = {
     classes: PropTypes.object.isRequired,
     match: PropTypes.shape({
         params: PropTypes.shape({
             cellName: PropTypes.string.isRequired,
-            microserviceName: PropTypes.string.isRequired
+            componentName: PropTypes.string.isRequired
         }).isRequired
     }).isRequired,
     history: PropTypes.shape({
@@ -152,4 +151,4 @@ Microservice.propTypes = {
     }).isRequired
 };
 
-export default withStyles(styles)(Microservice);
+export default withStyles(styles)(Component);

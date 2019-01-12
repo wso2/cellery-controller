@@ -35,7 +35,7 @@ const styles = (theme) => ({
         marginTop: theme.spacing.unit * 4,
         marginBottom: theme.spacing.unit * 0.5
     },
-    microserviceTypeMenuItem: {
+    componentTypeMenuItem: {
         pointerEvents: "none"
     }
 });
@@ -47,7 +47,7 @@ class Timeline extends React.PureComponent {
 
         this.state = {
             selectedServiceTypes: [
-                Constants.ComponentType.MICROSERVICE,
+                Constants.ComponentType.COMPONENT,
                 Constants.ComponentType.VICK,
                 Constants.ComponentType.ISTIO
             ],
@@ -104,7 +104,7 @@ class Timeline extends React.PureComponent {
     };
 
     render = () => {
-        const {classes, selectedMicroservice} = this.props;
+        const {classes, selectedComponent} = this.props;
         const {filteredSpans} = this.state;
 
         // Finding the service types to be shown in the filter
@@ -112,7 +112,7 @@ class Timeline extends React.PureComponent {
         for (const filterName in Constants.ComponentType) {
             if (Constants.ComponentType.hasOwnProperty(filterName)) {
                 const serviceType = Constants.ComponentType[filterName];
-                if (serviceType !== Constants.ComponentType.MICROSERVICE) {
+                if (serviceType !== Constants.ComponentType.COMPONENT) {
                     serviceTypes.push(serviceType);
                 }
             }
@@ -131,7 +131,7 @@ class Timeline extends React.PureComponent {
                                 {
                                     serviceTypes.map((serviceType) => {
                                         const checked = this.state.selectedServiceTypes
-                                            .filter((type) => type !== Constants.ComponentType.MICROSERVICE)
+                                            .filter((type) => type !== Constants.ComponentType.COMPONENT)
                                             .indexOf(serviceType) > -1;
                                         return (
                                             <MenuItem key={serviceType} value={serviceType}>
@@ -141,17 +141,17 @@ class Timeline extends React.PureComponent {
                                         );
                                     })
                                 }
-                                <MenuItem key={Constants.ComponentType.MICROSERVICE}
-                                    value={Constants.ComponentType.MICROSERVICE}
-                                    className={classes.microserviceTypeMenuItem}>
+                                <MenuItem key={Constants.ComponentType.COMPONENT}
+                                    value={Constants.ComponentType.COMPONENT}
+                                    className={classes.componentTypeMenuItem}>
                                     <Checkbox checked={true}/>
-                                    <ListItemText primary={Constants.ComponentType.MICROSERVICE}/>
+                                    <ListItemText primary={Constants.ComponentType.COMPONENT}/>
                                 </MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
                 </Grid>
-                <TimelineView spans={filteredSpans} selectedMicroservice={selectedMicroservice}
+                <TimelineView spans={filteredSpans} selectedComponent={selectedComponent}
                     innerRef={this.timelineViewRef}/>
             </React.Fragment>
         );
@@ -165,7 +165,7 @@ Timeline.propTypes = {
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
     clicked: PropTypes.bool,
-    selectedMicroservice: PropTypes.shape({
+    selectedComponent: PropTypes.shape({
         cellName: PropTypes.string.isRequired,
         serviceName: PropTypes.string.isRequired
     })

@@ -161,12 +161,12 @@ class TracesList extends React.PureComponent {
      *
      * @param {MouseEvent} event Event for the click event
      * @param {string} traceId The trace ID of the selected trace
-     * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
-     * @param {string} microservice The microservice name if a microservice was selected
+     * @param {string} cellName The name of the cell the component belongs to if a component was selected
+     * @param {string} component The component name if a component was selected
      */
-    loadTracePage = (event, traceId, cellName = "", microservice = "") => {
+    loadTracePage = (event, traceId, cellName = "", component = "") => {
         event.stopPropagation();
-        this.props.onTraceClick(traceId, cellName, microservice);
+        this.props.onTraceClick(traceId, cellName, component);
     };
 
     /**
@@ -194,7 +194,7 @@ class TracesList extends React.PureComponent {
         const self = this;
         const {globalState, filter, globalFilterOverrides} = self.props;
         const {
-            cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
+            cell, component, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = filter;
 
         // Build search object
@@ -205,7 +205,7 @@ class TracesList extends React.PureComponent {
             }
         };
         addSearchParam("cell", cell);
-        addSearchParam("serviceName", microservice);
+        addSearchParam("serviceName", component);
         addSearchParam("operationName", operation);
         addSearchParam("tags", JSON.stringify(tags && Object.keys(tags).length > 0 ? tags : {}));
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
@@ -415,7 +415,7 @@ TracesList.propTypes = {
     onTraceClick: PropTypes.func.isRequired,
     filter: PropTypes.shape({
         cell: PropTypes.string,
-        microservice: PropTypes.string,
+        component: PropTypes.string,
         operation: PropTypes.string,
         tags: PropTypes.object,
         minDuration: PropTypes.number,

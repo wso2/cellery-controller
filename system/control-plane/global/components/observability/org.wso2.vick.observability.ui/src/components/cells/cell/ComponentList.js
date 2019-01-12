@@ -33,13 +33,13 @@ const styles = (theme) => ({
     }
 });
 
-class MicroserviceList extends React.Component {
+class ComponentList extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            microserviceInfo: [],
+            componentInfo: [],
             isLoading: false
         };
     }
@@ -67,10 +67,10 @@ class MicroserviceList extends React.Component {
     };
 
     update = (isUserAction, startTime, endTime) => {
-        this.loadMicroserviceInfo(isUserAction, startTime, endTime);
+        this.loadComponentInfo(isUserAction, startTime, endTime);
     };
 
-    loadMicroserviceInfo = (isUserAction, queryStartTime, queryEndTime) => {
+    loadComponentInfo = (isUserAction, queryStartTime, queryEndTime) => {
         const {globalState, cell} = this.props;
         const self = this;
 
@@ -80,7 +80,7 @@ class MicroserviceList extends React.Component {
         };
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Microservice Info", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -89,18 +89,18 @@ class MicroserviceList extends React.Component {
             },
             globalState
         ).then((data) => {
-            const microserviceInfo = data.map((dataItem) => ({
+            const componentInfo = data.map((dataItem) => ({
                 sourceCell: dataItem[0],
-                sourceMicroservice: dataItem[1],
+                sourceComponent: dataItem[1],
                 destinationCell: dataItem[2],
-                destinationMicroservice: dataItem[3],
+                destinationComponent: dataItem[3],
                 httpResponseGroup: dataItem[4],
                 totalResponseTimeMilliSec: dataItem[5],
                 requestCount: dataItem[6]
             }));
 
             self.setState({
-                microserviceInfo: microserviceInfo
+                componentInfo: componentInfo
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
@@ -119,7 +119,7 @@ class MicroserviceList extends React.Component {
 
     render = () => {
         const {cell} = this.props;
-        const {microserviceInfo, isLoading} = this.state;
+        const {componentInfo, isLoading} = this.state;
         const columns = [
             {
                 name: "Health",
@@ -130,7 +130,7 @@ class MicroserviceList extends React.Component {
             {
                 name: "Component",
                 options: {
-                    customBodyRender: (value) => <Link to={`/cells/${cell}/microservices/${value}`}>{value}</Link>
+                    customBodyRender: (value) => <Link to={`/cells/${cell}/components/${value}`}>{value}</Link>
                 }
             },
             {
@@ -161,9 +161,9 @@ class MicroserviceList extends React.Component {
 
         // Processing data to find the required values
         const dataTableMap = {};
-        const initializeDataTableMapEntryIfNotPresent = (microservice) => {
-            if (!dataTableMap[microservice]) {
-                dataTableMap[microservice] = {
+        const initializeDataTableMapEntryIfNotPresent = (component) => {
+            if (!dataTableMap[component]) {
+                dataTableMap[component] = {
                     inboundErrorCount: 0,
                     outboundErrorCount: 0,
                     requestCount: 0,
@@ -171,51 +171,51 @@ class MicroserviceList extends React.Component {
                 };
             }
         };
-        const isMicroserviceRelevant = (consideredCell, microservice) => (
-            !Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(microservice) && consideredCell === cell
+        const isComponentRelevant = (consideredCell, component) => (
+            !Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component) && consideredCell === cell
         );
-        for (const microserviceDatum of microserviceInfo) {
-            if (isMicroserviceRelevant(microserviceDatum.sourceCell, microserviceDatum.sourceMicroservice)) {
-                initializeDataTableMapEntryIfNotPresent(microserviceDatum.sourceMicroservice);
+        for (const componentDatum of componentInfo) {
+            if (isComponentRelevant(componentDatum.sourceCell, componentDatum.sourceComponent)) {
+                initializeDataTableMapEntryIfNotPresent(componentDatum.sourceComponent);
 
-                if (microserviceDatum.httpResponseGroup === "5xx") {
-                    dataTableMap[microserviceDatum.sourceMicroservice].outboundErrorCount
-                        += microserviceDatum.requestCount;
+                if (componentDatum.httpResponseGroup === "5xx") {
+                    dataTableMap[componentDatum.sourceComponent].outboundErrorCount
+                        += componentDatum.requestCount;
                 }
             }
-            if (isMicroserviceRelevant(microserviceDatum.destinationCell, microserviceDatum.destinationMicroservice)) {
-                initializeDataTableMapEntryIfNotPresent(microserviceDatum.destinationMicroservice);
+            if (isComponentRelevant(componentDatum.destinationCell, componentDatum.destinationComponent)) {
+                initializeDataTableMapEntryIfNotPresent(componentDatum.destinationComponent);
 
-                if (microserviceDatum.httpResponseGroup === "5xx") {
-                    dataTableMap[microserviceDatum.destinationMicroservice].inboundErrorCount
-                        += microserviceDatum.requestCount;
+                if (componentDatum.httpResponseGroup === "5xx") {
+                    dataTableMap[componentDatum.destinationComponent].inboundErrorCount
+                        += componentDatum.requestCount;
                 }
-                dataTableMap[microserviceDatum.destinationMicroservice].requestCount += microserviceDatum.requestCount;
-                dataTableMap[microserviceDatum.destinationMicroservice].totalResponseTimeMilliSec
-                    += microserviceDatum.totalResponseTimeMilliSec;
+                dataTableMap[componentDatum.destinationComponent].requestCount += componentDatum.requestCount;
+                dataTableMap[componentDatum.destinationComponent].totalResponseTimeMilliSec
+                    += componentDatum.totalResponseTimeMilliSec;
             }
         }
 
         // Transforming the objects into 2D array accepted by the Table library
         const tableData = [];
-        for (const microservice in dataTableMap) {
-            if (dataTableMap.hasOwnProperty(microservice) && Boolean(microservice)) {
-                const microserviceData = dataTableMap[microservice];
+        for (const component in dataTableMap) {
+            if (dataTableMap.hasOwnProperty(component) && Boolean(component)) {
+                const componentData = dataTableMap[component];
                 tableData.push([
-                    microserviceData.requestCount === 0
+                    componentData.requestCount === 0
                         ? -1
-                        : 1 - microserviceData.inboundErrorCount / microserviceData.requestCount,
-                    microservice,
-                    microserviceData.requestCount === 0
+                        : 1 - componentData.inboundErrorCount / componentData.requestCount,
+                    component,
+                    componentData.requestCount === 0
                         ? 0
-                        : microserviceData.inboundErrorCount / microserviceData.requestCount,
-                    microserviceData.requestCount === 0
+                        : componentData.inboundErrorCount / componentData.requestCount,
+                    componentData.requestCount === 0
                         ? 0
-                        : microserviceData.outboundErrorCount / microserviceData.requestCount,
-                    microserviceData.requestCount === 0
+                        : componentData.outboundErrorCount / componentData.requestCount,
+                    componentData.requestCount === 0
                         ? 0
-                        : microserviceData.totalResponseTimeMilliSec / microserviceData.requestCount,
-                    microserviceData.requestCount
+                        : componentData.totalResponseTimeMilliSec / componentData.requestCount,
+                    componentData.requestCount
                 ]);
             }
         }
@@ -229,10 +229,10 @@ class MicroserviceList extends React.Component {
 
 }
 
-MicroserviceList.propTypes = {
+ComponentList.propTypes = {
     classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     cell: PropTypes.string.isRequired
 };
 
-export default withStyles(styles)(withGlobalState(MicroserviceList));
+export default withStyles(styles)(withGlobalState(ComponentList));

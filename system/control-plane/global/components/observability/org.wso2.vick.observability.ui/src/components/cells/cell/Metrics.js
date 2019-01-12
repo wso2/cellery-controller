@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Constants from "../../../utils/constants";
 import FormControl from "@material-ui/core/FormControl";
 import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -47,16 +48,12 @@ const styles = (theme) => ({
 
 class Metrics extends React.Component {
 
-    static ALL_VALUE = "All";
-    static INBOUND = "Inbound";
-    static OUTBOUND = "Outbound";
-
     constructor(props) {
         super(props);
 
         this.state = {
-            selectedType: Metrics.INBOUND,
-            selectedCell: Metrics.ALL_VALUE,
+            selectedType: Constants.Dashboard.INBOUND,
+            selectedCell: Constants.Dashboard.ALL_VALUE,
             cells: [],
             cellData: [],
             isLoading: false
@@ -158,14 +155,14 @@ class Metrics extends React.Component {
             queryStartTime: queryStartTime,
             queryEndTime: queryEndTime
         };
-        if (selectedCell !== Metrics.ALL_VALUE) {
-            if (selectedType === Metrics.INBOUND) {
+        if (selectedCell !== Constants.Dashboard.ALL_VALUE) {
+            if (selectedType === Constants.Dashboard.INBOUND) {
                 search.sourceCell = selectedCell;
             } else {
                 search.destinationCell = selectedCell;
             }
         }
-        if (selectedType === Metrics.INBOUND) {
+        if (selectedType === Constants.Dashboard.INBOUND) {
             search.destinationCell = cell;
         } else {
             search.sourceCell = cell;
@@ -212,7 +209,7 @@ class Metrics extends React.Component {
         const {classes, cell} = this.props;
         const {selectedType, selectedCell, cells, cellData, isLoading} = this.state;
 
-        const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
+        const targetSourcePrefix = selectedType === Constants.Dashboard.INBOUND ? "Source" : "Target";
 
         return (
             isLoading
@@ -228,8 +225,8 @@ class Metrics extends React.Component {
                                         name: "selected-type",
                                         id: "selected-type"
                                     }}>
-                                    <option value={Metrics.INBOUND}>Inbound</option>
-                                    <option value={Metrics.OUTBOUND}>Outbound</option>
+                                    <option value={Constants.Dashboard.INBOUND}>Inbound</option>
+                                    <option value={Constants.Dashboard.OUTBOUND}>Outbound</option>
                                 </Select>
                             </FormControl>
                             <FormControl className={classes.formControl}>
@@ -240,7 +237,9 @@ class Metrics extends React.Component {
                                         name: "selected-cell",
                                         id: "selected-cell"
                                     }}>
-                                    <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
+                                    <option value={Constants.Dashboard.ALL_VALUE}>
+                                        {Constants.Dashboard.ALL_VALUE}
+                                    </option>
                                     {
                                         cells.map((cell) => (<option key={cell} value={cell}>{cell}</option>))
                                     }
@@ -252,12 +251,12 @@ class Metrics extends React.Component {
                                 cellData.length > 0
                                     ? (
                                         <MetricsGraphs cell={cell} data={cellData}
-                                            direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
+                                            direction={selectedType === Constants.Dashboard.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (
                                         <Typography>
                                             {
-                                                selectedType === Metrics.INBOUND
+                                                selectedType === Constants.Dashboard.INBOUND
                                                     ? `No Requests from the selected cell to "${cell}" cell`
                                                     : `No Requests from "${cell}" cell to the selected cell`
                                             }

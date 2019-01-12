@@ -250,7 +250,7 @@ class DependencyDiagram extends React.Component {
                                                 <FiberManualRecord className={classes.legendFirstEl}
                                                     color="action"/>
                                                 <Typography color="inherit"
-                                                    className={classes.legendText}> Microservice/System
+                                                    className={classes.legendText}> Component/System
                                                     component </Typography>
                                                 <Typography color="textSecondary"
                                                     className={classes.legendHelpText}> (Radius

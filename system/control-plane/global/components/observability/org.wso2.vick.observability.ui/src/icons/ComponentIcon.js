@@ -1,7 +1,7 @@
 import React from "react";
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-const MicroserviceIcon = (props) => (
+const ComponentIcon = (props) => (
     <SvgIcon viewBox="0 0 14 14" {...props}>
         <path d="M7,5.4C5.6,5.4,4.4,6.5,4.4,8s1.2,2.6,2.6,2.6c1.4,0,2.6-1.2,2.6-2.6S8.5,5.4,7,5.4z M7,9.6C6.2,9.6,5.4,8.8,5.4,8
 c0-0.9,0.7-1.6,1.6-1.6c0.9,0,1.6,0.7,1.6,1.6C8.6,8.8,7.9,9.6,7,9.6z M7,3.5c0.4,0,0.8,0.3,0.8,0.8S7.5,5,7,5S6.3,4.7,6.3,4.3
@@ -17,4 +17,4 @@ c0,0.6-0.5,1.1-1.1,1.1C2.3,6.6,1.8,6.1,1.8,5.5z"/>
     </SvgIcon>
 );
 
-export default MicroserviceIcon;
+export default ComponentIcon;

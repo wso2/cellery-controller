@@ -231,7 +231,7 @@ TimeSeriesGraph.propTypes = {
     }).isRequired,
     traceSearchFilter: PropTypes.shape({
         cell: PropTypes.string,
-        microservice: PropTypes.string,
+        component: PropTypes.string,
         operation: PropTypes.string,
         tags: PropTypes.object,
         minDuration: PropTypes.number,

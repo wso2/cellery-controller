@@ -208,7 +208,7 @@ class MetricsGraphs extends React.Component {
 
         const traceSearchFilter = {
             cell: cell,
-            microservice: component
+            component: component
         };
         return (
             <div className={classes.root}>

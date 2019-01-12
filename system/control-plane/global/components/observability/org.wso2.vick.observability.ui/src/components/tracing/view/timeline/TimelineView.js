@@ -220,7 +220,7 @@ class TimelineView extends React.Component {
     };
 
     drawTimeline = () => {
-        const {selectedMicroservice, classes, colorGenerator, spans} = this.props;
+        const {selectedComponent, classes, colorGenerator, spans} = this.props;
         const self = this;
 
         // Un-selecting the spans
@@ -249,8 +249,8 @@ class TimelineView extends React.Component {
         const minLimit = this.trace.minTime - duration * 0.05;
         const maxLimit = this.trace.maxTime + duration * 0.12;
         const addSelectedSpanClass = (element, span) => {
-            if (selectedMicroservice && (!span.cell.name || span.cell.name === selectedMicroservice.cellName)
-                && span.serviceName === selectedMicroservice.serviceName) {
+            if (selectedComponent && (!span.cell.name || span.cell.name === selectedComponent.cellName)
+                && span.serviceName === selectedComponent.serviceName) {
                 element.classList.add(TimelineView.Classes.SELECTED_SPAN);
             }
         };
@@ -419,7 +419,7 @@ class TimelineView extends React.Component {
                     node.style.top = `${(minHeight - node.offsetHeight) / 2}px`;
                 });
 
-                // Adding the selected microservice highlights
+                // Adding the selected component highlights
                 this.timelineNode.current.querySelectorAll(`div.${TimelineView.Classes.VIS_LABEL}, `
                     + `div.${TimelineView.Classes.VIS_GROUP}`).forEach((node) => {
                     if (node.querySelector(`div.${TimelineView.Classes.SELECTED_SPAN}`)) {
@@ -604,7 +604,7 @@ TimelineView.propTypes = {
     spans: PropTypes.arrayOf(
         PropTypes.instanceOf(Span).isRequired
     ).isRequired,
-    selectedMicroservice: PropTypes.shape({
+    selectedComponent: PropTypes.shape({
         cellName: PropTypes.string,
         serviceName: PropTypes.string.isRequired
     }),

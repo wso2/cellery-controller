@@ -130,7 +130,7 @@ class TracingUtils {
             } else if (span.isFromVICKSystemComponent()) {
                 span.componentType = Constants.ComponentType.VICK;
             } else {
-                span.componentType = Constants.ComponentType.COMPONENTS;
+                span.componentType = Constants.ComponentType.COMPONENT;
             }
         }, null);
 

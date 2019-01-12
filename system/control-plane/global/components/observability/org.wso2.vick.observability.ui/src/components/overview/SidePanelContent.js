@@ -22,6 +22,7 @@ import Avatar from "@material-ui/core/Avatar";
 import CellIcon from "../../icons/CellIcon";
 import CellsIcon from "../../icons/CellsIcon";
 import CheckCircleOutline from "@material-ui/icons/CheckCircleOutline";
+import ComponentIcon from "../../icons/ComponentIcon";
 import ErrorIcon from "@material-ui/icons/ErrorOutline";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpansionPanel from "@material-ui/core/ExpansionPanel";
@@ -33,7 +34,6 @@ import HttpUtils from "../../utils/api/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import {Link} from "react-router-dom";
 import MUIDataTable from "mui-datatables";
-import MicroserviceIcon from "../../icons/MicroserviceIcon";
 import React from "react";
 import StateHolder from "../common/state/stateHolder";
 import Table from "@material-ui/core/Table";
@@ -168,11 +168,11 @@ class SidePanelContent extends React.Component {
             {
                 options: {
                     customBodyRender: (datum) => {
-                        const {cell, microservice} = datum;
+                        const {cell, component} = datum;
                         return (
                             <Typography component={Link} className={classes.sidebarListTableText}
-                                to={`/cells/${cell}${microservice ? `/microservices/${microservice}` : ""}`}>
-                                {microservice ? microservice : cell}
+                                to={`/cells/${cell}${component ? `/components/${component}` : ""}`}>
+                                {component ? component : cell}
                             </Typography>
                         );
                     }
@@ -418,7 +418,7 @@ class SidePanelContent extends React.Component {
                 <div className={classes.sidebarContainer}>
                     {
                         selectedCell
-                            ? <MicroserviceIcon className={classes.titleIcon} fontSize="small"/>
+                            ? <ComponentIcon className={classes.titleIcon} fontSize="small"/>
                             : <CellsIcon className={classes.titleIcon} fontSize="small"/>
                     }
                     <Typography color="inherit" className={classes.sideBarContentTitle}>
@@ -455,12 +455,12 @@ class SidePanelContent extends React.Component {
                                         datum[0],
                                         {
                                             cell: selectedCell ? selectedCell.id : datum[1],
-                                            microservice: selectedCell ? datum[1] : null
+                                            component: selectedCell ? datum[1] : null
 
                                         },
                                         {
                                             cell: selectedCell ? selectedCell.id : datum[2],
-                                            microservice: selectedCell ? datum[2] : null
+                                            component: selectedCell ? datum[2] : null
                                         }
                                     ])}/>
                             </div>

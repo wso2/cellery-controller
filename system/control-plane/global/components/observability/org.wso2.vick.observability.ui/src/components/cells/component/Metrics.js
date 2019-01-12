@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Constants from "../../../utils/constants";
 import FormControl from "@material-ui/core/FormControl";
 import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -47,23 +48,19 @@ const styles = (theme) => ({
 
 class Metrics extends React.Component {
 
-    static ALL_VALUE = "All";
-    static INBOUND = "Inbound";
-    static OUTBOUND = "Outbound";
-
     constructor(props) {
         super(props);
 
         this.state = {
-            selectedType: Metrics.INBOUND,
-            selectedCell: Metrics.ALL_VALUE,
-            selectedMicroservice: Metrics.ALL_VALUE,
-            microservices: [],
+            selectedType: Constants.Dashboard.INBOUND,
+            selectedCell: Constants.Dashboard.ALL_VALUE,
+            selectedComponent: Constants.Dashboard.ALL_VALUE,
+            components: [],
             metadata: {
                 availableCells: [],
-                availableMicroservices: [] // Filtered based on the selected cell
+                availableComponents: [] // Filtered based on the selected cell
             },
-            microserviceData: [],
+            componentData: [],
             isLoading: false
         };
     }
@@ -79,8 +76,8 @@ class Metrics extends React.Component {
     };
 
     update = (isUserAction, startTime, endTime, selectedTypeOverride, selectedCellOverride,
-        selectedMicroserviceOverride) => {
-        const {selectedType, selectedCell, selectedMicroservice} = this.state;
+        selectedComponentOverride) => {
+        const {selectedType, selectedCell, selectedComponent} = this.state;
         const queryStartTime = startTime.valueOf();
         const queryEndTime = endTime.valueOf();
 
@@ -88,9 +85,9 @@ class Metrics extends React.Component {
             isUserAction, queryStartTime, queryEndTime,
             selectedTypeOverride ? selectedTypeOverride : selectedType,
             selectedCellOverride ? selectedCellOverride : selectedCell,
-            selectedMicroserviceOverride ? selectedMicroserviceOverride : selectedMicroservice
+            selectedComponentOverride ? selectedComponentOverride : selectedComponent
         );
-        this.loadMicroserviceMetadata(isUserAction, queryStartTime, queryEndTime);
+        this.loadComponentMetadata(isUserAction, queryStartTime, queryEndTime);
     };
 
     getFilterChangeHandler = (name) => (event) => {
@@ -107,12 +104,12 @@ class Metrics extends React.Component {
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime),
             name === "selectedType" ? newValue : null,
             name === "selectedCell" ? newValue : null,
-            name === "selectedMicroservice" ? newValue : null
+            name === "selectedComponent" ? newValue : null
         );
     };
 
-    loadMicroserviceMetadata = (isUserAction, queryStartTime, queryEndTime) => {
-        const {globalState, cell, microservice} = this.props;
+    loadComponentMetadata = (isUserAction, queryStartTime, queryEndTime) => {
+        const {globalState, cell, component} = this.props;
         const self = this;
 
         const search = {
@@ -121,7 +118,7 @@ class Metrics extends React.Component {
         };
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Microservice Info", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
             self.setState({
                 isLoading: true
             });
@@ -134,8 +131,8 @@ class Metrics extends React.Component {
             globalState
         ).then((data) => {
             self.setState({
-                microservices: data
-                    .filter((datum) => (datum.cell !== cell || datum.microservice !== microservice))
+                components: data
+                    .filter((datum) => (datum.cell !== cell || datum.component !== component))
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
@@ -150,7 +147,7 @@ class Metrics extends React.Component {
                     isLoading: false
                 });
                 NotificationUtils.showNotification(
-                    "Failed to load microservice information",
+                    "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
@@ -158,8 +155,8 @@ class Metrics extends React.Component {
         });
     };
 
-    loadMetrics = (isUserAction, queryStartTime, queryEndTime, selectedType, selectedCell, selectedMicroservice) => {
-        const {globalState, cell, microservice} = this.props;
+    loadMetrics = (isUserAction, queryStartTime, queryEndTime, selectedType, selectedCell, selectedComponent) => {
+        const {globalState, cell, component} = this.props;
         const self = this;
 
         // Creating the search params
@@ -167,25 +164,25 @@ class Metrics extends React.Component {
             queryStartTime: queryStartTime,
             queryEndTime: queryEndTime
         };
-        if (selectedCell !== Metrics.ALL_VALUE) {
-            if (selectedType === Metrics.INBOUND) {
+        if (selectedCell !== Constants.Dashboard.ALL_VALUE) {
+            if (selectedType === Constants.Dashboard.INBOUND) {
                 search.sourceCell = selectedCell;
-                search.sourceMicroservice = selectedMicroservice;
+                search.sourceComponent = selectedComponent;
             } else {
                 search.destinationCell = selectedCell;
-                search.destinationMicroservice = selectedMicroservice;
+                search.destinationComponent = selectedComponent;
             }
         }
-        if (selectedType === Metrics.INBOUND) {
+        if (selectedType === Constants.Dashboard.INBOUND) {
             search.destinationCell = cell;
-            search.destinationMicroservice = microservice;
+            search.destinationComponent = component;
         } else {
             search.sourceCell = cell;
-            search.sourceMicroservice = microservice;
+            search.sourceComponent = component;
         }
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Microservice Metrics", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Component Metrics", globalState);
             self.setState({
                 isLoading: true
             });
@@ -197,7 +194,7 @@ class Metrics extends React.Component {
             },
             globalState
         ).then((data) => {
-            const microserviceData = data.map((datum) => ({
+            const componentData = data.map((datum) => ({
                 timestamp: datum[0],
                 httpResponseGroup: datum[1],
                 totalResponseTimeMilliSec: datum[2],
@@ -207,7 +204,7 @@ class Metrics extends React.Component {
             }));
 
             self.setState({
-                microserviceData: microserviceData
+                componentData: componentData
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
@@ -222,7 +219,7 @@ class Metrics extends React.Component {
                     isLoading: false
                 });
                 NotificationUtils.showNotification(
-                    "Failed to load microservice metrics",
+                    "Failed to load component metrics",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
@@ -231,54 +228,54 @@ class Metrics extends React.Component {
     };
 
     static getDerivedStateFromProps = (props, state) => {
-        const {cell, microservice} = props;
-        const {microservices, selectedCell, selectedMicroservice} = state;
+        const {cell, component} = props;
+        const {components, selectedCell, selectedComponent} = state;
 
         const availableCells = [];
-        microservices.forEach((microserviceDatum) => {
-            // Validating whether at-least one relevant microservice in this cell exists
-            let hasRelevantMicroservice = true;
-            if (Boolean(microserviceDatum.cell) && microserviceDatum.cell === cell) {
-                const relevantMicroservices = microservices.find(
-                    (datum) => cell === datum.cell && datum.name !== microservice);
-                hasRelevantMicroservice = Boolean(relevantMicroservices);
+        components.forEach((componentDatum) => {
+            // Validating whether at-least one relevant component in this cell exists
+            let hasRelevantComponent = true;
+            if (Boolean(componentDatum.cell) && componentDatum.cell === cell) {
+                const relevantComponents = components.find(
+                    (datum) => cell === datum.cell && datum.name !== component);
+                hasRelevantComponent = Boolean(relevantComponents);
             }
 
-            if (hasRelevantMicroservice && Boolean(microserviceDatum.cell)
-                    && !availableCells.includes(microserviceDatum.cell)) {
-                availableCells.push(microserviceDatum.cell);
-            }
-        });
-
-        const availableMicroservices = [];
-        microservices.forEach((microserviceDatum) => {
-            if (Boolean(microserviceDatum.name) && Boolean(microserviceDatum.cell)
-                && (selectedCell === Metrics.ALL_VALUE || microserviceDatum.cell === selectedCell)
-                && (microserviceDatum.cell !== cell || microserviceDatum.name !== microservice)
-                && !availableMicroservices.includes(microserviceDatum.name)) {
-                availableMicroservices.push(microserviceDatum.name);
+            if (hasRelevantComponent && Boolean(componentDatum.cell)
+                    && !availableCells.includes(componentDatum.cell)) {
+                availableCells.push(componentDatum.cell);
             }
         });
 
-        const selectedMicroserviceToShow = availableMicroservices.includes(selectedMicroservice)
-            ? selectedMicroservice
-            : Metrics.ALL_VALUE;
+        const availableComponents = [];
+        components.forEach((componentDatum) => {
+            if (Boolean(componentDatum.name) && Boolean(componentDatum.cell)
+                && (selectedCell === Constants.Dashboard.ALL_VALUE || componentDatum.cell === selectedCell)
+                && (componentDatum.cell !== cell || componentDatum.name !== component)
+                && !availableComponents.includes(componentDatum.name)) {
+                availableComponents.push(componentDatum.name);
+            }
+        });
+
+        const selectedComponentToShow = availableComponents.includes(selectedComponent)
+            ? selectedComponent
+            : Constants.Dashboard.ALL_VALUE;
 
         return {
             ...state,
-            selectedMicroservice: selectedMicroserviceToShow,
+            selectedComponent: selectedComponentToShow,
             metadata: {
                 availableCells: availableCells,
-                availableMicroservices: availableMicroservices
+                availableComponents: availableComponents
             }
         };
     };
 
     render = () => {
-        const {classes, cell, microservice} = this.props;
-        const {selectedType, selectedCell, selectedMicroservice, microserviceData, metadata, isLoading} = this.state;
+        const {classes, cell, component} = this.props;
+        const {selectedType, selectedCell, selectedComponent, componentData, metadata, isLoading} = this.state;
 
-        const targetSourcePrefix = selectedType === Metrics.INBOUND ? "Source" : "Target";
+        const targetSourcePrefix = selectedType === Constants.Dashboard.INBOUND ? "Source" : "Target";
 
         return (
             isLoading
@@ -294,8 +291,8 @@ class Metrics extends React.Component {
                                         name: "selected-type",
                                         id: "selected-type"
                                     }}>
-                                    <option value={Metrics.INBOUND}>{Metrics.INBOUND}</option>
-                                    <option value={Metrics.OUTBOUND}>{Metrics.OUTBOUND}</option>
+                                    <option value={Constants.Dashboard.INBOUND}>{Constants.Dashboard.INBOUND}</option>
+                                    <option value={Constants.Dashboard.OUTBOUND}>{Constants.Dashboard.OUTBOUND}</option>
                                 </Select>
                             </FormControl>
                             <FormControl className={classes.formControl}>
@@ -306,7 +303,9 @@ class Metrics extends React.Component {
                                         name: "selected-cell",
                                         id: "selected-cell"
                                     }}>
-                                    <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
+                                    <option value={Constants.Dashboard.ALL_VALUE}>
+                                        {Constants.Dashboard.ALL_VALUE}
+                                    </option>
                                     {
                                         metadata.availableCells.map(
                                             (cell) => (<option key={cell} value={cell}>{cell}</option>))
@@ -314,19 +313,21 @@ class Metrics extends React.Component {
                                 </Select>
                             </FormControl>
                             <FormControl className={classes.formControl}>
-                                <InputLabel htmlFor="selected-microservice">
+                                <InputLabel htmlFor="selected-component">
                                     {targetSourcePrefix} Component
                                 </InputLabel>
-                                <Select value={selectedMicroservice}
-                                    onChange={this.getFilterChangeHandler("selectedMicroservice")}
+                                <Select value={selectedComponent}
+                                    onChange={this.getFilterChangeHandler("selectedComponent")}
                                     inputProps={{
-                                        name: "selected-microservice",
-                                        id: "selected-microservice"
+                                        name: "selected-component",
+                                        id: "selected-component"
                                     }}>
-                                    <option value={Metrics.ALL_VALUE}>{Metrics.ALL_VALUE}</option>
+                                    <option value={Constants.Dashboard.ALL_VALUE}>
+                                        {Constants.Dashboard.ALL_VALUE}
+                                    </option>
                                     {
-                                        metadata.availableMicroservices.map((microservice) => (
-                                            <option key={microservice} value={microservice}>{microservice}</option>
+                                        metadata.availableComponents.map((component) => (
+                                            <option key={component} value={component}>{component}</option>
                                         ))
                                     }
                                 </Select>
@@ -334,18 +335,18 @@ class Metrics extends React.Component {
                         </div>
                         <div className={classes.graphs}>
                             {
-                                microserviceData.length > 0
+                                componentData.length > 0
                                     ? (
-                                        <MetricsGraphs cell={cell} component={microservice} data={microserviceData}
-                                            direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
+                                        <MetricsGraphs cell={cell} component={component} data={componentData}
+                                            direction={selectedType === Constants.Dashboard.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (
                                         <Typography>
                                             {
-                                                selectedType === Metrics.INBOUND
+                                                selectedType === Constants.Dashboard.INBOUND
                                                     ? "No Requests from the selected component "
-                                                        + `to the "${cell}" cell's "${microservice}" component`
-                                                    : `No Requests from the "${cell}" cell's "${microservice}" `
+                                                        + `to the "${cell}" cell's "${component}" component`
+                                                    : `No Requests from the "${cell}" cell's "${component}" `
                                                         + "component to the selected component"
                                             }
                                         </Typography>
@@ -363,7 +364,7 @@ Metrics.propTypes = {
     classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     cell: PropTypes.string.isRequired,
-    microservice: PropTypes.string.isRequired
+    component: PropTypes.string.isRequired
 };
 
 export default withStyles(styles)(withGlobalState(Metrics));

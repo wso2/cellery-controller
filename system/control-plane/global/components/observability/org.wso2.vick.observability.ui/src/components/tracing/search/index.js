@@ -16,6 +16,7 @@
 
 import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
+import Constants from "../../../utils/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
@@ -64,8 +65,6 @@ const styles = (theme) => ({
 
 class TraceSearch extends React.Component {
 
-    static ALL_VALUE = "All";
-
     constructor(props) {
         super(props);
         const {location} = props;
@@ -74,13 +73,13 @@ class TraceSearch extends React.Component {
         this.state = {
             data: {
                 cells: [],
-                microservices: [],
+                components: [],
                 operations: []
             },
             filter: {
-                cell: queryParams.cell ? queryParams.cell : TraceSearch.ALL_VALUE,
-                microservice: queryParams.microservice ? queryParams.microservice : TraceSearch.ALL_VALUE,
-                operation: queryParams.operation ? queryParams.operation : TraceSearch.ALL_VALUE,
+                cell: queryParams.cell ? queryParams.cell : Constants.Dashboard.ALL_VALUE,
+                component: queryParams.component ? queryParams.component : Constants.Dashboard.ALL_VALUE,
+                operation: queryParams.operation ? queryParams.operation : Constants.Dashboard.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
                 minDuration: queryParams.minDuration
                     ? parseInt(queryParams.minDuration, 10)
@@ -96,7 +95,7 @@ class TraceSearch extends React.Component {
                     : 1
             },
             metaData: {
-                availableMicroservices: [],
+                availableComponents: [],
                 availableOperations: []
             },
             tagsTempInput: {
@@ -167,8 +166,9 @@ class TraceSearch extends React.Component {
                                     <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
                                     <Select value={filter.cell} onChange={this.getChangeHandlerForString("cell")}
                                         inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(data.cells)}
                                     </Select>
@@ -176,14 +176,15 @@ class TraceSearch extends React.Component {
                             </Grid>
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="microservice" shrink={true}>Component</InputLabel>
-                                    <Select value={filter.microservice}
-                                        onChange={this.getChangeHandlerForString("microservice")}
-                                        inputProps={{name: "microservice", id: "microservice"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                    <InputLabel htmlFor="component" shrink={true}>Component</InputLabel>
+                                    <Select value={filter.component}
+                                        onChange={this.getChangeHandlerForString("component")}
+                                        inputProps={{name: "component", id: "component"}}>
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
-                                        {createMenuItemForSelect(metaData.availableMicroservices)}
+                                        {createMenuItemForSelect(metaData.availableComponents)}
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -193,8 +194,9 @@ class TraceSearch extends React.Component {
                                     <Select value={filter.operation}
                                         onChange={this.getChangeHandlerForString("operation")}
                                         inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableOperations)}
                                     </Select>
@@ -292,13 +294,13 @@ class TraceSearch extends React.Component {
         );
     };
 
-    onTraceClick = (traceId, selectedCellName, selectedMicroservice) => {
+    onTraceClick = (traceId, selectedCellName, selectedComponent) => {
         this.props.history.push({
             pathname: `./id/${traceId}`,
             state: {
-                selectedMicroservice: {
+                selectedComponent: {
                     cellName: selectedCellName,
-                    serviceName: selectedMicroservice
+                    serviceName: selectedComponent
                 }
             }
         });
@@ -354,7 +356,7 @@ class TraceSearch extends React.Component {
             globalState
         ).then((data) => {
             const cells = [];
-            const microservices = [];
+            const components = [];
             const operations = [];
 
             const cellData = data.map((dataItem) => ({
@@ -375,8 +377,8 @@ class TraceSearch extends React.Component {
                     if (!cells.includes(cellName)) {
                         cells.push(cellName);
                     }
-                    if (!microservices.map((service) => service.name).includes(serviceName)) {
-                        microservices.push({
+                    if (!components.map((service) => service.name).includes(serviceName)) {
+                        components.push({
                             name: serviceName,
                             cell: cellName
                         });
@@ -384,7 +386,7 @@ class TraceSearch extends React.Component {
                     if (!operations.map((operation) => operation.name).includes(operationName)) {
                         operations.push({
                             name: operationName,
-                            microservice: serviceName,
+                            component: serviceName,
                             cell: cellName
                         });
                     }
@@ -395,7 +397,7 @@ class TraceSearch extends React.Component {
                 ...prevState,
                 data: {
                     cells: cells,
-                    microservices: microservices,
+                    components: components,
                     operations: operations
                 }
             }));
@@ -526,40 +528,40 @@ class TraceSearch extends React.Component {
     static getDerivedStateFromProps = (props, state) => {
         const {data, filter, metaData} = state;
 
-        // Finding the available microservices to be selected
-        const selectedCells = (filter.cell === TraceSearch.ALL_VALUE ? data.cells : [filter.cell]);
-        const availableMicroservices = data.microservices
-            .filter((microservice) => selectedCells.includes(microservice.cell))
-            .map((microservice) => microservice.name);
+        // Finding the available components to be selected
+        const selectedCells = (filter.cell === Constants.Dashboard.ALL_VALUE ? data.cells : [filter.cell]);
+        const availableComponents = data.components
+            .filter((component) => selectedCells.includes(component.cell))
+            .map((component) => component.name);
 
-        const selectedMicroservice = data.cells.length === 0 || (filter.microservice
-            && availableMicroservices.includes(filter.microservice))
-            ? filter.microservice
-            : TraceSearch.ALL_VALUE;
+        const selectedComponent = data.cells.length === 0 || (filter.component
+            && availableComponents.includes(filter.component))
+            ? filter.component
+            : Constants.Dashboard.ALL_VALUE;
 
         // Finding the available operations to be selected
-        const selectedMicroservices = (selectedMicroservice === TraceSearch.ALL_VALUE
-            ? availableMicroservices
-            : [selectedMicroservice]);
+        const selectedComponents = (selectedComponent === Constants.Dashboard.ALL_VALUE
+            ? availableComponents
+            : [selectedComponent]);
         const availableOperations = data.operations
-            .filter((operation) => selectedMicroservices.includes(operation.microservice))
+            .filter((operation) => selectedComponents.includes(operation.component))
             .map((operation) => operation.name);
 
         const selectedOperation = data.cells.length === 0 || (filter.operation
             && availableOperations.includes(filter.operation))
             ? filter.operation
-            : TraceSearch.ALL_VALUE;
+            : Constants.Dashboard.ALL_VALUE;
 
         return {
             ...state,
             filter: {
                 ...filter,
-                microservice: selectedMicroservice,
+                component: selectedComponent,
                 operation: selectedOperation
             },
             metaData: {
                 ...metaData,
-                availableMicroservices: availableMicroservices,
+                availableComponents: availableComponents,
                 availableOperations: availableOperations
             }
         };

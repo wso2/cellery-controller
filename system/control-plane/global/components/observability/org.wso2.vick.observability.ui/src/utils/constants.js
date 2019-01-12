@@ -37,7 +37,7 @@ const Constants = {
     },
     Cell: {
         GATEWAY_NAME_PATTERN: /^gateway$/,
-        MICROSERVICE_NAME_PATTERN: /^(.+)--(.+)$/
+        COMPONENT_NAME_PATTERN: /^(.+)--(.+)$/
     },
     System: {
         ISTIO_MIXER_NAME_PATTERN: /^istio-mixer$/,
@@ -45,10 +45,9 @@ const Constants = {
         SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN: /^async\sext_authz\segress$/
     },
     ComponentType: {
-        COMPONENTS: "COMPONENTS",
+        COMPONENT: "Component",
         VICK: "VICK",
-        ISTIO: "Istio",
-        MICROSERVICE: "Microservice"
+        ISTIO: "Istio"
     },
     Status: {
         Success: "Success",
@@ -56,7 +55,9 @@ const Constants = {
         Warning: "Warning"
     },
     Dashboard: {
-        ALL_VALUE: "All"
+        ALL_VALUE: "All",
+        INBOUND: "Inbound",
+        OUTBOUND: "Outbound"
     }
 };
 

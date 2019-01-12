@@ -86,18 +86,18 @@ class Details extends React.Component {
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
-        const {globalState, cell, microservice} = this.props;
+        const {globalState, cell, component} = this.props;
         const self = this;
 
         const search = {
             queryStartTime: queryStartTime.valueOf(),
             queryEndTime: queryEndTime.valueOf(),
             destinationCell: cell,
-            destinationMicroservice: microservice
+            destinationComponent: component
         };
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Microservice Info", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -131,7 +131,7 @@ class Details extends React.Component {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
-                    "Failed to load microservice information",
+                    "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
@@ -140,7 +140,7 @@ class Details extends React.Component {
     };
 
     render() {
-        const {classes, cell, microservice} = this.props;
+        const {classes, cell, component} = this.props;
         const {health, isLoading} = this.state;
         return (
             <React.Fragment>
@@ -179,7 +179,7 @@ class Details extends React.Component {
                         Dependencies
                     </Typography>
                     <div className={classes.diagram}>
-                        <ServiceDependencyView cell={cell} service={microservice}/>
+                        <ServiceDependencyView cell={cell} service={component}/>
                     </div>
                 </div>
             </React.Fragment>
@@ -191,7 +191,7 @@ class Details extends React.Component {
 Details.propTypes = {
     classes: PropTypes.object.isRequired,
     cell: PropTypes.string.isRequired,
-    microservice: PropTypes.string.isRequired,
+    component: PropTypes.string.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired
 };
 
