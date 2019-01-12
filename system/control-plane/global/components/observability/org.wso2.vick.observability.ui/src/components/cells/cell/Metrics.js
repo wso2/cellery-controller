@@ -66,23 +66,11 @@ class Metrics extends React.Component {
     componentDidMount = () => {
         const {globalState} = this.props;
 
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     update = (isUserAction, startTime, endTime, selectedTypeOverride, selectedCellOverride) => {
@@ -126,6 +114,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -139,10 +130,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load cell information",
                     NotificationUtils.Levels.ERROR,
@@ -254,7 +251,7 @@ class Metrics extends React.Component {
                             {
                                 cellData.length > 0
                                     ? (
-                                        <MetricsGraphs data={cellData}
+                                        <MetricsGraphs cell={cell} data={cellData}
                                             direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (

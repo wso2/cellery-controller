@@ -19,9 +19,9 @@ import Constants from "../../../utils/constants";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import React from "react";
+import TracesList from "../../tracing/search/TracesList";
 import moment from "moment/moment";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
@@ -39,7 +39,7 @@ const styles = (theme) => ({
     }
 });
 
-class TraceDialog extends React.Component {
+class TracesDialog extends React.Component {
 
     constructor(props) {
         super(props);
@@ -57,10 +57,23 @@ class TraceDialog extends React.Component {
         this.setState({open: false});
     };
 
+    onTraceClick = (traceId) => {
+        const {component} = this.props;
+        window.open(`${component ? "../../" : ""}../tracing/id/${traceId}`);
+    };
+
     render = () => {
-        const {classes, selectedArea} = this.props;
+        const {classes, selectedArea, cell, component} = this.props;
         const {open} = this.state;
 
+        const filter = {
+            cell: cell,
+            component: component
+        };
+        const globalFilterOverrides = {
+            queryStartTime: moment(selectedArea.left),
+            queryEndTime: moment(selectedArea.right)
+        };
         return (
             <Dialog
                 fullWidth={true}
@@ -72,21 +85,18 @@ class TraceDialog extends React.Component {
                 <DialogTitle id="max-width-dialog-title">Traces <span className={classes.subTitle}>
                     <span className={classes.light}> From</span> {
                         selectedArea
-                            ? moment(selectedArea.left.valueOf()).format(Constants.Pattern.GRAPH_DATE_TIME)
+                            ? globalFilterOverrides.queryStartTime.format(Constants.Pattern.GRAPH_DATE_TIME)
                             : null}
                     <span className={classes.light}> to</span> {
                         selectedArea
-                            ? moment(selectedArea.right.valueOf()).format(Constants.Pattern.GRAPH_DATE_TIME)
+                            ? globalFilterOverrides.queryEndTime.format(Constants.Pattern.GRAPH_DATE_TIME)
                             : null}</span> </DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        Trace List Table
-                    </DialogContentText>
+                    <TracesList cell={cell} component={component} onTraceClick={this.onTraceClick} filter={filter}
+                        globalFilterOverrides={globalFilterOverrides} loadTracesOnMount={true} hideTitle={true}/>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={this.handleClose} color="primary">
-                        Close
-                    </Button>
+                    <Button onClick={this.handleClose} color="primary">Close</Button>
                 </DialogActions>
             </Dialog>
         );
@@ -94,9 +104,11 @@ class TraceDialog extends React.Component {
 
 }
 
-TraceDialog.propTypes = {
+TracesDialog.propTypes = {
     classes: PropTypes.object.isRequired,
-    selectedArea: PropTypes.objectOf(moment)
+    selectedArea: PropTypes.any,
+    cell: PropTypes.string.isRequired,
+    component: PropTypes.string
 };
 
-export default withStyles(styles)(TraceDialog);
+export default withStyles(styles)(TracesDialog);

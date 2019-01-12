@@ -54,6 +54,9 @@ const Constants = {
         Success: "Success",
         Error: "Error",
         Warning: "Warning"
+    },
+    Dashboard: {
+        ALL_VALUE: "All"
     }
 };
 

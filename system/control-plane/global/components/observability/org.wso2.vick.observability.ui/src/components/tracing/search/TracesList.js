@@ -17,12 +17,16 @@
 import AccessTime from "@material-ui/icons/AccessTime";
 import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
+import HttpUtils from "../../../utils/api/httpUtils";
+import NotificationUtils from "../../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
+import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
+import StateHolder from "../../common/state/stateHolder";
 import TablePagination from "@material-ui/core/TablePagination/TablePagination";
 import Typography from "@material-ui/core/Typography/Typography";
 import moment from "moment";
-import {withRouter} from "react-router-dom";
+import withGlobalState from "../../common/state";
 import withStyles from "@material-ui/core/styles/withStyles";
 import withColor, {ColorGenerator} from "../../common/color";
 import * as PropTypes from "prop-types";
@@ -109,9 +113,35 @@ class TracesList extends React.PureComponent {
 
         this.state = {
             rowsPerPage: 5,
-            page: 0
+            page: 0,
+            hasSearchCompleted: false,
+            isLoading: false,
+            searchResults: {
+                rootSpans: [],
+                spanCounts: []
+            }
         };
     }
+
+    componentDidMount = () => {
+        const {globalState, loadTracesOnMount} = this.props;
+
+        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+        if (loadTracesOnMount) {
+            this.loadTraces(true);
+        }
+    };
+
+    componentWillUnmount = () => {
+        const {globalState} = this.props;
+        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+    };
+
+    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
+        this.setState({
+            isLoading: newState.loadingOverlayCount > 0
+        });
+    };
 
     handleChangeRowsPerPage = (event) => {
         const rowsPerPage = event.target.value;
@@ -136,15 +166,7 @@ class TracesList extends React.PureComponent {
      */
     loadTracePage = (event, traceId, cellName = "", microservice = "") => {
         event.stopPropagation();
-        this.props.history.push({
-            pathname: `./id/${traceId}`,
-            state: {
-                selectedMicroservice: {
-                    cellName: cellName,
-                    serviceName: microservice
-                }
-            }
-        });
+        this.props.onTraceClick(traceId, cellName, microservice);
     };
 
     /**
@@ -157,11 +179,7 @@ class TracesList extends React.PureComponent {
         const {colorGenerator} = this.props;
         let colorKey = ColorGenerator.UNKNOWN;
         if (component.cellName) {
-            if (Constants.Cell.GATEWAY_NAME_PATTERN.test(component.serviceName)) {
-                colorKey = ColorGenerator.VICK;
-            } else {
-                colorKey = component.cellName;
-            }
+            colorKey = component.cellName;
         } else if (Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component.serviceName)) {
             colorKey = ColorGenerator.VICK;
         } else if (Constants.System.ISTIO_MIXER_NAME_PATTERN.test(component.serviceName)) {
@@ -172,9 +190,82 @@ class TracesList extends React.PureComponent {
         return colorGenerator.getColor(colorKey);
     };
 
+    loadTraces = (isUserAction) => {
+        const self = this;
+        const {globalState, filter, globalFilterOverrides} = self.props;
+        const {
+            cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
+        } = filter;
+        const {queryStartTime, queryEndTime} = globalFilterOverrides;
+
+        // Build search object
+        const search = {};
+        const addSearchParam = (key, value) => {
+            if (value && value !== Constants.Dashboard.ALL_VALUE) {
+                search[key] = value;
+            }
+        };
+        addSearchParam("cell", cell);
+        addSearchParam("serviceName", microservice);
+        addSearchParam("operationName", operation);
+        addSearchParam("tags", JSON.stringify(tags && Object.keys(tags).length > 0 ? tags : {}));
+        addSearchParam("minDuration", minDuration * minDurationMultiplier);
+        addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
+        addSearchParam("queryStartTime", queryStartTime
+            ? queryStartTime.valueOf()
+            : QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
+        addSearchParam("queryEndTime", queryEndTime
+            ? queryEndTime.valueOf()
+            : QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
+
+        if (isUserAction) {
+            NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        }
+        HttpUtils.callObservabilityAPI(
+            {
+                url: `/traces/search${HttpUtils.generateQueryParamString(search)}`,
+                method: "GET"
+            },
+            globalState
+        ).then((data) => {
+            self.setState((prevState) => ({
+                ...prevState,
+                hasSearchCompleted: true,
+                searchResults: {
+                    rootSpans: data.rootSpans.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        rootCellName: dataItem[1],
+                        rootServiceName: dataItem[2],
+                        rootOperationName: dataItem[3],
+                        rootStartTime: dataItem[4],
+                        rootDuration: dataItem[5]
+                    })),
+                    spanCounts: data.spanCounts.map((dataItem) => ({
+                        traceId: dataItem[0],
+                        cellName: dataItem[1],
+                        serviceName: dataItem[2],
+                        count: dataItem[3]
+                    }))
+                }
+            }));
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+            }
+        }).catch(() => {
+            if (isUserAction) {
+                NotificationUtils.hideLoadingOverlay(globalState);
+                NotificationUtils.showNotification(
+                    "Failed to search for Traces",
+                    NotificationUtils.Levels.ERROR,
+                    globalState
+                );
+            }
+        });
+    };
+
     render = () => {
-        const {classes, searchResults} = this.props;
-        const {rowsPerPage, page} = this.state;
+        const {classes} = this.props;
+        const {rowsPerPage, page, hasSearchCompleted, isLoading, searchResults, hideTitle} = this.state;
 
         // Merging the span counts and root span information
         const rootSpans = searchResults.rootSpans.reduce((accumulator, dataItem) => {
@@ -198,129 +289,145 @@ class TracesList extends React.PureComponent {
             }
         }
 
-        return (
-            searchResultsArray.length > 0
-                ? (
-                    <React.Fragment>
-                        <Typography variant="h6" color="inherit" className={classes.subheading}>
-                            Traces
-                        </Typography>
-                        {
-                            searchResultsArray.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((result) => (
-                                    <Paper key={result.traceId} className={classes.trace}
-                                        onClick={(event) => this.loadTracePage(event, result.traceId)}>
-                                        <Grid container className={classes.traceHeader}>
-                                            <Grid item xs={8}>
-                                                {
-                                                    result.rootCellName
-                                                        ? (
-                                                            <span className={classes.cellName}>
-                                                                {`${result.rootCellName}:`}
-                                                            </span>
-                                                        )
-                                                        : null
-                                                }
-                                                <span className={classes.serviceName}>
-                                                    {result.rootServiceName}
-                                                </span>
-                                                <span className={classes.operationName}>
-                                                    {result.rootOperationName}
-                                                </span>
-                                            </Grid>
-                                            <Grid item xs={4} className={classes.traceHeaderRight}>
-                                                <span>
+        let view;
+        if (hasSearchCompleted && !isLoading) {
+            view = (
+                searchResultsArray.length > 0
+                    ? (
+                        <React.Fragment>
+                            {
+                                hideTitle
+                                    ? null
+                                    : (
+                                        <Typography variant="h6" color="inherit" className={classes.subheading}>
+                                            Traces
+                                        </Typography>
+                                    )
+                            }
+                            {
+                                searchResultsArray.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((result) => (
+                                        <Paper key={result.traceId} className={classes.trace}
+                                            onClick={(event) => this.loadTracePage(event, result.traceId)}>
+                                            <Grid container className={classes.traceHeader}>
+                                                <Grid item xs={8}>
                                                     {
-                                                        result.services.reduce(
-                                                            (accumulator, currentValue) => accumulator
+                                                        result.rootCellName
+                                                            ? (
+                                                                <span className={classes.cellName}>
+                                                                    {`${result.rootCellName}:`}
+                                                                </span>
+                                                            )
+                                                            : null
+                                                    }
+                                                    <span className={classes.serviceName}>
+                                                        {result.rootServiceName}
+                                                    </span>
+                                                    <span className={classes.operationName}>
+                                                        {result.rootOperationName}
+                                                    </span>
+                                                </Grid>
+                                                <Grid item xs={4} className={classes.traceHeaderRight}>
+                                                    <span>
+                                                        {
+                                                            result.services.reduce(
+                                                                (accumulator, currentValue) => accumulator
                                                                 + currentValue.count,
-                                                            0
-                                                        )
-                                                    } Spans
-                                                </span>
-                                                <span className={classes.rootStartTime}>
-                                                    {moment(result.rootStartTime).format(Constants.Pattern.DATE_TIME)}
-                                                </span>
-                                                <span className={classes.durationIcon}>
-                                                    <AccessTime varient="inherit" fontSize="small"/>
-                                                </span>
-                                                <span className={classes.duration}>
-                                                    {result.rootDuration / 1000} s
-                                                </span>
+                                                                0
+                                                            )
+                                                        } Spans
+                                                    </span>
+                                                    <span className={classes.rootStartTime}>
+                                                        {
+                                                            moment(result.rootStartTime)
+                                                                .format(Constants.Pattern.DATE_TIME)
+                                                        }
+                                                    </span>
+                                                    <span className={classes.durationIcon}>
+                                                        <AccessTime varient="inherit" fontSize="small"/>
+                                                    </span>
+                                                    <span className={classes.duration}>
+                                                        {result.rootDuration / 1000} s
+                                                    </span>
+                                                </Grid>
                                             </Grid>
-                                        </Grid>
-                                        <div className={classes.traceContent}>
-                                            {
-                                                result.services
-                                                    .sort((a, b) => {
-                                                        if (a.serviceName < b.serviceName) {
-                                                            return -1;
-                                                        }
-                                                        if (a.serviceName > b.serviceName) {
-                                                            return 1;
-                                                        }
-                                                        return 0;
-                                                    })
-                                                    .map((service) => (
-                                                        <div key={`${service.cellName}-${service.serviceName}`}
-                                                            className={classes.serviceTag}
-                                                            onClick={
-                                                                (event) => this.loadTracePage(event, result.traceId,
-                                                                    service.cellName, service.serviceName)}>
-                                                            <div className={classes.serviceTagColor} style={{
-                                                                backgroundColor: this.getColorForComponent(service)
-                                                            }}/>
-                                                            <div className={classes.serviceTagContent}>
-                                                                <span className={classes.tagCellName}>
-                                                                    {service.cellName
-                                                                        ? `${service.cellName}: `
-                                                                        : null} </span>
-                                                                <span className={classes.tagServiceName}>
-                                                                    {service.serviceName} ({service.count})</span>
+                                            <div className={classes.traceContent}>
+                                                {
+                                                    result.services
+                                                        .sort((a, b) => {
+                                                            if (a.serviceName < b.serviceName) {
+                                                                return -1;
+                                                            }
+                                                            if (a.serviceName > b.serviceName) {
+                                                                return 1;
+                                                            }
+                                                            return 0;
+                                                        })
+                                                        .map((service) => (
+                                                            <div key={`${service.cellName}-${service.serviceName}`}
+                                                                className={classes.serviceTag}
+                                                                onClick={
+                                                                    (event) => this.loadTracePage(event, result.traceId,
+                                                                        service.cellName, service.serviceName)}>
+                                                                <div className={classes.serviceTagColor} style={{
+                                                                    backgroundColor: this.getColorForComponent(service)
+                                                                }}/>
+                                                                <div className={classes.serviceTagContent}>
+                                                                    <span className={classes.tagCellName}>
+                                                                        {service.cellName
+                                                                            ? `${service.cellName}: `
+                                                                            : null} </span>
+                                                                    <span className={classes.tagServiceName}>
+                                                                        {service.serviceName} ({service.count})
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))
-                                            }
-                                        </div>
-                                    </Paper>
-                                ))
-                        }
-                        <TablePagination component="div" count={searchResultsArray.length} rowsPerPage={rowsPerPage}
-                            backIconButtonProps={{"aria-label": "Previous Page"}} labelRowsPerPage={"Traces Per Page"}
-                            nextIconButtonProps={{"aria-label": "Next Page"}} onChangePage={this.handleChangePage}
-                            onChangeRowsPerPage={this.handleChangeRowsPerPage} page={page}/>
-                    </React.Fragment>
-                )
-                : (
-                    <div>No Traces Found</div>
-                )
-        );
+                                                        ))
+                                                }
+                                            </div>
+                                        </Paper>
+                                    ))
+                            }
+                            <TablePagination component="div" count={searchResultsArray.length} rowsPerPage={rowsPerPage}
+                                backIconButtonProps={{"aria-label": "Previous Page"}} page={page}
+                                labelRowsPerPage={"Traces Per Page"} onChangePage={this.handleChangePage}
+                                nextIconButtonProps={{"aria-label": "Next Page"}}
+                                onChangeRowsPerPage={this.handleChangeRowsPerPage}/>
+                        </React.Fragment>
+                    )
+                    : (
+                        <div>No Traces Found</div>
+                    )
+            );
+        } else {
+            view = null;
+        }
+        return view;
     };
 
 }
 
 TracesList.propTypes = {
     classes: PropTypes.any.isRequired,
-    history: PropTypes.shape({
-        push: PropTypes.func.isRequired
-    }).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator),
-    searchResults: PropTypes.shape({
-        rootSpans: PropTypes.arrayOf(PropTypes.shape({
-            traceId: PropTypes.string.isRequired,
-            rootCellName: PropTypes.string.isRequired,
-            rootServiceName: PropTypes.string.isRequired,
-            rootOperationName: PropTypes.string.isRequired,
-            rootStartTime: PropTypes.number.isRequired,
-            rootDuration: PropTypes.number.isRequired
-        })).isRequired,
-        spanCounts: PropTypes.arrayOf(PropTypes.shape({
-            traceId: PropTypes.string.isRequired,
-            cellName: PropTypes.string.isRequired,
-            serviceName: PropTypes.string.isRequired,
-            count: PropTypes.number.isRequired
-        })).isRequired
-    }).isRequired
+    globalState: PropTypes.instanceOf(StateHolder),
+    hideTitle: PropTypes.bool,
+    loadTracesOnMount: PropTypes.bool,
+    onTraceClick: PropTypes.func.isRequired,
+    filter: PropTypes.shape({
+        cell: PropTypes.string,
+        microservice: PropTypes.string,
+        operation: PropTypes.string,
+        tags: PropTypes.object,
+        minDuration: PropTypes.number,
+        minDurationMultiplier: PropTypes.number,
+        maxDuration: PropTypes.number,
+        maxDurationMultiplier: PropTypes.number
+    }).isRequired,
+    globalFilterOverrides: PropTypes.shape({
+        queryStartTime: PropTypes.any.isRequired,
+        queryEndTime: PropTypes.any.isRequired
+    })
 };
 
-export default withStyles(styles)(withRouter(withColor(TracesList)));
+export default withStyles(styles)(withColor(withGlobalState(TracesList)));

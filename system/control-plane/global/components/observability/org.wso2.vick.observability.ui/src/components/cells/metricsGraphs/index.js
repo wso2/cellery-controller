@@ -27,7 +27,7 @@ import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Timeline from "@material-ui/icons/Timeline";
 import Tooltip from "@material-ui/core/Tooltip";
-import TraceDialog from "./TraceDialog";
+import TracesDialog from "./TracesDialog";
 import Typography from "@material-ui/core/Typography";
 import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
@@ -284,7 +284,7 @@ class MetricsGraphs extends React.Component {
     };
 
     render = () => {
-        const {classes, colorGenerator} = this.props;
+        const {classes, colorGenerator, cell, component} = this.props;
         const {
             statusTooltip, trafficTooltip, volumeTooltip, durationTooltip, sizeTooltip, lastDrawLocationVolumeChart,
             lastDrawLocationDurationChart, lastDrawLocationSizeChart
@@ -471,10 +471,16 @@ class MetricsGraphs extends React.Component {
                                     title: classes.title,
                                     action: classes.cardActions
                                 }}
-                                action={ lastDrawLocationVolumeChart
-                                    ? <React.Fragment>{traceBtn}<TraceDialog innerRef={this.traceDialogRef}
-                                        selectedArea={lastDrawLocationVolumeChart}/>{zoomHintToolTip}
-                                    </React.Fragment>
+                                action={lastDrawLocationVolumeChart
+                                    ? (
+                                        <React.Fragment>
+                                            {traceBtn}
+                                            <TracesDialog cell={cell} component={component}
+                                                innerRef={this.traceDialogRef}
+                                                selectedArea={lastDrawLocationVolumeChart}/>
+                                            {zoomHintToolTip}
+                                        </React.Fragment>
+                                    )
                                     : zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
@@ -545,9 +551,15 @@ class MetricsGraphs extends React.Component {
                                     action: classes.cardActions
                                 }}
                                 action={ lastDrawLocationDurationChart
-                                    ? <React.Fragment>{traceBtn}<TraceDialog innerRef={this.traceDialogRef}
-                                        selectedArea={lastDrawLocationDurationChart}/> {zoomHintToolTip}
-                                    </React.Fragment>
+                                    ? (
+                                        <React.Fragment>
+                                            {traceBtn}
+                                            <TracesDialog cell={cell} component={component}
+                                                innerRef={this.traceDialogRef}
+                                                selectedArea={lastDrawLocationDurationChart}/>
+                                            {zoomHintToolTip}
+                                        </React.Fragment>
+                                    )
                                     : zoomHintToolTip}
 
                             />
@@ -618,8 +630,15 @@ class MetricsGraphs extends React.Component {
                                     action: classes.cardActions
                                 }}
                                 action={ lastDrawLocationSizeChart
-                                    ? <React.Fragment>{traceBtn} <TraceDialog innerRef={this.traceDialogRef}
-                                        selectedArea={lastDrawLocationSizeChart}/>{zoomHintToolTip}</React.Fragment>
+                                    ? (
+                                        <React.Fragment>
+                                            {traceBtn}
+                                            <TracesDialog cell={cell} component={component}
+                                                innerRef={this.traceDialogRef}
+                                                selectedArea={lastDrawLocationSizeChart}/>
+                                            {zoomHintToolTip}
+                                        </React.Fragment>
+                                    )
                                     : zoomHintToolTip}
                             />
                             <CardContent className={classes.content}>
@@ -719,6 +738,8 @@ MetricsGraphs.propTypes = {
         totalResponseTimeMilliSec: PropTypes.number.isRequired,
         requestCount: PropTypes.number.isRequired
     })).isRequired,
+    cell: PropTypes.string.isRequired,
+    component: PropTypes.string,
     direction: PropTypes.string.isRequired
 };
 

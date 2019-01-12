@@ -71,23 +71,11 @@ class Metrics extends React.Component {
     componentDidMount = () => {
         const {globalState} = this.props;
 
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     update = (isUserAction, startTime, endTime, selectedTypeOverride, selectedCellOverride,
@@ -134,6 +122,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Microservice Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -148,10 +139,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load microservice information",
                     NotificationUtils.Levels.ERROR,
@@ -189,6 +186,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Microservice Metrics", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -211,10 +211,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load microservice metrics",
                     NotificationUtils.Levels.ERROR,
@@ -330,7 +336,7 @@ class Metrics extends React.Component {
                             {
                                 microserviceData.length > 0
                                     ? (
-                                        <MetricsGraphs data={microserviceData}
+                                        <MetricsGraphs cell={cell} component={microservice} data={microserviceData}
                                             direction={selectedType === Metrics.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (

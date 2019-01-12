@@ -249,7 +249,7 @@ class TimelineView extends React.Component {
         const minLimit = this.trace.minTime - duration * 0.05;
         const maxLimit = this.trace.maxTime + duration * 0.12;
         const addSelectedSpanClass = (element, span) => {
-            if ((!span.cell.name || span.cell.name === selectedMicroservice.cellName)
+            if (selectedMicroservice && (!span.cell.name || span.cell.name === selectedMicroservice.cellName)
                 && span.serviceName === selectedMicroservice.serviceName) {
                 element.classList.add(TimelineView.Classes.SELECTED_SPAN);
             }
