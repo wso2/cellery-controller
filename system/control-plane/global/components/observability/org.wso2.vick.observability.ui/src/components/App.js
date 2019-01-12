@@ -16,9 +16,10 @@
  * under the License.
  */
 
-import AppLayout from "./AppLayout";
+import AppLayout from "./appLayout";
 import Cells from "./cells";
 import {ColorProvider} from "./common/color";
+import CssBaseline from "@material-ui/core/CssBaseline/CssBaseline";
 import ErrorBoundary from "./common/error/ErrorBoundary";
 import NotFound from "./common/error/NotFound";
 import Overview from "./overview";
@@ -90,6 +91,7 @@ const theme = createMuiTheme({
  */
 const App = () => (
     <MuiThemeProvider theme={theme}>
+        <CssBaseline/>
         <ErrorBoundary>
             <BrowserRouter>
                 <ColorProvider>

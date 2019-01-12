@@ -57,7 +57,8 @@ const Constants = {
     Dashboard: {
         ALL_VALUE: "All",
         INBOUND: "Inbound",
-        OUTBOUND: "Outbound"
+        OUTBOUND: "Outbound",
+        SIDE_NAV_BAR_WIDTH: 240
     }
 };
 
