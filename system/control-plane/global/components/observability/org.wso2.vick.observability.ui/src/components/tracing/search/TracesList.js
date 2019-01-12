@@ -196,7 +196,6 @@ class TracesList extends React.PureComponent {
         const {
             cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
         } = filter;
-        const {queryStartTime, queryEndTime} = globalFilterOverrides;
 
         // Build search object
         const search = {};
@@ -211,11 +210,11 @@ class TracesList extends React.PureComponent {
         addSearchParam("tags", JSON.stringify(tags && Object.keys(tags).length > 0 ? tags : {}));
         addSearchParam("minDuration", minDuration * minDurationMultiplier);
         addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
-        addSearchParam("queryStartTime", queryStartTime
-            ? queryStartTime.valueOf()
+        addSearchParam("queryStartTime", globalFilterOverrides && globalFilterOverrides.queryStartTime
+            ? globalFilterOverrides.queryStartTime.valueOf()
             : QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
-        addSearchParam("queryEndTime", queryEndTime
-            ? queryEndTime.valueOf()
+        addSearchParam("queryEndTime", globalFilterOverrides && globalFilterOverrides.queryEndTime
+            ? globalFilterOverrides.queryEndTime.valueOf()
             : QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
 
         if (isUserAction) {
@@ -264,8 +263,8 @@ class TracesList extends React.PureComponent {
     };
 
     render = () => {
-        const {classes} = this.props;
-        const {rowsPerPage, page, hasSearchCompleted, isLoading, searchResults, hideTitle} = this.state;
+        const {classes, hideTitle} = this.props;
+        const {rowsPerPage, page, hasSearchCompleted, isLoading, searchResults} = this.state;
 
         // Merging the span counts and root span information
         const rootSpans = searchResults.rootSpans.reduce((accumulator, dataItem) => {

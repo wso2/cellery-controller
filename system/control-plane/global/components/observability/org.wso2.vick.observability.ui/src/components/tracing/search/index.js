@@ -111,8 +111,20 @@ class TraceSearch extends React.Component {
     }
 
     componentDidMount = () => {
-        const {globalState} = this.props;
+        const {globalState, location} = this.props;
+
         globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
+
+        const queryParams = HttpUtils.parseQueryParams(location.search);
+        let isQueryParamsEmpty = true;
+        for (const key in queryParams) {
+            if (queryParams.hasOwnProperty(key) && queryParams[key]) {
+                isQueryParamsEmpty = false;
+            }
+        }
+        if (!isQueryParamsEmpty) {
+            this.search(true);
+        }
     };
 
     componentWillUnmount() {
@@ -309,19 +321,7 @@ class TraceSearch extends React.Component {
     };
 
     onGlobalRefresh = (isUserAction, queryStartTime, queryEndTime) => {
-        const {location} = this.props;
-        let isSearchRequired = this.state.hasSearchCompleted;
-
-        if (!isSearchRequired) {
-            const queryParams = HttpUtils.parseQueryParams(location.search);
-            for (const key in queryParams) {
-                if (queryParams.hasOwnProperty(key) && queryParams[key]) {
-                    isSearchRequired = true;
-                }
-            }
-        }
-
-        if (isSearchRequired) {
+        if (this.state.hasSearchCompleted) {
             this.search(isUserAction);
         }
         this.loadCellData(isUserAction && !this.state.hasSearchCompleted, queryStartTime, queryEndTime);

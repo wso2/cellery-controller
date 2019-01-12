@@ -15,13 +15,13 @@
  */
 
 import Button from "@material-ui/core/Button/Button";
-import Constants from "../../../utils/constants";
+import Constants from "../../../../utils/constants";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import React from "react";
-import TracesList from "../../tracing/search/TracesList";
+import TracesList from "../../../tracing/search/TracesList";
 import moment from "moment/moment";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
@@ -58,18 +58,13 @@ class TracesDialog extends React.Component {
     };
 
     onTraceClick = (traceId) => {
-        const {component} = this.props;
-        window.open(`${component ? "../../" : ""}../tracing/id/${traceId}`);
+        window.open(`/tracing/id/${traceId}`);
     };
 
     render = () => {
-        const {classes, selectedArea, cell, component} = this.props;
+        const {classes, selectedArea, filter} = this.props;
         const {open} = this.state;
 
-        const filter = {
-            cell: cell,
-            component: component
-        };
         const globalFilterOverrides = {
             queryStartTime: moment(selectedArea.left),
             queryEndTime: moment(selectedArea.right)
@@ -92,7 +87,7 @@ class TracesDialog extends React.Component {
                             ? globalFilterOverrides.queryEndTime.format(Constants.Pattern.GRAPH_DATE_TIME)
                             : null}</span> </DialogTitle>
                 <DialogContent>
-                    <TracesList cell={cell} component={component} onTraceClick={this.onTraceClick} filter={filter}
+                    <TracesList onTraceClick={this.onTraceClick} filter={filter}
                         globalFilterOverrides={globalFilterOverrides} loadTracesOnMount={true} hideTitle={true}/>
                 </DialogContent>
                 <DialogActions>
@@ -107,8 +102,16 @@ class TracesDialog extends React.Component {
 TracesDialog.propTypes = {
     classes: PropTypes.object.isRequired,
     selectedArea: PropTypes.any,
-    cell: PropTypes.string.isRequired,
-    component: PropTypes.string
+    filter: PropTypes.shape({
+        cell: PropTypes.string,
+        microservice: PropTypes.string,
+        operation: PropTypes.string,
+        tags: PropTypes.object,
+        minDuration: PropTypes.number,
+        minDurationMultiplier: PropTypes.number,
+        maxDuration: PropTypes.number,
+        maxDurationMultiplier: PropTypes.number
+    }).isRequired
 };
 
 export default withStyles(styles)(TracesDialog);

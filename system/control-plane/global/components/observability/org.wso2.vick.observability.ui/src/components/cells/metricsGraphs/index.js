@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-/* eslint max-lines: ["off"] */
-
-import Button from "@material-ui/core/Button/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
-import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid";
-import InfoIcon from "@material-ui/icons/InfoOutlined";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
-import Timeline from "@material-ui/icons/Timeline";
-import Tooltip from "@material-ui/core/Tooltip";
-import TracesDialog from "./TracesDialog";
+import TimeSeriesGraph from "./timeSeriesGraph";
 import Typography from "@material-ui/core/Typography";
-import moment from "moment";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    ChartLabel, Crosshair, DiscreteColorLegend, Highlight, Hint, HorizontalBarSeries, HorizontalGridLines,
-    LineMarkSeries, RadialChart, VerticalGridLines, XAxis, XYPlot, YAxis, makeWidthFlexible
+    ChartLabel, DiscreteColorLegend, Hint, HorizontalBarSeries, HorizontalGridLines, RadialChart,VerticalGridLines,
+    XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../../common/color";
 import withGlobalState, {StateHolder} from "../../common/state";
@@ -69,29 +61,9 @@ const styles = (theme) => ({
     contentGrid: {
         marginTop: 48
     },
-    toolTipHead: {
-        fontWeight: 600
-    },
     barChart: {
         marginTop: 40,
         marginBottom: 40
-    },
-    info: {
-        color: "#999",
-        marginRight: 27,
-        fontSize: 18,
-        verticalAlign: "middle"
-    },
-    traceButton: {
-        fontSize: 12,
-        verticalAlign: "middle",
-        marginRight: theme.spacing.unit
-    },
-    viewTracesContent: {
-        paddingLeft: theme.spacing.unit
-    },
-    cardActions: {
-        marginTop: theme.spacing.unit / 4
     }
 });
 
@@ -104,21 +76,12 @@ class MetricsGraphs extends React.Component {
 
         this.state = {
             statusTooltip: false,
-            trafficTooltip: false,
-            sizeTooltip: [],
-            volumeTooltip: false,
-            durationTooltip: false,
-            lastDrawLocationVolumeChart: null,
-            lastDrawLocationDurationChart: null,
-            lastDrawLocationSizeChart: null,
-            open: false
+            trafficTooltip: false
         };
-
-        this.traceDialogRef = React.createRef();
     }
 
     calculateMetrics = () => {
-        const {colorGenerator, globalState, data, direction} = this.props;
+        const {colorGenerator, data, direction} = this.props;
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
@@ -183,68 +146,18 @@ class MetricsGraphs extends React.Component {
                 count: httpResponseGroupCounts[datum]
             }));
 
-        // Aggregating the data by timestamp (time-series charts doesn't need to consider response code)
-        const aggregatedData = [];
-        let lastTimestamp = 0;
-        let aggregatedDatum = null;
-        for (let i = 0; i < data.length; i++) {
-            const datum = data[i];
-            if (datum.timestamp === lastTimestamp) {
-                aggregatedDatum.totalRequestSizeBytes += datum.totalRequestSizeBytes;
-                aggregatedDatum.totalResponseSizeBytes += datum.totalResponseSizeBytes;
-                aggregatedDatum.totalResponseTimeMilliSec += datum.totalResponseTimeMilliSec;
-                aggregatedDatum.requestCount += datum.requestCount;
-            } else {
-                if (aggregatedDatum) {
-                    aggregatedData.push(aggregatedDatum);
-                }
-
-                lastTimestamp = datum.timestamp;
-                aggregatedDatum = {
-                    timestamp: datum.timestamp,
-                    totalRequestSizeBytes: datum.totalRequestSizeBytes,
-                    totalResponseSizeBytes: datum.totalResponseSizeBytes,
-                    totalResponseTimeMilliSec: datum.totalResponseTimeMilliSec,
-                    requestCount: datum.requestCount
-                };
-            }
-        }
-
-        // Preparing a proper time-series data-set with 0 requests points added
-        const timeSeriesData = [];
-        const addEmptyTimeSeriesPoint = (timestamp) => {
-            timeSeriesData.push({
-                timestamp: timestamp,
-                totalRequestSizeBytes: 0,
-                totalResponseSizeBytes: 0,
-                totalResponseTimeMilliSec: 0,
-                requestCount: 0
-            });
-        };
-        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime));
-        for (let i = 0; i < aggregatedData.length; i++) {
-            const datum = aggregatedData[i];
-
-            if (i === 0 || timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
-                addEmptyTimeSeriesPoint(datum.timestamp - 1000);
-            }
-            timeSeriesData.push(datum);
-            if (i === aggregatedData.length - 1 || aggregatedData[i + 1].timestamp > datum.timestamp + 1000) {
-                addEmptyTimeSeriesPoint(datum.timestamp + 1000);
-            }
-        }
-        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime));
+        const timeSeriesData = this.generateTimeSeriesDataSet();
 
         // Preparing data for the Request Volume Line Chart
         const reqVolumeData = timeSeriesData.map((datum) => ({
-            x: datum.timestamp,
-            y: datum.requestCount
+            timestamp: datum.timestamp,
+            value: datum.requestCount
         }));
 
         // Preparing data for the Request Duration Line Chart
         const reqDurationData = timeSeriesData.map((datum) => ({
-            x: datum.timestamp,
-            y: datum.requestCount === 0 ? 0 : datum.totalResponseTimeMilliSec / datum.requestCount
+            timestamp: datum.timestamp,
+            value: datum.requestCount === 0 ? 0 : datum.totalResponseTimeMilliSec / datum.requestCount
         }));
 
         // Preparing data for the Response Size Line Chart
@@ -252,15 +165,15 @@ class MetricsGraphs extends React.Component {
             {
                 name: "Request",
                 data: timeSeriesData.map((datum) => ({
-                    x: datum.timestamp,
-                    y: datum.requestCount === 0 ? 0 : datum.totalRequestSizeBytes / datum.requestCount
+                    timestamp: datum.timestamp,
+                    value: datum.requestCount === 0 ? 0 : datum.totalRequestSizeBytes / datum.requestCount
                 }))
             },
             {
                 name: "Response",
                 data: timeSeriesData.map((datum) => ({
-                    x: datum.timestamp,
-                    y: datum.requestCount === 0 ? 0 : datum.totalResponseSizeBytes / datum.requestCount
+                    timestamp: datum.timestamp,
+                    value: datum.requestCount === 0 ? 0 : datum.totalResponseSizeBytes / datum.requestCount
                 }))
             }
         ];
@@ -277,18 +190,9 @@ class MetricsGraphs extends React.Component {
         };
     };
 
-    handleClickOpen = () => {
-        if (this.traceDialogRef.current && this.traceDialogRef.current.handleClickOpen) {
-            this.traceDialogRef.current.handleClickOpen();
-        }
-    };
-
     render = () => {
         const {classes, colorGenerator, cell, component} = this.props;
-        const {
-            statusTooltip, trafficTooltip, volumeTooltip, durationTooltip, sizeTooltip, lastDrawLocationVolumeChart,
-            lastDrawLocationDurationChart, lastDrawLocationSizeChart
-        } = this.state;
+        const {statusTooltip, trafficTooltip} = this.state;
 
         const successColor = colorGenerator.getColor(ColorGenerator.SUCCESS);
         const errColor = colorGenerator.getColor(ColorGenerator.ERROR);
@@ -296,26 +200,16 @@ class MetricsGraphs extends React.Component {
         const redirectionColor = colorGenerator.getColor(ColorGenerator.CLIENT_ERROR);
 
         const statusCodesColors = [successColor, redirectionColor, warningColor, errColor];
-        const reqResColors = ["#5bbd5a", "#76c7e3"];
 
         const {
             timeRange, statusData, trafficData, reqVolumeData, reqDurationData, reqResSizeData, totalRequestsCount,
             totalResponseTime
         } = this.calculateMetrics();
 
-        const zoomHintToolTip = (
-            <Tooltip title="Click and drag in the plot area to zoom in, click anywhere in the graph to zoom out.">
-                <InfoIcon className={classes.info}/>
-            </Tooltip>
-        );
-
-        const traceBtn = (
-            <Tooltip title="View traces for the selected time range">
-                <Button className={classes.traceButton} onClick={this.handleClickOpen} variant="outlined">
-                    <Timeline color="action"/><span className={classes.viewTracesContent}>View Traces</span>
-                </Button>
-            </Tooltip>
-        );
+        const traceSearchFilter = {
+            cell: cell,
+            microservice: component
+        };
         return (
             <div className={classes.root}>
                 <Grid container spacing={24}>
@@ -465,264 +359,113 @@ class MetricsGraphs extends React.Component {
                         </Card>
                     </Grid>
                     <Grid item sm={12}>
-                        <Card className={classes.card}>
-                            <CardHeader title="Request Volume" className={classes.cardHeader}
-                                classes={{
-                                    title: classes.title,
-                                    action: classes.cardActions
-                                }}
-                                action={lastDrawLocationVolumeChart
-                                    ? (
-                                        <React.Fragment>
-                                            {traceBtn}
-                                            <TracesDialog cell={cell} component={component}
-                                                innerRef={this.traceDialogRef}
-                                                selectedArea={lastDrawLocationVolumeChart}/>
-                                            {zoomHintToolTip}
-                                        </React.Fragment>
-                                    )
-                                    : zoomHintToolTip}
-                            />
-                            <CardContent className={classes.content}>
-                                <div>
-                                    <FlexibleWidthXYPlot xType="time" height={400} animation
-                                        xDomain={
-                                            lastDrawLocationVolumeChart && [
-                                                lastDrawLocationVolumeChart.left,
-                                                lastDrawLocationVolumeChart.right
-                                            ]
-                                        }
-                                        onMouseLeave={() => this.setState({volumeTooltip: false})}>
-                                        <HorizontalGridLines/>
-                                        <VerticalGridLines/>
-                                        <XAxis title="Time"/>
-                                        <YAxis title="Volume (ops / s)"/>
-                                        <LineMarkSeries data={reqVolumeData} color="#12939a" size={3}
-                                            onNearestX={(d) => this.setState({volumeTooltip: d})}/>
-                                        {
-                                            volumeTooltip
-                                                ? (
-                                                    <Crosshair values={[volumeTooltip]}>
-                                                        <div className="rv-hint__content">
-                                                            {
-                                                                `${moment(volumeTooltip.x)
-                                                                    .format(Constants.Pattern.DATE_TIME)} :
-                                                                ${Math.round(volumeTooltip.y)} Requests`
-                                                            }
-                                                        </div>
-                                                    </Crosshair>
-                                                )
-                                                : null
-                                        }
-                                        <Highlight
-                                            onBrushEnd={(area) => this.setState({lastDrawLocationVolumeChart: area})}
-                                            onDrag={(area) => {
-                                                this.setState({
-                                                    lastDrawLocationVolumeChart: {
-                                                        bottom: lastDrawLocationVolumeChart.bottom
-                                                            + (area.top - area.bottom),
-                                                        left: lastDrawLocationVolumeChart.left
-                                                            - (area.right - area.left),
-                                                        right: lastDrawLocationVolumeChart.right
-                                                            - (area.right - area.left),
-                                                        top: lastDrawLocationVolumeChart.top
-                                                            + (area.top - area.bottom)
-                                                    }
-                                                });
-                                            }}/>
-                                    </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend orientation="horizontal"
-                                        items={[
-                                            {
-                                                title: "Request",
-                                                color: "#12939a"
-                                            }
-                                        ]}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <TimeSeriesGraph title={"Request Volume"} traceSearchFilter={traceSearchFilter}
+                            data={[
+                                {
+                                    title: "Request",
+                                    points: reqVolumeData,
+                                    color: "#12939a"
+                                }
+                            ]}
+                            yAxis={{
+                                title: "Volume",
+                                unit: "Ops / s"
+                            }}/>
                     </Grid>
                     <Grid item sm={12}>
-                        <Card className={classes.card}>
-                            <CardHeader title="Request Duration" className={classes.cardHeader}
-                                classes={{
-                                    title: classes.title,
-                                    action: classes.cardActions
-                                }}
-                                action={ lastDrawLocationDurationChart
-                                    ? (
-                                        <React.Fragment>
-                                            {traceBtn}
-                                            <TracesDialog cell={cell} component={component}
-                                                innerRef={this.traceDialogRef}
-                                                selectedArea={lastDrawLocationDurationChart}/>
-                                            {zoomHintToolTip}
-                                        </React.Fragment>
-                                    )
-                                    : zoomHintToolTip}
-
-                            />
-                            <CardContent className={classes.content}>
-                                <div>
-                                    <FlexibleWidthXYPlot xType="time" height={400} animation
-                                        xDomain={
-                                            lastDrawLocationDurationChart && [
-                                                lastDrawLocationDurationChart.left,
-                                                lastDrawLocationDurationChart.right
-                                            ]
-                                        }
-                                        onMouseLeave={() => this.setState({durationTooltip: false})}>
-                                        <HorizontalGridLines/>
-                                        <VerticalGridLines/>
-                                        <XAxis title="Time"/>
-                                        <YAxis title="Duration (ms)"/>
-                                        <LineMarkSeries data={reqDurationData} color="#3f51b5" size={3}
-                                            onNearestX={(d) => this.setState({durationTooltip: d})}/>
-                                        {
-                                            durationTooltip
-                                                ? (
-                                                    <Crosshair values={[durationTooltip]}>
-                                                        <div className="rv-hint__content">
-                                                            {
-                                                                `${moment(durationTooltip.x)
-                                                                    .format(Constants.Pattern.DATE_TIME)} :
-                                                                ${Math.round(durationTooltip.y)} ms`
-                                                            }
-                                                        </div>
-                                                    </Crosshair>
-                                                )
-                                                : null
-                                        }
-                                        <Highlight
-                                            onBrushEnd={(area) => this.setState({lastDrawLocationDurationChart: area})}
-                                            onDrag={(area) => {
-                                                this.setState({
-                                                    lastDrawLocationDurationChart: {
-                                                        bottom: lastDrawLocationDurationChart.bottom
-                                                            + (area.top - area.bottom),
-                                                        left: lastDrawLocationDurationChart.left
-                                                            - (area.right - area.left),
-                                                        right: lastDrawLocationDurationChart.right
-                                                            - (area.right - area.left),
-                                                        top: lastDrawLocationDurationChart.top
-                                                            + (area.top - area.bottom)
-                                                    }
-                                                });
-                                            }}/>
-                                    </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend orientation="horizontal"
-                                        items={[
-                                            {
-                                                title: "Request",
-                                                color: "#3f51b5"
-                                            }
-                                        ]}/>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <TimeSeriesGraph title={"Request Duration"} traceSearchFilter={traceSearchFilter}
+                            data={[
+                                {
+                                    title: "Request",
+                                    points: reqDurationData,
+                                    color: "#3f51b5"
+                                }
+                            ]}
+                            yAxis={{
+                                title: "Duration",
+                                unit: "ms"
+                            }}/>
                     </Grid>
                     <Grid item sm={12}>
-                        <Card className={classes.card}>
-                            <CardHeader title="Request/Response Size" className={classes.cardHeader}
-                                classes={{
-                                    title: classes.title,
-                                    action: classes.cardActions
-                                }}
-                                action={ lastDrawLocationSizeChart
-                                    ? (
-                                        <React.Fragment>
-                                            {traceBtn}
-                                            <TracesDialog cell={cell} component={component}
-                                                innerRef={this.traceDialogRef}
-                                                selectedArea={lastDrawLocationSizeChart}/>
-                                            {zoomHintToolTip}
-                                        </React.Fragment>
-                                    )
-                                    : zoomHintToolTip}
-                            />
-                            <CardContent className={classes.content}>
-                                <div>
-                                    <FlexibleWidthXYPlot xType="time" height={400} animation
-                                        xDomain={
-                                            lastDrawLocationSizeChart && [
-                                                lastDrawLocationSizeChart.left,
-                                                lastDrawLocationSizeChart.right
-                                            ]
-                                        }
-                                        onMouseLeave={() => this.setState({sizeTooltip: []})}>
-                                        <HorizontalGridLines/>
-                                        <VerticalGridLines/>
-                                        <XAxis title="Time"/>
-                                        <YAxis title="Size (Bytes)"/>
-                                        {
-                                            reqResSizeData.map((dataItem, index) => (
-                                                <LineMarkSeries key={dataItem.name} color={reqResColors[index]} size={3}
-                                                    data={dataItem.data}
-                                                    onNearestX={(d, {index}) => this.setState({
-                                                        sizeTooltip: reqResSizeData.map((d) => ({
-                                                            ...d.data[index],
-                                                            name: d.name
-                                                        }))
-                                                    })}/>
-                                            ))
-                                        }
-                                        <Crosshair values={sizeTooltip}>
-                                            {
-                                                sizeTooltip.length > 0
-                                                    ? (
-                                                        <div className="rv-hint__content">
-                                                            <div className={classes.toolTipHead}>
-                                                                {
-                                                                    `${moment(sizeTooltip[0].x)
-                                                                        .format(Constants.Pattern.DATE_TIME)}`
-                                                                }
-                                                            </div>
-                                                            {
-                                                                sizeTooltip.map((tooltipItem) => (
-                                                                    <div key={tooltipItem.name}>
-                                                                        {
-                                                                            `${tooltipItem.name} Size:
-                                                                            ${Math.round(tooltipItem.y)} Bytes`
-                                                                        }
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                        </div>
-                                                    )
-                                                    : null
-                                            }
-                                        </Crosshair>
-                                        <Highlight
-                                            onBrushEnd={(area) => this.setState({lastDrawLocationSizeChart: area})}
-                                            onDrag={(area) => {
-                                                this.setState({
-                                                    lastDrawLocationSizeChart: {
-                                                        bottom: lastDrawLocationSizeChart.bottom
-                                                            + (area.top - area.bottom),
-                                                        left: lastDrawLocationSizeChart.left - (area.right - area.left),
-                                                        right: lastDrawLocationSizeChart.right
-                                                            - (area.right - area.left),
-                                                        top: lastDrawLocationSizeChart.top + (area.top - area.bottom)
-                                                    }
-                                                });
-                                            }}/>
-                                    </FlexibleWidthXYPlot>
-                                    <DiscreteColorLegend orientation="horizontal"
-                                        items={
-                                            reqResSizeData.map((d, index) => ({
-                                                title: d.name,
-                                                color: reqResColors[index]
-                                            }))
-                                        }/>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <TimeSeriesGraph title={"Request/Response Size"} traceSearchFilter={traceSearchFilter}
+                            data={
+                                reqResSizeData.map((datum, index) => ({
+                                    title: datum.name,
+                                    points: datum.data,
+                                    color: ["#5bbd5a", "#76c7e3"][index]
+                                }))
+                            }
+                            yAxis={{
+                                title: "Size",
+                                unit: "Bytes"
+                            }}/>
                     </Grid>
                 </Grid>
             </div>
         );
-    }
+    };
+
+    /**
+     * Generate a time series data set from the metrics data.
+     *
+     * @returns {Array<Object>} The time series data set generated from the provided data
+     */
+    generateTimeSeriesDataSet = () => {
+        const {globalState, data} = this.props;
+
+        // Aggregating the data by timestamp (time-series charts doesn't need to consider response code)
+        const aggregatedData = [];
+        let lastTimestamp = 0;
+        let aggregatedDatum = null;
+        for (let i = 0; i < data.length; i++) {
+            const datum = data[i];
+            if (datum.timestamp === lastTimestamp) {
+                aggregatedDatum.totalRequestSizeBytes += datum.totalRequestSizeBytes;
+                aggregatedDatum.totalResponseSizeBytes += datum.totalResponseSizeBytes;
+                aggregatedDatum.totalResponseTimeMilliSec += datum.totalResponseTimeMilliSec;
+                aggregatedDatum.requestCount += datum.requestCount;
+            } else {
+                if (aggregatedDatum) {
+                    aggregatedData.push(aggregatedDatum);
+                }
+
+                lastTimestamp = datum.timestamp;
+                aggregatedDatum = {
+                    timestamp: datum.timestamp,
+                    totalRequestSizeBytes: datum.totalRequestSizeBytes,
+                    totalResponseSizeBytes: datum.totalResponseSizeBytes,
+                    totalResponseTimeMilliSec: datum.totalResponseTimeMilliSec,
+                    requestCount: datum.requestCount
+                };
+            }
+        }
+
+        // Preparing a proper time-series data-set with 0 requests points added.
+        const timeSeriesData = [];
+        const addEmptyTimeSeriesPoint = (timestamp) => {
+            timeSeriesData.push({
+                timestamp: timestamp,
+                totalRequestSizeBytes: 0,
+                totalResponseSizeBytes: 0,
+                totalResponseTimeMilliSec: 0,
+                requestCount: 0
+            });
+        };
+        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
+        for (let i = 0; i < aggregatedData.length; i++) {
+            const datum = aggregatedData[i];
+
+            if (i === 0 || timeSeriesData[timeSeriesData.length - 1].timestamp < datum.timestamp - 1000) {
+                addEmptyTimeSeriesPoint(datum.timestamp - 1000);
+            }
+            timeSeriesData.push(datum);
+            if (i === aggregatedData.length - 1 || aggregatedData[i + 1].timestamp > datum.timestamp + 1000) {
+                addEmptyTimeSeriesPoint(datum.timestamp + 1000);
+            }
+        }
+        addEmptyTimeSeriesPoint(QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
+        return timeSeriesData;
+    };
 
 }
 
