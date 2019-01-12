@@ -30,7 +30,11 @@ describe("ColorGenerator", () => {
         }
     };
 
+    const clearPersistedData = () => localStorage.removeItem("colorMap");
+
     describe("constructor()", () => {
+        afterEach(clearPersistedData);
+
         it("should have VICK and Istio keys by default", () => {
             const colorGenerator = new ColorGenerator();
 
@@ -40,6 +44,8 @@ describe("ColorGenerator", () => {
     });
 
     describe("addKeys()", () => {
+        afterEach(clearPersistedData);
+
         const KEY_1 = "key1";
         const KEY_2 = "key2";
         const KEY_3 = "key3";
@@ -92,6 +98,8 @@ describe("ColorGenerator", () => {
             }
         });
 
+        afterEach(clearPersistedData);
+
         it("should return colors different to one another", () => {
             const colorGenerator = new ColorGenerator();
             colorGenerator.addKeys(keyList);
@@ -143,6 +151,8 @@ describe("ColorGenerator", () => {
     });
 
     describe("getColorForPercentage()", () => {
+        afterEach(clearPersistedData);
+
         const globalState = new StateHolder();
         const colorGenerator = new ColorGenerator();
         globalState.set(StateHolder.CONFIG, {
@@ -176,31 +186,6 @@ describe("ColorGenerator", () => {
             expect(colorGenerator.getColorForPercentage(0.7, globalState)).toBe(successColor);
             expect(colorGenerator.getColorForPercentage(0.8, globalState)).toBe(successColor);
             expect(colorGenerator.getColorForPercentage(1, globalState)).toBe(successColor);
-        });
-    });
-
-    describe("regenerateNewColorScheme()", () => {
-        const keyCount = 200;
-        let keyList;
-
-        beforeEach(() => {
-            keyList = [];
-            for (const key of INITIAL_KEYS) {
-                keyList.push(key);
-            }
-            for (let i = 0; i < keyCount; i++) {
-                keyList.push(`key${i}`);
-            }
-        });
-
-        it("should generate colors for all the existing colors", () => {
-            const colorGenerator = new ColorGenerator();
-            colorGenerator.addKeys(keyList);
-            const spy = jest.spyOn(colorGenerator, "generateColors");
-            colorGenerator.regenerateNewColorScheme();
-
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(keyList.length);
         });
     });
 });

@@ -29,7 +29,6 @@ const ColorContext = React.createContext(null);
  * Color Provider to provide the color generator.
  *
  * @param {Object} props Props passed into the color provider
- * @returns {React.Component} Color Provider React Component
  * @constructor
  */
 class ColorProvider extends React.Component {
@@ -37,14 +36,34 @@ class ColorProvider extends React.Component {
     constructor(props) {
         super(props);
 
-        this.colorGenerator = new ColorGenerator();
+        const colorGenerator = new ColorGenerator();
+        this.state = {
+            colorGenerator: colorGenerator
+        };
+        colorGenerator.addListener(this.handleColorChange);
+    }
+
+    handleColorChange = () => {
+        this.state.colorGenerator.removeListener(this.handleColorChange);
+
+        // Adding the new color generator
+        const colorGenerator = new ColorGenerator();
+        this.setState({
+            colorGenerator: colorGenerator
+        });
+        colorGenerator.addListener(this.handleColorChange);
+    };
+
+    componentWillUnmount() {
+        this.state.colorGenerator.removeListener(this.handleColorChange);
     }
 
     render = () => {
         const {children} = this.props;
+        const {colorGenerator} = this.state;
 
         return (
-            <ColorContext.Provider value={this.colorGenerator}>
+            <ColorContext.Provider value={colorGenerator}>
                 {children}
             </ColorContext.Provider>
         );

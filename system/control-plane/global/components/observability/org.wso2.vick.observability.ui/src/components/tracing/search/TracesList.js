@@ -15,17 +15,17 @@
  */
 
 import AccessTime from "@material-ui/icons/AccessTime";
-import Constants from "../../utils/constants";
+import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import TablePagination from "@material-ui/core/TablePagination/TablePagination";
 import Typography from "@material-ui/core/Typography/Typography";
 import moment from "moment";
 import {withRouter} from "react-router-dom";
 import withStyles from "@material-ui/core/styles/withStyles";
-import withColor, {ColorGenerator} from "../common/color";
+import withColor, {ColorGenerator} from "../../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     trace: {
@@ -102,7 +102,7 @@ const styles = (theme) => ({
     }
 });
 
-class SearchResult extends React.Component {
+class TracesList extends React.PureComponent {
 
     constructor(props) {
         super(props);
@@ -129,7 +129,7 @@ class SearchResult extends React.Component {
     /**
      * Load the trace page.
      *
-     * @param {Event} event Event for the click event
+     * @param {MouseEvent} event Event for the click event
      * @param {string} traceId The trace ID of the selected trace
      * @param {string} cellName The name of the cell the microservice belongs to if a microservice was selected
      * @param {string} microservice The microservice name if a microservice was selected
@@ -147,31 +147,66 @@ class SearchResult extends React.Component {
         });
     };
 
+    /**
+     * Get the suitable color for Component.
+     *
+     * @param {Object} component The name of the Component
+     * @returns {string} The suitable color for the component
+     */
+    getColorForComponent = (component) => {
+        const {colorGenerator} = this.props;
+        let colorKey = ColorGenerator.UNKNOWN;
+        if (component.cellName) {
+            if (Constants.Cell.GATEWAY_NAME_PATTERN.test(component.serviceName)) {
+                colorKey = ColorGenerator.VICK;
+            } else {
+                colorKey = component.cellName;
+            }
+        } else if (Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component.serviceName)) {
+            colorKey = ColorGenerator.VICK;
+        } else if (Constants.System.ISTIO_MIXER_NAME_PATTERN.test(component.serviceName)) {
+            colorKey = ColorGenerator.ISTIO;
+        } else if (component.serviceName) {
+            colorKey = component.serviceName;
+        }
+        return colorGenerator.getColor(colorKey);
+    };
+
     render = () => {
-        const {classes, data, colorGenerator} = this.props;
+        const {classes, searchResults} = this.props;
         const {rowsPerPage, page} = this.state;
 
-        const cellNames = [];
-        data.forEach(
-            (result) => result.services.forEach(
-                (service) => {
-                    if (!cellNames.includes(service.cellNameKey)) {
-                        cellNames.push(service.cellNameKey);
-                    }
+        // Merging the span counts and root span information
+        const rootSpans = searchResults.rootSpans.reduce((accumulator, dataItem) => {
+            accumulator[dataItem.traceId] = {...dataItem};
+            return accumulator;
+        }, {});
+        const processedSearchResults = searchResults.spanCounts.reduce((accumulator, dataItem) => {
+            if (accumulator[dataItem.traceId]) {
+                if (!accumulator[dataItem.traceId].services) {
+                    accumulator[dataItem.traceId].services = [];
                 }
-            )
-        );
-        colorGenerator.addKeys(cellNames);
+                accumulator[dataItem.traceId].services.push({...dataItem});
+            }
+            return accumulator;
+        }, rootSpans);
+
+        const searchResultsArray = [];
+        for (const traceId in processedSearchResults) {
+            if (processedSearchResults.hasOwnProperty(traceId)) {
+                searchResultsArray.push(processedSearchResults[traceId]);
+            }
+        }
 
         return (
-            data.length > 0
+            searchResultsArray.length > 0
                 ? (
                     <React.Fragment>
                         <Typography variant="h6" color="inherit" className={classes.subheading}>
                             Traces
                         </Typography>
                         {
-                            data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            searchResultsArray.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((result) => (
                                     <Paper key={result.traceId} className={classes.trace}
                                         onClick={(event) => this.loadTracePage(event, result.traceId)}>
@@ -227,19 +262,18 @@ class SearchResult extends React.Component {
                                                         return 0;
                                                     })
                                                     .map((service) => (
-                                                        <div key={`${service.cellNameKey}-${service.serviceName}`}
+                                                        <div key={`${service.cellName}-${service.serviceName}`}
                                                             className={classes.serviceTag}
                                                             onClick={
                                                                 (event) => this.loadTracePage(event, result.traceId,
-                                                                    service.cellNameKey, service.serviceName)}>
+                                                                    service.cellName, service.serviceName)}>
                                                             <div className={classes.serviceTagColor} style={{
-                                                                backgroundColor: colorGenerator
-                                                                    .getColor(service.cellNameKey)
+                                                                backgroundColor: this.getColorForComponent(service)
                                                             }}/>
                                                             <div className={classes.serviceTagContent}>
                                                                 <span className={classes.tagCellName}>
-                                                                    {service.cellNameKey
-                                                                        ? `${service.cellNameKey}: `
+                                                                    {service.cellName
+                                                                        ? `${service.cellName}: `
                                                                         : null} </span>
                                                                 <span className={classes.tagServiceName}>
                                                                     {service.serviceName} ({service.count})</span>
@@ -251,16 +285,10 @@ class SearchResult extends React.Component {
                                     </Paper>
                                 ))
                         }
-                        <TablePagination
-                            component="div"
-                            count={data.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            labelRowsPerPage={"Traces Per Page"}
-                            backIconButtonProps={{"aria-label": "Previous Page"}}
-                            nextIconButtonProps={{"aria-label": "Next Page"}}
-                            onChangePage={this.handleChangePage}
-                            onChangeRowsPerPage={this.handleChangeRowsPerPage}/>
+                        <TablePagination component="div" count={searchResultsArray.length} rowsPerPage={rowsPerPage}
+                            backIconButtonProps={{"aria-label": "Previous Page"}} labelRowsPerPage={"Traces Per Page"}
+                            nextIconButtonProps={{"aria-label": "Next Page"}} onChangePage={this.handleChangePage}
+                            onChangeRowsPerPage={this.handleChangeRowsPerPage} page={page}/>
                     </React.Fragment>
                 )
                 : (
@@ -271,25 +299,28 @@ class SearchResult extends React.Component {
 
 }
 
-SearchResult.propTypes = {
+TracesList.propTypes = {
     classes: PropTypes.any.isRequired,
     history: PropTypes.shape({
         push: PropTypes.func.isRequired
     }).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator),
-    data: PropTypes.arrayOf(PropTypes.shape({
-        traceId: PropTypes.string.isRequired,
-        rootCellName: PropTypes.string.isRequired,
-        rootServiceName: PropTypes.string.isRequired,
-        rootOperationName: PropTypes.string.isRequired,
-        rootStartTime: PropTypes.number.isRequired,
-        rootDuration: PropTypes.number.isRequired,
-        services: PropTypes.arrayOf(PropTypes.shape({
-            cellNameKey: PropTypes.string.isRequired,
+    searchResults: PropTypes.shape({
+        rootSpans: PropTypes.arrayOf(PropTypes.shape({
+            traceId: PropTypes.string.isRequired,
+            rootCellName: PropTypes.string.isRequired,
+            rootServiceName: PropTypes.string.isRequired,
+            rootOperationName: PropTypes.string.isRequired,
+            rootStartTime: PropTypes.number.isRequired,
+            rootDuration: PropTypes.number.isRequired
+        })).isRequired,
+        spanCounts: PropTypes.arrayOf(PropTypes.shape({
+            traceId: PropTypes.string.isRequired,
+            cellName: PropTypes.string.isRequired,
             serviceName: PropTypes.string.isRequired,
             count: PropTypes.number.isRequired
         })).isRequired
-    })).isRequired
+    }).isRequired
 };
 
-export default withStyles(styles)(withRouter(withColor(SearchResult)));
+export default withStyles(styles)(withRouter(withColor(TracesList)));

@@ -121,15 +121,18 @@ class SequenceDiagram extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const collectionsMessage = this.mermaidDivRef.current.getElementsByClassName("messageText");
-        const collectionsActor = this.mermaidDivRef.current.getElementsByClassName("actor");
         if (this.state.config !== prevState.config) {
+            const collectionsMessage = this.mermaidDivRef.current.getElementsByClassName("messageText");
             this.mermaidDivRef.current.removeAttribute("data-processed");
             mermaid.init(this.mermaidDivRef.current);
 
             if (!this.state.clicked) {
                 this.setMessageLinkStyle(collectionsMessage);
             }
+        }
+
+        if (this.state.config !== prevState.config || this.props.colorGenerator !== prevProps.colorGenerator) {
+            const collectionsActor = this.mermaidDivRef.current.getElementsByClassName("actor");
             this.addActorColor(this.state.clicked, collectionsActor);
         }
     }

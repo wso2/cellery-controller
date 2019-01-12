@@ -30,6 +30,7 @@ class AuthUtils {
      * @param {StateHolder} globalState The global state provided to the current component
      */
     static signIn = (username, globalState) => {
+        // TODO: Implement User Login
         if (username) {
             localStorage.setItem(StateHolder.USER, username);
             globalState.set(StateHolder.USER, username);
@@ -45,6 +46,7 @@ class AuthUtils {
      * @param {StateHolder} globalState The global state provided to the current component
      */
     static signOut = (globalState) => {
+        // TODO: Implement User Logout
         localStorage.removeItem(StateHolder.USER);
         globalState.unset(StateHolder.USER);
     };

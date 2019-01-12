@@ -20,10 +20,12 @@
 
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
 import Grid from "@material-ui/core/Grid/Grid";
-import PropTypes from "prop-types";
+import HttpUtils from "../../../utils/api/httpUtils";
 import React from "react";
 import StateHolder from "./stateHolder";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 // Creating a context that can be accessed
 const StateContext = React.createContext({});
@@ -46,7 +48,9 @@ class UnStyledStateProvider extends React.Component {
         };
 
         this.mounted = false;
-        this.stateHolder = new StateHolder();
+
+        const queryParams = HttpUtils.parseQueryParams(props.location.search);
+        this.stateHolder = new StateHolder(queryParams);
     }
 
     componentDidMount = () => {
@@ -101,10 +105,13 @@ class UnStyledStateProvider extends React.Component {
 
 UnStyledStateProvider.propTypes = {
     children: PropTypes.any.isRequired,
-    classes: PropTypes.any.isRequired
+    classes: PropTypes.any.isRequired,
+    location: PropTypes.shape({
+        search: PropTypes.string.isRequired
+    }).isRequired
 };
 
-const StateProvider = withStyles(styles, {withTheme: true})(UnStyledStateProvider);
+const StateProvider = withStyles(styles, {withTheme: true})(withRouter(UnStyledStateProvider));
 
 /**
  * Higher Order Component for accessing the State Holder.

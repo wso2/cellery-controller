@@ -134,17 +134,9 @@ class ServiceDependencyView extends React.Component {
             },
             globalState
         ).then((data) => {
-            const nodes = [];
-            data.nodes.forEach((node) => {
-                nodes.push(
-                    {
-                        id: node.id,
-                        color: self.props.colorGenerator.getColor(node.id.split(":")[0])
-                    });
-            });
             self.setState({
                 data: {
-                    nodes: nodes,
+                    nodes: data.nodes,
                     links: data.edges
                 }
             });
@@ -163,6 +155,15 @@ class ServiceDependencyView extends React.Component {
         });
     };
 
+    viewGenerator = (nodeProps) => {
+        const color = this.props.colorGenerator.getColor(nodeProps.id.split(":")[0]);
+        return (
+            <svg x="0px" y="0px" width="50px" height="50px" viewBox="0 0 240 240">
+                <circle cx="120" cy="120" r={120} fill={color}/>
+            </svg>
+        );
+    };
+
     onClickCell = (nodeId) => {
         // TODO: redirect to another cell view.
     };
@@ -178,7 +179,13 @@ class ServiceDependencyView extends React.Component {
                     <DependencyGraph
                         id="service-dependency-graph"
                         data={this.state.data}
-                        config={graphConfig}
+                        config={{
+                            ...graphConfig,
+                            node: {
+                                ...graphConfig.node,
+                                viewGenerator: this.viewGenerator
+                            }
+                        }}
                         onClickNode={this.onClickCell}
                     />
                 </ErrorBoundary>
