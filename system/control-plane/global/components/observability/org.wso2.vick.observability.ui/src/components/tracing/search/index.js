@@ -584,6 +584,7 @@ class TraceSearch extends React.Component {
 TraceSearch.propTypes = {
     classes: PropTypes.object.isRequired,
     history: PropTypes.shape({
+        replace: PropTypes.func.isRequired,
         push: PropTypes.func.isRequired
     }).isRequired,
     location: PropTypes.shape({

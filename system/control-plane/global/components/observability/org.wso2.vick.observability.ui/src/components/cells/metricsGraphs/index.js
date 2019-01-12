@@ -24,7 +24,7 @@ import TimeSeriesGraph from "./timeSeriesGraph";
 import Typography from "@material-ui/core/Typography";
 import {withStyles} from "@material-ui/core/styles";
 import {
-    ChartLabel, DiscreteColorLegend, Hint, HorizontalBarSeries, HorizontalGridLines, RadialChart,VerticalGridLines,
+    ChartLabel, DiscreteColorLegend, Hint, HorizontalBarSeries, HorizontalGridLines, RadialChart, VerticalGridLines,
     XAxis, XYPlot, YAxis, makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../../common/color";

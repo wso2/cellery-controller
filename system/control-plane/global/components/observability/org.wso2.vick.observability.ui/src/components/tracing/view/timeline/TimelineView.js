@@ -607,7 +607,7 @@ TimelineView.propTypes = {
     selectedMicroservice: PropTypes.shape({
         cellName: PropTypes.string,
         serviceName: PropTypes.string.isRequired
-    }).isRequired,
+    }),
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 

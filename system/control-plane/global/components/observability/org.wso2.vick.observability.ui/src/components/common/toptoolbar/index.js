@@ -130,7 +130,8 @@ class TopToolbar extends React.Component {
             <div className={classes.container}>
                 <Toolbar disableGutters={true}>
                     {
-                        location.state && location.state.hideBackButton
+                        (location.state && location.state.hideBackButton) || history.length <= 1
+                            || location.pathname === "/"
                             ? null
                             : (
                                 <IconButton className={classes.menuButton} color="inherit" aria-label="Back"

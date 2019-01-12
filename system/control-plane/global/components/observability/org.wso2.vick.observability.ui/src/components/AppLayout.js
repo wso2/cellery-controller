@@ -20,6 +20,7 @@
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import AppBar from "@material-ui/core/AppBar";
 import AuthUtils from "../utils/api/authUtils";
+import Avatar from "@material-ui/core/Avatar/Avatar";
 import CellsIcon from "../icons/CellsIcon";
 import CheckCircle from "@material-ui/icons/CheckCircle";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
@@ -36,6 +37,7 @@ import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import FileCopy from "@material-ui/icons/FileCopyOutlined";
 import FormatColorFillOutlined from "@material-ui/icons/FormatColorFillOutlined";
+import HttpUtils from "../utils/api/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import Info from "@material-ui/icons/Info";
 import InputBase from "@material-ui/core/InputBase";
@@ -53,6 +55,7 @@ import OverviewIcon from "../icons/OverviewIcon";
 import Paper from "@material-ui/core/Paper/Paper";
 import PodIcon from "../icons/PodIcon";
 import Popover from "@material-ui/core/Popover";
+import QueryUtils from "../utils/common/queryUtils";
 import React from "react";
 import Settings from "@material-ui/icons/SettingsOutlined";
 import ShareIcon from "../icons/ShareIcon";
@@ -63,6 +66,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import Warning from "@material-ui/icons/Warning";
 import classNames from "classnames";
+import {deepPurple} from "@material-ui/core/colors";
 import withColor from "./common/color";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core/styles";
@@ -203,6 +207,15 @@ const styles = (theme) => ({
     iconButton: {
         marginLeft: theme.spacing.unit,
         marginRight: theme.spacing.unit
+    },
+    avatarContainer: {
+        marginBottom: theme.spacing.unit * 2,
+        pointerEvents: "none"
+    },
+    userAvatar: {
+        marginRight: theme.spacing.unit * 1.5,
+        color: "#fff",
+        backgroundColor: deepPurple[500]
     }
 });
 
@@ -348,11 +361,23 @@ class AppLayout extends React.Component {
         this.props.colorGenerator.resetColors();
     };
 
+    getShareableLink = () => {
+        const {globalState, location} = this.props;
+
+        const globalFilter = globalState.get(StateHolder.GLOBAL_FILTER);
+        const queryParams = HttpUtils.parseQueryParams(location.search);
+        queryParams.globalFilterStartTime = QueryUtils.parseTime(globalFilter.startTime).valueOf();
+        queryParams.globalFilterEndTime = QueryUtils.parseTime(globalFilter.endTime).valueOf();
+
+        return window.location.origin + location.pathname + HttpUtils.generateQueryParamString(queryParams);
+    };
+
     render = () => {
         const {classes, children, theme, globalState} = this.props;
         const {open, userInfo, loadingState, selectedIndex, popoverEl, showCopyText} = this.state;
         const userInfoOpen = Boolean(userInfo);
         const popoverOpen = Boolean(popoverEl);
+        const loggedInUser = globalState.get(StateHolder.USER);
 
         return (
             <div className={classes.root}>
@@ -373,10 +398,10 @@ class AppLayout extends React.Component {
                             Cellery Observability
                         </Typography>
                         {
-                            globalState.get(StateHolder.USER)
+                            loggedInUser
                                 ? (
                                     <div>
-                                        <Tooltip title="Change cell colors" placement="bottom">
+                                        <Tooltip title="Change color scheme" placement="bottom">
                                             <IconButton onClick={this.resetColorScheme} color="inherit">
                                                 <FormatColorFillOutlined/>
                                             </IconButton>
@@ -405,9 +430,8 @@ class AppLayout extends React.Component {
                                                     className={classes.typography}>Share Dashboard</Typography>
                                                 <Divider/>
                                                 <Paper className={classes.copyContainer} elevation={1}>
-                                                    {/* TODO: replace InputBase value to dashboard URL*/}
                                                     <InputBase className={classes.copyInput}
-                                                        placeholder="Sharable Link" value="http://cellery-dashboard/"
+                                                        placeholder="Sharable Link" value={this.getShareableLink()}
                                                         inputRef={this.popoverInputRef}/>
                                                     <Tooltip title="Copied!" disableFocusListener={false}
                                                         disableHoverListener={false} placement="top"
@@ -437,16 +461,15 @@ class AppLayout extends React.Component {
                                             }}
                                             open={userInfoOpen}
                                             onClose={this.handleUserInfoMenuClose}>
-                                            <MenuItem onClick={this.handleUserInfoMenuClose}>
-                                                Profile - {globalState.get(StateHolder.USER)}
+                                            <MenuItem onClick={this.handleUserInfoMenuClose}
+                                                className={classes.avatarContainer}>
+                                                <Avatar className={classes.userAvatar}>
+                                                    {loggedInUser.username.substr(0, 1).toUpperCase()}
+                                                </Avatar>
+                                                {loggedInUser.username}
                                             </MenuItem>
-                                            <MenuItem onClick={this.handleUserInfoMenuClose}>
-                                                My account
-                                            </MenuItem>
-                                            <MenuItem onClick={() => {
-                                                AuthUtils.signOut(globalState);
-                                            }}>
-                                                Logout
+                                            <MenuItem onClick={() => AuthUtils.signOut(globalState)}>
+                                                Sign Out
                                             </MenuItem>
                                         </Menu>
                                     </div>

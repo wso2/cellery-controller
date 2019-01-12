@@ -29,7 +29,7 @@ import {withStyles} from "@material-ui/core";
 import {
     Crosshair, DiscreteColorLegend, Highlight, HorizontalGridLines, LineMarkSeries, VerticalGridLines, XAxis, XYPlot,
     YAxis, makeWidthFlexible
-} from "react-vis/es";
+} from "react-vis";
 import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({

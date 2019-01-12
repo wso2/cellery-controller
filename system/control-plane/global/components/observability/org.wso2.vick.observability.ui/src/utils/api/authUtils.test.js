@@ -20,6 +20,10 @@ import AuthUtils from "./authUtils";
 import {StateHolder} from "../../components/common/state";
 
 describe("AuthUtils", () => {
+    const username = "User1";
+    const loggedInUser = {
+        username: username
+    };
     afterEach(() => {
         localStorage.removeItem(StateHolder.USER);
     });
@@ -28,11 +32,11 @@ describe("AuthUtils", () => {
         it("should set the username provided", () => {
             const stateHolder = new StateHolder();
             const spy = jest.spyOn(stateHolder, "set");
-            AuthUtils.signIn("user1", stateHolder);
+            AuthUtils.signIn(username, stateHolder);
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(StateHolder.USER, "user1");
-            expect(localStorage.getItem(StateHolder.USER)).toBe("user1");
+            expect(spy).toHaveBeenCalledWith(StateHolder.USER, loggedInUser);
+            expect(localStorage.getItem(StateHolder.USER)).toBe(JSON.stringify(loggedInUser));
         });
 
         it("should not set a username and should throw and error", () => {
@@ -51,9 +55,9 @@ describe("AuthUtils", () => {
     describe("signOut()", () => {
         it("should unset the user in the state", () => {
             const stateHolder = new StateHolder();
-            localStorage.setItem(StateHolder.USER, "user1");
+            localStorage.setItem(StateHolder.USER, JSON.stringify(loggedInUser));
             stateHolder.state[StateHolder.USER] = {
-                value: "user1",
+                value: {...loggedInUser},
                 listeners: []
             };
             const spy = jest.spyOn(stateHolder, "unset");
@@ -66,9 +70,9 @@ describe("AuthUtils", () => {
     });
 
     describe("getAuthenticatedUser()", () => {
-        localStorage.setItem(StateHolder.USER, "user1");
+        localStorage.setItem(StateHolder.USER, JSON.stringify(loggedInUser));
         const user = AuthUtils.getAuthenticatedUser();
 
-        expect(user).toBe("user1");
+        expect(user).toEqual({...user});
     });
 });

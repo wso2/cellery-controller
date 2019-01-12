@@ -168,7 +168,7 @@ Timeline.propTypes = {
     selectedMicroservice: PropTypes.shape({
         cellName: PropTypes.string.isRequired,
         serviceName: PropTypes.string.isRequired
-    }).isRequired
+    })
 };
 
 export default withStyles(styles)(Timeline);

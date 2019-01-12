@@ -238,7 +238,7 @@ View.propTypes = {
                 cellName: PropTypes.string.isRequired,
                 serviceName: PropTypes.string.isRequired
             }).isRequired
-        }).isRequired
+        })
     }).isRequired
 };
 
