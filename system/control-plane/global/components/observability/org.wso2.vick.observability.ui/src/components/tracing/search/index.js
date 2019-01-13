@@ -312,6 +312,7 @@ class TraceSearch extends React.Component {
 
         // Updating the URL to ensure that the user can come back to this page
         const searchString = HttpUtils.generateQueryParamString({
+            ...HttpUtils.parseQueryParams(location.search),
             ...filter,
             tags: JSON.stringify(filter.tags)
         });

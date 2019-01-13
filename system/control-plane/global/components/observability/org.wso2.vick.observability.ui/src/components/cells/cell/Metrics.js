@@ -52,8 +52,12 @@ class Metrics extends React.Component {
         super(props);
 
         this.state = {
-            selectedType: Constants.Dashboard.INBOUND,
-            selectedCell: Constants.Dashboard.ALL_VALUE,
+            selectedType: props.globalFilterOverrides && props.globalFilterOverrides.selectedType
+                ? props.globalFilterOverrides.selectedType
+                : Constants.Dashboard.INBOUND,
+            selectedCell: props.globalFilterOverrides && props.globalFilterOverrides.selectedCell
+                ? props.globalFilterOverrides.selectedCell
+                : Constants.Dashboard.ALL_VALUE,
             cells: [],
             cellData: [],
             isLoading: false
@@ -84,12 +88,21 @@ class Metrics extends React.Component {
     };
 
     getFilterChangeHandler = (name) => (event) => {
-        const {globalState} = this.props;
+        const {globalState, onFilterUpdate} = this.props;
+        const {selectedType, selectedCell} = this.state;
 
         const newValue = event.target.value;
         this.setState({
             [name]: newValue
         });
+
+        if (onFilterUpdate) {
+            onFilterUpdate({
+                selectedType: selectedType,
+                selectedCell: selectedCell,
+                [name]: newValue
+            });
+        }
 
         this.update(
             true,
@@ -274,7 +287,12 @@ class Metrics extends React.Component {
 Metrics.propTypes = {
     classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
-    cell: PropTypes.string.isRequired
+    cell: PropTypes.string.isRequired,
+    onFilterUpdate: PropTypes.func.isRequired,
+    globalFilterOverrides: PropTypes.shape({
+        selectedType: PropTypes.string,
+        selectedCell: PropTypes.string
+    })
 };
 
 export default withStyles(styles)(withGlobalState(Metrics));

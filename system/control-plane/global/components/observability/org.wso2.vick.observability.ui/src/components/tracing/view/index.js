@@ -164,6 +164,7 @@ class View extends React.Component {
 
         // Updating the Browser URL
         const queryParamsString = HttpUtils.generateQueryParamString({
+            ...HttpUtils.parseQueryParams(location.search),
             tab: this.tabs[value]
         });
         history.replace(match.url + queryParamsString, {

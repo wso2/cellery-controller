@@ -27,7 +27,7 @@ import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../../common/color";
 import * as PropTypes from "prop-types";
 
-const styles = (theme) => ({
+const styles = () => ({
     newMessageText: {
         fill: "#4c4cb3 !important",
         cursor: "pointer"
@@ -120,7 +120,7 @@ class SequenceDiagram extends React.Component {
         this.cloneArray();
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.config !== prevState.config) {
             const collectionsMessage = this.mermaidDivRef.current.getElementsByClassName("messageText");
             this.mermaidDivRef.current.removeAttribute("data-processed");
@@ -242,7 +242,7 @@ class SequenceDiagram extends React.Component {
             }, null,
             (span) => {
                 if (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent()) {
-                    data2 += SequenceDiagram.updateTextDatawithReturn(span, parentName);
+                    data2 += SequenceDiagram.updateTextDataWithReturn(span, parentName);
                 }
             },
             (span) => (!span.isFromIstioSystemComponent() && !span.isFromVICKSystemComponent()
@@ -258,12 +258,12 @@ class SequenceDiagram extends React.Component {
     /**
      * Updates the text data, which is used by the mermaid library to generate diagrams, with return drawn.
      *
-     * @param {span} span The span array.
+     * @param {Span} span The span array.
      * @param {String} parentName The parent cell name
      * @return {String} text The updated text
      */
 
-    static updateTextDatawithReturn(span, parentName) {
+    static updateTextDataWithReturn(span, parentName) {
         let text = "";
         if (!span.callingId && parentName === span.cell.name) {
             if (span.parent.serviceName !== span.serviceName) {
@@ -279,15 +279,7 @@ class SequenceDiagram extends React.Component {
      */
     addCells() {
         this.setState({
-            config: this.drawCells()
-        });
-        const cellArray = [];
-        for (let i = 0; i < this.props.spans.length; i++) {
-            if (this.props.spans[i].componentType === "Micro-service") {
-                cellArray.push(this.props.spans[i]);
-            }
-        }
-        this.setState({
+            config: this.drawCells(),
             clicked: false
         });
     }
@@ -343,7 +335,7 @@ class SequenceDiagram extends React.Component {
         let callId = 1;
         const tree = TracingUtils.getTreeRoot(this.props.spans);
         let dataText = "";
-        tree.walk((span, data) => {
+        tree.walk((span) => {
             let parentCellName;
             let childCellName;
             if (span.parent !== null) {

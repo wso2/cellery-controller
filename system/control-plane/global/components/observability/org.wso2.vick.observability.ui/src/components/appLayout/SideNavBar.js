@@ -89,16 +89,7 @@ class SideNavBar extends React.Component {
     constructor(props) {
         super(props);
 
-        const pages = ["/", "/cells", "/tracing", "/system-metrics"];
-        let selectedIndex = 0;
-        for (let i = 0; i < pages.length; i++) {
-            if (props.location.pathname.startsWith(pages[i])) {
-                selectedIndex = i;
-            }
-        }
-
         this.state = {
-            selectedIndex: selectedIndex,
             subMenuOpen: false
         };
     }
@@ -110,13 +101,10 @@ class SideNavBar extends React.Component {
         }
     };
 
-    handleNavItemClick = (nav, event) => {
+    handleNavItemClick = (path) => {
         const {history} = this.props;
 
-        this.setState({
-            selectedIndex: Number(event.currentTarget.attributes.index.value)
-        });
-        history.push(nav, {
+        history.push(path, {
             hideBackButton: true
         });
     };
@@ -126,8 +114,24 @@ class SideNavBar extends React.Component {
     };
 
     render() {
-        const {classes, theme, isSideNavBarOpen} = this.props;
-        const {selectedIndex, subMenuOpen} = this.state;
+        const {classes, theme, location, isSideNavBarOpen} = this.props;
+        const {subMenuOpen} = this.state;
+
+        const pages = [
+            "/",
+            "/cells",
+            "/tracing",
+            "/system-metrics/control-plane",
+            "/system-metrics/pod-usage",
+            "/system-metrics/node-usage"
+        ];
+        let selectedIndex = 0;
+        for (let i = 0; i < pages.length; i++) {
+            if (location.pathname.startsWith(pages[i])) {
+                selectedIndex = i;
+            }
+        }
+
         return (
             <Drawer variant="permanent" open={isSideNavBarOpen}
                 className={classNames(classes.drawer, {
