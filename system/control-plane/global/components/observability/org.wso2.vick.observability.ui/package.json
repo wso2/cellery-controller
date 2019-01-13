@@ -5,15 +5,16 @@
   "author": "WSO2 Org",
   "license": "Apache-2.0",
   "scripts": {
+    "install": "npm --prefix ./node-server install ./node-server",
     "clean": "rimraf ./build/ && rimraf ./node-server/public/ && rimraf ./coverage/",
-    "start": "react-scripts start",
+    "start": "concurrently --kill-others --names \"config-server,webpack-dev-server\" \"APP_ENV=DEV PORTAL_PORT=4000 node node-server/serve.js\" \"react-scripts start\"",
     "lint": "eslint --color --fix src/",
     "build": "react-scripts build",
     "test": "CI=true react-scripts test --colors --testURL=http://test.vick.com --coverage",
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "@material-ui/core": "^3.8.2",
+    "@material-ui/core": "^3.8.3",
     "@material-ui/icons": "^3.0.2",
     "axios": "^0.18.0",
     "classnames": "^2.2.6",
@@ -22,7 +23,6 @@
     "d3-force": "^2.0.0",
     "d3-shape": "^1.2.2",
     "d3-zoom": "^1.7.3",
-    "eslint-plugin-jest": "^22.0.0",
     "interactjs": "^1.3.4",
     "material-ui-chip-input": "^1.0.0-beta.11",
     "mermaid": "8.0.0",
@@ -41,7 +41,9 @@
     "vis": "^4.21.0"
   },
   "devDependencies": {
-    "rimraf": "^2.6.3"
+    "concurrently": "^4.1.0",
+    "rimraf": "^2.6.3",
+    "eslint-plugin-jest": "^22.1.3"
   },
   "jest": {
     "resetMocks": true,
@@ -52,5 +54,6 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "proxy": "http://localhost:4000"
 }

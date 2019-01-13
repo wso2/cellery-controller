@@ -23,6 +23,7 @@ import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
 import React from "react";
 import StateHolder from "./stateHolder";
+import UnknownError from "../error/UnknownError";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import * as PropTypes from "prop-types";
@@ -82,7 +83,11 @@ class UnStyledStateProvider extends React.Component {
         const {children, classes} = this.props;
         const {isLoading, isConfigAvailable} = this.state;
 
-        const content = (isConfigAvailable ? children : <div>Error</div>);
+        const content = (
+            isConfigAvailable
+                ? children
+                : <UnknownError title={"Failed to Load Cellery Observability Portal Configuration"}/>
+        );
         return (
             <StateContext.Provider value={this.stateHolder}>
                 {
