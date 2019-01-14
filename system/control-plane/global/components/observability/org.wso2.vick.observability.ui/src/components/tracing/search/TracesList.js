@@ -180,10 +180,9 @@ class TracesList extends React.PureComponent {
         let colorKey = ColorGenerator.UNKNOWN;
         if (component.cellName) {
             colorKey = component.cellName;
-        } else if (Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component.serviceName)) {
-            colorKey = ColorGenerator.VICK;
-        } else if (Constants.System.ISTIO_MIXER_NAME_PATTERN.test(component.serviceName)) {
-            colorKey = ColorGenerator.ISTIO;
+        } else if (Constants.System.GLOBAL_GATEWAY_NAME_PATTERN.test(component.serviceName)
+            || Constants.System.ISTIO_MIXER_NAME_PATTERN.test(component.serviceName)) {
+            colorKey = ColorGenerator.SYSTEM;
         } else if (component.serviceName) {
             colorKey = component.serviceName;
         }

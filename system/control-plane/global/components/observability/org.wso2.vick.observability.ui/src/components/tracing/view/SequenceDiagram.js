@@ -167,7 +167,7 @@ class SequenceDiagram extends React.Component {
         if (serviceClicked) {
             cellName = this.state.cellClicked;
             if (cellName === SequenceDiagram.GLOBAL) {
-                color = colorGenerator.getColor(ColorGenerator.VICK);
+                color = colorGenerator.getColor(ColorGenerator.SYSTEM);
             } else {
                 color = colorGenerator.getColor(SequenceDiagram.addDash(cellName));
             }
@@ -185,7 +185,7 @@ class SequenceDiagram extends React.Component {
                 if (elementArray[i].firstElementChild !== null) {
                     const cellName = SequenceDiagram.addDash(elementArray[i].firstElementChild.innerHTML);
                     if (cellName === SequenceDiagram.addDash(SequenceDiagram.GLOBAL_GATEWAY)) {
-                        color = colorGenerator.getColor(ColorGenerator.VICK);
+                        color = colorGenerator.getColor(ColorGenerator.SYSTEM);
                     } else {
                         color = colorGenerator.getColor(cellName);
                     }

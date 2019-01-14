@@ -104,10 +104,8 @@ class DependencyDiagram extends React.Component {
                 // Finding the proper color for this item
                 let colorKey = span.cell ? span.cell.name : null;
                 if (!colorKey) {
-                    if (span.componentType === Constants.ComponentType.VICK) {
-                        colorKey = ColorGenerator.VICK;
-                    } else if (span.componentType === Constants.ComponentType.ISTIO) {
-                        colorKey = ColorGenerator.ISTIO;
+                    if (span.componentType === Constants.CelleryType.SYSTEM) {
+                        colorKey = ColorGenerator.SYSTEM;
                     } else {
                         colorKey = span.componentType;
                     }

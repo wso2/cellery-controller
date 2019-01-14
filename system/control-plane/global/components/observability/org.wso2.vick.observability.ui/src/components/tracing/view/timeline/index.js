@@ -47,9 +47,8 @@ class Timeline extends React.PureComponent {
 
         this.state = {
             selectedServiceTypes: [
-                Constants.ComponentType.COMPONENT,
-                Constants.ComponentType.VICK,
-                Constants.ComponentType.ISTIO
+                Constants.CelleryType.COMPONENT,
+                Constants.CelleryType.SYSTEM
             ],
             filteredSpans: []
         };
@@ -109,10 +108,10 @@ class Timeline extends React.PureComponent {
 
         // Finding the service types to be shown in the filter
         const serviceTypes = [];
-        for (const filterName in Constants.ComponentType) {
-            if (Constants.ComponentType.hasOwnProperty(filterName)) {
-                const serviceType = Constants.ComponentType[filterName];
-                if (serviceType !== Constants.ComponentType.COMPONENT) {
+        for (const filterName in Constants.CelleryType) {
+            if (Constants.CelleryType.hasOwnProperty(filterName)) {
+                const serviceType = Constants.CelleryType[filterName];
+                if (serviceType !== Constants.CelleryType.COMPONENT) {
                     serviceTypes.push(serviceType);
                 }
             }
@@ -131,7 +130,7 @@ class Timeline extends React.PureComponent {
                                 {
                                     serviceTypes.map((serviceType) => {
                                         const checked = this.state.selectedServiceTypes
-                                            .filter((type) => type !== Constants.ComponentType.COMPONENT)
+                                            .filter((type) => type !== Constants.CelleryType.COMPONENT)
                                             .indexOf(serviceType) > -1;
                                         return (
                                             <MenuItem key={serviceType} value={serviceType}>
@@ -141,11 +140,11 @@ class Timeline extends React.PureComponent {
                                         );
                                     })
                                 }
-                                <MenuItem key={Constants.ComponentType.COMPONENT}
-                                    value={Constants.ComponentType.COMPONENT}
+                                <MenuItem key={Constants.CelleryType.COMPONENT}
+                                    value={Constants.CelleryType.COMPONENT}
                                     className={classes.componentTypeMenuItem}>
                                     <Checkbox checked={true}/>
-                                    <ListItemText primary={Constants.ComponentType.COMPONENT}/>
+                                    <ListItemText primary={Constants.CelleryType.COMPONENT}/>
                                 </MenuItem>
                             </Select>
                         </FormControl>

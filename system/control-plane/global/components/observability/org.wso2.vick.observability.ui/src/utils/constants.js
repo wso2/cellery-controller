@@ -44,10 +44,9 @@ const Constants = {
         GLOBAL_GATEWAY_NAME_PATTERN: /^global-gateway$/,
         SIDECAR_AUTH_FILTER_OPERATION_NAME_PATTERN: /^async\sext_authz\segress$/
     },
-    ComponentType: {
-        COMPONENT: "Component",
-        VICK: "VICK",
-        ISTIO: "Istio"
+    CelleryType: {
+        SYSTEM: "System",
+        COMPONENT: "Component"
     },
     Status: {
         Success: "Success",
