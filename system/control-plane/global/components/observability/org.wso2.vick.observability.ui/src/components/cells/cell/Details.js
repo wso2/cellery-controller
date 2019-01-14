@@ -18,6 +18,7 @@ import CellDependencyView from "./CellDependencyView";
 import ColorGenerator from "../../common/color/colorGenerator";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../../utils/api/httpUtils";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
@@ -32,23 +33,13 @@ import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
 
-const styles = (theme) => ({
+const styles = () => ({
     table: {
         width: "20%",
         marginTop: 25
     },
     tableCell: {
         borderBottom: "none"
-    },
-    dependencies: {
-        marginTop: theme.spacing.unit * 3
-    },
-    diagram: {
-        padding: theme.spacing.unit * 3
-    },
-    subtitle: {
-        fontWeight: 400,
-        fontSize: "1rem"
     }
 });
 
@@ -58,6 +49,7 @@ class Details extends React.Component {
         super(props);
 
         this.state = {
+            isDataAvailable: false,
             health: -1,
             dependencyGraphData: [],
             isLoading: false
@@ -66,24 +58,12 @@ class Details extends React.Component {
 
     componentDidMount = () => {
         const {globalState} = this.props;
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
 
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
@@ -98,6 +78,9 @@ class Details extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -121,15 +104,21 @@ class Details extends React.Component {
             });
 
             self.setState({
-                health: 1 - (aggregatedData.count === 0 ? aggregatedData.errorsCount / aggregatedData.count : 0),
-                dependencyGraphData: []
+                health: 1 - (aggregatedData.total === 0 ? aggregatedData.errorsCount / aggregatedData.total : 0),
+                isDataAvailable: aggregatedData.total > 0
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load cell information",
                     NotificationUtils.Levels.ERROR,
@@ -141,38 +130,40 @@ class Details extends React.Component {
 
     render = () => {
         const {classes, cell} = this.props;
-        const {health, isLoading} = this.state;
+        const {health, isLoading, isDataAvailable} = this.state;
 
+        let view;
+        if (isDataAvailable) {
+            view = (
+                <Table className={classes.table}>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className={classes.tableCell}>
+                                <Typography color="textSecondary">
+                                    Health
+                                </Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <HealthIndicator value={health}/>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            );
+        } else {
+            view = (
+                <NotFound title={"Cell Not Found"} description={`The "${cell}" cell not found. This is possibly `
+                    + "because no requests had been received/sent by this cell in the selected time period"}/>
+            );
+        }
         return (
             <React.Fragment>
+                {isLoading ? null : view}
                 {
-                    isLoading
-                        ? null
-                        : (
-                            <Table className={classes.table}>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell className={classes.tableCell}>
-                                            <Typography color="textSecondary">
-                                                Health
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell className={classes.tableCell}>
-                                            <HealthIndicator value={health}/>
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        )
+                    isDataAvailable
+                        ? <CellDependencyView cell={cell}/>
+                        : null
                 }
-                <div className={classes.dependencies}>
-                    <Typography color="textSecondary" className={classes.subtitle}>
-                        Dependencies
-                    </Typography>
-                    <div className={classes.diagram}>
-                        <CellDependencyView cell={cell}/>
-                    </div>
-                </div>
             </React.Fragment>
         );
     }

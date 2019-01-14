@@ -19,12 +19,12 @@ import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
 import Metrics from "./common/Metrics";
 import Paper from "@material-ui/core/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import Select from "react-select";
 import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
 import withColor, {ColorGenerator} from "../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {

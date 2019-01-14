@@ -19,8 +19,8 @@
 /* eslint react/prefer-stateless-function: ["off"] */
 
 import ColorGenerator from "./colorGenerator";
-import PropTypes from "prop-types";
 import React from "react";
+import * as PropTypes from "prop-types";
 
 // Creating a context that can be accessed
 const ColorContext = React.createContext(null);

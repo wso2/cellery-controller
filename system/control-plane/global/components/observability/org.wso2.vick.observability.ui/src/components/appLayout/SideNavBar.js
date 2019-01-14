@@ -269,7 +269,9 @@ class SideNavBar extends React.Component {
 
 SideNavBar.propTypes = {
     classes: PropTypes.object.isRequired,
-    history: PropTypes.any.isRequired,
+    history: PropTypes.shape({
+        push: PropTypes.func.isRequired
+    }).isRequired,
     location: PropTypes.shape({
         pathname: PropTypes.string.isRequired
     }),

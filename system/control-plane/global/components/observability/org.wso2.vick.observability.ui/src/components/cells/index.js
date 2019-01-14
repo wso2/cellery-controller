@@ -29,7 +29,7 @@ const Cells = ({match}) => (
         <Route exact path={`${match.path}/`} component={CellList}/>
         <Route exact path={`${match.path}/:cellName`} component={Cell}/>
         <Route exact path={`${match.path}/:cellName/components/:componentName`} component={Component}/>
-        <Route path={`${match.url}/*`} component={NotFound}/>
+        <Route path={`${match.url}/*`} render={(props) => <NotFound {...props} showNavigationButtons={true}/>}/>
     </Switch>
 );
 

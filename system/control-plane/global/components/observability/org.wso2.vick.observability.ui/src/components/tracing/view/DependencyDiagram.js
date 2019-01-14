@@ -24,13 +24,13 @@ import FiberManualRecord from "@material-ui/icons/FiberManualRecord";
 import {Graph} from "react-d3-graph";
 import Paper from "@material-ui/core/Paper";
 import Popper from "@material-ui/core/Popper";
-import PropTypes from "prop-types";
 import React from "react";
 import Span from "../../../utils/tracing/span";
 import TracingUtils from "../../../utils/tracing/tracingUtils";
 import Typography from "@material-ui/core/Typography";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     graph: {

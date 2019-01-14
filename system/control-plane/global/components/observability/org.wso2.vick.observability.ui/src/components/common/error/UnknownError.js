@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
+import ArrowBack from "@material-ui/icons/ArrowBack";
+import Button from "@material-ui/core/Button/Button";
 import ErrorOutline from "@material-ui/icons/ErrorOutline";
+import HomeOutlined from "@material-ui/icons/HomeOutlined";
 import React from "react";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     unknownErrorContainer: {
-        zIndex: -1,
-        position: "absolute",
+        position: "relative",
         top: 0,
         left: 0,
         height: "100%",
@@ -47,7 +50,17 @@ const styles = (theme) => ({
     unknownErrorDescription: {
         fontSize: "1em",
         fontWeight: 300,
-        color: "#808080"
+        color: "#808080",
+        maxWidth: "50vw"
+    },
+    navigationButtonsContainer: {
+        margin: theme.spacing.unit * 3
+    },
+    navigationButton: {
+        margin: theme.spacing.unit
+    },
+    navigationButtonIcon: {
+        marginRight: theme.spacing.unit
     }
 });
 
@@ -67,14 +80,37 @@ const UnknownError = (props) => (
                     )
                     : null
             }
+            {
+                props.showNavigationButtons
+                    ? (
+                        <div className={props.classes.navigationButtonsContainer}>
+                            <Button variant={"outlined"} size={"small"} className={props.classes.navigationButton}
+                                onClick={() => props.history.goBack()}>
+                                <ArrowBack className={props.classes.navigationButtonIcon}/>
+                                Go Back
+                            </Button>
+                            <Button variant={"outlined"} size={"small"} className={props.classes.navigationButton}
+                                onClick={() => props.history.push("/")}>
+                                <HomeOutlined className={props.classes.navigationButtonIcon}/>
+                                Home
+                            </Button>
+                        </div>
+                    )
+                    : null
+            }
         </div>
     </div>
 );
 
 UnknownError.propTypes = {
     classes: PropTypes.object.isRequired,
+    history: PropTypes.shape({
+        goBack: PropTypes.func.isRequired,
+        push: PropTypes.func.isRequired
+    }),
     title: PropTypes.string,
-    description: PropTypes.string
+    description: PropTypes.string,
+    showNavigationButtons: PropTypes.bool
 };
 
-export default withStyles(styles, {withTheme: true})(UnknownError);
+export default withStyles(styles, {withTheme: true})(withRouter(UnknownError));

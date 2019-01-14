@@ -74,9 +74,6 @@ class View extends React.Component {
     }
 
     componentDidMount = () => {
-        const {globalState} = this.props;
-
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.loadTrace();
     };
 
@@ -84,17 +81,6 @@ class View extends React.Component {
         if (this.traceViewRef.current && this.traceViewRef.current.draw) {
             this.traceViewRef.current.draw();
         }
-    };
-
-    componentWillUnmount() {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    }
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     loadTrace = () => {
@@ -107,6 +93,9 @@ class View extends React.Component {
             spans: []
         });
         NotificationUtils.showLoadingOverlay("Loading trace", globalState);
+        self.setState({
+            isLoading: true
+        });
         HttpUtils.callObservabilityAPI(
             {
                 url: `/traces/${traceId}`,
@@ -129,24 +118,32 @@ class View extends React.Component {
                 tags: dataItem[11]
             }));
 
-            try {
-                const rootSpan = TracingUtils.buildTree(spans);
-                TracingUtils.labelSpanTree(rootSpan);
+            if (spans.length > 0) {
+                try {
+                    const rootSpan = TracingUtils.buildTree(spans);
+                    TracingUtils.labelSpanTree(rootSpan);
 
-                self.setState({
-                    traceTree: rootSpan,
-                    spans: TracingUtils.getOrderedList(rootSpan)
-                });
-            } catch (e) {
-                NotificationUtils.showNotification(
-                    "Unable to Render Invalid Trace", NotificationUtils.Levels.ERROR, globalState);
-                self.setState({
-                    errorMessage: e.message
-                });
+                    self.setState({
+                        traceTree: rootSpan,
+                        spans: TracingUtils.getOrderedList(rootSpan)
+                    });
+                } catch (e) {
+                    NotificationUtils.showNotification(
+                        "Unable to Render Invalid Trace", NotificationUtils.Levels.ERROR, globalState);
+                    self.setState({
+                        errorMessage: e.message
+                    });
+                }
             }
             NotificationUtils.hideLoadingOverlay(globalState);
+            self.setState({
+                isLoading: false
+            });
         }).catch(() => {
             NotificationUtils.hideLoadingOverlay(globalState);
+            self.setState({
+                isLoading: false
+            });
             NotificationUtils.showNotification(
                 `Failed to fetch Trace with ID ${traceId}`,
                 NotificationUtils.Levels.ERROR,
@@ -185,6 +182,21 @@ class View extends React.Component {
         let view;
         if (isLoading || (spans && spans.length)) {
             view = (
+                <ErrorBoundary title={"Unable to render Invalid Trace"}>
+                    <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
+                        selectedComponent={selectedComponent}/>
+                </ErrorBoundary>
+            );
+        } else if (errorMessage) {
+            view = <UnknownError title={"Unable to Render Trace"} description={errorMessage}/>;
+        } else {
+            view = <NotFound title={"Unable to find Trace"} description={`Trace with ID "${traceId}" Not Found`}/>;
+        }
+
+        return (
+            <React.Fragment>
+                <TopToolbar title={(traceTree ? traceTree.serviceName : "Distributed Tracing")}
+                    subTitle={`${traceTree ? traceTree.operationName : ""}`}/>
                 <Paper className={classes.container}>
                     <Tabs value={selectedTabIndex} indicatorColor="primary"
                         onChange={this.handleTabChange} className={classes.tabs}>
@@ -192,29 +204,8 @@ class View extends React.Component {
                         <Tab label="Sequence Diagram"/>
                         <Tab label="Dependency Diagram"/>
                     </Tabs>
-                    {
-                        isLoading
-                            ? null
-                            : (
-                                <ErrorBoundary title={"Unable to render Invalid Trace"}>
-                                    <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                        selectedComponent={selectedComponent}/>
-                                </ErrorBoundary>
-                            )
-                    }
+                    {isLoading ? null : view}
                 </Paper>
-            );
-        } else if (errorMessage) {
-            view = <UnknownError title={"Unable to Render Trace"} description={errorMessage}/>;
-        } else {
-            view = <NotFound title={`Trace with ID "${traceId}" Not Found`}/>;
-        }
-
-        return (
-            <React.Fragment>
-                <TopToolbar title={(traceTree ? traceTree.serviceName : " ") }
-                    subTitle={` ${traceTree ? traceTree.operationName : " "}`}/>
-                {view}
             </React.Fragment>
         );
     };
@@ -238,7 +229,7 @@ View.propTypes = {
             selectedComponent: PropTypes.shape({
                 cellName: PropTypes.string.isRequired,
                 serviceName: PropTypes.string.isRequired
-            }).isRequired
+            })
         })
     }).isRequired
 };

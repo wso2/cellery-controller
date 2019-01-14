@@ -19,6 +19,7 @@ import DataTable from "../../common/DataTable";
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../../utils/api/httpUtils";
 import {Link} from "react-router-dom";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
@@ -47,23 +48,11 @@ class ComponentList extends React.Component {
     componentDidMount = () => {
         const {globalState} = this.props;
 
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     update = (isUserAction, startTime, endTime) => {
@@ -81,6 +70,9 @@ class ComponentList extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -104,10 +96,16 @@ class ComponentList extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
@@ -220,11 +218,18 @@ class ComponentList extends React.Component {
             }
         }
 
-        return (
-            isLoading
-                ? null
-                : <DataTable columns={columns} options={options} data={tableData}/>
-        );
+        let listView;
+        if (tableData.length > 0) {
+            listView = <DataTable columns={columns} options={options} data={tableData}/>;
+        } else {
+            listView = (
+                <NotFound title={"No Components Found"} description={`No Components found in "${cell}" cell.`
+                    + `This is because no requests were found between components in "${cell}" cell in the `
+                    + "selected time range"}/>
+            );
+        }
+
+        return (isLoading ? null : listView);
     };
 
 }

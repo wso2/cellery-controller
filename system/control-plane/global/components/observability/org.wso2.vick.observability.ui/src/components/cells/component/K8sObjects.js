@@ -68,22 +68,6 @@ class K8sObjects extends React.Component {
         };
     }
 
-    componentDidMount = () => {
-        const {globalState} = this.props;
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
-    };
-
     render = () => {
         const {classes} = this.props;
         const {isLoading} = this.state;

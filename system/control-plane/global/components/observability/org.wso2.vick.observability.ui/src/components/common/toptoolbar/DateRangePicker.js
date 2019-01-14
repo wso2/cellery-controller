@@ -85,7 +85,7 @@ class DateRangePicker extends React.Component {
 
     DEFAULT_RANGES = {
         LAST_MIN: {
-            name: "Last mins",
+            name: "Last min",
             from: "now - 1 minute"
         },
         LAST_5_MINS: {
@@ -101,7 +101,7 @@ class DateRangePicker extends React.Component {
             from: "now - 30 minutes"
         },
         LAST_1_HOUR: {
-            name: "Last 1 hour",
+            name: "Last hour",
             from: "now - 1 hour"
         },
         LAST_3_HOURS: {

@@ -19,12 +19,12 @@ import FormControl from "@material-ui/core/FormControl";
 import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
 import MetricsGraphs from "../metricsGraphs";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
-import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state/index";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
@@ -60,7 +60,7 @@ class Metrics extends React.Component {
                 : Constants.Dashboard.ALL_VALUE,
             cells: [],
             cellData: [],
-            isLoading: false
+            loadingCount: 0
         };
     }
 
@@ -124,9 +124,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
-            self.setState({
-                isLoading: true
-            });
+            self.setState((prevState) => ({
+                loadingCount: prevState.loadingCount + 1
+            }));
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -140,16 +140,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
                 NotificationUtils.showNotification(
                     "Failed to load cell information",
                     NotificationUtils.Levels.ERROR,
@@ -183,6 +183,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Metrics", globalState);
+            self.setState((prevState) => ({
+                loadingCount: prevState.loadingCount + 1
+            }));
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -205,10 +208,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
                 NotificationUtils.showNotification(
                     "Failed to load cell metrics",
                     NotificationUtils.Levels.ERROR,
@@ -220,12 +229,12 @@ class Metrics extends React.Component {
 
     render = () => {
         const {classes, cell} = this.props;
-        const {selectedType, selectedCell, cells, cellData, isLoading} = this.state;
+        const {selectedType, selectedCell, cells, cellData, loadingCount} = this.state;
 
         const targetSourcePrefix = selectedType === Constants.Dashboard.INBOUND ? "Source" : "Target";
 
         return (
-            isLoading
+            loadingCount > 0
                 ? null
                 : (
                     <React.Fragment>
@@ -267,13 +276,12 @@ class Metrics extends React.Component {
                                             direction={selectedType === Constants.Dashboard.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (
-                                        <Typography>
-                                            {
+                                        <NotFound title={"No Metrics Found"}
+                                            description={
                                                 selectedType === Constants.Dashboard.INBOUND
                                                     ? `No Requests from the selected cell to "${cell}" cell`
                                                     : `No Requests from "${cell}" cell to the selected cell`
-                                            }
-                                        </Typography>
+                                            }/>
                                     )
                             }
                         </div>

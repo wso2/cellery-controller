@@ -44,12 +44,14 @@ class ErrorBoundary extends React.Component {
     });
 
     render = () => {
-        const {children, title, description} = this.props;
+        const {children, title, description, showNavigationButtons} = this.props;
         const {hasError} = this.state;
 
         let content;
         if (hasError) {
-            content = <UnknownError title={title} description={description}/>;
+            content = (
+                <UnknownError title={title} description={description} showNavigationButtons={showNavigationButtons}/>
+            );
         } else {
             content = children;
         }
@@ -61,7 +63,8 @@ class ErrorBoundary extends React.Component {
 ErrorBoundary.propTypes = {
     children: PropTypes.any.isRequired,
     title: PropTypes.string,
-    description: PropTypes.string
+    description: PropTypes.string,
+    showNavigationButtons: PropTypes.bool
 };
 
 export default ErrorBoundary;

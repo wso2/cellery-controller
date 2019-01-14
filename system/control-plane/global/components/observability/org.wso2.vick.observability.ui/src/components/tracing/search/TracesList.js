@@ -18,6 +18,7 @@ import AccessTime from "@material-ui/icons/AccessTime";
 import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
 import QueryUtils from "../../../utils/common/queryUtils";
@@ -124,23 +125,11 @@ class TracesList extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        const {globalState, loadTracesOnMount} = this.props;
+        const {loadTracesOnMount} = this.props;
 
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
         if (loadTracesOnMount) {
             this.loadTraces(true);
         }
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     handleChangeRowsPerPage = (event) => {
@@ -218,6 +207,9 @@ class TracesList extends React.PureComponent {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -248,10 +240,16 @@ class TracesList extends React.PureComponent {
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to search for Traces",
                     NotificationUtils.Levels.ERROR,
@@ -394,7 +392,8 @@ class TracesList extends React.PureComponent {
                         </React.Fragment>
                     )
                     : (
-                        <div>No Traces Found</div>
+                        <NotFound title={"No Traces Found"}
+                            description={"No Traces matching the above specifications were found"}/>
                     )
             );
         } else {

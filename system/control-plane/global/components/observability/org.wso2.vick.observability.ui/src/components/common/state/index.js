@@ -21,9 +21,9 @@
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
+import NotFound from "../error/NotFound";
 import React from "react";
 import StateHolder from "./stateHolder";
-import UnknownError from "../error/UnknownError";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
 import * as PropTypes from "prop-types";
@@ -86,7 +86,7 @@ class UnStyledStateProvider extends React.Component {
         const content = (
             isConfigAvailable
                 ? children
-                : <UnknownError title={"Failed to Load Cellery Observability Portal Configuration"}/>
+                : <NotFound title={"Failed to Load Cellery Observability Portal Configuration"}/>
         );
         return (
             <StateContext.Provider value={this.stateHolder}>

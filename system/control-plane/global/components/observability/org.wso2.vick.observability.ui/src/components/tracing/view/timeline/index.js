@@ -22,13 +22,13 @@ import Input from "@material-ui/core/Input/Input";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import ListItemText from "@material-ui/core/ListItemText";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
-import PropTypes from "prop-types";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
 import Span from "../../../../utils/tracing/span";
 import TimelineView from "./TimelineView";
 import TracingUtils from "../../../../utils/tracing/tracingUtils";
 import withStyles from "@material-ui/core/styles/withStyles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     formControl: {

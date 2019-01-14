@@ -31,6 +31,7 @@ import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../../utils/api/httpUtils";
 import IconButton from "@material-ui/core/IconButton";
 import MoreIcon from "@material-ui/icons/MoreHoriz";
+import NotFound from "../common/error/NotFound";
 import NotificationUtils from "../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import Popper from "@material-ui/core/Popper";
@@ -100,14 +101,14 @@ const styles = (theme) => ({
             duration: theme.transitions.duration.leavingScreen
         }),
         marginLeft: Number(theme.spacing.unit),
-        marginRight: -drawerWidth
+        marginRight: -drawerWidth + theme.spacing.unit
     },
     contentShift: {
         transition: theme.transitions.create("margin", {
             easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen
         }),
-        marginRight: 0
+        marginRight: theme.spacing.unit
     },
     sideBarHeading: {
         letterSpacing: 1,
@@ -688,8 +689,10 @@ class Overview extends React.Component {
     render = () => {
         const {classes, theme, colorGenerator} = this.props;
         const {open, selectedCell, legend, legendOpen, isLoading} = this.state;
+
         const id = legendOpen ? "legend-popper" : null;
         const percentageVal = this.props.globalState.get(StateHolder.CONFIG).percentageRangeMinValue;
+        const isDataAvailable = this.state.data.nodes && this.state.data.nodes.length > 0;
 
         return (
             <React.Fragment>
@@ -702,16 +705,30 @@ class Overview extends React.Component {
                                 <Paper className={classNames(classes.content, {
                                     [classes.contentShift]: open
                                 })}>
-                                    <DependencyGraph id="graph-id" data={this.state.data}
-                                        onClickNode={(nodeId) => this.onClickCell(nodeId, true)}
-                                        onClickGraph={this.onClickGraph}
-                                        config={{
-                                            node: {
-                                                viewGenerator: this.viewGenerator
-                                            }
-                                        }}/>
-                                    <Button aria-describedby={id} variant="outlined" className={classes.btnLegend}
-                                        onClick={this.handleClick}>Legend</Button>
+                                    {
+                                        isDataAvailable
+                                            ? (
+                                                <React.Fragment>
+                                                    <DependencyGraph id="graph-id" data={this.state.data}
+                                                        onClickNode={(nodeId) => this.onClickCell(nodeId, true)}
+                                                        onClickGraph={this.onClickGraph}
+                                                        config={{
+                                                            node: {
+                                                                viewGenerator: this.viewGenerator
+                                                            }
+                                                        }}/>
+                                                    <Button aria-describedby={id} variant="outlined"
+                                                        className={classes.btnLegend} onClick={this.handleClick}>
+                                                        Legend
+                                                    </Button>
+                                                </React.Fragment>
+                                            )
+                                            : (
+                                                <NotFound title={"No Cells Found"}
+                                                    description={"No Requests were sent within the selected time range"}
+                                                />
+                                            )
+                                    }
                                     <Popper id={id} open={legendOpen} anchorEl={legend} placement="top-end" transition>
                                         {({TransitionProps}) => (
                                             <Fade {...TransitionProps} timeout={350}>
@@ -745,32 +762,49 @@ class Overview extends React.Component {
                                         )}
                                     </Popper>
                                 </Paper>
-                                <div className={classNames(classes.moreDetails, {
-                                    [classes.moreDetailsShift]: open
-                                })}>
-                                    <IconButton color="inherit" aria-label="Open drawer" onClick={this.handleDrawerOpen}
-                                        className={classNames(classes.menuButton, open && classes.hide)}>
-                                        <MoreIcon/>
-                                    </IconButton>
-                                </div>
+                                {
+                                    isDataAvailable
+                                        ? (
+                                            <React.Fragment>
+                                                <div className={classNames(classes.moreDetails, {
+                                                    [classes.moreDetailsShift]: open
+                                                })}>
+                                                    <IconButton color="inherit" aria-label="Open drawer"
+                                                        onClick={this.handleDrawerOpen}
+                                                        className={classNames(classes.menuButton, open && classes.hide)}
+                                                    >
+                                                        <MoreIcon/>
+                                                    </IconButton>
+                                                </div>
 
-                                <Drawer className={classes.drawer} variant="persistent" anchor="right" open={open}
-                                    classes={{
-                                        paper: classes.drawerPaper
-                                    }}>
-                                    <div className={classes.drawerHeader}>
-                                        <IconButton onClick={this.handleDrawerClose}>
-                                            {theme.direction === "rtl" ? <ChevronLeftIcon/> : <ChevronRightIcon/>}
-                                        </IconButton>
-                                        <Typography color="textSecondary" className={classes.sideBarHeading}>
-                                            {selectedCell ? "Cell Details" : "Overview"}
-                                        </Typography>
-                                    </div>
-                                    <Divider/>
-                                    <SidePanelContent summary={this.state.summary} request={this.state.request}
-                                        selectedCell={selectedCell} open={this.state.open}
-                                        listData={this.state.listData}/>
-                                </Drawer>
+                                                <Drawer className={classes.drawer} variant="persistent" anchor="right"
+                                                    open={open}
+                                                    classes={{
+                                                        paper: classes.drawerPaper
+                                                    }}>
+                                                    <div className={classes.drawerHeader}>
+                                                        <IconButton onClick={this.handleDrawerClose}>
+                                                            {
+                                                                theme.direction === "rtl"
+                                                                    ? <ChevronLeftIcon/>
+                                                                    : <ChevronRightIcon/>
+                                                            }
+                                                        </IconButton>
+                                                        <Typography color="textSecondary"
+                                                            className={classes.sideBarHeading}>
+                                                            {selectedCell ? "Cell Details" : "Overview"}
+                                                        </Typography>
+                                                    </div>
+                                                    <Divider/>
+                                                    <SidePanelContent summary={this.state.summary}
+                                                        request={this.state.request} selectedCell={selectedCell}
+                                                        open={this.state.open} listData={this.state.listData}/>
+                                                </Drawer>
+                                            </React.Fragment>
+
+                                        )
+                                        : null
+                                }
                             </div>
                         )
                 }

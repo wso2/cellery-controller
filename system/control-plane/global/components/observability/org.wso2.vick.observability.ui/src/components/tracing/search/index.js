@@ -23,6 +23,7 @@ import HttpUtils from "../../../utils/api/httpUtils";
 import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
@@ -109,11 +110,14 @@ class TraceSearch extends React.Component {
         this.tracesListRef = React.createRef();
     }
 
-    componentDidMount = () => {
-        const {globalState, location} = this.props;
+    render = () => {
+        const {classes, location} = this.props;
+        const {data, filter, metaData, tagsTempInput, isLoading} = this.state;
 
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-
+        /*
+         * Checking if the search should be run for the right after rendering
+         * If the query params are present, it indicates that the search should be run.
+         */
         const queryParams = HttpUtils.parseQueryParams(location.search);
         let isQueryParamsEmpty = true;
         for (const key in queryParams) {
@@ -121,30 +125,12 @@ class TraceSearch extends React.Component {
                 isQueryParamsEmpty = false;
             }
         }
-        if (!isQueryParamsEmpty) {
-            this.search(true);
-        }
-    };
 
-    componentWillUnmount() {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    }
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
-    };
-
-    render = () => {
-        const {classes} = this.props;
-        const {data, filter, metaData, tagsTempInput} = this.state;
-
-        const createMenuItemForSelect = (itemNames) => itemNames.map(
+        const createMenuItemsForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
         );
 
+        // Generating the chips from the tags object
         const tagChips = [];
         for (const tagKey in filter.tags) {
             if (filter.tags.hasOwnProperty(tagKey)) {
@@ -155,141 +141,163 @@ class TraceSearch extends React.Component {
         return (
             <React.Fragment>
                 <TopToolbar title={"Distributed Tracing"} onUpdate={this.onGlobalRefresh}/>
-                <Paper className={classes.container}>
-                    <Typography variant="h6" color="inherit" className={classes.subheading}>
-                        Search Traces
-                    </Typography>
-                    <Grid container justify={"flex-start"} className={classes.searchForm}>
-                        <Grid container justify={"flex-start"} spacing={24}>
-                            <Grid item xs={3}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
-                                    <Select value={filter.cell} onChange={this.getChangeHandlerForString("cell")}
-                                        inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
-                                            value={Constants.Dashboard.ALL_VALUE}>
-                                            {Constants.Dashboard.ALL_VALUE}
-                                        </MenuItem>
-                                        {createMenuItemForSelect(data.cells)}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="component" shrink={true}>Component</InputLabel>
-                                    <Select value={filter.component}
-                                        onChange={this.getChangeHandlerForString("component")}
-                                        inputProps={{name: "component", id: "component"}}>
-                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
-                                            value={Constants.Dashboard.ALL_VALUE}>
-                                            {Constants.Dashboard.ALL_VALUE}
-                                        </MenuItem>
-                                        {createMenuItemForSelect(metaData.availableComponents)}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
-                                    <Select value={filter.operation}
-                                        onChange={this.getChangeHandlerForString("operation")}
-                                        inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
-                                            value={Constants.Dashboard.ALL_VALUE}>
-                                            {Constants.Dashboard.ALL_VALUE}
-                                        </MenuItem>
-                                        {createMenuItemForSelect(metaData.availableOperations)}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                    <Grid container justify={"flex-start"} spacing={24} className={classes.searchForm}>
-                        <Grid item xs={6}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <ChipInput label="Tags" InputLabelProps={{shrink: true}} value={tagChips}
-                                    onAdd={this.handleTagAdd} onDelete={this.handleTagRemove}
-                                    onBeforeAdd={(chip) => Boolean(TraceSearch.parseChip(chip))}
-                                    error={Boolean(tagsTempInput.errorMessage)}
-                                    helperText={tagsTempInput.errorMessage} placeholder={"Eg: http.status_code=200"}
-                                    onUpdateInput={this.handleTagsTempInputUpdate} inputValue={tagsTempInput.content}
-                                    onBlur={() => this.setState({
-                                        tagsTempInput: {
-                                            content: "",
-                                            errorMessage: ""
-                                        }
-                                    })}
-                                />
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
-                                <TextField id="min-duration" value={filter.minDuration ? filter.minDuration : ""}
-                                    className={classes.durationTextField}
-                                    onChange={this.getChangeHandlerForNumber("minDuration")} type="number"
-                                    placeholder={"Eg: 10"}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment} variant="filled"
-                                                position="start">
-                                                Min
-                                            </InputAdornment>
-                                        ),
-                                        endAdornment: (
-                                            <InputAdornment variant="filled" position="end">
-                                                <Select value={filter.minDurationMultiplier}
-                                                    onChange={this.getChangeHandlerForNumber("minDurationMultiplier")}
-                                                    inputProps={{
-                                                        name: "min-duration-multiplier",
-                                                        id: "min-duration-multiplier"
-                                                    }}>
-                                                    <MenuItem value={1}>ms</MenuItem>
-                                                    <MenuItem value={1000}>s</MenuItem>
+                {
+                    isLoading
+                        ? null
+                        : (
+                            <Paper className={classes.container}>
+                                <Typography variant="h6" color="inherit" className={classes.subheading}>
+                                    Search Traces
+                                </Typography>
+                                <Grid container justify={"flex-start"} className={classes.searchForm}>
+                                    <Grid container justify={"flex-start"} spacing={24}>
+                                        <Grid item xs={3}>
+                                            <FormControl className={classes.formControl} fullWidth={true}>
+                                                <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
+                                                <Select value={filter.cell} inputProps={{name: "cell", id: "cell"}}
+                                                    onChange={this.getChangeHandlerForString("cell")}>
+                                                    <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                                        value={Constants.Dashboard.ALL_VALUE}>
+                                                        {Constants.Dashboard.ALL_VALUE}
+                                                    </MenuItem>
+                                                    {createMenuItemsForSelect(data.cells)}
                                                 </Select>
-                                            </InputAdornment>
-                                        )
-                                    }}/>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={3}>
-                            <FormControl className={classes.formControl} fullWidth={true}>
-                                <TextField id="max-duration" value={filter.maxDuration ? filter.maxDuration : ""}
-                                    className={classes.durationTextField}
-                                    onChange={this.getChangeHandlerForNumber("maxDuration")} type="number"
-                                    placeholder={"Eg: 1,000"}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment} variant="filled"
-                                                position="start">
-                                                Max
-                                            </InputAdornment>
-                                        ),
-                                        endAdornment: (
-                                            <InputAdornment variant="filled" position="end">
-                                                <Select value={filter.maxDurationMultiplier}
-                                                    onChange={this.getChangeHandlerForNumber("maxDurationMultiplier")}
-                                                    inputProps={{
-                                                        name: "max-duration-multiplier",
-                                                        id: "max-duration-multiplier"
-                                                    }}>
-                                                    <MenuItem value={1}>ms</MenuItem>
-                                                    <MenuItem value={1000}>s</MenuItem>
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={3}>
+                                            <FormControl className={classes.formControl} fullWidth={true}>
+                                                <InputLabel htmlFor="component" shrink={true}>Component</InputLabel>
+                                                <Select value={filter.component}
+                                                    onChange={this.getChangeHandlerForString("component")}
+                                                    inputProps={{name: "component", id: "component"}}>
+                                                    <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                                        value={Constants.Dashboard.ALL_VALUE}>
+                                                        {Constants.Dashboard.ALL_VALUE}
+                                                    </MenuItem>
+                                                    {createMenuItemsForSelect(metaData.availableComponents)}
                                                 </Select>
-                                            </InputAdornment>
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={3}>
+                                            <FormControl className={classes.formControl} fullWidth={true}>
+                                                <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
+                                                <Select value={filter.operation}
+                                                    onChange={this.getChangeHandlerForString("operation")}
+                                                    inputProps={{name: "operation", id: "operation"}}>
+                                                    <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                                        value={Constants.Dashboard.ALL_VALUE}>
+                                                        {Constants.Dashboard.ALL_VALUE}
+                                                    </MenuItem>
+                                                    {createMenuItemsForSelect(metaData.availableOperations)}
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                                <Grid container justify={"flex-start"} spacing={24} className={classes.searchForm}>
+                                    <Grid item xs={6}>
+                                        <FormControl className={classes.formControl} fullWidth={true}>
+                                            <ChipInput label="Tags" InputLabelProps={{shrink: true}}
+                                                onBeforeAdd={(chip) => Boolean(TraceSearch.parseChip(chip))}
+                                                error={Boolean(tagsTempInput.errorMessage)}
+                                                helperText={tagsTempInput.errorMessage} onAdd={this.handleTagAdd}
+                                                placeholder={"Eg: http.status_code=200"} value={tagChips}
+                                                onUpdateInput={this.handleTagsTempInputUpdate}
+                                                inputValue={tagsTempInput.content} onDelete={this.handleTagRemove}
+                                                onBlur={() => this.setState({
+                                                    tagsTempInput: {
+                                                        content: "",
+                                                        errorMessage: ""
+                                                    }
+                                                })}
+                                            />
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <FormControl className={classes.formControl} fullWidth={true}>
+                                            <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
+                                            <TextField id="min-duration" className={classes.durationTextField}
+                                                value={filter.minDuration ? filter.minDuration : ""}
+                                                onChange={this.getChangeHandlerForNumber("minDuration")} type="number"
+                                                placeholder={"Eg: 10"}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment className={classes.startInputAdornment}
+                                                            variant="filled" position="start">
+                                                            Min
+                                                        </InputAdornment>
+                                                    ),
+                                                    endAdornment: (
+                                                        <InputAdornment variant="filled" position="end">
+                                                            <Select value={filter.minDurationMultiplier}
+                                                                onChange={this.getChangeHandlerForNumber(
+                                                                    "minDurationMultiplier")}
+                                                                inputProps={{
+                                                                    name: "min-duration-multiplier",
+                                                                    id: "min-duration-multiplier"
+                                                                }}>
+                                                                <MenuItem value={1}>ms</MenuItem>
+                                                                <MenuItem value={1000}>s</MenuItem>
+                                                            </Select>
+                                                        </InputAdornment>
+                                                    )
+                                                }}/>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <FormControl className={classes.formControl} fullWidth={true}>
+                                            <TextField id="max-duration"
+                                                value={filter.maxDuration ? filter.maxDuration : ""} type={"number"}
+                                                className={classes.durationTextField} placeholder={"Eg: 1,000"}
+                                                onChange={this.getChangeHandlerForNumber("maxDuration")}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment className={classes.startInputAdornment}
+                                                            variant="filled" position="start">
+                                                            Max
+                                                        </InputAdornment>
+                                                    ),
+                                                    endAdornment: (
+                                                        <InputAdornment variant="filled" position="end">
+                                                            <Select value={filter.maxDurationMultiplier}
+                                                                onChange={this.getChangeHandlerForNumber(
+                                                                    "maxDurationMultiplier")}
+                                                                inputProps={{
+                                                                    name: "max-duration-multiplier",
+                                                                    id: "max-duration-multiplier"
+                                                                }}>
+                                                                <MenuItem value={1}>ms</MenuItem>
+                                                                <MenuItem value={1000}>s</MenuItem>
+                                                            </Select>
+                                                        </InputAdornment>
+                                                    )
+                                                }}/>
+                                        </FormControl>
+                                    </Grid>
+                                </Grid>
+                                <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}
+                                    disabled={Boolean(tagsTempInput.errorMessage) || data.cells.length === 0}>
+                                    Search
+                                </Button>
+                                {
+                                    data.cells.length > 0
+                                        ? (
+                                            <div className={classes.resultContainer}>
+                                                <TracesList innerRef={this.tracesListRef} filter={filter}
+                                                    onTraceClick={this.onTraceClick}
+                                                    loadTracesOnMount={!isQueryParamsEmpty}/>
+                                            </div>
                                         )
-                                    }}/>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-                    <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}
-                        disabled={Boolean(tagsTempInput.errorMessage)}>
-                        Search
-                    </Button>
-                    <div className={classes.resultContainer}>
-                        <TracesList innerRef={this.tracesListRef} onTraceClick={this.onTraceClick} filter={filter}/>
-                    </div>
-                </Paper>
+                                        : (
+                                            <NotFound title={"No Traces Available"}
+                                                description={"No Traces are available in the Selected Time Range. "
+                                                    + "This is because no requests were sent/received during this "
+                                                    + "time period."}/>
+                                        )
+                                }
+                            </Paper>
+                        )
+                }
             </React.Fragment>
         );
     };
@@ -348,6 +356,9 @@ class TraceSearch extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Information", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -404,17 +415,16 @@ class TraceSearch extends React.Component {
             }));
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                if (cells.length === 0) {
-                    NotificationUtils.showNotification(
-                        "No Traces Available in the Selected Time Range",
-                        NotificationUtils.Levels.WARNING,
-                        globalState
-                    );
-                }
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load Cell Data",
                     NotificationUtils.Levels.ERROR,
