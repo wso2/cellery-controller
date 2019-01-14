@@ -32,8 +32,11 @@ class AuthUtils {
     static signIn = (username, globalState) => {
         // TODO: Implement User Login
         if (username) {
-            localStorage.setItem(StateHolder.USER, username);
-            globalState.set(StateHolder.USER, username);
+            const user = {
+                username: username
+            };
+            localStorage.setItem(StateHolder.USER, JSON.stringify(user));
+            globalState.set(StateHolder.USER, user);
         } else {
             throw Error(`Username provided cannot be "${username}"`);
         }
@@ -56,7 +59,7 @@ class AuthUtils {
      *
      * @returns {string} The current user
      */
-    static getAuthenticatedUser = () => localStorage.getItem(StateHolder.USER);
+    static getAuthenticatedUser = () => JSON.parse(localStorage.getItem(StateHolder.USER));
 
 }
 

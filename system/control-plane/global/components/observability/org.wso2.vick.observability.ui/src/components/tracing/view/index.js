@@ -174,7 +174,7 @@ class View extends React.Component {
     render = () => {
         const {classes, location, match} = this.props;
         const {spans, selectedTabIndex, isLoading, errorMessage, traceTree} = this.state;
-        const selectedMicroservice = location.state ? location.state.selectedMicroservice : null;
+        const selectedComponent = location.state ? location.state.selectedComponent : null;
 
         const traceId = match.params.traceId;
 
@@ -197,7 +197,7 @@ class View extends React.Component {
                             : (
                                 <ErrorBoundary title={"Unable to render Invalid Trace"}>
                                     <SelectedTabContent spans={spans} innerRef={this.traceViewRef}
-                                        selectedMicroservice={selectedMicroservice}/>
+                                        selectedComponent={selectedComponent}/>
                                 </ErrorBoundary>
                             )
                     }
@@ -234,11 +234,11 @@ View.propTypes = {
     location: PropTypes.shape({
         search: PropTypes.string.isRequired,
         state: PropTypes.shape({
-            selectedMicroservice: PropTypes.shape({
+            selectedComponent: PropTypes.shape({
                 cellName: PropTypes.string.isRequired,
                 serviceName: PropTypes.string.isRequired
             }).isRequired
-        }).isRequired
+        })
     }).isRequired
 };
 

@@ -16,6 +16,7 @@
 
 import Button from "@material-ui/core/Button";
 import ChipInput from "material-ui-chip-input";
+import Constants from "../../../utils/constants";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
@@ -24,7 +25,6 @@ import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper/Paper";
-import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
 import Span from "../../../utils/tracing/span";
@@ -65,8 +65,6 @@ const styles = (theme) => ({
 
 class TraceSearch extends React.Component {
 
-    static ALL_VALUE = "All";
-
     constructor(props) {
         super(props);
         const {location} = props;
@@ -75,21 +73,29 @@ class TraceSearch extends React.Component {
         this.state = {
             data: {
                 cells: [],
-                microservices: [],
+                components: [],
                 operations: []
             },
             filter: {
-                cell: queryParams.cell ? queryParams.cell : TraceSearch.ALL_VALUE,
-                microservice: queryParams.microservice ? queryParams.microservice : TraceSearch.ALL_VALUE,
-                operation: queryParams.operation ? queryParams.operation : TraceSearch.ALL_VALUE,
+                cell: queryParams.cell ? queryParams.cell : Constants.Dashboard.ALL_VALUE,
+                component: queryParams.component ? queryParams.component : Constants.Dashboard.ALL_VALUE,
+                operation: queryParams.operation ? queryParams.operation : Constants.Dashboard.ALL_VALUE,
                 tags: queryParams.tags ? JSON.parse(queryParams.tags) : {},
-                minDuration: queryParams.minDuration ? queryParams.minDuration : "",
-                minDurationMultiplier: queryParams.minDurationMultiplier ? queryParams.minDurationMultiplier : 1,
-                maxDuration: queryParams.maxDuration ? queryParams.maxDuration : "",
-                maxDurationMultiplier: queryParams.maxDurationMultiplier ? queryParams.maxDurationMultiplier : 1
+                minDuration: queryParams.minDuration
+                    ? parseInt(queryParams.minDuration, 10)
+                    : undefined,
+                minDurationMultiplier: queryParams.minDurationMultiplier
+                    ? parseInt(queryParams.minDurationMultiplier, 10)
+                    : 1,
+                maxDuration: queryParams.maxDuration
+                    ? parseInt(queryParams.maxDuration, 10)
+                    : undefined,
+                maxDurationMultiplier: queryParams.maxDurationMultiplier
+                    ? parseInt(queryParams.maxDurationMultiplier, 10)
+                    : 1
             },
             metaData: {
-                availableMicroservices: [],
+                availableComponents: [],
                 availableOperations: []
             },
             tagsTempInput: {
@@ -97,12 +103,10 @@ class TraceSearch extends React.Component {
                 errorMessage: ""
             },
             isLoading: false,
-            hasSearchCompleted: false,
-            searchResults: {
-                rootSpans: [],
-                spanCounts: []
-            }
+            hasSearchCompleted: false
         };
+
+        this.tracesListRef = React.createRef();
     }
 
     componentDidMount = () => {
@@ -124,7 +128,6 @@ class TraceSearch extends React.Component {
 
     componentWillUnmount() {
         const {globalState} = this.props;
-
         globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
     }
 
@@ -136,7 +139,7 @@ class TraceSearch extends React.Component {
 
     render = () => {
         const {classes} = this.props;
-        const {data, filter, metaData, isLoading, hasSearchCompleted, searchResults, tagsTempInput} = this.state;
+        const {data, filter, metaData, tagsTempInput} = this.state;
 
         const createMenuItemForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
@@ -161,10 +164,11 @@ class TraceSearch extends React.Component {
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
                                     <InputLabel htmlFor="cell" shrink={true}>Cell</InputLabel>
-                                    <Select value={filter.cell} onChange={this.getChangeHandler("cell")}
+                                    <Select value={filter.cell} onChange={this.getChangeHandlerForString("cell")}
                                         inputProps={{name: "cell", id: "cell"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(data.cells)}
                                     </Select>
@@ -172,23 +176,27 @@ class TraceSearch extends React.Component {
                             </Grid>
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
-                                    <InputLabel htmlFor="microservice" shrink={true}>Component</InputLabel>
-                                    <Select value={filter.microservice} onChange={this.getChangeHandler("microservice")}
-                                        inputProps={{name: "microservice", id: "microservice"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                    <InputLabel htmlFor="component" shrink={true}>Component</InputLabel>
+                                    <Select value={filter.component}
+                                        onChange={this.getChangeHandlerForString("component")}
+                                        inputProps={{name: "component", id: "component"}}>
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
-                                        {createMenuItemForSelect(metaData.availableMicroservices)}
+                                        {createMenuItemForSelect(metaData.availableComponents)}
                                     </Select>
                                 </FormControl>
                             </Grid>
                             <Grid item xs={3}>
                                 <FormControl className={classes.formControl} fullWidth={true}>
                                     <InputLabel htmlFor="operation" shrink={true}>Operation</InputLabel>
-                                    <Select value={filter.operation} onChange={this.getChangeHandler("operation")}
+                                    <Select value={filter.operation}
+                                        onChange={this.getChangeHandlerForString("operation")}
                                         inputProps={{name: "operation", id: "operation"}}>
-                                        <MenuItem key={TraceSearch.ALL_VALUE} value={TraceSearch.ALL_VALUE}>
-                                            {TraceSearch.ALL_VALUE}
+                                        <MenuItem key={Constants.Dashboard.ALL_VALUE}
+                                            value={Constants.Dashboard.ALL_VALUE}>
+                                            {Constants.Dashboard.ALL_VALUE}
                                         </MenuItem>
                                         {createMenuItemForSelect(metaData.availableOperations)}
                                     </Select>
@@ -217,45 +225,50 @@ class TraceSearch extends React.Component {
                         <Grid item xs={3}>
                             <FormControl className={classes.formControl} fullWidth={true}>
                                 <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
-                                <TextField id="min-duration" value={filter.minDuration}
+                                <TextField id="min-duration" value={filter.minDuration ? filter.minDuration : ""}
                                     className={classes.durationTextField}
-                                    onChange={this.getChangeHandler("minDuration")} type="number"
+                                    onChange={this.getChangeHandlerForNumber("minDuration")} type="number"
                                     placeholder={"Eg: 10"}
                                     InputProps={{
                                         startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment}
-                                                variant="filled" position="start">Min</InputAdornment>
+                                            <InputAdornment className={classes.startInputAdornment} variant="filled"
+                                                position="start">
+                                                Min
+                                            </InputAdornment>
                                         ),
                                         endAdornment: (
                                             <InputAdornment variant="filled" position="end">
                                                 <Select value={filter.minDurationMultiplier}
-                                                    onChange={this.getChangeHandler("minDurationMultiplier")}
+                                                    onChange={this.getChangeHandlerForNumber("minDurationMultiplier")}
                                                     inputProps={{
                                                         name: "min-duration-multiplier",
                                                         id: "min-duration-multiplier"
                                                     }}>
                                                     <MenuItem value={1}>ms</MenuItem>
                                                     <MenuItem value={1000}>s</MenuItem>
-                                                </Select></InputAdornment>
+                                                </Select>
+                                            </InputAdornment>
                                         )
                                     }}/>
                             </FormControl>
                         </Grid>
                         <Grid item xs={3}>
                             <FormControl className={classes.formControl} fullWidth={true}>
-                                <TextField id="max-duration" value={filter.maxDuration}
+                                <TextField id="max-duration" value={filter.maxDuration ? filter.maxDuration : ""}
                                     className={classes.durationTextField}
-                                    onChange={this.getChangeHandler("maxDuration")} type="number"
+                                    onChange={this.getChangeHandlerForNumber("maxDuration")} type="number"
                                     placeholder={"Eg: 1,000"}
                                     InputProps={{
                                         startAdornment: (
-                                            <InputAdornment className={classes.startInputAdornment}
-                                                variant="filled" position="start">Max</InputAdornment>
+                                            <InputAdornment className={classes.startInputAdornment} variant="filled"
+                                                position="start">
+                                                Max
+                                            </InputAdornment>
                                         ),
                                         endAdornment: (
                                             <InputAdornment variant="filled" position="end">
                                                 <Select value={filter.maxDurationMultiplier}
-                                                    onChange={this.getChangeHandler("maxDurationMultiplier")}
+                                                    onChange={this.getChangeHandlerForNumber("maxDurationMultiplier")}
                                                     inputProps={{
                                                         name: "max-duration-multiplier",
                                                         id: "max-duration-multiplier"
@@ -269,19 +282,28 @@ class TraceSearch extends React.Component {
                             </FormControl>
                         </Grid>
                     </Grid>
-                    <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}>Search</Button>
-                    {
-                        hasSearchCompleted && !isLoading
-                            ? (
-                                <div className={classes.resultContainer}>
-                                    <TracesList searchResults={searchResults}/>
-                                </div>
-                            )
-                            : null
-                    }
+                    <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}
+                        disabled={Boolean(tagsTempInput.errorMessage)}>
+                        Search
+                    </Button>
+                    <div className={classes.resultContainer}>
+                        <TracesList innerRef={this.tracesListRef} onTraceClick={this.onTraceClick} filter={filter}/>
+                    </div>
                 </Paper>
             </React.Fragment>
         );
+    };
+
+    onTraceClick = (traceId, selectedCellName, selectedComponent) => {
+        this.props.history.push({
+            pathname: `./id/${traceId}`,
+            state: {
+                selectedComponent: {
+                    cellName: selectedCellName,
+                    serviceName: selectedComponent
+                }
+            }
+        });
     };
 
     onSearchButtonClick = () => {
@@ -334,7 +356,7 @@ class TraceSearch extends React.Component {
             globalState
         ).then((data) => {
             const cells = [];
-            const microservices = [];
+            const components = [];
             const operations = [];
 
             const cellData = data.map((dataItem) => ({
@@ -355,8 +377,8 @@ class TraceSearch extends React.Component {
                     if (!cells.includes(cellName)) {
                         cells.push(cellName);
                     }
-                    if (!microservices.map((service) => service.name).includes(serviceName)) {
-                        microservices.push({
+                    if (!components.map((service) => service.name).includes(serviceName)) {
+                        components.push({
                             name: serviceName,
                             cell: cellName
                         });
@@ -364,7 +386,7 @@ class TraceSearch extends React.Component {
                     if (!operations.map((operation) => operation.name).includes(operationName)) {
                         operations.push({
                             name: operationName,
-                            microservice: serviceName,
+                            component: serviceName,
                             cell: cellName
                         });
                     }
@@ -375,7 +397,7 @@ class TraceSearch extends React.Component {
                 ...prevState,
                 data: {
                     cells: cells,
-                    microservices: microservices,
+                    components: components,
                     operations: operations
                 }
             }));
@@ -402,12 +424,12 @@ class TraceSearch extends React.Component {
     };
 
     /**
-     * Get the on change handler for a particular state filter attribute.
+     * Get the on change handler for a particular state filter attribute of type string.
      *
      * @param {string} name The name of the filter
      * @returns {Function} The on change handler
      */
-    getChangeHandler = (name) => (event) => {
+    getChangeHandlerForString = (name) => (event) => {
         const value = event.target.value;
         this.setState((prevState) => ({
             ...prevState,
@@ -416,6 +438,25 @@ class TraceSearch extends React.Component {
                 [name]: value
             }
         }));
+    };
+
+    /**
+     * Get the on change handler for a particular state filter attribute of type number.
+     *
+     * @param {string} name The name of the filter
+     * @returns {Function} The on change handler
+     */
+    getChangeHandlerForNumber = (name) => (event) => {
+        const value = event.target.value === "" ? undefined : parseFloat(event.target.value);
+        if (value === undefined || !isNaN(value)) {
+            this.setState((prevState) => ({
+                ...prevState,
+                filter: {
+                    ...prevState.filter,
+                    [name]: value
+                }
+            }));
+        }
     };
 
     handleTagsTempInputUpdate = (event) => {
@@ -479,112 +520,48 @@ class TraceSearch extends React.Component {
     };
 
     search = (isUserAction) => {
-        const {
-            cell, microservice, operation, tags, minDuration, minDurationMultiplier, maxDuration, maxDurationMultiplier
-        } = this.state.filter;
-        const {globalState} = this.props;
-        const self = this;
-
-        // Build search object
-        const search = {};
-        const addSearchParam = (key, value) => {
-            if (value && value !== TraceSearch.ALL_VALUE) {
-                search[key] = value;
-            }
-        };
-        addSearchParam("cell", cell);
-        addSearchParam("serviceName", microservice);
-        addSearchParam("operationName", operation);
-        addSearchParam("tags", JSON.stringify(Object.keys(tags).length > 0 ? tags : {}));
-        addSearchParam("minDuration", minDuration * minDurationMultiplier);
-        addSearchParam("maxDuration", maxDuration * maxDurationMultiplier);
-        addSearchParam("queryStartTime",
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime).valueOf());
-        addSearchParam("queryEndTime",
-            QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime).valueOf());
-
-        if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Searching for Traces", globalState);
+        if (this.tracesListRef.current && this.tracesListRef.current.loadTraces) {
+            this.tracesListRef.current.loadTraces(isUserAction);
         }
-        HttpUtils.callObservabilityAPI(
-            {
-                url: `/traces/search${HttpUtils.generateQueryParamString(search)}`,
-                method: "GET"
-            },
-            globalState
-        ).then((data) => {
-            self.setState((prevState) => ({
-                ...prevState,
-                hasSearchCompleted: true,
-                searchResults: {
-                    rootSpans: data.rootSpans.map((dataItem) => ({
-                        traceId: dataItem[0],
-                        rootCellName: dataItem[1],
-                        rootServiceName: dataItem[2],
-                        rootOperationName: dataItem[3],
-                        rootStartTime: dataItem[4],
-                        rootDuration: dataItem[5]
-                    })),
-                    spanCounts: data.spanCounts.map((dataItem) => ({
-                        traceId: dataItem[0],
-                        cellName: dataItem[1],
-                        serviceName: dataItem[2],
-                        count: dataItem[3]
-                    }))
-                }
-            }));
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-            }
-        }).catch(() => {
-            if (isUserAction) {
-                NotificationUtils.hideLoadingOverlay(globalState);
-                NotificationUtils.showNotification(
-                    "Failed to search for Traces",
-                    NotificationUtils.Levels.ERROR,
-                    globalState
-                );
-            }
-        });
     };
 
     static getDerivedStateFromProps = (props, state) => {
         const {data, filter, metaData} = state;
 
-        // Finding the available microservices to be selected
-        const selectedCells = (filter.cell === TraceSearch.ALL_VALUE ? data.cells : [filter.cell]);
-        const availableMicroservices = data.microservices
-            .filter((microservice) => selectedCells.includes(microservice.cell))
-            .map((microservice) => microservice.name);
+        // Finding the available components to be selected
+        const selectedCells = (filter.cell === Constants.Dashboard.ALL_VALUE ? data.cells : [filter.cell]);
+        const availableComponents = data.components
+            .filter((component) => selectedCells.includes(component.cell))
+            .map((component) => component.name);
 
-        const selectedMicroservice = data.cells.length === 0 || (filter.microservice
-            && availableMicroservices.includes(filter.microservice))
-            ? filter.microservice
-            : TraceSearch.ALL_VALUE;
+        const selectedComponent = data.cells.length === 0 || (filter.component
+            && availableComponents.includes(filter.component))
+            ? filter.component
+            : Constants.Dashboard.ALL_VALUE;
 
         // Finding the available operations to be selected
-        const selectedMicroservices = (selectedMicroservice === TraceSearch.ALL_VALUE
-            ? availableMicroservices
-            : [selectedMicroservice]);
+        const selectedComponents = (selectedComponent === Constants.Dashboard.ALL_VALUE
+            ? availableComponents
+            : [selectedComponent]);
         const availableOperations = data.operations
-            .filter((operation) => selectedMicroservices.includes(operation.microservice))
+            .filter((operation) => selectedComponents.includes(operation.component))
             .map((operation) => operation.name);
 
         const selectedOperation = data.cells.length === 0 || (filter.operation
             && availableOperations.includes(filter.operation))
             ? filter.operation
-            : TraceSearch.ALL_VALUE;
+            : Constants.Dashboard.ALL_VALUE;
 
         return {
             ...state,
             filter: {
                 ...filter,
-                microservice: selectedMicroservice,
+                component: selectedComponent,
                 operation: selectedOperation
             },
             metaData: {
                 ...metaData,
-                availableMicroservices: availableMicroservices,
+                availableComponents: availableComponents,
                 availableOperations: availableOperations
             }
         };
@@ -609,8 +586,9 @@ class TraceSearch extends React.Component {
 TraceSearch.propTypes = {
     classes: PropTypes.object.isRequired,
     history: PropTypes.shape({
-        replace: PropTypes.func.isRequired
-    }),
+        replace: PropTypes.func.isRequired,
+        push: PropTypes.func.isRequired
+    }).isRequired,
     location: PropTypes.shape({
         search: PropTypes.string.isRequired
     }).isRequired,

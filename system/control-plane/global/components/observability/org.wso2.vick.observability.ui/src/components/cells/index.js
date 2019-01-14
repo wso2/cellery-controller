@@ -18,7 +18,7 @@
 
 import Cell from "./cell";
 import CellList from "./CellList";
-import MicroService from "./microservice";
+import Component from "./component";
 import NotFound from "../common/error/NotFound";
 import React from "react";
 import {Route, Switch, withRouter} from "react-router-dom";
@@ -28,7 +28,7 @@ const Cells = ({match}) => (
     <Switch>
         <Route exact path={`${match.path}/`} component={CellList}/>
         <Route exact path={`${match.path}/:cellName`} component={Cell}/>
-        <Route exact path={`${match.path}/:cellName/microservices/:microserviceName`} component={MicroService}/>
+        <Route exact path={`${match.path}/:cellName/components/:componentName`} component={Component}/>
         <Route path={`${match.url}/*`} component={NotFound}/>
     </Switch>
 );

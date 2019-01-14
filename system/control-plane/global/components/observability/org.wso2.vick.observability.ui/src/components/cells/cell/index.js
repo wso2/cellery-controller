@@ -15,12 +15,12 @@
  */
 
 import Button from "@material-ui/core/Button/Button";
+import ComponentList from "./ComponentList";
 import Details from "./Details";
 import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../../../utils/api/httpUtils";
 import {Link} from "react-router-dom";
 import Metrics from "./Metrics";
-import MicroserviceList from "./MicroserviceList";
 import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
 import Tab from "@material-ui/core/Tab";
@@ -104,7 +104,7 @@ class Cell extends React.Component {
 
         const cellName = match.params.cellName;
 
-        const tabContent = [Details, MicroserviceList, Metrics];
+        const tabContent = [Details, ComponentList, Metrics];
         const SelectedTabContent = tabContent[selectedTabIndex];
 
         const traceSearch = {

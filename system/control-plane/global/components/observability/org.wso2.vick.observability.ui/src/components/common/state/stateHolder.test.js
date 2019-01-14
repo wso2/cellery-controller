@@ -21,8 +21,10 @@
 import StateHolder from "./stateHolder";
 
 describe("ConfigHolder", () => {
-    const loggedInUser = "User1";
-    localStorage.setItem(StateHolder.USER, loggedInUser);
+    const loggedInUser = {
+        username: "User1"
+    };
+    localStorage.setItem(StateHolder.USER, JSON.stringify(loggedInUser));
 
     const validateInitialState = (stateHolder) => {
         {
@@ -62,7 +64,7 @@ describe("ConfigHolder", () => {
             const user = stateHolder.state[StateHolder.USER];
             expect(user).not.toBeUndefined();
             expect(Object.keys(user)).toHaveLength(1);
-            expect(user.value).toBe(loggedInUser);
+            expect(user.value).toEqual(loggedInUser);
         }
     };
 

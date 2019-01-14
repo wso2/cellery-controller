@@ -68,7 +68,7 @@ div.vis-item-span-description {
     border: #f3f3f3;
 }
 
-@keyframes selected-microservice-highlight {
+@keyframes selected-component-highlight {
     from {
         background-color: rgba(0, 0, 0, 0.7);
     }
@@ -78,7 +78,7 @@ div.vis-item-span-description {
 }
 
 div.highlighted-span {
-    animation-name: selected-microservice-highlight;
+    animation-name: selected-component-highlight;
     animation-duration: 3s;
     animation-timing-function: ease-out;
 }

@@ -40,18 +40,20 @@ class StateHolder {
      *
      * @param {Object} queryParams The query params object in the current location
      */
-    constructor(queryParams = "") {
+    constructor(queryParams = {}) {
         // Parsing the overrides to the global filter provided as Query Params
         let filterStartTime = null;
         if (queryParams.globalFilterStartTime) {
-            const parsedFilterStartTime = moment(queryParams.globalFilterStartTime).format(Constants.Pattern.DATE_TIME);
+            const parsedFilterStartTime
+                = moment(parseInt(queryParams.globalFilterStartTime, 10)).format(Constants.Pattern.DATE_TIME);
             if (parsedFilterStartTime !== "Invalid date") {
                 filterStartTime = parsedFilterStartTime;
             }
         }
         let filterEndTime = null;
         if (queryParams.globalFilterEndTime) {
-            const parsedFilterEndTime = moment(queryParams.globalFilterEndTime).format(Constants.Pattern.DATE_TIME);
+            const parsedFilterEndTime
+                = moment(parseInt(queryParams.globalFilterEndTime, 10)).format(Constants.Pattern.DATE_TIME);
             if (parsedFilterEndTime !== "Invalid date") {
                 filterEndTime = parsedFilterEndTime;
             }
