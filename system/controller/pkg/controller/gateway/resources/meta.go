@@ -59,6 +59,10 @@ func IstioVSName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name
 }
 
+func IstioIngressVirtualServiceName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-ingress-virtual-service"
+}
+
 func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
 	return GatewayK8sServiceName(gateway) + "." + gateway.Namespace
 }

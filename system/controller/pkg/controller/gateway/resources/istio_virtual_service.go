@@ -69,3 +69,46 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 		},
 	}
 }
+
+func CreateIstioVirtualServiceForIngress(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
+
+	var routes []*v1alpha3.HTTPRoute
+
+	for _, apiRoute := range gateway.Spec.APIRoutes {
+		if apiRoute.Global == true {
+			routes = append(routes, &v1alpha3.HTTPRoute{
+				Match: []*v1alpha3.HTTPMatchRequest{
+					{
+						Uri: &v1alpha3.StringMatch{
+							Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
+						},
+					},
+				},
+				Route: []*v1alpha3.DestinationWeight{
+					{
+						Destination: &v1alpha3.Destination{
+							Host: gateway.Status.HostName,
+						},
+					},
+				},
+			})
+		}
+	}
+
+	return &v1alpha3.VirtualService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      IstioIngressVirtualServiceName(gateway),
+			Namespace: gateway.Namespace,
+			Labels:    createGatewayLabels(gateway),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateGatewayOwnerRef(gateway),
+			},
+		},
+		Spec: v1alpha3.VirtualServiceSpec{
+			Hosts:    []string{"*"},
+			Gateways: []string{"ingress-gateway"},
+			Http:     routes,
+		},
+	}
+}
+

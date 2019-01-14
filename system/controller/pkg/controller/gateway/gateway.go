@@ -154,6 +154,10 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
+	if err := h.handleIstioVirtualServicesForIngress(gateway); err != nil {
+		return err
+	}
+
 	h.updateOwnerCell(gateway)
 
 	return nil
@@ -247,6 +251,37 @@ func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) er
 		return err
 	}
 	glog.Infof("Istio virtual service created %+v", istioVS)
+
+	return nil
+}
+
+func (h *gatewayHandler) handleIstioVirtualServicesForIngress(gateway *v1alpha1.Gateway) error {
+	var hasGlobalApis = false
+
+	for _, apiRoute := range gateway.Spec.APIRoutes {
+		if apiRoute.Global == true {
+			hasGlobalApis = true
+			break
+		}
+	}
+
+	if hasGlobalApis == true {
+		istioVS, err := h.istioVSLister.VirtualServices(gateway.Namespace).Get(resources.IstioIngressVirtualServiceName(gateway))
+		if errors.IsNotFound(err) {
+			istioVS, err = h.vickClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(
+				resources.CreateIstioVirtualServiceForIngress(gateway))
+			if err != nil {
+				glog.Errorf("Failed to create virtual service for ingress %v", err)
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+
+		glog.Infof("Istio virtual service for ingress created %+v", istioVS)
+	} else {
+		glog.Infof("Ingress virtual services not created since gateway %+v does not have global APIs", gateway.Name)
+	}
 
 	return nil
 }
