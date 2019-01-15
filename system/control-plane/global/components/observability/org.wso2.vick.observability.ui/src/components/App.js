@@ -92,15 +92,15 @@ const theme = createMuiTheme({
 const App = () => (
     <MuiThemeProvider theme={theme}>
         <CssBaseline/>
-        <ErrorBoundary showNavigationButtons={true}>
-            <BrowserRouter>
+        <BrowserRouter>
+            <ErrorBoundary showNavigationButtons={true}>
                 <ColorProvider>
                     <StateProvider>
                         <ProtectedPortal/>
                     </StateProvider>
                 </ColorProvider>
-            </BrowserRouter>
-        </ErrorBoundary>
+            </ErrorBoundary>
+        </BrowserRouter>
     </MuiThemeProvider>
 );
 

@@ -30,8 +30,8 @@ console.log(`Using Portal Configuration from ${portalConfigFile} file`);
 
 let portalConfig;
 const loadPortalConfig = () => {
-    console.log("Loaded new Portal Configuration");
     portalConfig = fs.readFileSync(`${portalConfigFile}`, "utf8");
+    console.log("Loaded new Portal Configuration");
 };
 loadPortalConfig();
 
@@ -55,6 +55,8 @@ if (process.env.APP_ENV !== "DEV") {
     app.use(fallback("index.html", {
         root: appRoot
     }));
+} else {
+    console.log("Serving Only the Observability Portal Configuration");
 }
 
 const server = app.listen(webPortalPort, () => {

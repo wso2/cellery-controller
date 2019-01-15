@@ -15,12 +15,11 @@
  */
 
 import Button from "@material-ui/core/Button";
-import ChipInput from "material-ui-chip-input";
 import Constants from "../../../utils/constants";
+import DurationInput from "./DurationInput";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import Grid from "@material-ui/core/Grid/Grid";
 import HttpUtils from "../../../utils/api/httpUtils";
-import InputAdornment from "@material-ui/core/InputAdornment/InputAdornment";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem/MenuItem";
 import NotFound from "../../common/error/NotFound";
@@ -29,7 +28,7 @@ import Paper from "@material-ui/core/Paper/Paper";
 import React from "react";
 import Select from "@material-ui/core/Select/Select";
 import Span from "../../../utils/tracing/span";
-import TextField from "@material-ui/core/TextField/TextField";
+import TagsInput from "./TagsInput";
 import TopToolbar from "../../common/toptoolbar";
 import TracesList from "./TracesList";
 import Typography from "@material-ui/core/Typography/Typography";
@@ -47,13 +46,6 @@ const styles = (theme) => ({
         marginBottom: theme.spacing.unit * 2
     },
     formControl: {
-        marginBottom: theme.spacing.unit * 2
-    },
-    durationTextField: {
-        marginTop: theme.spacing.unit * 2
-    },
-    startInputAdornment: {
-        marginRight: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
     },
     searchForm: {
@@ -99,10 +91,6 @@ class TraceSearch extends React.Component {
                 availableComponents: [],
                 availableOperations: []
             },
-            tagsTempInput: {
-                content: "",
-                errorMessage: ""
-            },
             isLoading: false,
             hasSearchCompleted: false
         };
@@ -112,7 +100,7 @@ class TraceSearch extends React.Component {
 
     render = () => {
         const {classes, location} = this.props;
-        const {data, filter, metaData, tagsTempInput, isLoading} = this.state;
+        const {data, filter, metaData, isLoading} = this.state;
 
         /*
          * Checking if the search should be run for the right after rendering
@@ -129,14 +117,6 @@ class TraceSearch extends React.Component {
         const createMenuItemsForSelect = (itemNames) => itemNames.map(
             (itemName) => (<MenuItem key={itemName} value={itemName}>{itemName}</MenuItem>)
         );
-
-        // Generating the chips from the tags object
-        const tagChips = [];
-        for (const tagKey in filter.tags) {
-            if (filter.tags.hasOwnProperty(tagKey)) {
-                tagChips.push(`${tagKey}=${filter.tags[tagKey]}`);
-            }
-        }
 
         return (
             <React.Fragment>
@@ -197,86 +177,29 @@ class TraceSearch extends React.Component {
                                 <Grid container justify={"flex-start"} spacing={24} className={classes.searchForm}>
                                     <Grid item xs={6}>
                                         <FormControl className={classes.formControl} fullWidth={true}>
-                                            <ChipInput label="Tags" InputLabelProps={{shrink: true}}
-                                                onBeforeAdd={(chip) => Boolean(TraceSearch.parseChip(chip))}
-                                                error={Boolean(tagsTempInput.errorMessage)}
-                                                helperText={tagsTempInput.errorMessage} onAdd={this.handleTagAdd}
-                                                placeholder={"Eg: http.status_code=200"} value={tagChips}
-                                                onUpdateInput={this.handleTagsTempInputUpdate}
-                                                inputValue={tagsTempInput.content} onDelete={this.handleTagRemove}
-                                                onBlur={() => this.setState({
-                                                    tagsTempInput: {
-                                                        content: "",
-                                                        errorMessage: ""
-                                                    }
-                                                })}
-                                            />
+                                            <TagsInput onTagsUpdate={this.handleTagsUpdate} defaultTags={filter.tags}/>
                                         </FormControl>
                                     </Grid>
                                     <Grid item xs={3}>
                                         <FormControl className={classes.formControl} fullWidth={true}>
-                                            <InputLabel htmlFor="min-duration" shrink={true}>Duration</InputLabel>
-                                            <TextField id="min-duration" className={classes.durationTextField}
-                                                value={filter.minDuration ? filter.minDuration : ""}
-                                                onChange={this.getChangeHandlerForNumber("minDuration")} type="number"
-                                                placeholder={"Eg: 10"}
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment className={classes.startInputAdornment}
-                                                            variant="filled" position="start">
-                                                            Min
-                                                        </InputAdornment>
-                                                    ),
-                                                    endAdornment: (
-                                                        <InputAdornment variant="filled" position="end">
-                                                            <Select value={filter.minDurationMultiplier}
-                                                                onChange={this.getChangeHandlerForNumber(
-                                                                    "minDurationMultiplier")}
-                                                                inputProps={{
-                                                                    name: "min-duration-multiplier",
-                                                                    id: "min-duration-multiplier"
-                                                                }}>
-                                                                <MenuItem value={1}>ms</MenuItem>
-                                                                <MenuItem value={1000}>s</MenuItem>
-                                                            </Select>
-                                                        </InputAdornment>
-                                                    )
-                                                }}/>
+                                            <InputLabel htmlFor="min-duration-input" shrink={true}>Duration</InputLabel>
+                                            <DurationInput onDurationUpdate={this.handleMinDurationUpdate} label={"Min"}
+                                                durationInputId={"min-duration-input"}
+                                                defaultDuration={filter.minDuration}
+                                                defaultDurationMultiplier={filter.minDurationMultiplier}/>
                                         </FormControl>
                                     </Grid>
                                     <Grid item xs={3}>
                                         <FormControl className={classes.formControl} fullWidth={true}>
-                                            <TextField id="max-duration"
-                                                value={filter.maxDuration ? filter.maxDuration : ""} type={"number"}
-                                                className={classes.durationTextField} placeholder={"Eg: 1,000"}
-                                                onChange={this.getChangeHandlerForNumber("maxDuration")}
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment className={classes.startInputAdornment}
-                                                            variant="filled" position="start">
-                                                            Max
-                                                        </InputAdornment>
-                                                    ),
-                                                    endAdornment: (
-                                                        <InputAdornment variant="filled" position="end">
-                                                            <Select value={filter.maxDurationMultiplier}
-                                                                onChange={this.getChangeHandlerForNumber(
-                                                                    "maxDurationMultiplier")}
-                                                                inputProps={{
-                                                                    name: "max-duration-multiplier",
-                                                                    id: "max-duration-multiplier"
-                                                                }}>
-                                                                <MenuItem value={1}>ms</MenuItem>
-                                                                <MenuItem value={1000}>s</MenuItem>
-                                                            </Select>
-                                                        </InputAdornment>
-                                                    )
-                                                }}/>
+                                            <DurationInput onDurationUpdate={this.handleMaxDurationUpdate} label={"Max"}
+                                                durationInputId={"max-duration-input"}
+                                                defaultDuration={filter.maxDuration}
+                                                defaultDurationMultiplier={filter.maxDurationMultiplier}/>
                                         </FormControl>
                                     </Grid>
                                 </Grid>
                                 <Button variant="contained" color="primary" onClick={this.onSearchButtonClick}
-                                    disabled={Boolean(tagsTempInput.errorMessage) || data.cells.length === 0}>
+                                    disabled={data.cells.length === 0}>
                                     Search
                                 </Button>
                                 {
@@ -451,83 +374,38 @@ class TraceSearch extends React.Component {
         }));
     };
 
-    /**
-     * Get the on change handler for a particular state filter attribute of type number.
-     *
-     * @param {string} name The name of the filter
-     * @returns {Function} The on change handler
-     */
-    getChangeHandlerForNumber = (name) => (event) => {
-        const value = event.target.value === "" ? undefined : parseFloat(event.target.value);
-        if (value === undefined || !isNaN(value)) {
-            this.setState((prevState) => ({
-                ...prevState,
-                filter: {
-                    ...prevState.filter,
-                    [name]: value
-                }
-            }));
-        }
-    };
-
-    handleTagsTempInputUpdate = (event) => {
-        const value = event.currentTarget.value;
-        this.setState({
-            tagsTempInput: {
-                content: value,
-                errorMessage: !value || TraceSearch.parseChip(value)
-                    ? ""
-                    : "Invalid tag filter format. Expected \"tagKey=tagValue\""
+    handleMinDurationUpdate = ({duration, durationMultiplier}) => {
+        this.setState((prevState) => ({
+            filter: {
+                ...prevState.filter,
+                minDuration: duration,
+                minDurationMultiplier: durationMultiplier
             }
-        });
+        }));
+    };
+
+    handleMaxDurationUpdate = ({duration, durationMultiplier}) => {
+        this.setState((prevState) => ({
+            filter: {
+                ...prevState.filter,
+                maxDuration: duration,
+                maxDurationMultiplier: durationMultiplier
+            }
+        }));
     };
 
     /**
-     * Handle a tag being added to the tag filter.
+     * Handle a tags object changes.
      *
-     * @param {string} chip The chip representing the tag that was added
+     * @param {Object} newTags The new tags object
      */
-    handleTagAdd = (chip) => {
-        const tag = TraceSearch.parseChip(chip);
-        if (tag) {
-            this.setState((prevState) => ({
-                ...prevState,
-                filter: {
-                    ...prevState.filter,
-                    tags: {
-                        ...prevState.filter.tags,
-                        [tag.key]: tag.value
-                    }
-                },
-                tagsTempInput: {
-                    ...prevState.tagsTempInput,
-                    content: "",
-                    errorMessage: ""
-                }
-            }));
-        }
-    };
-
-    /**
-     * Handle a tag being removed from the tag filter.
-     *
-     * @param {string} chip The chip representing the tag that was removed
-     */
-    handleTagRemove = (chip) => {
-        const tag = TraceSearch.parseChip(chip);
-        if (tag) {
-            this.setState((prevState) => {
-                const newTags = {...prevState.filter.tags};
-                Reflect.deleteProperty(newTags, tag.key);
-                return {
-                    ...prevState,
-                    filter: {
-                        ...prevState.filter,
-                        tags: newTags
-                    }
-                };
-            });
-        }
+    handleTagsUpdate = (newTags) => {
+        this.setState((prevState) => ({
+            filter: {
+                ...prevState.filter,
+                tags: newTags
+            }
+        }));
     };
 
     search = (isUserAction) => {
@@ -576,20 +454,6 @@ class TraceSearch extends React.Component {
                 availableOperations: availableOperations
             }
         };
-    };
-
-    static parseChip = (chip) => {
-        let tag = null;
-        if (chip) {
-            const chipContent = chip.split("=");
-            if (chipContent.length === 2 && chipContent[0] && chipContent[1]) {
-                tag = {
-                    key: chipContent[0].trim(),
-                    value: chipContent[1].trim()
-                };
-            }
-        }
-        return tag;
     };
 
 }

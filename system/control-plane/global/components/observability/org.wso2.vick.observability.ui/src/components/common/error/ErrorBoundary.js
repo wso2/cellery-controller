@@ -18,6 +18,8 @@ import React from "react";
 import UnknownError from "./UnknownError";
 import * as PropTypes from "prop-types";
 
+/* eslint no-console: ["off"] */
+
 /**
  * Error Boundary to catch error in React Components.
  * This Component can be used to wrap areas of the React App and catch any errors that occur inside them.
@@ -39,9 +41,18 @@ class ErrorBoundary extends React.Component {
         };
     }
 
-    static getDerivedStateFromError = () => ({
-        hasError: true
-    });
+    /**
+     * Derive a suitable state from the error if any error occurs.
+     *
+     * @param {Error} error The error that occurred
+     * @returns {Object} New state
+     */
+    static getDerivedStateFromError = (error) => {
+        console.error(error);
+        return {
+            hasError: true
+        };
+    };
 
     render = () => {
         const {children, title, description, showNavigationButtons} = this.props;

@@ -18,7 +18,7 @@
 import ArrowBack from "@material-ui/icons/ArrowBack";
 import Button from "@material-ui/core/Button/Button";
 import ErrorOutline from "@material-ui/icons/ErrorOutline";
-import HomeOutlined from "@material-ui/icons/HomeOutlined";
+import OverviewIcon from "../../../icons/OverviewIcon";
 import React from "react";
 import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
@@ -89,8 +89,8 @@ const NotFound = (props) => (
                             </Button>
                             <Button variant={"outlined"} size={"small"} className={props.classes.navigationButton}
                                 onClick={() => props.history.push("/")}>
-                                <HomeOutlined className={props.classes.navigationButtonIcon}/>
-                                Home
+                                <OverviewIcon fontSize={"small"} className={props.classes.navigationButtonIcon}/>
+                                Overview
                             </Button>
                         </React.Fragment>
                     )
