@@ -485,8 +485,9 @@ fi
 
 #Read parameter from the STDIN as bash positional parameters and set IaaS, GCP Project and GCP Compute Zone
 if [[ -n ${1/[ ]*\n/} ]]; then
-    iaas=$1
-    if [ $iaas == "GCP" ]; then
+    #iaas=$1
+    IAAS=$1
+    if [ $IAAS == "GCP" ]; then
         if [[ -n ${2/[ ]*\n/} ]]; then
             gcp_project=$2
         fi
