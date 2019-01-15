@@ -486,13 +486,14 @@ fi
 #Read parameter from the STDIN as bash positional parameters and set IaaS, GCP Project and GCP Compute Zone
 if [[ -n ${1/[ ]*\n/} ]]; then
     iaas=$1
-    if [ iaas == "GCP" ]; then
+    if [ $iaas == "GCP" ]; then
         if [[ -n ${2/[ ]*\n/} ]]; then
             gcp_project=$2
         fi
         if [[ -n ${3/[ ]*\n/} ]]; then
             gcp_compute_zone=$3
         fi
+    fi
 fi
 
 #Read IaaS configurations via environment variables.
@@ -696,4 +697,3 @@ fi
 
 echo "ℹ️ VICK installation is finished."
 echo "-=🎉=-"
-
