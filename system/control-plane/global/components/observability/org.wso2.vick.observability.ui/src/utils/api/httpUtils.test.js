@@ -339,6 +339,7 @@ describe("HttpUtils", () => {
 
         const ERROR_DATA = "testError";
         const SUCCESS_OUTPUT_DATA = ["testEvent"];
+        const unauthorizedStatusCode = 401;
         const resolveStatusCodes = [
             200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
             300, 301, 302, 303, 304, 305, 306, 307, 308
@@ -365,7 +366,7 @@ describe("HttpUtils", () => {
                 }
             }, stateHolder);
         };
-        const mockReject = (statusCode) => {
+        const mockReject = (statusCode, noStateHolder = false) => {
             axios.mockResolvedValue(new Promise((resolve, reject) => {
                 reject({
                     response: {
@@ -381,7 +382,7 @@ describe("HttpUtils", () => {
                 headers: {
                     Accept: "application/xml"
                 }
-            }, stateHolder);
+            }, (noStateHolder ? undefined : stateHolder));
         };
 
         resolveStatusCodes.forEach((statusCode) => {
@@ -398,18 +399,27 @@ describe("HttpUtils", () => {
             });
         });
 
-        rejectStatusCodes.filter((statusCode) => statusCode !== 401).forEach((statusCode) => {
+        rejectStatusCodes.filter((statusCode) => statusCode !== unauthorizedStatusCode).forEach((statusCode) => {
             it(`should reject with response data when axios rejects with a ${statusCode} status code`, () => {
                 expect.assertions(1);
                 return expect(mockReject(statusCode)).rejects.toEqual(new Error(ERROR_DATA));
             });
         });
 
-        it("should sign out and reject with response when axios rejects with a 401 status code", async () => {
-            const spy = jest.spyOn(AuthUtils, "signOut");
+        it(`should sign out and reject with response when axios rejects with a ${unauthorizedStatusCode} status code`,
+            async () => {
+                const spy = jest.spyOn(AuthUtils, "signOut");
 
-            await expect(mockReject(401)).rejects.toEqual(new Error(ERROR_DATA));
-            expect(spy).toHaveBeenCalledTimes(1);
-        });
+                await expect(mockReject(unauthorizedStatusCode)).rejects.toEqual(new Error(ERROR_DATA));
+                expect(spy).toHaveBeenCalledTimes(1);
+            });
+
+        it(`should only reject with response when axios rejects with a ${unauthorizedStatusCode} status code`,
+            async () => {
+                const spy = jest.spyOn(AuthUtils, "signOut");
+
+                await expect(mockReject(unauthorizedStatusCode, true)).rejects.toEqual(new Error(ERROR_DATA));
+                expect(spy).toHaveBeenCalledTimes(0);
+            });
     });
 });

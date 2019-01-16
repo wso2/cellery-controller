@@ -167,14 +167,16 @@ class MetricsGraphs extends React.Component {
                 data: timeSeriesData.map((datum) => ({
                     timestamp: datum.timestamp,
                     value: datum.requestCount === 0 ? 0 : datum.totalRequestSizeBytes / datum.requestCount
-                }))
+                })),
+                color: "#5bbd5a"
             },
             {
                 name: "Response",
                 data: timeSeriesData.map((datum) => ({
                     timestamp: datum.timestamp,
                     value: datum.requestCount === 0 ? 0 : datum.totalResponseSizeBytes / datum.requestCount
-                }))
+                })),
+                color: "#76c7e3"
             }
         ];
 
@@ -389,10 +391,10 @@ class MetricsGraphs extends React.Component {
                     <Grid item sm={12}>
                         <TimeSeriesGraph title={"Request/Response Size"} traceSearchFilter={traceSearchFilter}
                             data={
-                                reqResSizeData.map((datum, index) => ({
+                                reqResSizeData.map((datum) => ({
                                     title: datum.name,
                                     points: datum.data,
-                                    color: ["#5bbd5a", "#76c7e3"][index]
+                                    color: datum.color
                                 }))
                             }
                             yAxis={{

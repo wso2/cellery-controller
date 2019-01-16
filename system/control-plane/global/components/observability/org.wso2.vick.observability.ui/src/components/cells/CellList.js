@@ -18,6 +18,7 @@ import DataTable from "../common/DataTable";
 import HealthIndicator from "../common/HealthIndicator";
 import HttpUtils from "../../utils/api/httpUtils";
 import {Link} from "react-router-dom";
+import NotFound from "../common/error/NotFound";
 import NotificationUtils from "../../utils/common/notificationUtils";
 import Paper from "@material-ui/core/Paper";
 import React from "react";
@@ -29,7 +30,8 @@ import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
-        margin: theme.spacing.unit
+        margin: theme.spacing.unit,
+        padding: theme.spacing.unit * 3
     }
 });
 
@@ -42,20 +44,7 @@ class CellList extends React.Component {
             cellInfo: [],
             isLoading: false
         };
-
-        props.globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
     }
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
-    };
 
     loadCellInfo = (isUserAction, queryStartTime, queryEndTime) => {
         const {globalState} = this.props;
@@ -68,6 +57,9 @@ class CellList extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Cell Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -89,10 +81,16 @@ class CellList extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load cell information",
                     NotificationUtils.Levels.ERROR,
@@ -192,7 +190,15 @@ class CellList extends React.Component {
                         ? null
                         : (
                             <Paper className={classes.root}>
-                                <DataTable columns={columns} options={options} data={tableData}/>
+                                {
+                                    tableData.length > 0
+                                        ? <DataTable columns={columns} options={options} data={tableData}/>
+                                        : (
+                                            <NotFound title={"No Cells Found"}
+                                                description={"No Requests between cells found in the selected "
+                                                    + "time range"}/>
+                                        )
+                                }
                             </Paper>
                         )
                 }

@@ -19,12 +19,12 @@ import FormControl from "@material-ui/core/FormControl";
 import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel";
 import MetricsGraphs from "../metricsGraphs";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import Select from "@material-ui/core/Select";
 import StateHolder from "../../common/state/stateHolder";
-import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
@@ -52,16 +52,22 @@ class Metrics extends React.Component {
         super(props);
 
         this.state = {
-            selectedType: Constants.Dashboard.INBOUND,
-            selectedCell: Constants.Dashboard.ALL_VALUE,
-            selectedComponent: Constants.Dashboard.ALL_VALUE,
+            selectedType: props.globalFilterOverrides && props.globalFilterOverrides.selectedType
+                ? props.globalFilterOverrides.selectedType
+                : Constants.Dashboard.INBOUND,
+            selectedCell: props.globalFilterOverrides && props.globalFilterOverrides.selectedCell
+                ? props.globalFilterOverrides.selectedCell
+                : Constants.Dashboard.ALL_VALUE,
+            selectedComponent: props.globalFilterOverrides && props.globalFilterOverrides.selectedComponent
+                ? props.globalFilterOverrides.selectedComponent
+                : Constants.Dashboard.ALL_VALUE,
             components: [],
             metadata: {
                 availableCells: [],
                 availableComponents: [] // Filtered based on the selected cell
             },
             componentData: [],
-            isLoading: false
+            loadingCount: 0
         };
     }
 
@@ -91,12 +97,22 @@ class Metrics extends React.Component {
     };
 
     getFilterChangeHandler = (name) => (event) => {
-        const {globalState} = this.props;
+        const {globalState, onFilterUpdate} = this.props;
+        const {selectedType, selectedCell, selectedComponent} = this.state;
 
         const newValue = event.target.value;
         this.setState({
             [name]: newValue
         });
+
+        if (onFilterUpdate) {
+            onFilterUpdate({
+                selectedType: selectedType,
+                selectedCell: selectedCell,
+                selectedComponent: selectedComponent,
+                [name]: newValue
+            });
+        }
 
         this.update(
             true,
@@ -119,9 +135,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
-            self.setState({
-                isLoading: true
-            });
+            self.setState((prevState) => ({
+                loadingCount: prevState.loadingCount + 1
+            }));
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -136,16 +152,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
                 NotificationUtils.showNotification(
                     "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
@@ -167,9 +183,14 @@ class Metrics extends React.Component {
         if (selectedCell !== Constants.Dashboard.ALL_VALUE) {
             if (selectedType === Constants.Dashboard.INBOUND) {
                 search.sourceCell = selectedCell;
-                search.sourceComponent = selectedComponent;
             } else {
                 search.destinationCell = selectedCell;
+            }
+        }
+        if (selectedComponent !== Constants.Dashboard.ALL_VALUE) {
+            if (selectedType === Constants.Dashboard.INBOUND) {
+                search.sourceComponent = selectedComponent;
+            } else {
                 search.destinationComponent = selectedComponent;
             }
         }
@@ -183,9 +204,9 @@ class Metrics extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Component Metrics", globalState);
-            self.setState({
-                isLoading: true
-            });
+            self.setState((prevState) => ({
+                loadingCount: prevState.loadingCount + 1
+            }));
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -208,16 +229,16 @@ class Metrics extends React.Component {
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
-                self.setState({
-                    isLoading: false
-                });
+                self.setState((prevState) => ({
+                    loadingCount: prevState.loadingCount - 1
+                }));
                 NotificationUtils.showNotification(
                     "Failed to load component metrics",
                     NotificationUtils.Levels.ERROR,
@@ -257,7 +278,7 @@ class Metrics extends React.Component {
             }
         });
 
-        const selectedComponentToShow = availableComponents.includes(selectedComponent)
+        const selectedComponentToShow = components.length === 0 || availableComponents.includes(selectedComponent)
             ? selectedComponent
             : Constants.Dashboard.ALL_VALUE;
 
@@ -273,12 +294,12 @@ class Metrics extends React.Component {
 
     render = () => {
         const {classes, cell, component} = this.props;
-        const {selectedType, selectedCell, selectedComponent, componentData, metadata, isLoading} = this.state;
+        const {selectedType, selectedCell, selectedComponent, componentData, metadata, loadingCount} = this.state;
 
         const targetSourcePrefix = selectedType === Constants.Dashboard.INBOUND ? "Source" : "Target";
 
         return (
-            isLoading
+            loadingCount > 0
                 ? null
                 : (
                     <React.Fragment>
@@ -341,15 +362,14 @@ class Metrics extends React.Component {
                                             direction={selectedType === Constants.Dashboard.INBOUND ? "In" : "Out"}/>
                                     )
                                     : (
-                                        <Typography>
-                                            {
+                                        <NotFound title={"No Metrics Found"}
+                                            description={
                                                 selectedType === Constants.Dashboard.INBOUND
                                                     ? "No Requests from the selected component "
                                                         + `to the "${cell}" cell's "${component}" component`
                                                     : `No Requests from the "${cell}" cell's "${component}" `
                                                         + "component to the selected component"
-                                            }
-                                        </Typography>
+                                            }/>
                                     )
                             }
                         </div>
@@ -364,7 +384,13 @@ Metrics.propTypes = {
     classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     cell: PropTypes.string.isRequired,
-    component: PropTypes.string.isRequired
+    component: PropTypes.string.isRequired,
+    onFilterUpdate: PropTypes.func.isRequired,
+    globalFilterOverrides: PropTypes.shape({
+        selectedType: PropTypes.string,
+        selectedCell: PropTypes.string,
+        selectedComponent: PropTypes.string
+    })
 };
 
 export default withStyles(styles)(withGlobalState(Metrics));

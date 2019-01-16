@@ -96,7 +96,7 @@ class HttpUtils {
      * Call the Siddhi backend API.
      *
      * @param {Object} config Axios configuration object
-     * @param {StateHolder} globalState The global state provided to the current component
+     * @param {StateHolder} [globalState] The global state provided to the current component
      * @returns {Promise} A promise for the API call
      */
     static callAPI = (config, globalState) => new Promise((resolve, reject) => {
@@ -126,7 +126,9 @@ class HttpUtils {
                     const errorResponse = error.response;
                     if (errorResponse.status === 401) {
                         // Redirect to home page since the user is not authorised
-                        AuthUtils.signOut(globalState);
+                        if (globalState) {
+                            AuthUtils.signOut(globalState);
+                        }
                     }
                     reject(new Error(errorResponse.data));
                 } else {

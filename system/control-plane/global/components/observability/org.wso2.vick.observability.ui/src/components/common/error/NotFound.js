@@ -15,15 +15,18 @@
  * under the License.
  */
 
+import ArrowBack from "@material-ui/icons/ArrowBack";
+import Button from "@material-ui/core/Button/Button";
 import ErrorOutline from "@material-ui/icons/ErrorOutline";
-import PropTypes from "prop-types";
+import OverviewIcon from "../../../icons/OverviewIcon";
 import React from "react";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     notFoundContainer: {
-        zIndex: -1,
-        position: "absolute",
+        position: "relative",
         top: 0,
         left: 0,
         height: "100%",
@@ -48,7 +51,14 @@ const styles = (theme) => ({
     notFoundDescription: {
         fontSize: "1em",
         fontWeight: 300,
-        color: "#808080"
+        color: "#808080",
+        maxWidth: "50vw"
+    },
+    navigationButton: {
+        margin: theme.spacing.unit
+    },
+    navigationButtonIcon: {
+        marginRight: theme.spacing.unit
     }
 });
 
@@ -68,14 +78,37 @@ const NotFound = (props) => (
                     )
                     : null
             }
+            {
+                props.showNavigationButtons
+                    ? (
+                        <React.Fragment>
+                            <Button variant={"outlined"} size={"small"} className={props.classes.navigationButton}
+                                onClick={() => props.history.goBack()}>
+                                <ArrowBack className={props.classes.navigationButtonIcon}/>
+                                Go Back
+                            </Button>
+                            <Button variant={"outlined"} size={"small"} className={props.classes.navigationButton}
+                                onClick={() => props.history.push("/")}>
+                                <OverviewIcon fontSize={"small"} className={props.classes.navigationButtonIcon}/>
+                                Overview
+                            </Button>
+                        </React.Fragment>
+                    )
+                    : null
+            }
         </div>
     </div>
 );
 
 NotFound.propTypes = {
     classes: PropTypes.object.isRequired,
+    history: PropTypes.shape({
+        goBack: PropTypes.func.isRequired,
+        push: PropTypes.func.isRequired
+    }),
     title: PropTypes.string,
-    description: PropTypes.string
+    description: PropTypes.string,
+    showNavigationButtons: PropTypes.bool
 };
 
-export default withStyles(styles, {withTheme: true})(NotFound);
+export default withStyles(styles, {withTheme: true})(withRouter(NotFound));

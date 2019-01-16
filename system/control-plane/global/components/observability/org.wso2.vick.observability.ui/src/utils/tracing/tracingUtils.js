@@ -125,12 +125,10 @@ class TracingUtils {
      */
     static labelSpanTree = (tree) => {
         tree.walk((span) => {
-            if (span.isFromIstioSystemComponent()) {
-                span.componentType = Constants.ComponentType.ISTIO;
-            } else if (span.isFromVICKSystemComponent()) {
-                span.componentType = Constants.ComponentType.VICK;
+            if (span.isFromIstioSystemComponent() || span.isFromVICKSystemComponent()) {
+                span.componentType = Constants.CelleryType.SYSTEM;
             } else {
-                span.componentType = Constants.ComponentType.COMPONENT;
+                span.componentType = Constants.CelleryType.COMPONENT;
             }
         }, null);
 

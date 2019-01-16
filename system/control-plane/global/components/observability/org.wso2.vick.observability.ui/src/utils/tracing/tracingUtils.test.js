@@ -685,71 +685,71 @@ describe("TracingUtils", () => {
             validateInitialSpanData();
 
             expect(globalGatewayServerSpan.cell).toBeNull();
-            expect(globalGatewayServerSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(globalGatewayServerSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(globalGatewayServerSpan.treeDepth).toBe(0);
 
             expect(globalGatewayClientSpan.cell).toBeNull();
-            expect(globalGatewayClientSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(globalGatewayClientSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(globalGatewayClientSpan.treeDepth).toBe(1);
 
             expect(hrCellGatewayServerSpan.cell).not.toBeNull();
             expect(hrCellGatewayServerSpan.cell.name).toBe("hr");
-            expect(hrCellGatewayServerSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(hrCellGatewayServerSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(hrCellGatewayServerSpan.treeDepth).toBe(2);
 
             expect(hrCellGatewayClientSpan.cell).not.toBeNull();
             expect(hrCellGatewayClientSpan.cell.name).toBe("hr");
-            expect(hrCellGatewayClientSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(hrCellGatewayClientSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(hrCellGatewayClientSpan.treeDepth).toBe(3);
 
             expect(employeeServiceServerSpan.cell).not.toBeNull();
             expect(employeeServiceServerSpan.cell.name).toBe("hr");
-            expect(employeeServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENT);
+            expect(employeeServiceServerSpan.componentType).toBe(Constants.CelleryType.COMPONENT);
             expect(employeeServiceServerSpan.treeDepth).toBe(4);
 
             expect(employeeServiceToIstioMixerClientSpan.cell).not.toBeNull();
             expect(employeeServiceToIstioMixerClientSpan.cell.name).toBe("hr");
-            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.ComponentType.COMPONENT);
+            expect(employeeServiceToIstioMixerClientSpan.componentType).toBe(Constants.CelleryType.COMPONENT);
             expect(employeeServiceToIstioMixerClientSpan.treeDepth).toBe(5);
 
             expect(istioMixerServerSpan.cell).toBeNull();
-            expect(istioMixerServerSpan.componentType).toBe(Constants.ComponentType.ISTIO);
+            expect(istioMixerServerSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(istioMixerServerSpan.treeDepth).toBe(6);
 
             expect(istioMixerWorkerSpan.cell).toBeNull();
-            expect(istioMixerWorkerSpan.componentType).toBe(Constants.ComponentType.ISTIO);
+            expect(istioMixerWorkerSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(istioMixerWorkerSpan.treeDepth).toBe(7);
 
             expect(employeeServiceToReviewsServiceClientSpan.cell).not.toBeNull();
             expect(employeeServiceToReviewsServiceClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToReviewsServiceClientSpan.componentType)
-                .toBe(Constants.ComponentType.COMPONENT);
+                .toBe(Constants.CelleryType.COMPONENT);
             expect(employeeServiceToReviewsServiceClientSpan.treeDepth).toBe(5);
 
             expect(reviewsServiceServerSpan.cell).not.toBeNull();
             expect(reviewsServiceServerSpan.cell.name).toBe("hr");
-            expect(reviewsServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENT);
+            expect(reviewsServiceServerSpan.componentType).toBe(Constants.CelleryType.COMPONENT);
             expect(reviewsServiceServerSpan.treeDepth).toBe(6);
 
             expect(employeeServiceToStockOptionsCellClientSpan.cell).not.toBeNull();
             expect(employeeServiceToStockOptionsCellClientSpan.cell.name).toBe("hr");
             expect(employeeServiceToStockOptionsCellClientSpan.componentType)
-                .toBe(Constants.ComponentType.COMPONENT);
+                .toBe(Constants.CelleryType.COMPONENT);
             expect(employeeServiceToStockOptionsCellClientSpan.treeDepth).toBe(5);
 
             expect(stockOptionsCellGatewayServerSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayServerSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsCellGatewayServerSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(stockOptionsCellGatewayServerSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(stockOptionsCellGatewayServerSpan.treeDepth).toBe(6);
 
             expect(stockOptionsCellGatewayClientSpan.cell).not.toBeNull();
             expect(stockOptionsCellGatewayClientSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsCellGatewayClientSpan.componentType).toBe(Constants.ComponentType.VICK);
+            expect(stockOptionsCellGatewayClientSpan.componentType).toBe(Constants.CelleryType.SYSTEM);
             expect(stockOptionsCellGatewayClientSpan.treeDepth).toBe(7);
 
             expect(stockOptionsServiceServerSpan.cell).not.toBeNull();
             expect(stockOptionsServiceServerSpan.cell.name).toBe("stock-options");
-            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.ComponentType.COMPONENT);
+            expect(stockOptionsServiceServerSpan.componentType).toBe(Constants.CelleryType.COMPONENT);
             expect(stockOptionsServiceServerSpan.treeDepth).toBe(8);
         });
     });

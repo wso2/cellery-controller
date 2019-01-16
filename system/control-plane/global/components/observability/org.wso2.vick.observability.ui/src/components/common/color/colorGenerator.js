@@ -26,8 +26,7 @@ import randomColor from "randomcolor";
  */
 class ColorGenerator {
 
-    static VICK = "VICK";
-    static ISTIO = "Istio";
+    static SYSTEM = "System";
     static UNKNOWN = "UNKNOWN";
     static SUCCESS = "SUCCESS";
     static WARNING = "WARNING";
@@ -51,8 +50,7 @@ class ColorGenerator {
             this.colorMap = {};
         }
 
-        this.colorMap[ColorGenerator.VICK] = "#ababab";
-        this.colorMap[ColorGenerator.ISTIO] = "#434da1";
+        this.colorMap[ColorGenerator.SYSTEM] = "#ababab";
         this.colorMap[ColorGenerator.UNKNOWN] = "#71736f";
         this.colorMap[ColorGenerator.SUCCESS] = Green[500];
         this.colorMap[ColorGenerator.WARNING] = Yellow[800];

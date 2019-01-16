@@ -17,6 +17,7 @@
 import HealthIndicator from "../../common/HealthIndicator";
 import HttpUtils from "../../../utils/api/httpUtils";
 import {Link} from "react-router-dom";
+import NotFound from "../../common/error/NotFound";
 import NotificationUtils from "../../../utils/common/notificationUtils";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
@@ -31,23 +32,13 @@ import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core/styles";
 import * as PropTypes from "prop-types";
 
-const styles = (theme) => ({
+const styles = () => ({
     table: {
         width: "20%",
         marginTop: 25
     },
     tableCell: {
         borderBottom: "none"
-    },
-    dependencies: {
-        marginTop: theme.spacing.unit * 3
-    },
-    diagram: {
-        padding: theme.spacing.unit * 3
-    },
-    subtitle: {
-        fontWeight: 400,
-        fontSize: "1rem"
     }
 });
 
@@ -57,6 +48,7 @@ class Details extends React.Component {
         super(props);
 
         this.state = {
+            isDataAvailable: false,
             health: -1,
             dependencyGraphData: [],
             isLoading: false
@@ -65,24 +57,12 @@ class Details extends React.Component {
 
     componentDidMount = () => {
         const {globalState} = this.props;
-        globalState.addListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
 
         this.update(
             true,
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).startTime),
             QueryUtils.parseTime(globalState.get(StateHolder.GLOBAL_FILTER).endTime)
         );
-    };
-
-    componentWillUnmount = () => {
-        const {globalState} = this.props;
-        globalState.removeListener(StateHolder.LOADING_STATE, this.handleLoadingStateChange);
-    };
-
-    handleLoadingStateChange = (loadingStateKey, oldState, newState) => {
-        this.setState({
-            isLoading: newState.loadingOverlayCount > 0
-        });
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
@@ -98,6 +78,9 @@ class Details extends React.Component {
 
         if (isUserAction) {
             NotificationUtils.showLoadingOverlay("Loading Component Info", globalState);
+            self.setState({
+                isLoading: true
+            });
         }
         HttpUtils.callObservabilityAPI(
             {
@@ -121,15 +104,21 @@ class Details extends React.Component {
             });
 
             self.setState({
-                health: 1 - (aggregatedData.count === 0 ? aggregatedData.errorsCount / aggregatedData.count : 0),
-                dependencyGraphData: []
+                health: 1 - (aggregatedData.total === 0 ? aggregatedData.errorsCount / aggregatedData.total : 0),
+                isDataAvailable: aggregatedData.total > 0
             });
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
             }
         }).catch(() => {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
+                self.setState({
+                    isLoading: false
+                });
                 NotificationUtils.showNotification(
                     "Failed to load component information",
                     NotificationUtils.Levels.ERROR,
@@ -141,47 +130,51 @@ class Details extends React.Component {
 
     render() {
         const {classes, cell, component} = this.props;
-        const {health, isLoading} = this.state;
+        const {health, isLoading, isDataAvailable} = this.state;
+
+        let view;
+        if (isDataAvailable) {
+            view = (
+                <Table className={classes.table}>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className={classes.tableCell}>
+                                <Typography color="textSecondary">
+                                    Health
+                                </Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <HealthIndicator value={health}/>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell className={classes.tableCell}>
+                                <Typography color="textSecondary">
+                                    Cell
+                                </Typography>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <Link to={`/cells/${cell}`}>{cell}</Link>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            );
+        } else {
+            view = (
+                <NotFound title={"Component Not Found"} description={`The "${component}" component not found. `
+                    + "This is possibly because no requests had been received/sent by this component in the selected "
+                    + "time period"}/>
+            );
+        }
         return (
             <React.Fragment>
+                {isLoading ? null : view}
                 {
-                    isLoading
-                        ? null
-                        : (
-                            <Table className={classes.table}>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell className={classes.tableCell}>
-                                            <Typography color="textSecondary">
-                                                Health
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell className={classes.tableCell}>
-                                            <HealthIndicator value={health}/>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className={classes.tableCell}>
-                                            <Typography color="textSecondary">
-                                                Cell
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell className={classes.tableCell}>
-                                            <Link to={`/cells/${cell}`}>{cell}</Link>
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        )
+                    isDataAvailable
+                        ? <ServiceDependencyView cell={cell} component={component}/>
+                        : null
                 }
-                <div className={classes.dependencies}>
-                    <Typography color="textSecondary" className={classes.subtitle}>
-                        Dependencies
-                    </Typography>
-                    <div className={classes.diagram}>
-                        <ServiceDependencyView cell={cell} service={component}/>
-                    </div>
-                </div>
             </React.Fragment>
         );
     }

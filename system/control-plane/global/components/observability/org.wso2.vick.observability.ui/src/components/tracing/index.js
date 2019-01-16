@@ -27,7 +27,7 @@ const Tracing = ({match, location}) => (
         <Route exact path={`${match.path}/search`} component={Search}/>
         <Route exact path={`${match.path}/id/:traceId`} component={View}/>
         <Redirect exact from={`${match.url}/`} to={{pathname: `${match.url}/search`, state: location.state}}/>
-        <Route path={`${match.url}/*`} component={NotFound}/>
+        <Route path={`${match.url}/*`} render={(props) => <NotFound {...props} showNavigationButtons={true}/>}/>
     </Switch>
 );
 

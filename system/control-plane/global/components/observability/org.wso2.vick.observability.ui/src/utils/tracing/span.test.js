@@ -1262,7 +1262,7 @@ describe("Span", () => {
             span.addSpanReference(parentSpan);
             span.addSpanReference(childSpanA);
             span.addSpanReference(childSpanB);
-            span.componentType = Constants.ComponentType.VICK;
+            span.componentType = Constants.CelleryType.SYSTEM;
             span.cell = {
                 name: "cell-a"
             };

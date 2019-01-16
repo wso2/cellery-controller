@@ -19,6 +19,7 @@
 import ErrorBoundary from "./error/ErrorBoundary";
 import {Graph} from "react-d3-graph";
 import React from "react";
+import UnknownError from "./error/UnknownError";
 import * as PropTypes from "prop-types";
 
 class DependencyGraph extends React.Component {
@@ -112,7 +113,9 @@ class DependencyGraph extends React.Component {
                 </ErrorBoundary>
             );
         } else {
-            view = <div>No Data Available</div>;
+            view = (
+                <UnknownError title={"No Data Available"} description={"No Data Available to render Dependency Graph"}/>
+            );
         }
         return view;
     };
@@ -120,7 +123,9 @@ class DependencyGraph extends React.Component {
 }
 
 DependencyGraph.propTypes = {
+    id: PropTypes.string.isRequired,
     data: PropTypes.object.isRequired,
+    config: PropTypes.object,
     reloadGraph: PropTypes.bool
 };
 

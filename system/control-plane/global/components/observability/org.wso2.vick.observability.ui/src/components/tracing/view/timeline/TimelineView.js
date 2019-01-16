@@ -310,10 +310,8 @@ class TimelineView extends React.Component {
                     // Finding the proper color for this item
                     let colorKey = item.span.cell.name;
                     if (!colorKey) {
-                        if (item.span.componentType === Constants.ComponentType.VICK) {
-                            colorKey = ColorGenerator.VICK;
-                        } else if (item.span.componentType === Constants.ComponentType.ISTIO) {
-                            colorKey = ColorGenerator.ISTIO;
+                        if (item.span.componentType === Constants.CelleryType.SYSTEM) {
+                            colorKey = ColorGenerator.SYSTEM;
                         } else {
                             colorKey = item.span.componentType;
                         }

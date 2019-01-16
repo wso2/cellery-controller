@@ -55,13 +55,13 @@ class StatelessProtectedPortal extends React.Component {
         return isAuthenticated
             ? (
                 <AppLayout>
-                    <ErrorBoundary>
+                    <ErrorBoundary showNavigationButtons={true}>
                         <Switch>
                             <Route exact path="/" component={Overview}/>
                             <Route path="/cells" component={Cells}/>
                             <Route path="/tracing" component={Tracing}/>
                             <Route path="/system-metrics" component={SystemMetrics}/>
-                            <Route path="/*" component={NotFound}/>
+                            <Route path="/*" render={(props) => <NotFound {...props} showNavigationButtons={true}/>}/>
                         </Switch>
                     </ErrorBoundary>
                 </AppLayout>
@@ -92,15 +92,15 @@ const theme = createMuiTheme({
 const App = () => (
     <MuiThemeProvider theme={theme}>
         <CssBaseline/>
-        <ErrorBoundary>
-            <BrowserRouter>
+        <BrowserRouter>
+            <ErrorBoundary showNavigationButtons={true}>
                 <ColorProvider>
                     <StateProvider>
                         <ProtectedPortal/>
                     </StateProvider>
                 </ColorProvider>
-            </BrowserRouter>
-        </ErrorBoundary>
+            </ErrorBoundary>
+        </BrowserRouter>
     </MuiThemeProvider>
 );
 

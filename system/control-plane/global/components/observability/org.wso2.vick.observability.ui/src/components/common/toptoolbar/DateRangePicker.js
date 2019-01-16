@@ -26,14 +26,16 @@ import Divider from "@material-ui/core/Divider";
 import FormControl from "@material-ui/core/FormControl/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel/FormControlLabel";
 import Grid from "@material-ui/core/Grid/Grid";
+import HttpUtils from "../../../utils/api/httpUtils";
 import InputLabel from "@material-ui/core/InputLabel/InputLabel";
-import PropTypes from "prop-types";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import TextField from "@material-ui/core/TextField/TextField";
 import Typography from "@material-ui/core/Typography/Typography";
 import classNames from "classnames";
+import {withRouter} from "react-router-dom";
 import {withStyles} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     dateRangePopOver: {
@@ -83,7 +85,7 @@ class DateRangePicker extends React.Component {
 
     DEFAULT_RANGES = {
         LAST_MIN: {
-            name: "Last mins",
+            name: "Last min",
             from: "now - 1 minute"
         },
         LAST_5_MINS: {
@@ -99,7 +101,7 @@ class DateRangePicker extends React.Component {
             from: "now - 30 minutes"
         },
         LAST_1_HOUR: {
-            name: "Last 1 hour",
+            name: "Last hour",
             from: "now - 1 hour"
         },
         LAST_3_HOURS: {
@@ -391,8 +393,18 @@ class DateRangePicker extends React.Component {
      * @param {string} newDateRangeNickname The new date range nickname to be applied
      */
     applyDateRange = (newStartTime = "", newEndTime = "", newDateRangeNickname = "") => {
-        const {onRangeChange} = this.props;
+        const {onRangeChange, history, location, match} = this.props;
         const {startTime, endTime} = this.state;
+
+        // Removing Query Params provided for overriding time range
+        const queryParamsString = HttpUtils.generateQueryParamString({
+            ...HttpUtils.parseQueryParams(location.search),
+            globalFilterStartTime: undefined,
+            globalFilterEndTime: undefined
+        });
+        history.replace(match.url + queryParamsString, {
+            ...location.state
+        });
 
         onRangeChange(
             newStartTime ? newStartTime : startTime,
@@ -405,10 +417,20 @@ class DateRangePicker extends React.Component {
 
 DateRangePicker.propTypes = {
     classes: PropTypes.any.isRequired,
+    history: PropTypes.shape({
+        replace: PropTypes.func.isRequired,
+        push: PropTypes.func.isRequired
+    }).isRequired,
+    location: PropTypes.shape({
+        search: PropTypes.string.isRequired
+    }).isRequired,
+    match: PropTypes.shape({
+        url: PropTypes.string.isRequired
+    }).isRequired,
     startTime: PropTypes.string.isRequired,
     endTime: PropTypes.string.isRequired,
     dateRangeNickname: PropTypes.string,
     onRangeChange: PropTypes.func.isRequired
 };
 
-export default withStyles(styles, {withTheme: true})(DateRangePicker);
+export default withStyles(styles, {withTheme: true})(withRouter(DateRangePicker));

@@ -17,9 +17,8 @@
 import DependencyGraph from "../../common/DependencyGraph";
 import ErrorBoundary from "../../common/error/ErrorBoundary";
 import HttpUtils from "../../../utils/api/httpUtils";
-import Info from "@material-ui/icons/InfoOutlined";
+import InfoOutlined from "@material-ui/icons/InfoOutlined";
 import NotificationUtils from "../../../utils/common/notificationUtils";
-import PropTypes from "prop-types";
 import QueryUtils from "../../../utils/common/queryUtils";
 import React from "react";
 import StateHolder from "../../common/state/stateHolder";
@@ -27,11 +26,22 @@ import Typography from "@material-ui/core/Typography/Typography";
 import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
 import withColor, {ColorGenerator} from "../../common/color";
+import * as PropTypes from "prop-types";
 
-const styles = () => ({
+const styles = (theme) => ({
+    subtitle: {
+        fontWeight: 400,
+        fontSize: "1rem"
+    },
     graph: {
         width: "100%",
         height: "100%"
+    },
+    diagram: {
+        padding: theme.spacing.unit * 3
+    },
+    dependencies: {
+        marginTop: theme.spacing.unit * 3
     },
     info: {
         display: "inline-flex"
@@ -114,7 +124,7 @@ class ServiceDependencyView extends React.Component {
     };
 
     update = (isUserAction, queryStartTime, queryEndTime) => {
-        const {globalState, cell, service} = this.props;
+        const {globalState, cell, component} = this.props;
         const self = this;
 
         const search = {
@@ -123,9 +133,9 @@ class ServiceDependencyView extends React.Component {
         };
 
         if (isUserAction) {
-            NotificationUtils.showLoadingOverlay("Loading Service Dependency Graph", globalState);
+            NotificationUtils.showLoadingOverlay("Loading Component Dependency Graph", globalState);
         }
-        let url = `/dependency-model/cells/${cell}/microservices/${service}`;
+        let url = `/dependency-model/cells/${cell}/microservices/${component}`;
         url += `${HttpUtils.generateQueryParamString(search)}`;
         HttpUtils.callObservabilityAPI(
             {
@@ -147,7 +157,7 @@ class ServiceDependencyView extends React.Component {
             if (isUserAction) {
                 NotificationUtils.hideLoadingOverlay(globalState);
                 NotificationUtils.showNotification(
-                    "Failed to load service dependency view",
+                    "Failed to load component dependency view",
                     NotificationUtils.Levels.ERROR,
                     globalState
                 );
@@ -169,15 +179,15 @@ class ServiceDependencyView extends React.Component {
     };
 
     render = () => {
-        const {classes} = this.props;
+        const {classes, cell, component} = this.props;
         const dependedNodeCount = this.state.data.nodes.length;
-        let view;
 
+        let view;
         if (dependedNodeCount > 1) {
             view = (
                 <ErrorBoundary title={"Unable to Render"} description={"Unable to Render due to Invalid Data"}>
                     <DependencyGraph
-                        id="service-dependency-graph"
+                        id="component-dependency-graph"
                         data={this.state.data}
                         config={{
                             ...graphConfig,
@@ -191,12 +201,25 @@ class ServiceDependencyView extends React.Component {
                 </ErrorBoundary>
             );
         } else {
-            view = <div> <Info className={classes.infoIcon} color="action"/>
-                <Typography variant="subtitle2" color="textSecondary" className={classes.info}>
-                    No depended services exists for component - {this.props.service}
-                </Typography></div>;
+            view = (
+                <div>
+                    <InfoOutlined className={classes.infoIcon} color="action"/>
+                    <Typography variant="subtitle2" color="textSecondary" className={classes.info}>
+                        {`"${component}"`} component in {`"${cell}"`} cell does not depend on any other Component
+                    </Typography>
+                </div>
+            );
         }
-        return view;
+        return (
+            <div className={classes.dependencies}>
+                <Typography color="textSecondary" className={classes.subtitle}>
+                    Dependencies
+                </Typography>
+                <div className={classes.diagram}>
+                    {view}
+                </div>
+            </div>
+        );
     }
 
 }
@@ -204,7 +227,7 @@ class ServiceDependencyView extends React.Component {
 ServiceDependencyView.propTypes = {
     classes: PropTypes.object.isRequired,
     cell: PropTypes.string.isRequired,
-    service: PropTypes.string.isRequired,
+    component: PropTypes.string.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired
 };

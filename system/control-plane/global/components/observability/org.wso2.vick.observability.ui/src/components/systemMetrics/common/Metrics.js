@@ -20,7 +20,6 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Constants from "../../../utils/constants";
 import Grid from "@material-ui/core/Grid";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
-import PropTypes from "prop-types";
 import React from "react";
 import Tooltip from "@material-ui/core/Tooltip";
 import moment from "moment";
@@ -39,6 +38,7 @@ import {
     makeWidthFlexible
 } from "react-vis";
 import withColor, {ColorGenerator} from "../../common/color";
+import * as PropTypes from "prop-types";
 
 const styles = {
     card: {

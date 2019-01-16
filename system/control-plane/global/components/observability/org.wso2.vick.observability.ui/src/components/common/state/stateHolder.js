@@ -16,6 +16,7 @@
 
 import AuthUtils from "../../../utils/api/authUtils";
 import Constants from "../../../utils/constants";
+import HttpUtils from "../../../utils/api/httpUtils";
 import moment from "moment";
 
 /**
@@ -194,16 +195,16 @@ class StateHolder {
      */
     loadConfig = () => {
         const self = this;
-        return new Promise((resolve) => {
-            // TODO : Load configuration from server
-            self.set(StateHolder.CONFIG, {
-                observabilityAPIURL: "http://wso2sp-observability-api/api",
-                percentageRangeMinValue: {
-                    errorThreshold: 0.5,
-                    warningThreshold: 0.7
-                }
+        return new Promise((resolve, reject) => {
+            HttpUtils.callAPI({
+                url: "/config",
+                method: "GET"
+            }).then((data) => {
+                self.set(StateHolder.CONFIG, data);
+                resolve(data);
+            }).catch((error) => {
+                reject(error);
             });
-            resolve();
         });
     };
 

@@ -84,6 +84,7 @@ class Component extends React.Component {
 
         // Updating the Browser URL
         const queryParams = HttpUtils.generateQueryParamString({
+            ...HttpUtils.parseQueryParams(location.search),
             tab: this.tabs[value]
         });
         history.replace(match.url + queryParams, {
@@ -97,8 +98,21 @@ class Component extends React.Component {
         }
     };
 
+    onFilterUpdate = (newFilter) => {
+        const {history, location, match} = this.props;
+
+        // Updating the Browser URL
+        const queryParams = HttpUtils.generateQueryParamString({
+            ...HttpUtils.parseQueryParams(location.search),
+            ...newFilter
+        });
+        history.replace(match.url + queryParams, {
+            ...location.state
+        });
+    };
+
     render() {
-        const {classes, match} = this.props;
+        const {classes, location, match} = this.props;
         const {selectedTabIndex} = this.state;
 
         const cellName = match.params.cellName;
@@ -106,6 +120,8 @@ class Component extends React.Component {
 
         const tabContent = [Details, K8sObjects, Metrics];
         const SelectedTabContent = tabContent[selectedTabIndex];
+
+        const queryParams = HttpUtils.parseQueryParams(location.search);
 
         const traceSearch = {
             cell: cellName,
@@ -127,7 +143,8 @@ class Component extends React.Component {
                             <Timeline/><span className={classes.viewTracesContent}>View Traces</span>
                         </Button>
                     </div>
-                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} component={componentName}/>
+                    <SelectedTabContent innerRef={this.tabContentRef} cell={cellName} component={componentName}
+                        onFilterUpdate={this.onFilterUpdate} globalFilterOverrides={queryParams}/>
                 </Paper>
             </React.Fragment>
         );

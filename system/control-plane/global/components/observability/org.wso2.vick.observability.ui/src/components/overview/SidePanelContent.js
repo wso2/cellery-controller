@@ -207,7 +207,7 @@ class SidePanelContent extends React.Component {
                                     <Typography color="inherit" className={classes.sideBarContentTitle}>
                                         Cell:
                                     </Typography>
-                                    <Typography component={Link} to={`/cells/${selectedCell.id}`}
+                                    <Typography component={Link} to={`/cells/${selectedCell}`}
                                         className={classes.cellName}>
                                         {summary.topic}
                                     </Typography>
@@ -454,12 +454,12 @@ class SidePanelContent extends React.Component {
                                     data={listData.map((datum) => [
                                         datum[0],
                                         {
-                                            cell: selectedCell ? selectedCell.id : datum[1],
+                                            cell: selectedCell ? selectedCell : datum[1],
                                             component: selectedCell ? datum[1] : null
 
                                         },
                                         {
-                                            cell: selectedCell ? selectedCell.id : datum[2],
+                                            cell: selectedCell ? selectedCell : datum[2],
                                             component: selectedCell ? datum[2] : null
                                         }
                                     ])}/>
@@ -478,9 +478,7 @@ SidePanelContent.propTypes = {
     colorGenerator: PropTypes.instanceOf(ColorGenerator).isRequired,
     summary: PropTypes.object.isRequired,
     request: PropTypes.object.isRequired,
-    selectedCell: PropTypes.shape({
-        id: PropTypes.string.isRequired
-    }),
+    selectedCell: PropTypes.string,
     listData: PropTypes.arrayOf(PropTypes.any).isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired
 };

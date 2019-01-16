@@ -236,7 +236,7 @@ class MainAppBar extends React.Component {
                                             <Divider/>
                                             <Paper className={classes.copyContainer} elevation={1}>
                                                 <InputBase className={classes.copyInput}
-                                                    placeholder="Sharable Link" value={this.getShareableLink()}
+                                                    inputProps={{spellCheck: false}} value={this.getShareableLink()}
                                                     inputRef={this.dashboardShareableLinkRef}/>
                                                 <Tooltip title="Copied!" disableFocusListener={false}
                                                     disableHoverListener={false} placement="top"

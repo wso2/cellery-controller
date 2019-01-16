@@ -17,10 +17,10 @@
  */
 
 import Paper from "@material-ui/core/Paper";
-import PropTypes from "prop-types";
 import React from "react";
 import TopToolbar from "../common/toptoolbar";
 import {withStyles} from "@material-ui/core/styles";
+import * as PropTypes from "prop-types";
 
 const styles = (theme) => ({
     root: {
