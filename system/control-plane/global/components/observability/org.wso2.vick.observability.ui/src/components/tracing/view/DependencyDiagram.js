@@ -18,10 +18,10 @@ import "./DependencyDiagram.css";
 import ArrowRightAltSharp from "@material-ui/icons/ArrowRightAltSharp";
 import Button from "@material-ui/core/Button";
 import Constants from "../../../utils/constants";
+import DependencyGraph from "../../common/DependencyGraph";
 import Error from "@material-ui/icons/Error";
 import Fade from "@material-ui/core/Fade";
 import FiberManualRecord from "@material-ui/icons/FiberManualRecord";
-import {Graph} from "react-d3-graph";
 import Paper from "@material-ui/core/Paper";
 import Popper from "@material-ui/core/Popper";
 import React from "react";
@@ -162,72 +162,52 @@ class DependencyDiagram extends React.Component {
             nodes.length > 0 && links.length > 0
                 ? (
                     <React.Fragment>
-                        <Graph id={"trace-dependency-graph"} className={classes.graph}
-                            data={{
-                                nodes: nodes,
-                                links: links
-                            }}
-                            config={{
-                                directed: true,
-                                nodeHighlightBehavior: true,
-                                highlightOpacity: 0.2,
-                                height: 520,
-                                width: 1100,
-                                node: {
-                                    fontSize: 15,
-                                    highlightFontSize: 15,
-                                    viewGenerator: (node) => {
-                                        const radius = (((node.span.duration - minDuration)
-                                               * (DependencyDiagram.MAX_RADIUS - DependencyDiagram.MIN_RADIUS))
-                                               / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
+                        <DependencyGraph id={"trace-dependency-graph"} data={{nodes: nodes, links: links}} config={{
+                            node: {
+                                viewGenerator: (node) => {
+                                    const radius = (((node.span.duration - minDuration)
+                                        * (DependencyDiagram.MAX_RADIUS - DependencyDiagram.MIN_RADIUS))
+                                        / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
 
-                                        let nodeSVGContent;
-                                        const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
-                                        if (node.span.hasError()) {
-                                            const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
+                                    let nodeSVGContent;
+                                    const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
+                                    if (node.span.hasError()) {
+                                        const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
 
-                                            const iconTranslation = radius * (Math.PI / 4);
-                                            const xTranslation = 150;
-                                            const yTranslation = 120 - iconTranslation - 30;
-                                            nodeSVGContent = (
+                                        const iconTranslation = radius * (Math.PI / 4);
+                                        const xTranslation = 150;
+                                        const yTranslation = 120 - iconTranslation - 30;
+                                        nodeSVGContent = (
+                                            <g>
                                                 <g>
                                                     <g>
-                                                        <g>
-                                                            {circle}
-                                                        </g>
-                                                    </g>
-                                                    <g transform={
-                                                        `translate(${xTranslation}, ${yTranslation})
-                                                       scale(0.4, 0.4)`
-                                                    }>
-                                                        <path stroke="#fff" strokeWidth="10" fill={errorColor}
-                                                            d="M120.5,9.6C59.1,9.6,9,59.8,9,121.3S59.1,233,120.5,
-                                                         233S232,182.8,232,121.3S181.9,9.6,120.5,9.6z"/>
-                                                        <path fill="#ffffff"
-                                                            d="M105.4,164.5h29.9v29.9h-29.9V164.5z M105.4,
-                                                    44.2h29.9v90.1h-29.9V44.2z"/>
+                                                        {circle}
                                                     </g>
                                                 </g>
-                                            );
-                                        } else {
-                                            nodeSVGContent = circle;
-                                        }
-                                        return (
-                                            <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 240 240">
-                                                {nodeSVGContent}
-                                            </svg>
+                                                <g transform={
+                                                    `translate(${xTranslation}, ${yTranslation})
+                                                       scale(0.4, 0.4)`
+                                                }>
+                                                    <path stroke="#fff" strokeWidth="10" fill={errorColor}
+                                                        d="M120.5,9.6C59.1,9.6,9,59.8,9,121.3S59.1,233,120.5,
+                                                         233S232,182.8,232,121.3S181.9,9.6,120.5,9.6z"/>
+                                                    <path fill="#ffffff"
+                                                        d="M105.4,164.5h29.9v29.9h-29.9V164.5z M105.4,
+                                                    44.2h29.9v90.1h-29.9V44.2z"/>
+                                                </g>
+                                            </g>
                                         );
+                                    } else {
+                                        nodeSVGContent = circle;
                                     }
-                                },
-                                link: {
-                                    strokeWidth: 3,
-                                    highlightColor: "#444"
-                                },
-                                d3: {
-                                    gravity: -200
+                                    return (
+                                        <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 240 240">
+                                            {nodeSVGContent}
+                                        </svg>
+                                    );
                                 }
-                            }}
-                        />
+                            }
+                        }}/>
                         <Button
                             aria-describedby={id}
                             variant="outlined"

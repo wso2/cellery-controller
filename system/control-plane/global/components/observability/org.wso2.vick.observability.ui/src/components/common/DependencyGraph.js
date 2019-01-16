@@ -123,7 +123,9 @@ class DependencyGraph extends React.Component {
 }
 
 DependencyGraph.propTypes = {
+    id: PropTypes.string.isRequired,
     data: PropTypes.object.isRequired,
+    config: PropTypes.object,
     reloadGraph: PropTypes.bool
 };
 
