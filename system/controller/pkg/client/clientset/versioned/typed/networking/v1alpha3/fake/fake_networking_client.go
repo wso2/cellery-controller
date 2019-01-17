@@ -30,6 +30,10 @@ type FakeNetworkingV1alpha3 struct {
 	*testing.Fake
 }
 
+func (c *FakeNetworkingV1alpha3) DestinationRules(namespace string) v1alpha3.DestinationRuleInterface {
+	return &FakeDestinationRules{c, namespace}
+}
+
 func (c *FakeNetworkingV1alpha3) EnvoyFilters(namespace string) v1alpha3.EnvoyFilterInterface {
 	return &FakeEnvoyFilters{c, namespace}
 }

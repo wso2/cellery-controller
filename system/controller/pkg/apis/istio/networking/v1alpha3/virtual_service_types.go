@@ -226,7 +226,16 @@ type Destination struct {
 	// Specifies the port on the host that is being addressed. If a service
 	// exposes only a single port it is not required to explicitly select the
 	// port.
-	//Port *PortSelector `json:"port,omitempty"`
+	Port *PortSelector `json:"port,omitempty"`
+}
+
+// PortSelector specifies the number of a port to be used for
+// matching or selection for final routing.
+type PortSelector struct {
+	// Types that are valid to be assigned to Port:
+	//	*PortSelector_Number
+	//	*PortSelector_Name
+	Number string `json:"number,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

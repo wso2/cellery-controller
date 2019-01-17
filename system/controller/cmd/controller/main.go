@@ -88,6 +88,7 @@ func main() {
 	serviceInformer := vickInformerFactory.Vick().V1alpha1().Services()
 	envoyFilterInformer := vickInformerFactory.Networking().V1alpha3().EnvoyFilters()
 	istioGatewayInformer := vickInformerFactory.Networking().V1alpha3().Gateways()
+	istioDRInformer := vickInformerFactory.Networking().V1alpha3().DestinationRules()
 	istioVSInformer := vickInformerFactory.Networking().V1alpha3().VirtualServices()
 
 	// Create VICK system informers
@@ -111,6 +112,7 @@ func main() {
 		deploymentInformer,
 		k8sServiceInformer,
 		istioGatewayInformer,
+		istioDRInformer,
 		istioVSInformer,
 		configMapInformer,
 		gatewayInformer,
@@ -153,6 +155,7 @@ func main() {
 		serviceInformer.Informer().HasSynced,
 		envoyFilterInformer.Informer().HasSynced,
 		istioGatewayInformer.Informer().HasSynced,
+		istioDRInformer.Informer().HasSynced,
 		istioVSInformer.Informer().HasSynced,
 	); !ok {
 		glog.Fatal("failed to wait for caches to sync")

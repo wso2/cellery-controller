@@ -32,11 +32,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"reflect"
 
+	istioinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	istioinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	vickinformers "github.com/wso2/product-vick/system/controller/pkg/client/informers/externalversions/vick/v1alpha1"
 	istionetworklisters "github.com/wso2/product-vick/system/controller/pkg/client/listers/networking/v1alpha3"
@@ -54,6 +54,7 @@ type gatewayHandler struct {
 	deploymentLister   appsv1listers.DeploymentLister
 	k8sServiceLister   corev1listers.ServiceLister
 	istioGatewayLister istionetworklisters.GatewayLister
+	istioDRLister      istionetworklisters.DestinationRuleLister
 	istioVSLister      istionetworklisters.VirtualServiceLister
 	configMapLister    corev1listers.ConfigMapLister
 	gatewayLister      listers.GatewayLister
@@ -67,6 +68,7 @@ func NewController(
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	istioGatewayInformer istioinformers.GatewayInformer,
+	istioDRInformer istioinformers.DestinationRuleInformer,
 	istioVSInformer istioinformers.VirtualServiceInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer vickinformers.GatewayInformer,
@@ -78,6 +80,7 @@ func NewController(
 		deploymentLister:   deploymentInformer.Lister(),
 		k8sServiceLister:   k8sServiceInformer.Lister(),
 		istioGatewayLister: istioGatewayInformer.Lister(),
+		istioDRLister:      istioDRInformer.Lister(),
 		istioVSLister:      istioVSInformer.Lister(),
 		configMapLister:    configMapInformer.Lister(),
 		gatewayLister:      gatewayInformer.Lister(),
