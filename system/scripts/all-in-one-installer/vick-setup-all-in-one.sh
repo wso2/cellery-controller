@@ -561,6 +561,7 @@ control_plane_configs=(
     "apim-configs/pub-store/log4j.properties"
     "sp-worker/siddhi/tracing-app.siddhi"
     "sp-worker/siddhi/istio-telemetry-app.siddhi"
+    "sp-worker/siddhi/k8s-telemetry-app.siddhi"
     "sp-worker/siddhi/telemetry-app.siddhi"
     "sp-worker/conf/deployment.yaml"
     "mysql/dbscripts/init.sql"

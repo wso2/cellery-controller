@@ -248,25 +248,85 @@
                 <artifactId>org.wso2.vick.observability.model.generator</artifactId>
                 <version>${vick.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.vick</groupId>
+                <artifactId>org.wso2.vick.observability.k8s.api.server.client</artifactId>
+                <version>${vick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java</artifactId>
+                <version>${k8s.client-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java-api</artifactId>
+                <version>${k8s.client-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java-proto</artifactId>
+                <version>${k8s.client-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>okhttp-ws</artifactId>
+                <version>${com.squareup.okhttp}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${com.squareup.okhttp}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${com.squareup.okhttp}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>adal4j</artifactId>
+                <version>${adal4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons.codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${joda.time.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk15on</artifactId>
+                <version>${bouncy.castle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-ext-jdk15on</artifactId>
+                <version>${bouncy.castle.version}</version>
+            </dependency>
             <!-- End of SP Worker docker images dependencies -->
 
-            <!--Observability API dependencies-->
+            <!-- Observability API dependencies -->
             <dependency>
                 <groupId>org.wso2.msf4j</groupId>
                 <artifactId>msf4j-core</artifactId>
                 <version>${msf4j.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>20.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.kubernetes</groupId>
-                <artifactId>client-java</artifactId>
-                <version>3.0.0</version>
-            </dependency>
-            <!--End of Observability API dependencies-->
+            <!-- End of Observability API dependencies -->
         </dependencies>
     </dependencyManagement>
 
@@ -322,6 +382,16 @@
         <brave.open.tracing.version>0.29.0</brave.open.tracing.version>
         <okhttp.version>3.11.0</okhttp.version>
         <okio.version>1.14.0</okio.version>
+
+        <!-- External Jars for K8s API Server Client -->
+        <k8s.client-java.version>3.0.0</k8s.client-java.version>
+        <com.squareup.okhttp>2.7.5</com.squareup.okhttp>
+        <joda.time.version>2.9.3</joda.time.version>
+        <guava.version>25.1-jre</guava.version>
+        <adal4j.version>1.6.0</adal4j.version>
+        <commons.codec.version>1.11</commons.codec.version>
+        <commons.compress.version>1.18</commons.compress.version>
+        <bouncy.castle.version>1.59</bouncy.castle.version>
 
         <!-- SP Worker Connectors -->
         <siddhi.io.http.version>1.0.41</siddhi.io.http.version>

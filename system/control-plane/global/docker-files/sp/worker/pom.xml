@@ -90,12 +90,72 @@
             <artifactId>siddhi-store-rdbms</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java-proto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp-ws</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>logging-interceptor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>adal4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-ext-jdk15on</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.vick</groupId>
             <artifactId>org.wso2.vick.observability.api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.vick</groupId>
             <artifactId>org.wso2.vick.observability.model.generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.vick</groupId>
+            <artifactId>org.wso2.vick.observability.k8s.api.server.client</artifactId>
         </dependency>
     </dependencies>
 
@@ -117,7 +177,8 @@
                             <outputDirectory>${project.build.directory}/files/lib</outputDirectory>
                             <excludeArtifactIds>
                                 grpc-protobuf, grpc-protobuf-lite, grpc-stub, opencensus-api,
-                                opencensus-contrib-grpc-metrics, proto-google-common-protos, zipkin
+                                opencensus-contrib-grpc-metrics, proto-google-common-protos,
+                                okhttp-ws, okhttp, adal4j, logging-interceptor
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                         </configuration>
@@ -135,7 +196,10 @@
                             <excludeArtifactIds>
                                 org.wso2.vick.telemetry.receiver, commons-io, gogoproto-java, grpc-wso2,
                                 org.wso2.vick.tracing.receiver, protobuf-wso2, org.wso2.vick.observability.api,
-                                org.wso2.vick.observability.model.generator
+                                org.wso2.vick.observability.model.generator, siddhi-io-http, siddhi-store-rdbms,
+                                org.wso2.vick.observability.k8s.api.server.client, joda-time, zipkin, client-java,
+                                client-java-api, guava, commons-codec, commons-compress, commons-lang3,
+                                client-java-proto, bcpkix-jdk15on, bcprov-ext-jdk15on
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                         </configuration>
