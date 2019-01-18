@@ -161,6 +161,10 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
+	if err := h.handleIstioDestinationRules(gateway); err != nil {
+		return err
+	}
+
 	h.updateOwnerCell(gateway)
 
 	return nil
@@ -285,6 +289,23 @@ func (h *gatewayHandler) handleIstioVirtualServicesForIngress(gateway *v1alpha1.
 	} else {
 		glog.Infof("Ingress virtual services not created since gateway %+v does not have global APIs", gateway.Name)
 	}
+
+	return nil
+}
+
+func (h *gatewayHandler) handleIstioDestinationRules(gateway *v1alpha1.Gateway) error {
+	istioDestinationRule, err := h.istioDRLister.DestinationRules(gateway.Namespace).Get(resources.IstioDestinationRuleName(gateway))
+	if errors.IsNotFound(err) {
+		istioDestinationRule, err = h.vickClient.NetworkingV1alpha3().DestinationRules(gateway.Namespace).Create(
+			resources.CreateIstioDestinationRule(gateway))
+		if err != nil {
+			glog.Errorf("Failed to create destination rule %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Istio destination rule created %+v", istioDestinationRule)
 
 	return nil
 }

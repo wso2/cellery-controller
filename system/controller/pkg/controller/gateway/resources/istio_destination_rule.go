@@ -25,42 +25,35 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
-	return &v1alpha3.Gateway{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioGatewayName(gateway),
+func CreateIstioDestinationRule(gateway *v1alpha1.Gateway) *v1alpha3.DestinationRule {
+
+	return &v1alpha3.DestinationRule {
+		ObjectMeta: metav1.ObjectMeta {
+			Name:      IstioDestinationRuleName(gateway),
 			Namespace: gateway.Namespace,
 			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
+			OwnerReferences: []metav1.OwnerReference {
+				*controller.CreateServiceOwnerRef(gateway),
 			},
 		},
-		Spec: v1alpha3.GatewaySpec{
-			Servers: []*v1alpha3.Server{
-				{
-					Hosts: []string{"*"},
-					Port: &v1alpha3.Port{
-						Number:   80,
-						Protocol: "HTTP2",
-						Name:     "http2",
-					},
+
+		Spec: v1alpha3.DestinationRuleSpec {
+			Host: GatewayK8sServiceName(gateway),
+			TrafficPolicy: &v1alpha3.TrafficPolicy {
+				LoadBalancer: &v1alpha3.LoadBalancerSettings {
+					Simple: "ROUND_ROBIN",
 				},
-				{
-					Hosts: []string{"*"},
-					Port: &v1alpha3.Port{
-						Number:   443,
-						Protocol: "HTTPS",
-						Name:     "https",
-					},
-					Tls: &v1alpha3.Server_TLSOptions{
-						Mode:              "MUTUAL",
-						ServerCertificate: "/etc/certs/cert-chain.pem",
-						PrivateKey:        "/etc/certs/key.pem",
-						CaCertificates:    "/etc/certs/root-cert.pem",
+				PortLevelSettings: []*v1alpha3.TrafficPolicy_PortTrafficPolicy {
+					{
+						Port: &v1alpha3.PortSelector {
+							Number: 443,
+						},
+						Tls: &v1alpha3.TLSSettings{
+							Mode: "ISTIO_MUTUAL",
+						},
 					},
 				},
 			},
-			Selector: createGatewayLabels(gateway),
 		},
 	}
 }

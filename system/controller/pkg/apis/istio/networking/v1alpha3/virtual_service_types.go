@@ -235,7 +235,7 @@ type PortSelector struct {
 	// Types that are valid to be assigned to Port:
 	//	*PortSelector_Number
 	//	*PortSelector_Name
-	Number string `json:"number,omitempty"`
+	Number uint32 `json:"number,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

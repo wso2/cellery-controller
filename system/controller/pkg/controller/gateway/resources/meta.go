@@ -66,3 +66,7 @@ func IstioIngressVirtualServiceName(gateway *v1alpha1.Gateway) string {
 func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
 	return GatewayK8sServiceName(gateway) + "." + gateway.Namespace
 }
+
+func IstioDestinationRuleName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-destination-rule"
+}
