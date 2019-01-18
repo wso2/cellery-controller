@@ -47,6 +47,9 @@ spec:
         -
           containerPort: 3000
           protocol: "TCP"
+        volumeMounts:
+        - name: observability-portal-config
+          mountPath: /portal/config
 
         livenessProbe:
           tcpSocket:
@@ -56,6 +59,10 @@ spec:
       imagePullSecrets:
             - name: wso2creds
       serviceAccountName: "vicksvc-account"
+      volumes:
+      - name: observability-portal-config
+        configMap:
+          name: observability-portal-config
 ---
 apiVersion: v1
 kind: Service

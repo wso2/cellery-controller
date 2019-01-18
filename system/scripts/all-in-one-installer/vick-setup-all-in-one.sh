@@ -365,7 +365,8 @@ kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
 #Create SP dashboard configmaps
 #kubectl create configmap sp-dashboard-conf --from-file=${download_location}/status-dashboard/conf -n vick-system
 #kubectl create configmap sp-worker-bin --from-file=sp-worker/bin -n vick-system
-#Create vick dashboard deployment, service and ingress.
+#Create observability portal deployment, service and ingress.
+kubectl create configmap observability-portal-config --from-file=${download_location}/node-server/config -n vick-system
 kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
 kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
 }
@@ -539,7 +540,7 @@ control_plane_yaml=(
 
 control_plane_configs_base_url="${git_base_url}/system/control-plane/global"
 control_plane_configs=(
-"apim-configs/gw/datasources/master-datasources.xml"
+    "apim-configs/gw/datasources/master-datasources.xml"
     "apim-configs/gw/user-mgt.xml"
     "apim-configs/gw/identity/identity.xml"
     "apim-configs/gw/tomcat/catalina-server.xml"
@@ -565,6 +566,10 @@ control_plane_configs=(
     "mysql/dbscripts/init.sql"
 )
 
+control_plane_observabilityui_base_url="${git_base_url}/system/control-plane/global/components/observability/org.wso2.vick.observability.ui"
+control_plane_observabilityui_configs=(
+"node-server/config/portal.json"
+)
 crd_base_url="${git_base_url}/build/target"
 crd_yaml=("vick.yaml")
 
@@ -614,6 +619,7 @@ echo "🕷️ Downloading VICK artifacts to ${download_path}"
 
 download_vick_artifacts $control_plane_base_url $download_path "${control_plane_yaml[@]}"
 download_vick_artifacts $control_plane_configs_base_url $download_path "${control_plane_configs[@]}"
+download_vick_artifacts $control_plane_observabilityui_base_url $download_path "${control_plane_observabilityui_configs[@]}"
 download_vick_artifacts $crd_base_url  $download_path "${crd_yaml[@]}"
 download_vick_artifacts $istio_base_url $download_path "${istio_yaml[@]}"
 
