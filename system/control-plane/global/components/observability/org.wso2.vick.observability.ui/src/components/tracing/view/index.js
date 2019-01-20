@@ -65,7 +65,7 @@ class View extends React.Component {
         this.state = {
             traceTree: null,
             spans: [],
-            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0),
+            selectedTabIndex: (preSelectedTab && preSelectedTab !== -1 ? preSelectedTab : 0),
             isLoading: false,
             errorMessage: null
         };

@@ -29,6 +29,7 @@ public class SiddhiStoreQueryManager {
     private static final String DISTRIBUTED_TRACING_TABLE_DEFINITION = "@Store(type=\"rdbms\", " +
             "datasource=\"VICK_OBSERVABILITY_DB\", field.length=\"tags:8000\")\n" +
             "@PrimaryKey(\"traceId\", \"spanId\", \"kind\")\n" +
+            "@purge(enable=\"false\")\n" +
             "define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, " +
             "cell string, serviceName string, pod string, operationName string, kind string, startTime long, " +
             "duration long, tags string);";
@@ -44,8 +45,14 @@ public class SiddhiStoreQueryManager {
             "count() as requestCount\n" +
             "group by sourceCell, sourceVICKService, destinationCell, destinationVICKService, httpResponseGroup\n" +
             "aggregate every sec...year;";
+    private static final String K8S_POD_INFO_TABLE = "@Store(type=\"rdbms\", datasource=\"VICK_OBSERVABILITY_DB\")\n" +
+            "@PrimaryKey(\"cell\", \"component\", \"name\")\n" +
+            "@purge(enable=\"false\")\n" +
+            "define table K8sPodInfoTable (cell string, component string, name string, creationTimestamp long, " +
+            "lastKnownAliveTimestamp long, nodeName string);";
+
     private static final String SIDDHI_APP = DISTRIBUTED_TRACING_TABLE_DEFINITION + "\n" +
-            REQUEST_AGGREGATION_DEFINITION;
+            REQUEST_AGGREGATION_DEFINITION + "\n" + K8S_POD_INFO_TABLE;
 
     private SiddhiAppRuntime siddhiAppRuntime;
 

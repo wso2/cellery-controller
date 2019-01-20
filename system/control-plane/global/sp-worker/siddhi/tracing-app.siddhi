@@ -16,6 +16,7 @@ define stream TelemetryStreamIn (sourceNamespace string, sourceCell string, sour
 
 @Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB", field.length="tags:8000")
 @PrimaryKey("traceId", "spanId", "kind")
+@purge(enable="false")
 define table DistributedTracingTable (traceId string, spanId string, parentId string, namespace string, cell string,
                                       serviceName string, pod string, operationName string, kind string,
                                       startTime long, duration long, tags string);

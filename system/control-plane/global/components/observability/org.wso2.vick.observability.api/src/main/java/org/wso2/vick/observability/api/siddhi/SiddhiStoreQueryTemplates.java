@@ -126,6 +126,17 @@ public enum SiddhiStoreQueryTemplates {
             "on traceId == \"${" + Params.TRACE_ID + "}\"\n" +
             "select traceId, spanId, parentId, namespace, cell, serviceName, pod, operationName, kind, startTime, " +
             "duration, tags"
+    ),
+    K8S_GET_PODS_FOR_COMPONENT("from K8sPodInfoTable\n" +
+            "on (\"${" + Params.CELL + "}\" == \"\" or cell == \"${" + Params.CELL + "}\") " +
+            "and (\"${" + Params.COMPONENT + "}\" == \"\" or component == \"${" + Params.COMPONENT + "}\") " +
+            "and ((creationTimestamp >= ${" + Params.QUERY_START_TIME + "}L " +
+            "and creationTimestamp <= ${" + Params.QUERY_END_TIME + "}L) " +
+            "or (lastKnownAliveTimestamp >= ${" + Params.QUERY_START_TIME + "}L " +
+            "and lastKnownAliveTimestamp <= ${" + Params.QUERY_END_TIME + "}L) " +
+            "or (creationTimestamp <= ${" + Params.QUERY_START_TIME + "}L " +
+            "and lastKnownAliveTimestamp >= ${" + Params.QUERY_END_TIME + "}L))\n" +
+            "select cell, component, name, creationTimestamp, lastKnownAliveTimestamp, nodeName"
     );
 
     /*
@@ -146,6 +157,7 @@ public enum SiddhiStoreQueryTemplates {
         public static final String QUERY_END_TIME = "queryEndTime";
         public static final String TIME_GRANULARITY = "timeGranularity";
         public static final String CELL = "cell";
+        public static final String COMPONENT = "component";
         public static final String SOURCE_CELL = "sourceCell";
         public static final String SOURCE_MICROSERVICE = "sourceMicroservice";
         public static final String DESTINATION_CELL = "destinationCell";

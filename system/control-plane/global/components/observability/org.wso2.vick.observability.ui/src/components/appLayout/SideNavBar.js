@@ -121,9 +121,9 @@ class SideNavBar extends React.Component {
             "/",
             "/cells",
             "/tracing",
+            "/system-metrics/pods",
             "/system-metrics/control-plane",
-            "/system-metrics/pod-usage",
-            "/system-metrics/node-usage"
+            "/system-metrics/nodes"
         ];
         let selectedIndex = 0;
         for (let i = 0; i < pages.length; i++) {
@@ -156,7 +156,7 @@ class SideNavBar extends React.Component {
                         <ListItem index={0} button key="Overview"
                             className={classNames({[classes.active]: selectedIndex === 0})}
                             onClick={(event) => {
-                                this.handleNavItemClick("/", event);
+                                this.handleNavItemClick(pages[0], event);
                             }}>
                             <ListItemIcon>
                                 <OverviewIcon className={classNames({[classes.active]: selectedIndex === 0})}/>
@@ -170,7 +170,7 @@ class SideNavBar extends React.Component {
                         <ListItem index={1} button key="Cells"
                             className={classNames({[classes.active]: selectedIndex === 1})}
                             onClick={(event) => {
-                                this.handleNavItemClick("/cells", event);
+                                this.handleNavItemClick(pages[1], event);
                             }}>
                             <ListItemIcon>
                                 <CellsIcon className={classNames({[classes.active]: selectedIndex === 1})}/>
@@ -184,7 +184,7 @@ class SideNavBar extends React.Component {
                         <ListItem index={2} button key="Distributed Tracing"
                             className={classNames({[classes.active]: selectedIndex === 2})}
                             onClick={(event) => {
-                                this.handleNavItemClick("/tracing", event);
+                                this.handleNavItemClick(pages[2], event);
                             }}>
                             <ListItemIcon>
                                 <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
@@ -205,54 +205,54 @@ class SideNavBar extends React.Component {
                     </Tooltip>
                     <Collapse in={subMenuOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <Tooltip title="Global Control Plane" placement="right"
+                            <Tooltip title="Pods" placement="right"
                                 disableFocusListener={isSideNavBarOpen} disableHoverListener={isSideNavBarOpen}
                                 disableTouchListener={isSideNavBarOpen}>
-                                <ListItem index={3} button key="ControlPlane"
+                                <ListItem index={3} button key="Pods"
                                     className={classNames({[classes.active]: selectedIndex === 3},
                                         classes.nested)}
                                     onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/control-plane", event);
+                                        this.handleNavItemClick(pages[3], event);
                                     }}>
                                     <ListItemIcon>
-                                        <SettingsOutlined
-                                            className={classNames({[classes.active]: selectedIndex === 3})}/>
+                                        <PodIcon className={classNames({[classes.active]: selectedIndex === 3})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Global Control Plane"
+                                    <ListItemText inset primary="Pods"
                                         classes={{
                                             primary: classNames({[classes.active]: selectedIndex === 3})
                                         }}/>
                                 </ListItem>
                             </Tooltip>
-                            <Tooltip title="Pod Usage" placement="right" disableFocusListener={isSideNavBarOpen}
+                            <Tooltip title="Control Plane" placement="right" disableFocusListener={isSideNavBarOpen}
                                 disableHoverListener={isSideNavBarOpen} disableTouchListener={isSideNavBarOpen}>
-                                <ListItem index={4} button key="PodUsage"
+                                <ListItem index={4} button key="Control Plane"
                                     className={classNames({[classes.active]: selectedIndex === 4},
                                         classes.nested)}
                                     onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/pod-usage", event);
+                                        this.handleNavItemClick(pages[4], event);
                                     }}>
                                     <ListItemIcon>
-                                        <PodIcon className={classNames({[classes.active]: selectedIndex === 4})}/>
+                                        <SettingsOutlined
+                                            className={classNames({[classes.active]: selectedIndex === 4})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Pod Usage"
+                                    <ListItemText inset primary="Control Plane"
                                         classes={{
                                             primary: classNames({[classes.active]: selectedIndex === 4})
                                         }}/>
                                 </ListItem>
                             </Tooltip>
-                            <Tooltip title="Node Usage" placement="right" disableFocusListener={isSideNavBarOpen}
+                            <Tooltip title="Nodes" placement="right" disableFocusListener={isSideNavBarOpen}
                                 disableHoverListener={isSideNavBarOpen} disableTouchListener={isSideNavBarOpen}>
-                                <ListItem index={5} button key="NodeUsage"
+                                <ListItem index={5} button key="Nodes"
                                     className={classNames({[classes.active]: selectedIndex === 5},
                                         classes.nested)}
                                     onClick={(event) => {
-                                        this.handleNavItemClick("/system-metrics/node-usage", event);
+                                        this.handleNavItemClick(pages[5], event);
                                     }}>
                                     <ListItemIcon>
                                         <NodeIcon className={classNames({[classes.active]: selectedIndex === 5})}/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Node Usage"
+                                    <ListItemText inset primary="Nodes"
                                         classes={{
                                             primary: classNames({[classes.active]: selectedIndex === 5})
                                         }}/>

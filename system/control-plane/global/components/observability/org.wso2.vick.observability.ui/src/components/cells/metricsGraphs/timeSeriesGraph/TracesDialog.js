@@ -80,11 +80,11 @@ class TracesDialog extends React.Component {
                 <DialogTitle id="max-width-dialog-title">Traces <span className={classes.subTitle}>
                     <span className={classes.light}> From</span> {
                         selectedArea
-                            ? globalFilterOverrides.queryStartTime.format(Constants.Pattern.GRAPH_DATE_TIME)
+                            ? globalFilterOverrides.queryStartTime.format(Constants.Pattern.PRECISE_DATE_TIME)
                             : null}
                     <span className={classes.light}> to</span> {
                         selectedArea
-                            ? globalFilterOverrides.queryEndTime.format(Constants.Pattern.GRAPH_DATE_TIME)
+                            ? globalFilterOverrides.queryEndTime.format(Constants.Pattern.PRECISE_DATE_TIME)
                             : null}</span> </DialogTitle>
                 <DialogContent>
                     <TracesList onTraceClick={this.onTraceClick} filter={filter}

@@ -72,7 +72,7 @@ class Cell extends React.Component {
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
-            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
+            selectedTabIndex: (preSelectedTab && preSelectedTab !== -1 ? preSelectedTab : 0)
         };
     }
 

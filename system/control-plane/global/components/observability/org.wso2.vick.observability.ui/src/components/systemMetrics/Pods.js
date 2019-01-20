@@ -47,7 +47,7 @@ const styles = (theme) => ({
     }
 });
 
-class Pod extends React.Component {
+class Pods extends React.Component {
 
     constructor(props) {
         super(props);
@@ -190,9 +190,9 @@ class Pod extends React.Component {
 
 }
 
-Pod.propTypes = {
+Pods.propTypes = {
     classes: PropTypes.object.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles)(withColor(Pod));
+export default withStyles(styles)(withColor(Pods));

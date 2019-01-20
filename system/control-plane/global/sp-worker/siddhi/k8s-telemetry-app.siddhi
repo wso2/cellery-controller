@@ -5,6 +5,7 @@ define trigger K8sScrapeTrigger at every 10 min;
 
 @Store(type="rdbms", datasource="VICK_OBSERVABILITY_DB")
 @PrimaryKey("cell", "component", "name")
+@purge(enable="false")
 define table K8sPodInfoTable (cell string, component string, name string, creationTimestamp long,
                               lastKnownAliveTimestamp long, nodeName string);
 

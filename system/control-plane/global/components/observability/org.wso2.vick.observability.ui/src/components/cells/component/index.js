@@ -18,7 +18,7 @@ import Button from "@material-ui/core/Button/Button";
 import Details from "./Details";
 import Grey from "@material-ui/core/colors/grey";
 import HttpUtils from "../../../utils/api/httpUtils";
-import K8sObjects from "./K8sObjects";
+import K8sPodsList from "./K8sPodsList";
 import {Link} from "react-router-dom";
 import Metrics from "./Metrics";
 import Paper from "@material-ui/core/Paper";
@@ -62,14 +62,14 @@ class Component extends React.Component {
 
         this.tabs = [
             "details",
-            "k8s-objects",
+            "k8s-pods",
             "metrics"
         ];
         const queryParams = HttpUtils.parseQueryParams(props.location.search);
         const preSelectedTab = queryParams.tab ? this.tabs.indexOf(queryParams.tab) : null;
 
         this.state = {
-            selectedTabIndex: (preSelectedTab ? preSelectedTab : 0)
+            selectedTabIndex: (preSelectedTab && preSelectedTab !== -1 ? preSelectedTab : 0)
         };
 
         this.tabContentRef = React.createRef();
@@ -118,7 +118,7 @@ class Component extends React.Component {
         const cellName = match.params.cellName;
         const componentName = match.params.componentName;
 
-        const tabContent = [Details, K8sObjects, Metrics];
+        const tabContent = [Details, K8sPodsList, Metrics];
         const SelectedTabContent = tabContent[selectedTabIndex];
 
         const queryParams = HttpUtils.parseQueryParams(location.search);
@@ -135,7 +135,7 @@ class Component extends React.Component {
                         <Tabs value={selectedTabIndex} indicatorColor="primary"
                             onChange={this.handleTabChange} className={classes.tabs}>
                             <Tab label="Details"/>
-                            <Tab label="K8s Objects"/>
+                            <Tab label="K8s Pods"/>
                             <Tab label="Metrics"/>
                         </Tabs>
                         <Button className={classes.traceButton} component={Link}

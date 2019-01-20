@@ -29,6 +29,7 @@ import org.wso2.msf4j.MicroservicesRunner;
 import org.wso2.vick.observability.api.AggregatedRequestsAPI;
 import org.wso2.vick.observability.api.DependencyModelAPI;
 import org.wso2.vick.observability.api.DistributedTracingAPI;
+import org.wso2.vick.observability.api.KubernetesAPI;
 import org.wso2.vick.observability.api.exception.mapper.APIExceptionMapper;
 import org.wso2.vick.observability.api.interceptor.CORSInterceptor;
 import org.wso2.vick.observability.api.siddhi.SiddhiStoreQueryManager;
@@ -64,7 +65,10 @@ public class ObservabilityDS {
             ServiceHolder.setMicroservicesRunner(new MicroservicesRunner(DEFAULT_OBSERVABILITY_API_PORT + offset)
                     .addGlobalRequestInterceptor(new CORSInterceptor())
                     .addExceptionMapper(new APIExceptionMapper())
-                    .deploy(new DependencyModelAPI(), new AggregatedRequestsAPI(), new DistributedTracingAPI())
+                    .deploy(
+                            new DependencyModelAPI(), new AggregatedRequestsAPI(), new DistributedTracingAPI(),
+                            new KubernetesAPI()
+                    )
             );
             ServiceHolder.getMicroservicesRunner().start();
 

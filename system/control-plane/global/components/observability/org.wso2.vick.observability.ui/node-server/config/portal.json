@@ -3,5 +3,11 @@
     "percentageRangeMinValue": {
         "errorThreshold": 0.5,
         "warningThreshold": 0.7
+    },
+    "templates": {
+        "kubernetesMetricsLinks": {
+            "pod": "http://k8s-metrics/pod-metrics?var-pod=${pod}&from=${fromTime}&to=${toTime}",
+            "node": "http://k8s-metrics/node-metrics?var-node=${node}&from=${fromTime}&to=${toTime}"
+        }
     }
 }

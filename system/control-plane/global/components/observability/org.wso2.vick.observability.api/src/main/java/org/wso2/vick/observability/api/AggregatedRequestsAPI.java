@@ -39,7 +39,6 @@ import javax.ws.rs.core.Response;
 public class AggregatedRequestsAPI {
     private static final Logger log = Logger.getLogger(AggregatedRequestsAPI.class);
 
-
     @GET
     @Path("/cells")
     @Produces(MediaType.APPLICATION_JSON)
