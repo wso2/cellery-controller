@@ -109,7 +109,7 @@ spec:
           periodSeconds: 20
       imagePullSecrets:
       - name: wso2creds
-      serviceAccountName: "vicksvc-account"
+      serviceAccountName: "vick-stream-processor"
       volumes:
       - name: sp-worker-conf
         configMap:
@@ -120,3 +120,34 @@ spec:
       - name: sp-worker-siddhi
         configMap:
           name: sp-worker-siddhi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vick-stream-processor
+  namespace: vick-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vick-stream-processor
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: vick-stream-processor-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vick-stream-processor
+subjects:
+  - kind: ServiceAccount
+    name: vick-stream-processor
+    namespace: vick-system
