@@ -149,13 +149,13 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
-	if err := h.handleIstioGateway(gateway); err != nil {
-		return err
-	}
-
-	if err := h.handleIstioVirtualService(gateway); err != nil {
-		return err
-	}
+	//if err := h.handleIstioGateway(gateway); err != nil {
+	//	return err
+	//}
+	//
+	//if err := h.handleIstioVirtualService(gateway); err != nil {
+	//	return err
+	//}
 
 	if err := h.handleIstioVirtualServicesForIngress(gateway); err != nil {
 		return err
@@ -193,7 +193,7 @@ func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeploymentEnvoy(gateway, h.gatewayConfig))
+		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
@@ -215,7 +215,7 @@ func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	k8sService, err := h.k8sServiceLister.Services(gateway.Namespace).Get(resources.GatewayK8sServiceName(gateway))
 	if errors.IsNotFound(err) {
-		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sServiceEnvoy(gateway))
+		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sService(gateway))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway service %v", err)
 			return err
@@ -229,38 +229,38 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 
 	return nil
 }
-
-func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
-	istioGateway, err := h.istioGatewayLister.Gateways(gateway.Namespace).Get(resources.IstioGatewayName(gateway))
-	if errors.IsNotFound(err) {
-		istioGateway, err = h.vickClient.NetworkingV1alpha3().Gateways(gateway.Namespace).Create(resources.CreateIstioGateway(gateway))
-		if err != nil {
-			glog.Errorf("Failed to create Gateway service %v", err)
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-	glog.Infof("Istio gateway created %+v", istioGateway)
-
-	return nil
-}
-
-func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) error {
-	istioVS, err := h.istioVSLister.VirtualServices(gateway.Namespace).Get(resources.IstioVSName(gateway))
-	if errors.IsNotFound(err) {
-		istioVS, err = h.vickClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(resources.CreateIstioVirtualService(gateway))
-		if err != nil {
-			glog.Errorf("Failed to create Gateway service %v", err)
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-	glog.Infof("Istio virtual service created %+v", istioVS)
-
-	return nil
-}
+//
+//func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
+//	istioGateway, err := h.istioGatewayLister.Gateways(gateway.Namespace).Get(resources.IstioGatewayName(gateway))
+//	if errors.IsNotFound(err) {
+//		istioGateway, err = h.vickClient.NetworkingV1alpha3().Gateways(gateway.Namespace).Create(resources.CreateIstioGateway(gateway))
+//		if err != nil {
+//			glog.Errorf("Failed to create Gateway service %v", err)
+//			return err
+//		}
+//	} else if err != nil {
+//		return err
+//	}
+//	glog.Infof("Istio gateway created %+v", istioGateway)
+//
+//	return nil
+//}
+//
+//func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) error {
+//	istioVS, err := h.istioVSLister.VirtualServices(gateway.Namespace).Get(resources.IstioVSName(gateway))
+//	if errors.IsNotFound(err) {
+//		istioVS, err = h.vickClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(resources.CreateIstioVirtualService(gateway))
+//		if err != nil {
+//			glog.Errorf("Failed to create Gateway service %v", err)
+//			return err
+//		}
+//	} else if err != nil {
+//		return err
+//	}
+//	glog.Infof("Istio virtual service created %+v", istioVS)
+//
+//	return nil
+//}
 
 func (h *gatewayHandler) handleIstioVirtualServicesForIngress(gateway *v1alpha1.Gateway) error {
 	var hasGlobalApis = false
