@@ -288,7 +288,7 @@ public class UpdateManager {
             apiCreateRequest.setName(generateAPIName(api, false));
             apiCreateRequest.setContext(api.getContext());
             apiCreateRequest.setVersion(cellConfig.getVersion());
-            apiCreateRequest.setApiDefinition(getAPIDefinition(api));
+            apiCreateRequest.setApiDefinition(getAPIDefinition(api, false));
             apiCreateRequest.setEndpointConfig(getEndpoint(api));
             Map<String, String> cellLabel = new HashMap<>();
             cellLabel.put("name", cellConfig.getCell());
@@ -302,7 +302,7 @@ public class UpdateManager {
                 globalApiCreateRequest
                         .setContext((cellConfig.getCell() + "/" + api.getContext()).replaceAll("//", "/"));
                 globalApiCreateRequest.setVersion(cellConfig.getVersion());
-                globalApiCreateRequest.setApiDefinition(getAPIDefinition(api));
+                globalApiCreateRequest.setApiDefinition(getAPIDefinition(api, true));
                 globalApiCreateRequest.setEndpointConfig(getGlobalEndpoint());
                 globalApiCreateRequest.setGatewayEnvironments(Constants.Utils.PRODUCTION_AND_SANDBOX);
 
@@ -387,13 +387,16 @@ public class UpdateManager {
      * @param api Api details
      * @return api definition payload string
      */
-    private static String getAPIDefinition(API api) throws APIException {
+    private static String getAPIDefinition(API api, boolean isGlobalAPI) throws APIException {
         PathsMapping apiDefinition = new PathsMapping();
         ApiDefinition[] definitions = api.getDefinitions();
 
         for (ApiDefinition definition : definitions) {
             PathDefinition pathDefinition;
             Method method = new Method();
+            if (!isGlobalAPI) {
+                method.setxAuthType("None");
+            }
             String methodStr = definition.getMethod();
 
             // Append /* to allow query parameters and path parameters
