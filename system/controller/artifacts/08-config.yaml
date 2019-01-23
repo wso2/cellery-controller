@@ -65,15 +65,7 @@ data:
     password="admin"
 
     [b7a.observability.tracing]
-    enabled=true
-    name="zipkin"
-
-    [b7a.observability.tracing.zipkin]
-    reporter.hostname="wso2sp-worker.vick-system"
-    reporter.port=9411
-    reporter.api.context="/api/v1/spans"
-    reporter.api.version="v1"
-    reporter.compression.enabled=false
+    enabled=false
 
   cell-gateway-init-image: wso2vick/cell-gateway-init
   cell-gateway-image: wso2vick/cell-gateway
