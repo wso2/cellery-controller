@@ -161,9 +161,9 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
-	if err := h.handleIstioDestinationRules(gateway); err != nil {
-		return err
-	}
+	// if err := h.handleIstioDestinationRules(gateway); err != nil {
+	// 	return err
+	// }
 
 	h.updateOwnerCell(gateway)
 
