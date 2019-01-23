@@ -84,7 +84,7 @@ data:
         "password": "admin",
         "globalJWKS" : "https://gateway.vick-system:9443/oauth2/jwks"
     }
-  cell-sts-image: wso2vick/cell-sts:envoy-cell-gw
+  cell-sts-image: wso2vick/cell-sts:test
 kind: ConfigMap
 metadata:
   name: vick-config

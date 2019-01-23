@@ -326,9 +326,10 @@ data:
     {
         "endpoint": "https://gateway.vick-system:9443/api/identity/vick-auth/v1.0/sts/token",
         "username": "admin",
-        "password": "admin"
+        "password": "admin",
+        "globalJWKS" : "https://gateway.vick-system:9443/oauth2/jwks"
     }
-  cell-sts-image: wso2vick/cell-sts:latest
+  cell-sts-image: wso2vick/cell-sts
 kind: ConfigMap
 metadata:
   name: vick-config
@@ -353,6 +354,6 @@ spec:
     spec:
       containers:
       - name: vick-controller
-        image: wso2vick/vick-controller:envoy-cell-gw
+        image: wso2vick/vick-controller
       serviceAccountName: vick-controller
 ---
