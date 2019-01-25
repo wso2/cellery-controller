@@ -15,7 +15,6 @@
  * under the License.
  */
 
-import ControlPlane from "./ControlPlane";
 import Nodes from "./Nodes";
 import NotFound from "../common/error/NotFound";
 import Pods from "./Pods";
@@ -26,7 +25,6 @@ import * as PropTypes from "prop-types";
 const SystemMetrics = ({match}) => (
     <Switch>
         <Route exact path={`${match.path}/pods`} component={Pods}/>
-        <Route exact path={`${match.path}/control-plane`} component={ControlPlane}/>
         <Route exact path={`${match.path}/nodes`} component={Nodes}/>
         <Route path={`${match.url}/*`} render={(props) => <NotFound {...props} showNavigationButtons={true}/>}/>
     </Switch>

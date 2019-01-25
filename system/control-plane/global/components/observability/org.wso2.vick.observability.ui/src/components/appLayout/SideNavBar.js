@@ -33,7 +33,6 @@ import NodeIcon from "../../icons/NodeIcon";
 import OverviewIcon from "../../icons/OverviewIcon";
 import PodIcon from "../../icons/PodIcon";
 import React from "react";
-import SettingsOutlined from "@material-ui/icons/SettingsOutlined";
 import Timeline from "@material-ui/icons/Timeline";
 import Tooltip from "@material-ui/core/Tooltip/Tooltip";
 import classNames from "classnames";
@@ -122,7 +121,6 @@ class SideNavBar extends React.Component {
             "/cells",
             "/tracing",
             "/system-metrics/pods",
-            "/system-metrics/control-plane",
             "/system-metrics/nodes"
         ];
         let selectedIndex = 0;
@@ -223,38 +221,20 @@ class SideNavBar extends React.Component {
                                         }}/>
                                 </ListItem>
                             </Tooltip>
-                            <Tooltip title="Control Plane" placement="right" disableFocusListener={isSideNavBarOpen}
+                            <Tooltip title="Nodes" placement="right" disableFocusListener={isSideNavBarOpen}
                                 disableHoverListener={isSideNavBarOpen} disableTouchListener={isSideNavBarOpen}>
-                                <ListItem index={4} button key="Control Plane"
+                                <ListItem index={4} button key="Nodes"
                                     className={classNames({[classes.active]: selectedIndex === 4},
                                         classes.nested)}
                                     onClick={(event) => {
                                         this.handleNavItemClick(pages[4], event);
                                     }}>
                                     <ListItemIcon>
-                                        <SettingsOutlined
-                                            className={classNames({[classes.active]: selectedIndex === 4})}/>
-                                    </ListItemIcon>
-                                    <ListItemText inset primary="Control Plane"
-                                        classes={{
-                                            primary: classNames({[classes.active]: selectedIndex === 4})
-                                        }}/>
-                                </ListItem>
-                            </Tooltip>
-                            <Tooltip title="Nodes" placement="right" disableFocusListener={isSideNavBarOpen}
-                                disableHoverListener={isSideNavBarOpen} disableTouchListener={isSideNavBarOpen}>
-                                <ListItem index={5} button key="Nodes"
-                                    className={classNames({[classes.active]: selectedIndex === 5},
-                                        classes.nested)}
-                                    onClick={(event) => {
-                                        this.handleNavItemClick(pages[5], event);
-                                    }}>
-                                    <ListItemIcon>
-                                        <NodeIcon className={classNames({[classes.active]: selectedIndex === 5})}/>
+                                        <NodeIcon className={classNames({[classes.active]: selectedIndex === 4})}/>
                                     </ListItemIcon>
                                     <ListItemText inset primary="Nodes"
                                         classes={{
-                                            primary: classNames({[classes.active]: selectedIndex === 5})
+                                            primary: classNames({[classes.active]: selectedIndex === 4})
                                         }}/>
                                 </ListItem>
                             </Tooltip>
