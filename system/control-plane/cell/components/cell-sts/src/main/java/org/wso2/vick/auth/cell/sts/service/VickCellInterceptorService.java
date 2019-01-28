@@ -58,6 +58,7 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
     private static final String DESTINATION_HEADER = ":authority";
     private static final String CELL_NAME_ENV_VARIABLE = "CELL_NAME";
     private static final String ISTIO_ATTRIBUTES_HEADER = "x-istio-attributes";
+    private static final String ISTIO_INGRESS_PREFIX = "istio-ingressgateway";
 
     protected VickCellStsService cellStsService;
 
@@ -243,6 +244,11 @@ public abstract class VickCellInterceptorService extends AuthorizationGrpc.Autho
     }
 
     private String extractCellNameFromWorkloadName(String workloadName) {
+
+        // When requests reaches cells through istio ingress (after mTLS), source cell is not avialable.
+        if (StringUtils.isNotEmpty(workloadName) && workloadName.startsWith(ISTIO_INGRESS_PREFIX)) {
+            return null;
+        }
         // Workload name is in the format hr--hr-deployment-596946948d-vvgln.default where the value before --
         // is the cell name.
         return workloadName.split("--")[0];
