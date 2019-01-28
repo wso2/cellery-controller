@@ -59,7 +59,16 @@ class AuthUtils {
      *
      * @returns {string} The current user
      */
-    static getAuthenticatedUser = () => JSON.parse(localStorage.getItem(StateHolder.USER));
+    static getAuthenticatedUser = () => {
+        let user;
+        try {
+            user = JSON.parse(localStorage.getItem(StateHolder.USER));
+        } catch {
+            user = null;
+            localStorage.removeItem(StateHolder.USER);
+        }
+        return user;
+    }
 
 }
 

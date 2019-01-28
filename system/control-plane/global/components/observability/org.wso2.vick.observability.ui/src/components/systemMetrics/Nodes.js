@@ -47,7 +47,7 @@ const styles = (theme) => ({
     }
 });
 
-class Node extends React.Component {
+class Nodes extends React.Component {
 
     constructor(props) {
         super(props);
@@ -190,9 +190,9 @@ class Node extends React.Component {
 
 }
 
-Node.propTypes = {
+Nodes.propTypes = {
     classes: PropTypes.object.isRequired,
     colorGenerator: PropTypes.instanceOf(ColorGenerator)
 };
 
-export default withStyles(styles)(withColor(Node));
+export default withStyles(styles)(withColor(Nodes));

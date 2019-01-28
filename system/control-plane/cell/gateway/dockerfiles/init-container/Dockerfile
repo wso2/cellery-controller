@@ -22,7 +22,6 @@ FROM ubuntu:18.04
 # copy java, microgateway and init.sh file to docker image
 COPY ./files/jdk1.8.0_* /java
 COPY ./files/wso2am-micro-gw-2.6.0 /wso2am-micro-gw-2.6.0
-COPY ./files/extension_filter.bal /wso2am-micro-gw-2.6.0/resources/filters/
 COPY ./files/vick-global-api-uploader.jar /
 
 # set environment variables

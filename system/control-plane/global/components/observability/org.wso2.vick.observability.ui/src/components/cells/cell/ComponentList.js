@@ -28,12 +28,6 @@ import withGlobalState from "../../common/state";
 import {withStyles} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 
-const styles = (theme) => ({
-    root: {
-        margin: theme.spacing.unit
-    }
-});
-
 class ComponentList extends React.Component {
 
     constructor(props) {
@@ -235,9 +229,8 @@ class ComponentList extends React.Component {
 }
 
 ComponentList.propTypes = {
-    classes: PropTypes.object.isRequired,
     globalState: PropTypes.instanceOf(StateHolder).isRequired,
     cell: PropTypes.string.isRequired
 };
 
-export default withStyles(styles)(withGlobalState(ComponentList));
+export default withStyles({})(withGlobalState(ComponentList));

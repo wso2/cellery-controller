@@ -15,19 +15,17 @@
  * under the License.
  */
 
-import ControlPlane from "./ControlPlane";
-import Node from "./Node";
+import Nodes from "./Nodes";
 import NotFound from "../common/error/NotFound";
-import Pod from "./Pod";
+import Pods from "./Pods";
 import React from "react";
 import {Route, Switch, withRouter} from "react-router-dom";
 import * as PropTypes from "prop-types";
 
 const SystemMetrics = ({match}) => (
     <Switch>
-        <Route exact path={`${match.path}/control-plane`} component={ControlPlane}/>
-        <Route exact path={`${match.path}/node-usage`} component={Node}/>
-        <Route exact path={`${match.path}/pod-usage`} component={Pod}/>
+        <Route exact path={`${match.path}/pods`} component={Pods}/>
+        <Route exact path={`${match.path}/nodes`} component={Nodes}/>
         <Route path={`${match.url}/*`} render={(props) => <NotFound {...props} showNavigationButtons={true}/>}/>
     </Switch>
 );
