@@ -3,4 +3,4 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://k8s-metrics-prometheus.vick-system:3000
+    url: http://k8s-metrics-prometheus.vick-system:9090
