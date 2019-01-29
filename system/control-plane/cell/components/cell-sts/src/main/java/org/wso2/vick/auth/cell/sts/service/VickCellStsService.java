@@ -28,6 +28,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.vick.auth.cell.authorization.AuthorizationFailedException;
+import org.wso2.vick.auth.cell.authorization.AuthorizationService;
 import org.wso2.vick.auth.cell.sts.CellStsUtils;
 import org.wso2.vick.auth.cell.sts.Constants;
 import org.wso2.vick.auth.cell.sts.STSTokenGenerator;
@@ -64,6 +66,7 @@ public class VickCellStsService {
     private static final String BEARER_HEADER_VALUE_PREFIX = "Bearer ";
     private static TokenValidator tokenValidator = new SelfContainedTokenValidator();
     private static CellSTSRequestValidator requestValidator = new DefaultCellSTSReqValidator(Collections.EMPTY_LIST);
+    private static AuthorizationService authorizationService = new AuthorizationService();
 
     private static final Logger log = LoggerFactory.getLogger(VickCellStsService.class);
 
@@ -112,6 +115,12 @@ public class VickCellStsService {
             jwtClaims = handleRequestToMicroGW(cellStsRequest, requestId, jwt);
         } else {
             jwtClaims = handleInternalRequest(cellStsRequest, requestId, jwt);
+        }
+          // TODO : Integrate OPA and enable authorization.
+        try {
+            authorizationService.authorize(cellStsRequest, jwt);
+        } catch (AuthorizationFailedException e) {
+            throw new VickCellSTSException("Authorization failure", e);
         }
         Map<String, String> headersToSet = new HashMap<>();
 
