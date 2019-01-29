@@ -42,6 +42,10 @@ func TokenServiceConfigMapName(tokenService *v1alpha1.TokenService) string {
 	return tokenService.Name + "-config"
 }
 
+func TokenServicePolicyConfigMapName(tokenService *v1alpha1.TokenService) string {
+	return tokenService.Name + "-policy"
+}
+
 func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
 	return tokenService.Name + "-deployment"
 }

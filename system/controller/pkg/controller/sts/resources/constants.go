@@ -24,17 +24,24 @@ const (
 
 	tokenServiceServicePortInboundName  = "grpc-inbound"
 	tokenServiceServicePortOutboundName = "grpc-outbound"
-	tokenServiceServicePortJWKSName = "http-jwks"
+	tokenServiceServicePortJWKSName     = "http-jwks"
 
 	tokenServiceContainerInboundPort  = 8080
 	tokenServiceContainerOutboundPort = 8081
-	tokenServiceContainerJWKSPort = 8090
+	tokenServiceContainerJWKSPort     = 8090
+	opaServicePort                    = 8181
 
 	tokenServiceConfigKey  = "sts-config"
 	tokenServiceConfigFile = "sts.json"
 
 	configVolumeName = "config-volume"
 	configMountPath  = "/etc/config"
+
+	policyVolumeName      = "cell-policy"
+	pocliyConfigMountPath = "/policies"
+
+	policyConfigKey  = "policy.rego"
+	policyConfigFile = "sample.rego"
 
 	envCellNameKey = "CELL_NAME"
 )

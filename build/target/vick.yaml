@@ -324,7 +324,13 @@ data:
         "password": "admin",
         "globalJWKS" : "https://gateway.vick-system:9443/oauth2/jwks"
     }
+  opa-default-policy: |
+      package sample
+
+      default deny = false
+      default allow = true
   cell-sts-image: wso2vick/cell-sts
+  cell-sts-opa-image: openpolicyagent/opa:0.10.3
 kind: ConfigMap
 metadata:
   name: vick-config

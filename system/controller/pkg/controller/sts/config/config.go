@@ -19,6 +19,8 @@
 package config
 
 type TokenService struct {
-	Config string
-	Image  string
+	Config   string
+	Image    string
+	OpaImage string
+	Policy   string
 }

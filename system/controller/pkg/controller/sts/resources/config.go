@@ -41,3 +41,19 @@ func CreateTokenServiceConfigMap(tokenService *v1alpha1.TokenService, tokenServi
 		},
 	}
 }
+
+func CreateTokenServiceOPAConfigMap(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      TokenServicePolicyConfigMapName(tokenService),
+			Namespace: tokenService.Namespace,
+			Labels:    createTokenServiceLabels(tokenService),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateTokenServiceOwnerRef(tokenService),
+			},
+		},
+		Data: map[string]string{
+			policyConfigKey: tokenServiceConfig.Policy,
+		},
+	}
+}

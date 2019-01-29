@@ -78,6 +78,31 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 								},
 							},
 						},
+						{
+							Name:  "opa",
+							Image: tokenServiceConfig.OpaImage,
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: opaServicePort,
+									Name:          "http",
+								},
+							},
+							Args: []string{
+								"run",
+								"--ignore=.*",
+								"--server",
+								"--watch",
+								"/policies",
+							},
+
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      policyVolumeName,
+									MountPath: pocliyConfigMountPath,
+									ReadOnly:  true,
+								},
+							},
+						},
 					},
 					Volumes: []corev1.Volume{
 						{
@@ -91,6 +116,22 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 										{
 											Key:  tokenServiceConfigKey,
 											Path: tokenServiceConfigFile,
+										},
+									},
+								},
+							},
+						},
+						{
+							Name: policyVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: TokenServicePolicyConfigMapName(tokenService),
+									},
+									Items: []corev1.KeyToPath{
+										{
+											Key:  policyConfigKey,
+											Path: policyConfigFile,
 										},
 									},
 								},

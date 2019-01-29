@@ -131,6 +131,20 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	}
 	glog.Infof("TokenService config map created %+v", configMap)
 
+	pocliyConfigMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.
+		TokenServicePolicyConfigMapName(tokenService))
+	if errors.IsNotFound(err) {
+		pocliyConfigMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceOPAConfigMap(tokenService, h.tokenServiceConfig))
+		if err != nil {
+			glog.Errorf("Failed to create TokenService OPA policy config map %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	glog.Infof("TokenService OPA polciy config map created %+v", pocliyConfigMap)
+
 	deployment, err := h.deploymentLister.Deployments(tokenService.Namespace).Get(resources.TokenServiceDeploymentName(tokenService))
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.CreateTokenServiceDeployment(tokenService, h.tokenServiceConfig))
@@ -180,6 +194,18 @@ func (h *tokenServiceHandler) updateConfig(obj interface{}) {
 		conf.Image = tokenServiceImage
 	} else {
 		glog.Errorf("Cell sts image missing.")
+	}
+
+	if opaImage, ok := configMap.Data["cell-sts-opa-image"]; ok {
+		conf.OpaImage = opaImage
+	} else {
+		glog.Errorf("Cell sts OPA image missing.")
+	}
+
+	if opaPolicy, ok := configMap.Data["opa-default-policy"]; ok {
+		conf.Policy = opaPolicy
+	} else {
+		glog.Errorf("opa default polciy is missing")
 	}
 
 	h.tokenServiceConfig = conf
