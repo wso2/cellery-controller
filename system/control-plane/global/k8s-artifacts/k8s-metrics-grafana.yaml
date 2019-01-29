@@ -89,7 +89,7 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
 spec:
   rules:
-    - host: k8s-metrics
+    - host: cellery-k8s-metrics
       http:
         paths:
           - path: /
