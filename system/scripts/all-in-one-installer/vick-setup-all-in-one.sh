@@ -369,6 +369,17 @@ kubectl apply -f ${download_location}/vick-sp-worker-service.yaml -n vick-system
 kubectl create configmap observability-portal-config --from-file=${download_location}/node-server/config -n vick-system
 kubectl apply -f ${download_location}/vick-observability-portal.yaml -n vick-system
 kubectl apply -f ${download_location}/vick-sp-worker-ingress.yaml -n vick-system
+
+# Create K8s Metrics Config-maps
+kubectl create configmap k8s-metrics-prometheus-conf --from-file=${download_location}/k8s-metrics/prometheus/config -n vick-system
+kubectl create configmap k8s-metrics-grafana-conf --from-file=${download_location}/k8s-metrics/grafana/config -n vick-system
+kubectl create configmap k8s-metrics-grafana-datasources --from-file=${download_location}/k8s-metrics/grafana/datasources -n vick-system
+kubectl create configmap k8s-metrics-grafana-dashboards --from-file=${download_location}/k8s-metrics/grafana/dashboards -n vick-system
+kubectl create configmap k8s-metrics-grafana-dashboards-default --from-file=${download_location}/k8s-metrics/grafana/dashboards/default -n vick-system
+
+#Create K8s Metrics deployment, service and ingress.
+kubectl apply -f ${download_location}/k8s-metrics-prometheus.yaml -n vick-system
+kubectl apply -f ${download_location}/k8s-metrics-grafana.yaml -n vick-system
 }
 
 function init_control_plane () {
@@ -533,6 +544,8 @@ control_plane_yaml=(
     "vick-sp-worker-ingress.yaml"
     "vick-apim-artifacts-persistent-volumes.yaml"
     "vick-apim-artifacts-persistent-volume-claim.yaml"
+    "k8s-metrics-prometheus.yaml"
+    "k8s-metrics-grafana.yaml"
     "mandatory.yaml"
     "service-nodeport.yaml"
     "cloud-generic.yaml"
@@ -565,6 +578,12 @@ control_plane_configs=(
     "sp-worker/siddhi/telemetry-app.siddhi"
     "sp-worker/conf/deployment.yaml"
     "mysql/dbscripts/init.sql"
+    "k8s-metrics/prometheus/config/prometheus.yaml"
+    "k8s-metrics/grafana/config/grafana.ini"
+    "k8s-metrics/grafana/datasources/prometheus.yaml"
+    "k8s-metrics/grafana/dashboards/dashboardproviders.yaml"
+    "k8s-metrics/grafana/dashboards/default/node-metrics.json"
+    "k8s-metrics/grafana/dashboards/default/pod-metrics.json"
 )
 
 control_plane_observabilityui_base_url="${git_base_url}/system/control-plane/global/components/observability/org.wso2.vick.observability.ui"

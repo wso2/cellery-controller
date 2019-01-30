@@ -6,8 +6,8 @@
     },
     "templates": {
         "kubernetesMetricsLinks": {
-            "pod": "http://k8s-metrics/pod-metrics?var-pod=${pod}&from=${fromTime}&to=${toTime}",
-            "node": "http://k8s-metrics/node-metrics?var-node=${node}&from=${fromTime}&to=${toTime}"
+            "pod": "http://cellery-k8s-metrics/d/cellery-k8s-pod-metrics-dashboard/pod-metrics?var-pod=${pod}&from=${fromTime}&to=${toTime}",
+            "node": "http://cellery-k8s-metrics/d/cellery-k8s-node-metrics-dashboard/node-metrics?var-node=${node}&from=${fromTime}&to=${toTime}"
         }
     }
 }
