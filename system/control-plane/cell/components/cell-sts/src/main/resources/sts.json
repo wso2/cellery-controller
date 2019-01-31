@@ -1,6 +1,0 @@
-{
-  "endpoint": "https://localhost:9443/api/identity/vick-auth/v1.0/sts/token",
-  "username": "admin",
-  "password": "admin",
-  "globalJWKS" : "https://localhost:9443/oauth2/jwks"
-}
