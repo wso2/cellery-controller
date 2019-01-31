@@ -3,7 +3,7 @@ import SvgIcon from "@material-ui/core/SvgIcon";
 
 const CellIcon = (props) => (
     <SvgIcon viewBox="0 0 14 14" {...props}>
-        <path d="M7,0.1L1,3.5l0,6.9l6,3.5l6-3.4l0-6.9L7,0.1z M12,9.9l-5,2.9L2,9.9l0-5.7l5-2.9l5,2.9L12,9.9z"/>
+        <path d="M9.81.21H4.19l-4,4V9.81l4,4H9.81l4-4V4.19Zm3,9.19L9.4,12.79H4.6L1.21,9.4V4.6L4.6,1.21H9.4L12.79,4.6Z"/>
     </SvgIcon>
 );
 
