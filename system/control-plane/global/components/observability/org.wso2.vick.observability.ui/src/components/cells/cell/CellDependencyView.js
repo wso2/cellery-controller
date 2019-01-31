@@ -165,11 +165,16 @@ class CellDependencyView extends React.Component {
     };
 
     viewGenerator = (nodeProps) => {
+        const {cell} = this.props;
         const nodeId = nodeProps.id;
         const color = this.props.colorGenerator.getColor(nodeId);
-        return <svg x="0px" y="0px"
-            width="50px" height="50px" viewBox="0 0 240 240">
-            <polygon fill={color} points="224,179.5 119.5,239.5 15,179.5 15,59.5 119.5,-0.5 224,59.5 "/>
+        const outlineColor = ColorGenerator.shadeColor(color, -0.08);
+        const style = {};
+        style.transform = "translate(1%, 10%) scale(2.2, 2.2)";
+        return <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+            <polygon strokeWidth="4" fill={color} stroke={(cell === nodeId) ? "#444" : outlineColor}
+                points="34.2,87.4 12.3,65.5 12.3,34.5 34.2,12.6 65.2,12.6 87.1,34.5 87.1,65.5 65.2,87.4"
+                style={style} strokeLinejoin="round"/>
         </svg>;
     };
 

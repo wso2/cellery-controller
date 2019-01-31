@@ -170,7 +170,9 @@ class DependencyDiagram extends React.Component {
                                         / (maxDuration - minDuration)) + DependencyDiagram.MIN_RADIUS;
 
                                     let nodeSVGContent;
-                                    const circle = <circle cx="120" cy="120" r={radius} fill={node.color}/>;
+                                    const outlineColor = ColorGenerator.shadeColor(node.color, -0.08);
+                                    const circle = <circle cx="120" cy="120" r={radius} fill={node.color}
+                                        stroke={outlineColor} strokeWidth="10"/>;
                                     if (node.span.hasError()) {
                                         const errorColor = colorGenerator.getColor(ColorGenerator.ERROR);
 

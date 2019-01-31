@@ -221,19 +221,17 @@ class Overview extends React.Component {
     viewGenerator = (nodeProps) => {
         const {colorGenerator} = this.props;
         const {selectedCell} = this.state;
-
         const nodeId = nodeProps.id;
         const color = colorGenerator.getColor(nodeId);
+        const outlineColor = ColorGenerator.shadeColor(color, -0.08);
         const state = this.getCellState(nodeId);
 
         const style = {};
-        if (selectedCell === nodeId) {
-            style.stroke = "#666";
-            style.strokeWidth = 15;
-        }
-        style.transform = "translate(15%, 10%) scale(0.8, 0.8)";
-        const cellIcon = <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"
-            style={style}/>;
+        style.transform = "translate(2%, 15%) scale(2, 2)";
+        const cellIcon
+            = <polygon strokeWidth="4" fill={color} stroke={(selectedCell === nodeId) ? "#444" : outlineColor}
+                points="34.2,87.4 12.3,65.5 12.3,34.5 34.2,12.6 65.2,12.6 87.1,34.5 87.1,65.5 65.2,87.4"
+                style={style} strokeLinejoin="round"/>;
 
         let cellView;
         if (state === Constants.Status.Success) {

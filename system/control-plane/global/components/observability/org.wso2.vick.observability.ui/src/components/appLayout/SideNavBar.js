@@ -74,6 +74,9 @@ const styles = (theme) => ({
     list: {
         paddingTop: 0
     },
+    listIcon: {
+        paddingLeft: theme.spacing.unit
+    },
     active: {
         color: theme.palette.primary.main,
         fontWeight: 500
@@ -156,7 +159,7 @@ class SideNavBar extends React.Component {
                             onClick={(event) => {
                                 this.handleNavItemClick(pages[0], event);
                             }}>
-                            <ListItemIcon>
+                            <ListItemIcon className={classes.listIcon}>
                                 <OverviewIcon className={classNames({[classes.active]: selectedIndex === 0})}/>
                             </ListItemIcon>
                             <ListItemText primary="Overview"
@@ -170,7 +173,7 @@ class SideNavBar extends React.Component {
                             onClick={(event) => {
                                 this.handleNavItemClick(pages[1], event);
                             }}>
-                            <ListItemIcon>
+                            <ListItemIcon className={classes.listIcon}>
                                 <CellsIcon className={classNames({[classes.active]: selectedIndex === 1})}/>
                             </ListItemIcon>
                             <ListItemText primary="Cells"
@@ -184,7 +187,7 @@ class SideNavBar extends React.Component {
                             onClick={(event) => {
                                 this.handleNavItemClick(pages[2], event);
                             }}>
-                            <ListItemIcon>
+                            <ListItemIcon className={classes.listIcon}>
                                 <Timeline className={classNames({[classes.active]: selectedIndex === 2})}/>
                             </ListItemIcon>
                             <ListItemText primary="Distributed Tracing"
@@ -194,7 +197,7 @@ class SideNavBar extends React.Component {
                     <Tooltip title="System Metrics" placement="right" disableFocusListener={isSideNavBarOpen}
                         disableHoverListener={isSideNavBarOpen} disableTouchListener={isSideNavBarOpen}>
                         <ListItem button onClick={this.handleSystemMetricsNavSectionClick}>
-                            <ListItemIcon>
+                            <ListItemIcon className={classes.listIcon}>
                                 <MetricsIcon/>
                             </ListItemIcon>
                             <ListItemText inset primary="System Metrics"/>

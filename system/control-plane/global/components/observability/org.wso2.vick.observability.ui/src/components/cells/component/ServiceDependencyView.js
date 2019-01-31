@@ -144,10 +144,36 @@ class ServiceDependencyView extends React.Component {
             },
             globalState
         ).then((data) => {
+            // Update node,edge data to show external cell dependencies
+            const nodes = [];
+            const edges = [];
+
+            data.nodes.forEach((node) => {
+                if (cell === node.id.split(":")[0]) {
+                    nodes.push(node);
+                } else if (node.id.split(":")[1] === "gateway") {
+                    nodes.push({
+                        ...node,
+                        id: node.id.split(":")[0]
+                    });
+                }
+            });
+
+            data.edges.forEach((edge) => {
+                if (cell === edge.source.split(":")[0] && cell === edge.target.split(":")[0]) {
+                    edges.push(edge);
+                } else if (cell === edge.source.split(":")[0] && edge.target.split(":")[1] === "gateway") {
+                    edges.push({
+                        ...edge,
+                        target: edge.target.split(":")[0]
+                    });
+                }
+            });
+
             self.setState({
                 data: {
-                    nodes: data.nodes,
-                    links: data.edges
+                    nodes: nodes,
+                    links: edges
                 }
             });
             if (isUserAction) {
@@ -167,9 +193,23 @@ class ServiceDependencyView extends React.Component {
 
     viewGenerator = (nodeProps) => {
         const color = this.props.colorGenerator.getColor(nodeProps.id.split(":")[0]);
+        const outlineColor = ColorGenerator.shadeColor(color, -0.08);
+        const {cell, component} = this.props;
+        const style = {};
+        style.transform = "translate(1%, 10%) scale(2.2, 2.2)";
+        if (cell === nodeProps.id.split(":")[0]) {
+            return (
+                <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                    <circle cx="100" cy="100" r={80} fill={color}
+                        strokeWidth="10" stroke={(component === nodeProps.id.split(":")[1]) ? "#444" : outlineColor}/>
+                </svg>
+            );
+        }
         return (
-            <svg x="0px" y="0px" width="50px" height="50px" viewBox="0 0 240 240">
-                <circle cx="120" cy="120" r={120} fill={color}/>
+            <svg x="0px" y="0px" width="100%" height="100%" viewBox="0 0 240 240">
+                <polygon strokeWidth="4" fill={color} stroke={outlineColor} style={style} strokeLinejoin="round"
+                    points="34.2,87.4 12.3,65.5 12.3,34.5 34.2,12.6 65.2,12.6 87.1,34.5 87.1,65.5 65.2,87.4"
+                />
             </svg>
         );
     };
