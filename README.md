@@ -1,6 +1,6 @@
 # Mesh Controller
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/wso2/product-vick)](https://goreportcard.com/report/github.com/wso2/product-vick)
+[![Go Report Card](https://goreportcard.com/badge/github.com/celleryio/mesh-controller)](https://goreportcard.com/report/github.com/celleryio/mesh-controller)
 
 Kubernetes controller for the Cellery
 
