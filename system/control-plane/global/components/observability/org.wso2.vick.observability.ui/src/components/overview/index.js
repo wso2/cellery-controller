@@ -15,6 +15,8 @@
  */
 
 /* eslint max-lines: ["off"] */
+/* eslint no-mixed-operators: ["off"] */
+/* eslint no-bitwise: ["off"] */
 
 import ArrowRightAltSharp from "@material-ui/icons/ArrowRightAltSharp";
 import Button from "@material-ui/core/Button";
@@ -218,22 +220,31 @@ class Overview extends React.Component {
         };
     }
 
+    shadeColor = (color, percent) => {
+        const f = parseInt(color.slice(1), 16);
+        const t = percent < 0 ? 0 : 255;
+        const p = percent < 0 ? percent * -1 : percent;
+        const R = f >> 16;
+        const G = f >> 8 & 0x00FF;
+        const B = f & 0x0000FF;
+        return `#${(0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100
+            + (Math.round((t - B) * p) + B)).toString(16).slice(1)}`;
+    };
+
     viewGenerator = (nodeProps) => {
         const {colorGenerator} = this.props;
         const {selectedCell} = this.state;
-
         const nodeId = nodeProps.id;
         const color = colorGenerator.getColor(nodeId);
+        const outlineColor = this.shadeColor(color, -0.08);
         const state = this.getCellState(nodeId);
 
         const style = {};
-        if (selectedCell === nodeId) {
-            style.stroke = "#666";
-            style.strokeWidth = 15;
-        }
-        style.transform = "translate(15%, 10%) scale(0.8, 0.8)";
-        const cellIcon = <polygon fill={color} points="208,179.5 103.5,239.5 -1,179.5 -1,59.5 103.5,-0.5 208,59.5"
-            style={style}/>;
+        style.transform = "translate(2%, 15%) scale(2, 2)";
+        const cellIcon
+            = <polygon strokeWidth="4" fill={color} stroke={(selectedCell === nodeId) ? "#444" : outlineColor}
+                points="34.2,87.4 12.3,65.5 12.3,34.5 34.2,12.6 65.2,12.6 87.1,34.5 87.1,65.5 65.2,87.4"
+                style={style} strokeLinejoin="round"/>;
 
         let cellView;
         if (state === Constants.Status.Success) {
