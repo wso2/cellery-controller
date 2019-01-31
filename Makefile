@@ -25,7 +25,7 @@ BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))
 TEST_TARGETS := $(addprefix test., $(MAIN_PACKAGES))
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
-DOCKER_REPO := mirage20
+DOCKER_REPO := wso2vick
 DOCKER_IMAGE_PREFIX := mesh
 DOCKER_IMAGE_TAG := latest
 
