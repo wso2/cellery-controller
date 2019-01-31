@@ -21,10 +21,11 @@
 package v1alpha3
 
 import (
-	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+
+	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 )
 
 // GatewayLister helps list Gateways.

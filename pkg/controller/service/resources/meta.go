@@ -19,9 +19,10 @@
 package resources
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createLabels(service *v1alpha1.Service) map[string]string {

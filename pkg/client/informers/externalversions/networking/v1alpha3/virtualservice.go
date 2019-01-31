@@ -23,14 +23,15 @@ package v1alpha3
 import (
 	time "time"
 
-	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	versioned "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha3 "github.com/celleryio/mesh-controller/pkg/client/listers/networking/v1alpha3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
+
+	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	versioned "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha3 "github.com/celleryio/mesh-controller/pkg/client/listers/networking/v1alpha3"
 )
 
 // VirtualServiceInformer provides access to a shared informer and lister for

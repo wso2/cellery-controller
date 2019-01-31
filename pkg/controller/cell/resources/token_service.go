@@ -19,9 +19,10 @@
 package resources
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {

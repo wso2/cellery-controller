@@ -21,12 +21,13 @@
 package v1alpha3
 
 import (
-	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	scheme "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
+
+	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	scheme "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 )
 
 // GatewaysGetter has a method to return a GatewayInterface.

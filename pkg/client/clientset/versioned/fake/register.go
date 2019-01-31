@@ -21,13 +21,14 @@
 package fake
 
 import (
-	authenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
-	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	meshv1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
+
+	authenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
+	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	meshv1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 var scheme = runtime.NewScheme()

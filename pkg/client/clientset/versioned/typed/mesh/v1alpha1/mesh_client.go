@@ -21,10 +21,11 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
+
+	v1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 )
 
 type MeshV1alpha1Interface interface {

@@ -19,10 +19,11 @@
 package v1alpha3
 
 import (
-	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking"
 )
 
 // SchemeGroupVersion is group version used to register these objects

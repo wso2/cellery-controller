@@ -21,14 +21,15 @@ package resources
 import (
 	"testing"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/controller"
-	"github.com/celleryio/mesh-controller/pkg/controller/sts/config"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/celleryio/mesh-controller/pkg/controller"
+	"github.com/celleryio/mesh-controller/pkg/controller/sts/config"
 )
 
 var intOne int32 = 1

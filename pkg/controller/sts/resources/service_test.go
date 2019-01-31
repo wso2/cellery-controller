@@ -21,12 +21,13 @@ package resources
 import (
 	"testing"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 var boolTrue = true

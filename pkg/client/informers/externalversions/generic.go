@@ -23,11 +23,12 @@ package externalversions
 import (
 	"fmt"
 
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	cache "k8s.io/client-go/tools/cache"
+
 	v1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
 	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	meshv1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	cache "k8s.io/client-go/tools/cache"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other

@@ -21,6 +21,12 @@
 package fake
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/discovery"
+	fakediscovery "k8s.io/client-go/discovery/fake"
+	"k8s.io/client-go/testing"
+
 	clientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
 	authenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
 	fakeauthenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1/fake"
@@ -28,11 +34,6 @@ import (
 	fakemeshv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/mesh/v1alpha1/fake"
 	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	fakenetworkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3/fake"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/discovery"
-	fakediscovery "k8s.io/client-go/discovery/fake"
-	"k8s.io/client-go/testing"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.

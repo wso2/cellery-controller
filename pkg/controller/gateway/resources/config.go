@@ -22,12 +22,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
 	"github.com/celleryio/mesh-controller/pkg/controller/gateway/config"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type apiConfig struct {

@@ -22,9 +22,14 @@ import (
 	"flag"
 	"time"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/golang/glog"
+	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
 	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions"
 	"github.com/celleryio/mesh-controller/pkg/controller/cell"
@@ -32,10 +37,6 @@ import (
 	"github.com/celleryio/mesh-controller/pkg/controller/service"
 	"github.com/celleryio/mesh-controller/pkg/controller/sts"
 	"github.com/celleryio/mesh-controller/pkg/signals"
-	"github.com/golang/glog"
-	kubeinformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (

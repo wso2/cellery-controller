@@ -19,9 +19,10 @@
 package controller
 
 import (
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 func CreateCellOwnerRef(obj metav1.Object) *metav1.OwnerReference {

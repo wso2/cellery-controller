@@ -21,12 +21,13 @@
 package versioned
 
 import (
-	authenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
-	meshv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/mesh/v1alpha1"
-	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
+
+	authenticationv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
+	meshv1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/mesh/v1alpha1"
+	networkingv1alpha3 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 )
 
 type Interface interface {

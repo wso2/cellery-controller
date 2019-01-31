@@ -21,10 +21,11 @@ package resources
 import (
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
