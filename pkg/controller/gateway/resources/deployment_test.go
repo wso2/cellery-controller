@@ -19,15 +19,16 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
 	"github.com/celleryio/mesh-controller/pkg/controller/gateway/config"
+	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 var intOne int32 = 1
@@ -47,9 +48,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Name:      "foo",
 				},
 			},
-			config: config.Gateway{
-
-			},
+			config: config.Gateway{},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo-namespace",
@@ -165,8 +164,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 								{
 									Name: gatewayBuildVolumeName,
 									VolumeSource: corev1.VolumeSource{
-										EmptyDir: &corev1.EmptyDirVolumeSource{
-										},
+										EmptyDir: &corev1.EmptyDirVolumeSource{},
 									},
 								},
 							},
@@ -312,8 +310,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 								{
 									Name: gatewayBuildVolumeName,
 									VolumeSource: corev1.VolumeSource{
-										EmptyDir: &corev1.EmptyDirVolumeSource{
-										},
+										EmptyDir: &corev1.EmptyDirVolumeSource{},
 									},
 								},
 							},

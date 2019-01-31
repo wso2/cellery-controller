@@ -140,8 +140,7 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 						{
 							Name: gatewayBuildVolumeName,
 							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{
-								},
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
 						},
 					},

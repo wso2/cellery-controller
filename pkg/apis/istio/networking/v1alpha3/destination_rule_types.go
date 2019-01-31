@@ -135,9 +135,6 @@ type TLSSettings struct {
 	Sni string `json:"sni,omitempty"`
 }
 
-
-
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type DestinationRuleList struct {

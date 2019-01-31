@@ -20,27 +20,29 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/golang/glog"
+	"reflect"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
 	"github.com/celleryio/mesh-controller/pkg/controller"
 	"github.com/celleryio/mesh-controller/pkg/controller/gateway/config"
 	"github.com/celleryio/mesh-controller/pkg/controller/gateway/resources"
+	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"reflect"
 
 	istioinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	istionetworklisters "github.com/celleryio/mesh-controller/pkg/client/listers/networking/v1alpha3"
 	listers "github.com/celleryio/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	istionetworklisters "github.com/celleryio/mesh-controller/pkg/client/listers/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
@@ -229,6 +231,7 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 
 	return nil
 }
+
 //
 //func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
 //	istioGateway, err := h.istioGatewayLister.Gateways(gateway.Namespace).Get(resources.IstioGatewayName(gateway))

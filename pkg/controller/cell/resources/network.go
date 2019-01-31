@@ -29,7 +29,7 @@ import (
 func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 
 	cellName := cell.Name
-	gatewayName := GatewayName(cell);
+	gatewayName := GatewayName(cell)
 	var serviceNames []string
 
 	serviceTemplates := cell.Spec.ServiceTemplates

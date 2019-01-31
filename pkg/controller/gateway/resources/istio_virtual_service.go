@@ -20,6 +20,7 @@ package resources
 
 import (
 	"fmt"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
@@ -111,4 +112,3 @@ func CreateIstioVirtualServiceForIngress(gateway *v1alpha1.Gateway) *v1alpha3.Vi
 		},
 	}
 }
-

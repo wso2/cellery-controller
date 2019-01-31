@@ -20,6 +20,7 @@ package sts
 
 import (
 	"fmt"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
@@ -29,10 +30,12 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
+
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/celleryio/mesh-controller/pkg/client/listers/mesh/v1alpha1"

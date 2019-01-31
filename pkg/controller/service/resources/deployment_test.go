@@ -19,14 +19,15 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
+	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 var intOne int32 = 1
@@ -80,9 +81,7 @@ func TestCreateServiceDeployment(t *testing.T) {
 						},
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{
-
-								},
+								{},
 							},
 						},
 					},

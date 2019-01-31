@@ -19,13 +19,14 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func TestCreateEnvoyFilter(t *testing.T) {

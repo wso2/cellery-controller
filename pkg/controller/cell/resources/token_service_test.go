@@ -19,13 +19,13 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
-
 
 func TestCreateTokenService(t *testing.T) {
 	tests := []struct {

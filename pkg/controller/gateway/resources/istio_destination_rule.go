@@ -27,25 +27,25 @@ import (
 
 func CreateIstioDestinationRule(gateway *v1alpha1.Gateway) *v1alpha3.DestinationRule {
 
-	return &v1alpha3.DestinationRule {
-		ObjectMeta: metav1.ObjectMeta {
+	return &v1alpha3.DestinationRule{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioDestinationRuleName(gateway),
 			Namespace: gateway.Namespace,
 			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference {
+			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateServiceOwnerRef(gateway),
 			},
 		},
 
-		Spec: v1alpha3.DestinationRuleSpec {
+		Spec: v1alpha3.DestinationRuleSpec{
 			Host: GatewayK8sServiceName(gateway),
-			TrafficPolicy: &v1alpha3.TrafficPolicy {
-				LoadBalancer: &v1alpha3.LoadBalancerSettings {
+			TrafficPolicy: &v1alpha3.TrafficPolicy{
+				LoadBalancer: &v1alpha3.LoadBalancerSettings{
 					Simple: "ROUND_ROBIN",
 				},
-				PortLevelSettings: []*v1alpha3.TrafficPolicy_PortTrafficPolicy {
+				PortLevelSettings: []*v1alpha3.TrafficPolicy_PortTrafficPolicy{
 					{
-						Port: &v1alpha3.PortSelector {
+						Port: &v1alpha3.PortSelector{
 							Number: 443,
 						},
 						Tls: &v1alpha3.TLSSettings{

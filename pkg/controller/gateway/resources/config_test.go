@@ -19,13 +19,14 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller/gateway/config"
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func TestCreateGatewayConfigMap(t *testing.T) {
@@ -43,9 +44,7 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 					Name:      "foo",
 				},
 			},
-			config: config.Gateway{
-
-			},
+			config: config.Gateway{},
 			want: &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo-namespace",

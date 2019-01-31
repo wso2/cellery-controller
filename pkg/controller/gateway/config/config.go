@@ -19,9 +19,8 @@
 package config
 
 type Gateway struct {
-	InitConfig string
+	InitConfig  string
 	SetupConfig string
-	InitImage  string
-	Image      string
+	InitImage   string
+	Image       string
 }
-

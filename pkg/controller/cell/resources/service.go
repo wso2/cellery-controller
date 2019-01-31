@@ -19,11 +19,12 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/celleryio/mesh-controller/pkg/controller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) *v1alpha1.Service {

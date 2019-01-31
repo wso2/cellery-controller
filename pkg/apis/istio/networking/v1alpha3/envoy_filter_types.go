@@ -36,7 +36,7 @@ type EnvoyFilter struct {
 
 type EnvoyFilterSpec struct {
 	WorkloadLabels map[string]string `json:"workloadLabels,omitempty"`
-	Filters        []Filter         `json:"filters"`
+	Filters        []Filter          `json:"filters"`
 }
 
 type Filter struct {

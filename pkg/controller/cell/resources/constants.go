@@ -24,10 +24,10 @@ const (
 	filterInsertPositionLast  = "LAST"
 
 	filterListenerTypeInbound  = "SIDECAR_INBOUND"
-	filterListenerTypeOutbound  = "SIDECAR_OUTBOUND"
+	filterListenerTypeOutbound = "SIDECAR_OUTBOUND"
 
-	HTTPProtocol = "HTTP"
+	HTTPProtocol   = "HTTP"
 	baseFilterName = "envoy.ext_authz"
-	statPrefix = "ext_authz"
-	filterTimeout = "10s"
+	statPrefix     = "ext_authz"
+	filterTimeout  = "10s"
 )

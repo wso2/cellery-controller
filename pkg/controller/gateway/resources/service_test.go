@@ -19,13 +19,14 @@
 package resources
 
 import (
-	"github.com/google/go-cmp/cmp"
+	"testing"
+
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
 	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"testing"
 )
 
 var boolTrue = true
@@ -61,8 +62,8 @@ func TestCreateGatewayK8sService(t *testing.T) {
 				},
 				Spec: corev1.ServiceSpec{
 					Ports: []corev1.ServicePort{{
-						Name:     "http",
-						Protocol: corev1.ProtocolTCP,
+						Name:       "http",
+						Protocol:   corev1.ProtocolTCP,
 						Port:       80,
 						TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
 					}},

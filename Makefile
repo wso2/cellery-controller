@@ -17,6 +17,7 @@
 PROJECT_ROOT := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 BUILD_DIRECTORY := build
 BUILD_ROOT := $(PROJECT_ROOT)/$(BUILD_DIRECTORY)
+GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 MAIN_PACKAGES := controller
 BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))
@@ -64,3 +65,21 @@ docker-push: $(DOCKER_PUSH_TARGETS)
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_ROOT)
+
+.PHONY: code.format
+code.format: tools.goimports
+	@goimports -w -l $(GOFILES)
+
+.PHONY: code.format-check
+code.format-check: tools.goimports
+	@goimports -l $(GOFILES)
+
+.PHONY: tools tools.goimports
+
+tools: tools.goimports
+
+tools.goimports:
+	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "goimports not found. Running 'go get golang.org/x/tools/cmd/goimports'"; \
+		go get golang.org/x/tools/cmd/goimports; \
+	fi

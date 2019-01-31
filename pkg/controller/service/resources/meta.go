@@ -41,11 +41,9 @@ func createSelector(service *v1alpha1.Service) *metav1.LabelSelector {
 	return &metav1.LabelSelector{MatchLabels: createLabels(service)}
 }
 
-
 func ServiceDeploymentName(service *v1alpha1.Service) string {
 	return service.Name + "-deployment"
 }
-
 
 func ServiceK8sServiceName(service *v1alpha1.Service) string {
 	return service.Name + "-service"
