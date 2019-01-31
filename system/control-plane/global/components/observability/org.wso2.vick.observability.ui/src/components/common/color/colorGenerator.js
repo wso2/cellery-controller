@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/* eslint no-mixed-operators: ["off"] */
+/* eslint no-bitwise: ["off"] */
+
 import Blue from "@material-ui/core/colors/blue";
 import Green from "@material-ui/core/colors/green";
 import Red from "@material-ui/core/colors/red";
@@ -190,6 +193,26 @@ class ColorGenerator {
      */
     loadColorMap = () => {
         this.colorMap = JSON.parse(localStorage.getItem(ColorGenerator.LOCAL_STORAGE_ITEM));
+    };
+
+    /**
+     * Shade the color.
+     *
+     * @private
+     * @param {string} color The generated color
+     * @param {number} percentage The shade percentage
+     * @returns {string} The shaded hex color
+     */
+    static shadeColor = (color, percentage) => {
+        const num = parseInt(color.slice(1), 16);
+        const amt = percentage < 0 ? 0 : 255;
+        const percent = percentage < 0 ? percentage * -1 : percentage;
+        const R = num >> 16;
+        const G = num >> 8 & 0x00FF;
+        const B = num & 0x0000FF;
+        return `#${(0x1000000 + (Math.round((amt - R) * percent) + R) * 0x10000
+            + (Math.round((amt - G) * percent) + G) * 0x100
+            + (Math.round((amt - B) * percent) + B)).toString(16).slice(1)}`;
     };
 
 }
