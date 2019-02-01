@@ -40,7 +40,7 @@ data:
     verifyHostname=true
 
     [jwtTokenConfig]
-    issuer="https://sts.mesh.cellery.io"
+    issuer="https://sts.cellery.io"
     audience="@env:{CELL_NAME}"
     certificateAlias="wso2apim"
     trustStore.path="${ballerina.home}/bre/security/ballerinaTruststore.p12"
