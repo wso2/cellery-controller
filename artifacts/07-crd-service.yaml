@@ -11,8 +11,8 @@ spec:
     plural: services
     singular: service
     shortNames:
-    - vservice
-    - vsvc
+    - cservice
+    - csvc
   additionalPrinterColumns:
   - name: Available-Replicas
     type: integer

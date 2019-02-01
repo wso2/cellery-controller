@@ -11,5 +11,5 @@ spec:
     plural: tokenservices
     singular: tokenservice
     shortNames:
-    - vtokenservice
-    - vts
+    - ctokenservice
+    - cts

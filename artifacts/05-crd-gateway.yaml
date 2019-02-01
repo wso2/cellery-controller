@@ -11,8 +11,8 @@ spec:
     plural: gateways
     singular: gateway
     shortNames:
-    - vgateways
-    - vgw
+    - cgateways
+    - cgw
   additionalPrinterColumns:
   - name: Status
     type: string
