@@ -47,6 +47,9 @@ $(TEST_TARGETS):
 .PHONY: test
 test: $(TEST_TARGETS)
 
+coverage: test
+	go tool cover -html=$(BUILD_ROOT)/coverage.out
+
 .PHONY: $(DOCKER_TARGETS)
 $(DOCKER_TARGETS): docker.% : build.%
 	$(eval TARGET=$(patsubst docker.%,%,$@))
