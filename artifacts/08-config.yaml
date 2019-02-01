@@ -67,8 +67,8 @@ data:
     [b7a.observability.tracing]
     enabled=false
 
-  cell-gateway-init-image: wso2vick/cell-gateway-init
-  cell-gateway-image: wso2vick/cell-gateway
+  cell-gateway-init-image: celleryio/cell-gateway-init
+  cell-gateway-image: celleryio/cell-gateway
   cell-sts-config: |
     {
         "endpoint": "https://gateway.cellery-system:9443/api/identity/cellery-auth/v1.0/sts/token",
@@ -81,7 +81,7 @@ data:
 
       default deny = false
       default allow = true
-  cell-sts-image: wso2vick/cell-sts
+  cell-sts-image: celleryio/cell-sts
   cell-sts-opa-image: openpolicyagent/opa:0.10.3
 kind: ConfigMap
 metadata:

@@ -17,5 +17,5 @@ spec:
     spec:
       containers:
       - name: controller
-        image: wso2vick/controller
+        image: celleryio/mesh-controller
       serviceAccountName: controller
