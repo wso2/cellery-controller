@@ -25,9 +25,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/controller/gateway/config"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/config"
 )
 
 func TestCreateGatewayConfigMap(t *testing.T) {

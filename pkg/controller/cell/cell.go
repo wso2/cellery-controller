@@ -26,12 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
-	"github.com/celleryio/mesh-controller/pkg/controller"
-	"github.com/celleryio/mesh-controller/pkg/controller/cell/resources"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
 
-	istioinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,9 +41,9 @@ import (
 	networkv1informers "k8s.io/client-go/informers/networking/v1"
 	networkv1listers "k8s.io/client-go/listers/networking/v1"
 
-	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/celleryio/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	istiov1alpha1listers "github.com/celleryio/mesh-controller/pkg/client/listers/networking/v1alpha3"
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 )
 
 type cellHandler struct {

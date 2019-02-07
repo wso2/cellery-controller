@@ -31,17 +31,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
-	"github.com/celleryio/mesh-controller/pkg/controller"
-	"github.com/celleryio/mesh-controller/pkg/controller/service/resources"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/controller/service/resources"
 
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
-	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/celleryio/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 )
 
 type serviceHandler struct {

@@ -19,8 +19,8 @@
 package resources
 
 import (
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 func createLabels(cell *v1alpha1.Cell) map[string]string {

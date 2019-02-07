@@ -21,11 +21,10 @@
 package v1alpha1
 
 import (
+	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
-
-	v1alpha1 "github.com/celleryio/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 )
 
 type AuthenticationV1alpha1Interface interface {

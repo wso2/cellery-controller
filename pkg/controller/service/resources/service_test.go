@@ -26,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 var boolTrue = true

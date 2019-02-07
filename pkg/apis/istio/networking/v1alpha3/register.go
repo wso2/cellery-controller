@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking"
+	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking"
 )
 
 // SchemeGroupVersion is group version used to register these objects

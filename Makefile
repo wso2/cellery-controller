@@ -15,10 +15,10 @@
 #  under the License.
 
 PROJECT_ROOT := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-PROJECT_PKG := github.com/celleryio/mesh-controller
+PROJECT_PKG := github.com/cellery-io/mesh-controller
 BUILD_DIRECTORY := build
 BUILD_ROOT := $(PROJECT_ROOT)/$(BUILD_DIRECTORY)
-GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/client/*")
 
 MAIN_PACKAGES := controller
 BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))

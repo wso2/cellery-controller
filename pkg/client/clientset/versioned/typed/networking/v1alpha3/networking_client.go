@@ -21,11 +21,10 @@
 package v1alpha3
 
 import (
+	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
-
-	v1alpha3 "github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/scheme"
 )
 
 type NetworkingV1alpha3Interface interface {

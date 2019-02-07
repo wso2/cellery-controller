@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 )
 
 // SchemeGroupVersion is group version used to register these objects

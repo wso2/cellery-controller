@@ -29,14 +29,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh"
-	meshclientset "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned"
-	meshinformers "github.com/celleryio/mesh-controller/pkg/client/informers/externalversions"
-	"github.com/celleryio/mesh-controller/pkg/controller/cell"
-	"github.com/celleryio/mesh-controller/pkg/controller/gateway"
-	"github.com/celleryio/mesh-controller/pkg/controller/service"
-	"github.com/celleryio/mesh-controller/pkg/controller/sts"
-	"github.com/celleryio/mesh-controller/pkg/signals"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell"
+	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
+	"github.com/cellery-io/mesh-controller/pkg/controller/service"
+	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
+	"github.com/cellery-io/mesh-controller/pkg/signals"
 )
 
 const (

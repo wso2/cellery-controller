@@ -23,8 +23,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
 func CreateTokenServiceK8sService(tokenService *v1alpha1.TokenService) *corev1.Service {

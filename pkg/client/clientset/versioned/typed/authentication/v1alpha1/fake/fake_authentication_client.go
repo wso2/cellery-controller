@@ -21,10 +21,9 @@
 package fake
 
 import (
+	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-
-	v1alpha1 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
 )
 
 type FakeAuthenticationV1alpha1 struct {

@@ -1,6 +1,6 @@
 # Mesh Controller
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/celleryio/mesh-controller)](https://goreportcard.com/report/github.com/celleryio/mesh-controller)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cellery-io/mesh-controller)](https://goreportcard.com/report/github.com/cellery-io/mesh-controller)
 
 Kubernetes controller for the Cellery
 

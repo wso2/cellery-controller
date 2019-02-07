@@ -21,10 +21,9 @@
 package fake
 
 import (
+	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-
-	v1alpha3 "github.com/celleryio/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 )
 
 type FakeNetworkingV1alpha3 struct {

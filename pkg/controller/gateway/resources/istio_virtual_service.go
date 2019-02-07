@@ -23,9 +23,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/celleryio/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/celleryio/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/celleryio/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
 func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
