@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"strings"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
@@ -32,6 +33,16 @@ func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 
 	if len(service.Spec.Container.Ports) > 0 {
 		containerPort = service.Spec.Container.Ports[0].ContainerPort
+	}
+
+	var protocol string
+	switch strings.ToLower(service.Spec.Protocol) {
+	case serviceProtocolTCP:
+		protocol = serviceProtocolTCP
+	case serviceProtocolHTTP:
+		protocol = serviceProtocolHTTP
+	default:
+		protocol = serviceProtocolHTTP
 	}
 
 	return &corev1.Service{
@@ -45,7 +56,7 @@ func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
-				Name:       controller.HTTPServiceName,
+				Name:       protocol,
 				Protocol:   corev1.ProtocolTCP,
 				Port:       service.Spec.ServicePort,
 				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: containerPort},

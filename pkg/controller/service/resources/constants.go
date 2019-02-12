@@ -23,4 +23,7 @@ const (
 
 	// used for tracing
 	appLabelKey = "app"
+
+	serviceProtocolTCP = "tcp"
+	serviceProtocolHTTP = "http"
 )

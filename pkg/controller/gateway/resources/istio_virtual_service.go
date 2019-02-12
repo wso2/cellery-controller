@@ -30,27 +30,49 @@ import (
 
 func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
 
-	var routes []*v1alpha3.HTTPRoute
+	//var routes []*v1alpha3.HTTPRoute
+	//
+	//for _, apiRoute := range gateway.Spec.APIRoutes {
+	//	routes = append(routes, &v1alpha3.HTTPRoute{
+	//		Match: []*v1alpha3.HTTPMatchRequest{
+	//			{
+	//				Uri: &v1alpha3.StringMatch{
+	//					//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
+	//					Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
+	//				},
+	//			},
+	//		},
+	//		Route: []*v1alpha3.DestinationWeight{
+	//			{
+	//				Destination: &v1alpha3.Destination{
+	//					Host: apiRoute.Backend,
+	//				},
+	//			},
+	//		},
+	//		Rewrite: &v1alpha3.HTTPRewrite{
+	//			Uri: "/",
+	//		},
+	//	})
+	//}
 
-	for _, apiRoute := range gateway.Spec.APIRoutes {
-		routes = append(routes, &v1alpha3.HTTPRoute{
-			Match: []*v1alpha3.HTTPMatchRequest{
+	var tcpRoutes []*v1alpha3.TCPRoute
+
+	for _, tcpRoute := range gateway.Spec.TCPRoutes {
+		tcpRoutes = append(tcpRoutes, &v1alpha3.TCPRoute{
+			Match: []*v1alpha3.L4MatchAttributes{
 				{
-					Uri: &v1alpha3.StringMatch{
-						//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
-						Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
-					},
+					Port: tcpRoute.Port,
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
 				{
 					Destination: &v1alpha3.Destination{
-						Host: apiRoute.Backend,
+						Host: tcpRoute.BackendHost,
+						Port: &v1alpha3.PortSelector{
+							Number: tcpRoute.BackendPort,
+						},
 					},
 				},
-			},
-			Rewrite: &v1alpha3.HTTPRewrite{
-				Uri: "/",
 			},
 		})
 	}
@@ -67,7 +89,8 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 		Spec: v1alpha3.VirtualServiceSpec{
 			Hosts:    []string{"*"},
 			Gateways: []string{IstioGatewayName(gateway)},
-			Http:     routes,
+			//Http:     routes,
+			Tcp: tcpRoutes,
 		},
 	}
 }
@@ -76,7 +99,7 @@ func CreateIstioVirtualServiceForIngress(gateway *v1alpha1.Gateway) *v1alpha3.Vi
 
 	var routes []*v1alpha3.HTTPRoute
 
-	for _, apiRoute := range gateway.Spec.APIRoutes {
+	for _, apiRoute := range gateway.Spec.HTTPRoutes {
 		if apiRoute.Global == true {
 			routes = append(routes, &v1alpha3.HTTPRoute{
 				Match: []*v1alpha3.HTTPMatchRequest{

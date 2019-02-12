@@ -40,10 +40,11 @@ type GatewayTemplateSpec struct {
 }
 
 type GatewaySpec struct {
-	APIRoutes []APIRoute `json:"apis"`
+	HTTPRoutes []HTTPRoute `json:"http"`
+	TCPRoutes  []TCPRoute  `json:"tcp"`
 }
 
-type APIRoute struct {
+type HTTPRoute struct {
 	Context     string          `json:"context"`
 	Definitions []APIDefinition `json:"definitions"`
 	Backend     string          `json:"backend"`
@@ -53,6 +54,12 @@ type APIRoute struct {
 type APIDefinition struct {
 	Path   string `json:"path"`
 	Method string `json:"method"`
+}
+
+type TCPRoute struct {
+	Port        uint32 `json:"port"`
+	BackendHost string `json:"backendHost"`
+	BackendPort uint32 `json:"backendPort"`
 }
 
 type GatewayStatus struct {

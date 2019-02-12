@@ -28,8 +28,12 @@ import (
 func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 	gatewaySpec := cell.Spec.GatewayTemplate.Spec
 
-	for i, _ := range gatewaySpec.APIRoutes {
-		gatewaySpec.APIRoutes[i].Backend = "http://" + cell.Name + "--" + gatewaySpec.APIRoutes[i].Backend + "-service"
+	for i, _ := range gatewaySpec.HTTPRoutes {
+		gatewaySpec.HTTPRoutes[i].Backend = "http://" + cell.Name + "--" + gatewaySpec.HTTPRoutes[i].Backend + "-service"
+	}
+
+	for i, _ := range gatewaySpec.TCPRoutes {
+		gatewaySpec.TCPRoutes[i].BackendHost = cell.Name + "--" + gatewaySpec.TCPRoutes[i].BackendHost + "-service"
 	}
 
 	return &v1alpha1.Gateway{

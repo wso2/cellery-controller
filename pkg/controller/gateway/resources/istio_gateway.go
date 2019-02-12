@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
@@ -27,6 +28,20 @@ import (
 )
 
 func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
+
+	var gatewayServers []*v1alpha3.Server
+
+	for _, tcpRoute := range gateway.Spec.TCPRoutes {
+		gatewayServers = append(gatewayServers, &v1alpha3.Server{
+			Hosts: []string{"*"},
+			Port: &v1alpha3.Port{
+				Number:   tcpRoute.Port,
+				Protocol: "TCP",
+				Name:     fmt.Sprintf("tcp-%d", tcpRoute.Port),
+			},
+		})
+	}
+
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioGatewayName(gateway),
@@ -37,30 +52,7 @@ func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
 			},
 		},
 		Spec: v1alpha3.GatewaySpec{
-			Servers: []*v1alpha3.Server{
-				{
-					Hosts: []string{"*"},
-					Port: &v1alpha3.Port{
-						Number:   80,
-						Protocol: "HTTP2",
-						Name:     "http2",
-					},
-				},
-				{
-					Hosts: []string{"*"},
-					Port: &v1alpha3.Port{
-						Number:   443,
-						Protocol: "HTTPS",
-						Name:     "https",
-					},
-					Tls: &v1alpha3.Server_TLSOptions{
-						Mode:              "MUTUAL",
-						ServerCertificate: "/etc/certs/cert-chain.pem",
-						PrivateKey:        "/etc/certs/key.pem",
-						CaCertificates:    "/etc/certs/root-cert.pem",
-					},
-				},
-			},
+			Servers:  gatewayServers,
 			Selector: createGatewayLabels(gateway),
 		},
 	}

@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -28,6 +29,27 @@ import (
 )
 
 func CreateGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
+
+	var servicePorts []corev1.ServicePort
+
+	if len(gateway.Spec.TCPRoutes) == 0 {
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Name:       controller.HTTPServiceName,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       gatewayServicePort,
+			TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+		})
+	} else {
+		for _, tcpRoute := range gateway.Spec.TCPRoutes {
+			servicePorts = append(servicePorts, corev1.ServicePort{
+				Name:       fmt.Sprintf("tcp-%d", tcpRoute.Port),
+				Protocol:   corev1.ProtocolTCP,
+				Port:       int32(tcpRoute.Port),
+				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(tcpRoute.Port)},
+			})
+		}
+	}
+
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayK8sServiceName(gateway),
@@ -38,14 +60,7 @@ func CreateGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       controller.HTTPServiceName,
-					Protocol:   corev1.ProtocolTCP,
-					Port:       gatewayServicePort,
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
-				},
-			},
+			Ports:    servicePorts,
 			Selector: createGatewayLabels(gateway),
 		},
 	}

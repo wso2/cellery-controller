@@ -89,7 +89,7 @@ type VirtualServiceSpec struct {
 	// An ordered list of route rules for opaque TCP traffic. TCP routes will
 	// be applied to any port that is not a HTTP or TLS port. The first rule
 	// matching an incoming request is used.
-	//Tcp []*TCPRoute `protobuf:"bytes,4,rep,name=tcp" json:"tcp,omitempty"`
+	Tcp []*TCPRoute `json:"tcp,omitempty"`
 }
 
 type HTTPRoute struct {
@@ -237,6 +237,46 @@ type PortSelector struct {
 	//	*PortSelector_Name
 	Number uint32 `json:"number,omitempty"`
 }
+
+type TCPRoute struct {
+	// Match conditions to be satisfied for the rule to be
+	// activated. All conditions inside a single match block have AND
+	// semantics, while the list of match blocks have OR semantics. The rule
+	// is matched if any one of the match blocks succeed.
+	Match []*L4MatchAttributes `json:"match,omitempty"`
+	// The destination to which the connection should be forwarded to.
+	// Currently, only one destination is allowed for TCP services. When TCP
+	// weighted routing support is introduced in Envoy, multiple destinations
+	// with weights can be specified.
+	Route []*DestinationWeight `json:"route,omitempty"`
+}
+
+// L4 connection match attributes. Note that L4 connection matching support
+// is incomplete.
+type L4MatchAttributes struct {
+	// IPv4 or IPv6 ip addresses of destination with optional subnet.  E.g.,
+	// a.b.c.d/xx form or just a.b.c.d.
+	DestinationSubnets []string `json:"destinationSubnets,omitempty"`
+	// Specifies the port on the host that is being addressed. Many services
+	// only expose a single port or label ports with the protocols they support,
+	// in these cases it is not required to explicitly select the port.
+	Port uint32 `json:"port,omitempty"`
+	// IPv4 or IPv6 ip address of source with optional subnet. E.g., a.b.c.d/xx
+	// form or just a.b.c.d
+	// $hide_from_docs
+	SourceSubnet string `json:"sourceSubnet,omitempty"`
+	// One or more labels that constrain the applicability of a rule to
+	// workloads with the given labels. If the VirtualService has a list of
+	// gateways specified at the top, it should include the reserved gateway
+	// `mesh` in order for this field to be applicable.
+	SourceLabels map[string]string `json:"sourceLabels,omitempty"`
+	// Names of gateways where the rule should be applied to. Gateway names
+	// at the top of the VirtualService (if any) are overridden. The gateway
+	// match is independent of sourceLabels.
+	Gateways []string `json:"gateways,omitempty"`
+}
+
+
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

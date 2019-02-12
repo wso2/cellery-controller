@@ -129,12 +129,14 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 		return err
 	}
 
-	if err := h.handleTokenService(cell); err != nil {
-		return err
-	}
-
-	if err := h.handleEnvoyFilter(cell); err != nil {
-		return err
+	if len(cell.Spec.GatewayTemplate.Spec.TCPRoutes) == 0 {
+		//if err := h.handleTokenService(cell); err != nil {
+		//	return err
+		//}
+		//
+		//if err := h.handleEnvoyFilter(cell); err != nil {
+		//	return err
+		//}
 	}
 
 	if err := h.handleServices(cell); err != nil {

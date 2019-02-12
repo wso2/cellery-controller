@@ -45,6 +45,7 @@ type ServiceSpec struct {
 	Replicas           *int32           `json:"replicas"`
 	ServicePort        int32            `json:"servicePort"`
 	ServiceAccountName string           `json:"serviceAccountName"`
+	Protocol           string           `json:"protocol"`
 	Container          corev1.Container `json:"container"`
 }
 
