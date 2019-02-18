@@ -81,6 +81,7 @@ func main() {
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
 	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
+	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
 
 	// Create Mesh informers
@@ -132,6 +133,7 @@ func main() {
 		kubeClient,
 		meshClient,
 		deploymentInformer,
+		hpaInformer,
 		k8sServiceInformer,
 		serviceInformer,
 	)

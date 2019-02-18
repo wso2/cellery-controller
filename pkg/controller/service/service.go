@@ -42,12 +42,15 @@ import (
 
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
+	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 )
 
 type serviceHandler struct {
 	kubeClient       kubernetes.Interface
 	meshClient       meshclientset.Interface
 	deploymentLister appsv1listers.DeploymentLister
+	hpaLister        autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
 	k8sServiceLister corev1listers.ServiceLister
 	serviceLister    listers.ServiceLister
 }
@@ -56,6 +59,7 @@ func NewController(
 	kubeClient kubernetes.Interface,
 	meshClient meshclientset.Interface,
 	deploymentInformer appsv1informers.DeploymentInformer,
+	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
 ) *controller.Controller {
@@ -63,6 +67,7 @@ func NewController(
 		kubeClient:       kubeClient,
 		meshClient:       meshClient,
 		deploymentLister: deploymentInformer.Lister(),
+		hpaLister:        hpaInformer.Lister(),
 		k8sServiceLister: k8sServiceInformer.Lister(),
 		serviceLister:    serviceInformer.Lister(),
 	}
@@ -115,6 +120,10 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 		return err
 	}
 
+	if err := h.handleHpa(service); err != nil {
+		return err
+	}
+
 	if err := h.handleK8sService(service); err != nil {
 		return err
 	}
@@ -138,6 +147,26 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 
 	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
 
+	return nil
+}
+
+func (h *serviceHandler) handleHpa(service *v1alpha1.Service) error {
+	if service.Spec.Autoscaling == nil {
+		glog.Infof("No Autoscaling configuration specified for service %s", service.Name)
+		return nil
+	}
+	hpa, err := h.hpaLister.HorizontalPodAutoscalers(service.Namespace).Get(resources.ServiceHpaName(service))
+	if errors.IsNotFound(err) {
+		hpa, err = h.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(service.Namespace).
+			Create(resources.CreateHpa(service))
+		if err != nil {
+			glog.Errorf("Failed to create HPA %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("HPA created %+v", hpa)
 	return nil
 }
 
