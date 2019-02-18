@@ -20,6 +20,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	autoscalingV2beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,11 +43,23 @@ type ServiceTemplateSpec struct {
 }
 
 type ServiceSpec struct {
-	Replicas           *int32           `json:"replicas"`
-	ServicePort        int32            `json:"servicePort"`
-	ServiceAccountName string           `json:"serviceAccountName"`
-	Protocol           string           `json:"protocol"`
-	Container          corev1.Container `json:"container"`
+	Replicas           *int32            `json:"replicas"`
+	ServicePort        int32             `json:"servicePort"`
+	ServiceAccountName string            `json:"serviceAccountName"`
+	Protocol           string            `json:"protocol"`
+	Container          corev1.Container  `json:"container"`
+	Autoscaling        *AutoscalingSpec  `json:"autoscaling"`
+}
+
+type AutoscalingSpec struct {
+	Overridable bool		`json:"overridable,omitempty"`
+	Policy Policy			`json:"policy"`
+}
+
+type Policy struct {
+	MinReplicas *int32 						`json:"minReplicas"`
+	MaxReplicas int32 						`json:"maxReplicas"`
+	Metrics []autoscalingV2beta1.MetricSpec `json:"metrics"`
 }
 
 type ServiceStatus struct {
