@@ -75,9 +75,9 @@ data:
         "username": "admin",
         "password": "admin",
         "globalJWKS" : "https://gateway.cellery-system:9443/oauth2/jwks",
-        "enableSignatureValidation" : "false",
-        "enableIssuerValidation" : "false",
-        "enableAudienceValidation" : "false",
+        "enableSignatureValidation" : "true",
+        "enableIssuerValidation" : "true",
+        "enableAudienceValidation" : "true",
         "enableAuthorization" : "true",
         "OPAQueryPrefix" : "data/cellery/io"
     }
