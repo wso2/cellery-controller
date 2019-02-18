@@ -57,8 +57,8 @@ type AutoscalingSpec struct {
 }
 
 type Policy struct {
-	MinReplicas *int32 						`json:"minReplicas"`
-	MaxReplicas int32 						`json:"maxReplicas"`
+	MinReplicas *int32 `json:"minReplicas"`
+	MaxReplicas int32 `json:"maxReplicas"`
 	Metrics []autoscalingV2beta1.MetricSpec `json:"metrics"`
 }
 
