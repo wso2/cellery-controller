@@ -74,12 +74,16 @@ data:
         "endpoint": "https://gateway.cellery-system:9443/api/identity/cellery-auth/v1.0/sts/token",
         "username": "admin",
         "password": "admin",
-        "globalJWKS" : "https://gateway.cellery-system:9443/oauth2/jwks"
+        "globalJWKS" : "https://gateway.cellery-system:9443/oauth2/jwks",
+        "enableSignatureValidation" : "false",
+        "enableIssuerValidation" : "false",
+        "enableAudienceValidation" : "false",
+        "enableAuthorization" : "true",
+        "OPAQueryPrefix" : "data/cellery/io"
     }
   opa-default-policy: |
-      package sample
+      package cellery.io
 
-      default deny = false
       default allow = true
   cell-sts-image: celleryio/cell-sts
   cell-sts-opa-image: openpolicyagent/opa:0.10.3
