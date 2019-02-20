@@ -19,17 +19,19 @@ PROJECT_PKG := github.com/cellery-io/mesh-controller
 BUILD_DIRECTORY := build
 BUILD_ROOT := $(PROJECT_ROOT)/$(BUILD_DIRECTORY)
 GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/client/*")
+GIT_REVISION := $(shell git rev-parse --verify HEAD)
 
 MAIN_PACKAGES := controller
 BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))
 TEST_TARGETS := $(addprefix test., $(MAIN_PACKAGES))
+CONTROLLER_YAML_NAME := mesh-controller.yaml
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
 DOCKER_REPO := celleryio
 DOCKER_IMAGE_PREFIX := mesh
-DOCKER_IMAGE_TAG := latest
+DOCKER_IMAGE_TAG ?= $(GIT_REVISION)
 
-all: build
+all: build artifacts
 
 .PHONY: $(BUILD_TARGETS)
 $(BUILD_TARGETS):
@@ -66,9 +68,20 @@ $(DOCKER_PUSH_TARGETS): docker-push.% : docker.%
 .PHONY: docker-push
 docker-push: $(DOCKER_PUSH_TARGETS)
 
+.PHONY: artifacts
+artifacts:
+	@mkdir -p $(BUILD_ROOT)
+	@> $(BUILD_ROOT)/$(CONTROLLER_YAML_NAME)
+	@for yaml in $(PROJECT_ROOT)/artifacts/*.yaml; do \
+	    cat $${yaml} >> $(BUILD_ROOT)/$(CONTROLLER_YAML_NAME); \
+        echo "---" >> ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME); \
+    done
+	@sed -i.bak 's/$${CONTROLLER_IMAGE_TAG}/$(DOCKER_IMAGE_TAG)/g' ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME)
+	@rm -f ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME).bak
+
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_ROOT)
+	@rm -rf $(BUILD_ROOT)
 
 .PHONY: code.format
 code.format: tools.goimports
