@@ -101,7 +101,7 @@ rules:
   - patch
   - watch
 - apiGroups:
-  - autoscaling/v2beta1
+  - autoscaling
   resources:
   - horizontalpodautoscalers
   verbs:
