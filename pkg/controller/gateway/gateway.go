@@ -240,7 +240,6 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	return nil
 }
 
-
 func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
 	istioGateway, err := h.istioGatewayLister.Gateways(gateway.Namespace).Get(resources.IstioGatewayName(gateway))
 	if errors.IsNotFound(err) {

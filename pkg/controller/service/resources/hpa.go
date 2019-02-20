@@ -14,58 +14,59 @@
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
-*/
+ */
 
 package resources
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
+	appsv1 "k8s.io/api/apps/v1"
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	appsv1 "k8s.io/api/apps/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
 const scaleTargetDeploymentKind = "Deployment"
 
 func CreateHpa(service *v1alpha1.Service) *autoscalingV2Beta1.HorizontalPodAutoscaler {
 
-	return &autoscalingV2Beta1.HorizontalPodAutoscaler {
+	return &autoscalingV2Beta1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      			ServiceHpaName(service),
-			Namespace: 			service.Namespace,
-			Labels:    			createLabels(service),
-			OwnerReferences: 	[]metav1.OwnerReference{
-					*controller.CreateServiceOwnerRef(service),
+			Name:      ServiceHpaName(service),
+			Namespace: service.Namespace,
+			Labels:    createLabels(service),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateServiceOwnerRef(service),
 			},
 		},
-		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec {
-			MinReplicas:		service.Spec.Autoscaling.Policy.MinReplicas,
-			MaxReplicas:		service.Spec.Autoscaling.Policy.MaxReplicas,
-			ScaleTargetRef:		autoscalingV2Beta1.CrossVersionObjectReference {
+		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec{
+			MinReplicas: service.Spec.Autoscaling.Policy.MinReplicas,
+			MaxReplicas: service.Spec.Autoscaling.Policy.MaxReplicas,
+			ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
 				Kind:       scaleTargetDeploymentKind,
 				Name:       ServiceDeploymentName(service),
 				APIVersion: appsv1.SchemeGroupVersion.String(),
 			},
-			Metrics:				service.Spec.Autoscaling.Policy.Metrics,
+			Metrics: service.Spec.Autoscaling.Policy.Metrics,
 		},
 	}
 }
 
 func CreateDefaultHpa(service *v1alpha1.Service) *autoscalingV2Beta1.HorizontalPodAutoscaler {
-	return &autoscalingV2Beta1.HorizontalPodAutoscaler {
+	return &autoscalingV2Beta1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      			ServiceHpaName(service),
-			Namespace: 			service.Namespace,
-			Labels:    			createLabels(service),
-			OwnerReferences: 	[]metav1.OwnerReference{
+			Name:      ServiceHpaName(service),
+			Namespace: service.Namespace,
+			Labels:    createLabels(service),
+			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateServiceOwnerRef(service),
 			},
 		},
-		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec {
-			MinReplicas:		service.Spec.Replicas,
-			MaxReplicas:		*service.Spec.Replicas,
-			ScaleTargetRef:		autoscalingV2Beta1.CrossVersionObjectReference {
+		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec{
+			MinReplicas: service.Spec.Replicas,
+			MaxReplicas: *service.Spec.Replicas,
+			ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
 				Kind:       scaleTargetDeploymentKind,
 				Name:       ServiceDeploymentName(service),
 				APIVersion: appsv1.SchemeGroupVersion.String(),
