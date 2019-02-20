@@ -40,10 +40,11 @@ import (
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
 	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
+
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 )
 
 type serviceHandler struct {
