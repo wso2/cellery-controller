@@ -42,6 +42,8 @@ func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 		protocol = serviceProtocolTCP
 	case serviceProtocolHTTP:
 		protocol = serviceProtocolHTTP
+	case serviceProtocolGRPC:
+		protocol = serviceProtocolGRPC
 	default:
 		protocol = serviceProtocolHTTP
 	}
