@@ -26,4 +26,5 @@ const (
 
 	serviceProtocolTCP  = "tcp"
 	serviceProtocolHTTP = "http"
+	serviceProtocolGRPC = "grpc"
 )
