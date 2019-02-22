@@ -18,25 +18,33 @@ PROJECT_ROOT := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 PROJECT_PKG := github.com/cellery-io/mesh-controller
 BUILD_DIRECTORY := build
 BUILD_ROOT := $(PROJECT_ROOT)/$(BUILD_DIRECTORY)
-GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/client/*")
+GO_FILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/client/*")
 GIT_REVISION := $(shell git rev-parse --verify HEAD)
 
 MAIN_PACKAGES := controller
 BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))
 TEST_TARGETS := $(addprefix test., $(MAIN_PACKAGES))
 CONTROLLER_YAML_NAME := mesh-controller.yaml
+
+VERSION ?= $(GIT_REVISION)
+
+# Go build time flags
+GO_LDFLAGS := -X $(PROJECT_PKG)/pkg/version.buildVersion=$(VERSION)
+GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildGitRevision=$(GIT_REVISION)
+GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildTime=$(shell date --iso=seconds)
+
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
 DOCKER_REPO := celleryio
 DOCKER_IMAGE_PREFIX := mesh
-DOCKER_IMAGE_TAG ?= $(GIT_REVISION)
+DOCKER_IMAGE_TAG ?= $(VERSION)
 
 all: build artifacts
 
 .PHONY: $(BUILD_TARGETS)
 $(BUILD_TARGETS):
 	$(eval TARGET=$(patsubst build.%,%,$@))
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BUILD_ROOT)/$(TARGET) -x $(PROJECT_ROOT)/cmd/$(TARGET)
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BUILD_ROOT)/$(TARGET) -ldflags "$(GO_LDFLAGS)" -x $(PROJECT_ROOT)/cmd/$(TARGET)
 
 .PHONY: build
 build: $(BUILD_TARGETS)
@@ -85,11 +93,11 @@ clean:
 
 .PHONY: code.format
 code.format: tools.goimports
-	@goimports -local $(PROJECT_PKG) -w -l $(GOFILES)
+	@goimports -local $(PROJECT_PKG) -w -l $(GO_FILES)
 
 .PHONY: code.format-check
 code.format-check: tools.goimports
-	@goimports -local $(PROJECT_PKG) -l $(GOFILES)
+	@goimports -local $(PROJECT_PKG) -l $(GO_FILES)
 
 .PHONY: tools tools.goimports
 
