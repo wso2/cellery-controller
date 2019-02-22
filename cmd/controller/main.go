@@ -20,6 +20,7 @@ package main
 
 import (
 	"flag"
+	"github.com/cellery-io/mesh-controller/pkg/version"
 	"time"
 
 	"k8s.io/client-go/tools/cache"
@@ -52,6 +53,8 @@ func main() {
 	flag.Parse()
 
 	stopCh := signals.SetupSignalHandler()
+
+	glog.Infoln(version.String())
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
