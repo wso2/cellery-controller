@@ -5,19 +5,19 @@ metadata:
 spec:
   gatewayTemplate:
     spec:
-      apis:
+      http:
       - context: time
         definitions:
         - path: /
           method: GET
         backend: server-time
-        global: true
+        global: false
       - context: hello
         definitions:
         - path: /
           method: GET
         backend: node-hello
-        global: true
+        global: false
   servicesTemplates:
   - metadata:
       name: time-us
