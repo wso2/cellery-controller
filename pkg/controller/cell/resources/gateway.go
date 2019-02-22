@@ -38,9 +38,10 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 
 	return &v1alpha1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GatewayName(cell),
-			Namespace: cell.Namespace,
-			Labels:    createLabels(cell),
+			Name:        GatewayName(cell),
+			Namespace:   cell.Namespace,
+			Labels:      createLabels(cell),
+			Annotations: createAnnotations(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},

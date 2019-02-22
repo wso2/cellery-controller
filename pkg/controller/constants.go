@@ -25,6 +25,11 @@ const (
 	// Istio
 	IstioSidecarInjectAnnotation = "sidecar.istio.io/inject"
 
+	// Image annotations
+	CellImageNameAnnotation = "mesh.cellery.io/cell-image-name";
+	CellImageVersionAnnotation = "mesh.cellery.io/cell-image-version"
+	CellImageOrgAnnotation = "mesh.cellery.io/cell-image-org"
+
 	// Names
 	HTTPServiceName = "http"
 )

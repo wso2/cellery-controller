@@ -31,6 +31,7 @@ func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {
 			Name:      TokenServiceName(cell),
 			Namespace: cell.Namespace,
 			Labels:    createLabels(cell),
+			Annotations: createAnnotations(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},
