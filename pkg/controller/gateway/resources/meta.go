@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
@@ -45,6 +46,10 @@ func GatewayConfigMapName(gateway *v1alpha1.Gateway) string {
 }
 
 func GatewayDeploymentName(gateway *v1alpha1.Gateway) string {
+	imageName, _, _ := extractImageInfo(gateway)
+	if len(imageName) > 0 {
+		return imageName + "-" + gateway.Name + "-deployment"
+	}
 	return gateway.Name + "-deployment"
 }
 
@@ -70,4 +75,14 @@ func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
 
 func IstioDestinationRuleName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-destination-rule"
+}
+
+func extractImageInfo(gateway *v1alpha1.Gateway) (string, string, string) {
+	annotations := gateway.Annotations
+	if annotations == nil || len(annotations) == 0 {
+		// no annotations found
+		return "", "", ""
+	}
+	return annotations[controller.CellImageNameAnnotation],
+		annotations[controller.CellImageVersionAnnotation], annotations[controller.CellImageOrgAnnotation]
 }

@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
@@ -48,9 +49,23 @@ func TokenServicePolicyConfigMapName(tokenService *v1alpha1.TokenService) string
 }
 
 func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
+	imageName, _, _ := extractImageInfo(tokenService)
+	if len(imageName) > 0 {
+		return imageName + "-" + tokenService.Name + "-deployment"
+	}
 	return tokenService.Name + "-deployment"
 }
 
 func TokenServiceK8sServiceName(tokenService *v1alpha1.TokenService) string {
 	return tokenService.Name + "-service"
+}
+
+func extractImageInfo(tokenService *v1alpha1.TokenService) (string, string, string) {
+	annotations := tokenService.Annotations
+	if annotations == nil || len(annotations) == 0 {
+		// no annotations found
+		return "", "", ""
+	}
+	return annotations[controller.CellImageNameAnnotation],
+		annotations[controller.CellImageVersionAnnotation], annotations[controller.CellImageOrgAnnotation]
 }
