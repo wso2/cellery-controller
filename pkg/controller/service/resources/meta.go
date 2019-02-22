@@ -30,7 +30,12 @@ func createLabels(service *v1alpha1.Service) map[string]string {
 	labels := make(map[string]string, len(service.ObjectMeta.Labels)+2)
 
 	labels[mesh.CellServiceLabelKey] = service.Name
-	labels[appLabelKey] = service.Name
+	imageName, _, _ := extractImageInfo(service)
+	if len(imageName) > 0 {
+		labels[appLabelKey] = imageName + "-" + service.Name
+	} else {
+		labels[appLabelKey] = service.Name
+	}
 	// order matters
 	// todo: update the code if override is not possible
 	for k, v := range service.ObjectMeta.Labels {
