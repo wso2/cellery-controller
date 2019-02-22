@@ -50,7 +50,7 @@ func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplate
 			Name:        ServiceName(cell, serviceTemplate),
 			Namespace:   cell.Namespace,
 			Labels:      createLabels(cell),
-			Annotations: createAnnotations(cell),
+			Annotations: createServiceAnnotations(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},
