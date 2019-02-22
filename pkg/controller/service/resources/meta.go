@@ -19,7 +19,6 @@
 package resources
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/controller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
@@ -44,10 +43,6 @@ func createSelector(service *v1alpha1.Service) *metav1.LabelSelector {
 }
 
 func ServiceDeploymentName(service *v1alpha1.Service) string {
-	imageName, _, _ := extractImageInfo(service)
-	if len(imageName) > 0 {
-		return imageName + "-" + service.Name + "-deployment"
-	}
 	return service.Name + "-deployment"
 }
 
@@ -57,14 +52,4 @@ func ServiceK8sServiceName(service *v1alpha1.Service) string {
 
 func ServiceHpaName(service *v1alpha1.Service) string {
 	return service.Name + "-hpa"
-}
-
-func extractImageInfo(service *v1alpha1.Service) (string, string, string) {
-	annotations := service.Annotations
-	if annotations == nil || len(annotations) == 0 {
-		// no annotations found
-		return "", "", ""
-	}
-	return annotations[controller.CellImageNameAnnotation],
-		annotations[controller.CellImageVersionAnnotation], annotations[controller.CellImageOrgAnnotation]
 }

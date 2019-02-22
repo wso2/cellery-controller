@@ -33,7 +33,7 @@ func createLabels(cell *v1alpha1.Cell) map[string]string {
 	return labels
 }
 
-func createAnnotations(cell *v1alpha1.Cell) map[string]string {
+func createServiceAnnotations(cell *v1alpha1.Cell) map[string]string {
 	annotations := make(map[string]string, len(cell.ObjectMeta.Annotations))
 
 	for k, v := range cell.ObjectMeta.Annotations {
