@@ -28,14 +28,8 @@ import (
 
 func createGatewayLabels(gateway *v1alpha1.Gateway) map[string]string {
 	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+2)
-
 	labels[mesh.CellGatewayLabelKey] = gateway.Name
-	imageName, _, _ := extractImageInfo(gateway)
-	if len(imageName) > 0 {
-		labels[appLabelKey] = imageName + "-" + gateway.Name
-	} else {
-		labels[appLabelKey] = gateway.Name
-	}
+	labels[appLabelKey] = gateway.Name
 
 	for k, v := range gateway.ObjectMeta.Labels {
 		labels[k] = v
