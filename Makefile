@@ -35,7 +35,7 @@ GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildTime=$(shell date --iso=seconds
 
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
-DOCKER_REPO := celleryio
+DOCKER_REPO ?= celleryio
 DOCKER_IMAGE_PREFIX := mesh
 DOCKER_IMAGE_TAG ?= $(VERSION)
 
@@ -84,7 +84,7 @@ artifacts:
 	    cat $${yaml} >> $(BUILD_ROOT)/$(CONTROLLER_YAML_NAME); \
         echo "---" >> ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME); \
     done
-	@sed -i.bak 's/$${CONTROLLER_IMAGE_TAG}/$(DOCKER_IMAGE_TAG)/g' ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME)
+	@sed -i.bak 's/$${CONTROLLER_IMAGE_TAG}/$(DOCKER_IMAGE_TAG)/g;s/$${DOCKER_REPO}/$(DOCKER_REPO)/g' ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME)
 	@rm -f ${BUILD_ROOT}/$(CONTROLLER_YAML_NAME).bak
 
 .PHONY: clean

@@ -17,5 +17,5 @@ spec:
     spec:
       containers:
       - name: controller
-        image: celleryio/mesh-controller:${CONTROLLER_IMAGE_TAG}
+        image: ${DOCKER_REPO}/mesh-controller:${CONTROLLER_IMAGE_TAG}
       serviceAccountName: controller
