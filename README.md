@@ -20,7 +20,7 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
 
 1. Clone this repository to your $GOPATH
    
-    ```console
+    ```bash
     cd $GOPATH/src/github.com/cellery-io/
     git clone https://github.com/cellery-io/mesh-controller.git
     cd mesh-controller
@@ -28,14 +28,14 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
    
 2. Build the controller
 
-    ```console
+    ```bash
     # The output binary can be located inside the build directory
     make build.controller 
     ```
 
 3. Run the controller in your local machine (This requires you to provide the kubeconfig file in order to connect to the Kubernetes cluster)
 
-    ```console
+    ```bash
     ./build/controller -logtostderr=true --kubeconfig=/home/<username>/.kube/config
     ```
     
@@ -45,12 +45,12 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
 
 1. Run the unit tests
 
-    ```console
+    ```bash
     make test.controller
     ```
 2. Generate and view coverage report
 
-    ```console
+    ```bash
     make coverage 
     ```
     
@@ -64,13 +64,13 @@ You can deploy a released version of the Mesh Controller using following steps.
  
 1. Generate Kubernetes YAML’s for the controller
     
-    ```console
+    ```bash
     # Specify a released version to generate the yaml
     VERSION=v0.1.0 make artifacts
     ```
 2. Deploy the controller into Kubernetes cluster
     
-    ```console
+    ```bash
     kubectl apply -f build/mesh-controller.yaml
     ```
 ### Deploying a development version
@@ -79,13 +79,13 @@ If you want to deploy a development version, you can to generate a Kubernetes YA
  
 1. Build and push the docker image
     
-    ```console
+    ```bash
     DOCKER_REPO=<your-repo> VERSION=dev make docker-push.controller artifacts
     ```
     
 2. Deploy controller into the Kubernetes cluster
     
-    ```console
+    ```bash
     kubectl apply -f build/mesh-controller.yaml
     ```
 
@@ -93,7 +93,7 @@ If you want to deploy a development version, you can to generate a Kubernetes YA
 
 You can create a sample cell using following command,
 
-```console
+```bash
 cat <<EOF | kubectl create -f -
 apiVersion: mesh.cellery.io/v1alpha1
 kind: Cell
