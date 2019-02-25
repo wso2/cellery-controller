@@ -24,6 +24,6 @@ When reporting a bug please include at least Mesh Controller version number and 
 
 You can use following command to get version information about the Mesh Controller
 
-```console
+```bash
 kubectl logs -n cellery-system -l app=controller | grep 'Mesh Controller'
 ```
