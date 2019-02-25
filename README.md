@@ -1,7 +1,11 @@
 # Mesh Controller
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/cellery-io/mesh-controller)](https://goreportcard.com/report/github.com/cellery-io/mesh-controller)
-
+[![GitHub (pre-)release](https://img.shields.io/github/release/cellery-io/mesh-controller/all.svg)](https://github.com/cellery-io/mesh-controller/releases)
+[![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/releases)
+[![GitHub last commit](https://img.shields.io/github/last-commit/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/commits/master)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+  
 Mesh controller is a Kubernetes implementation for the Cellery mesh (a.k.a Cell Mesh) builds using Istio. To learn more about about Cellery, check out the [cellery-sdk](https://github.com/cellery-io/sdk) repository.
 
 ## Getting Started
