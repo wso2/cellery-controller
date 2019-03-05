@@ -31,7 +31,7 @@ VERSION ?= $(GIT_REVISION)
 # Go build time flags
 GO_LDFLAGS := -X $(PROJECT_PKG)/pkg/version.buildVersion=$(VERSION)
 GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildGitRevision=$(GIT_REVISION)
-GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildTime=$(shell date --iso=seconds)
+GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildTime=$(shell date +%Y-%m-%dT%H:%M:%S%z)
 
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
