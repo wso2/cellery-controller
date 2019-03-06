@@ -6,6 +6,8 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/commits/master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   
+**Note**: If you just wish to get started with trying out Cellery, you can start your journey at [wso2-cellery/sdk](https://github.com/wso2-cellery/sdk) repository.  
+
 Mesh controller is a Kubernetes implementation for the Cellery mesh (a.k.a Cell Mesh) builds using Istio. To learn more about about Cellery, check out the [cellery-sdk](https://github.com/cellery-io/sdk) repository.
 
 ## Getting Started
