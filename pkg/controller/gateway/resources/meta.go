@@ -71,3 +71,7 @@ func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
 func IstioDestinationRuleName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-destination-rule"
 }
+
+func ClusterIngressName(gateway *v1alpha1.Gateway) string {
+	return gateway.Name + "-ingress"
+}

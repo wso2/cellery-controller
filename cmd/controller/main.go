@@ -86,6 +86,7 @@ func main() {
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
+	clusterIngressInformer := kubeInformerFactory.Extensions().V1beta1().Ingresses()
 
 	// Create Mesh informers
 	cellInformer := meshInformerFactory.Mesh().V1alpha1().Cells()
@@ -117,6 +118,7 @@ func main() {
 		systemConfigMapInformer,
 		deploymentInformer,
 		k8sServiceInformer,
+		clusterIngressInformer,
 		istioGatewayInformer,
 		istioDRInformer,
 		istioVSInformer,
@@ -155,6 +157,7 @@ func main() {
 		configMapInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
 		systemConfigMapInformer.Informer().HasSynced,
+		clusterIngressInformer.Informer().HasSynced,
 		// Sync mesh informers
 		cellInformer.Informer().HasSynced,
 		gatewayInformer.Informer().HasSynced,

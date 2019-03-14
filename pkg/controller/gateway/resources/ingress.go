@@ -19,50 +19,51 @@
 package resources
 
 import (
-	"fmt"
-
+	"k8s.io/api/extensions/v1beta1"
+	networkv1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
-
-	var gatewayServers []*v1alpha3.Server
-
-	for _, tcpRoute := range gateway.Spec.TCPRoutes {
-		gatewayServers = append(gatewayServers, &v1alpha3.Server{
-			Hosts: []string{"*"},
-			Port: &v1alpha3.Port{
-				Number:   tcpRoute.Port,
-				Protocol: "TCP",
-				Name:     fmt.Sprintf("tcp-%d", tcpRoute.Port),
-			},
-		})
-	}
-	gatewayServers = append(gatewayServers, &v1alpha3.Server{
-		Hosts: []string{"*"},
-		Port: &v1alpha3.Port{
-			Number:   80,
-			Protocol: "HTTP",
-			Name:     fmt.Sprintf("http-%d", 80),
-		},
-	})
-
-	return &v1alpha3.Gateway{
+func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
+	return &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioGatewayName(gateway),
+			Name:      ClusterIngressName(gateway),
 			Namespace: gateway.Namespace,
 			Labels:    createGatewayLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
 		},
-		Spec: v1alpha3.GatewaySpec{
-			Servers:  gatewayServers,
-			Selector: createGatewayLabels(gateway),
+		Spec: v1beta1.IngressSpec{
+			Rules: []networkv1.IngressRule{
+				{
+					Host: gateway.Spec.Host,
+					IngressRuleValue: v1beta1.IngressRuleValue{
+						HTTP: &v1beta1.HTTPIngressRuleValue{
+							Paths: []networkv1.HTTPIngressPath{
+								{
+									Path: "/",
+									Backend: v1beta1.IngressBackend{
+										ServiceName: GatewayK8sServiceName(gateway),
+										ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+									},
+								},
+								{
+									Path: "/_auth",
+									Backend: v1beta1.IngressBackend{
+										ServiceName: "oidc-service",
+										ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 8990},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }

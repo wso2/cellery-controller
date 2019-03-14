@@ -30,6 +30,14 @@ import (
 )
 
 func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
+	if gateway.Spec.Type == v1alpha1.GatewayTypeMicroGateway {
+		return createMicroGatewayDeployment(gateway, gatewayConfig)
+	} else {
+		return createEnvoyGatewayDeployment(gateway)
+	}
+}
+
+func createMicroGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
@@ -151,7 +159,7 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 	}
 }
 
-func CreateGatewayDeploymentEnvoy(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
+func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml

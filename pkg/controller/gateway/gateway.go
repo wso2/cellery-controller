@@ -33,7 +33,7 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
-
+	extensionsv1beta1listers "k8s.io/client-go/listers/extensions/v1beta1"
 	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
@@ -46,7 +46,7 @@ import (
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-
+	extensionsv1beta1informers "k8s.io/client-go/informers/extensions/v1beta1"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
@@ -57,6 +57,7 @@ type gatewayHandler struct {
 	meshClient         meshclientset.Interface
 	deploymentLister   appsv1listers.DeploymentLister
 	k8sServiceLister   corev1listers.ServiceLister
+	clusterIngressLister extensionsv1beta1listers.IngressLister
 	istioGatewayLister istionetworklisters.GatewayLister
 	istioDRLister      istionetworklisters.DestinationRuleLister
 	istioVSLister      istionetworklisters.VirtualServiceLister
@@ -71,6 +72,7 @@ func NewController(
 	systemConfigMapInformer corev1informers.ConfigMapInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
+	clusterIngressInformer extensionsv1beta1informers.IngressInformer,
 	istioGatewayInformer istioinformers.GatewayInformer,
 	istioDRInformer istioinformers.DestinationRuleInformer,
 	istioVSInformer istioinformers.VirtualServiceInformer,
@@ -83,6 +85,7 @@ func NewController(
 		meshClient:         meshClient,
 		deploymentLister:   deploymentInformer.Lister(),
 		k8sServiceLister:   k8sServiceInformer.Lister(),
+		clusterIngressLister: clusterIngressInformer.Lister(),
 		istioGatewayLister: istioGatewayInformer.Lister(),
 		istioDRLister:      istioDRInformer.Lister(),
 		istioVSLister:      istioVSInformer.Lister(),
@@ -153,12 +156,18 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
-	if len(gateway.Spec.TCPRoutes) != 0 {
+	if gateway.Spec.Type != v1alpha1.GatewayTypeMicroGateway {
 		if err := h.handleIstioVirtualService(gateway); err != nil {
 			return err
 		}
 
 		if err := h.handleIstioGateway(gateway); err != nil {
+			return err
+		}
+	}
+
+	if len(gateway.Spec.Host) > 0 {
+		if err := h.handleClusterIngress(gateway); err != nil {
 			return err
 		}
 	}
@@ -199,11 +208,7 @@ func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
-		if len(gateway.Spec.TCPRoutes) == 0 {
-			deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
-		} else {
-			deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeploymentEnvoy(gateway, h.gatewayConfig))
-		}
+		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
 		if err != nil {
 			glog.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
@@ -269,6 +274,21 @@ func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) er
 	}
 	glog.Infof("Istio virtual service created %+v", istioVS)
 
+	return nil
+}
+
+func (h *gatewayHandler) handleClusterIngress(gateway *v1alpha1.Gateway) error {
+	clusterIngress, err := h.clusterIngressLister.Ingresses(gateway.Namespace).Get(resources.ClusterIngressName(gateway))
+	if errors.IsNotFound(err) {
+		clusterIngress, err = h.kubeClient.ExtensionsV1beta1().Ingresses(gateway.Namespace).Create(resources.CreateClusterIngress(gateway))
+		if err != nil {
+			glog.Errorf("Failed to create Ingress %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("Ingress created %+v", clusterIngress)
 	return nil
 }
 

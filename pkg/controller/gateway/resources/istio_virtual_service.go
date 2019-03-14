@@ -30,30 +30,30 @@ import (
 
 func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
 
-	//var routes []*v1alpha3.HTTPRoute
-	//
-	//for _, apiRoute := range gateway.Spec.APIRoutes {
-	//	routes = append(routes, &v1alpha3.HTTPRoute{
-	//		Match: []*v1alpha3.HTTPMatchRequest{
-	//			{
-	//				Uri: &v1alpha3.StringMatch{
-	//					//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
-	//					Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
-	//				},
-	//			},
-	//		},
-	//		Route: []*v1alpha3.DestinationWeight{
-	//			{
-	//				Destination: &v1alpha3.Destination{
-	//					Host: apiRoute.Backend,
-	//				},
-	//			},
-	//		},
-	//		Rewrite: &v1alpha3.HTTPRewrite{
-	//			Uri: "/",
-	//		},
-	//	})
-	//}
+	var httpRoutes []*v1alpha3.HTTPRoute
+
+	for _, httpRoute := range gateway.Spec.HTTPRoutes {
+		httpRoutes = append(httpRoutes, &v1alpha3.HTTPRoute{
+			Match: []*v1alpha3.HTTPMatchRequest{
+				{
+					Uri: &v1alpha3.StringMatch{
+						//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
+						Prefix: fmt.Sprintf("/%s/", httpRoute.Context),
+					},
+				},
+			},
+			Route: []*v1alpha3.DestinationWeight{
+				{
+					Destination: &v1alpha3.Destination{
+						Host: httpRoute.Backend,
+					},
+				},
+			},
+			Rewrite: &v1alpha3.HTTPRewrite{
+				Uri: "/",
+			},
+		})
+	}
 
 	var tcpRoutes []*v1alpha3.TCPRoute
 
@@ -89,8 +89,8 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 		Spec: v1alpha3.VirtualServiceSpec{
 			Hosts:    []string{"*"},
 			Gateways: []string{IstioGatewayName(gateway)},
-			//Http:     routes,
-			Tcp: tcpRoutes,
+			Http:     httpRoutes,
+			Tcp:      tcpRoutes,
 		},
 	}
 }

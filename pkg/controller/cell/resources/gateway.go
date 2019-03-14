@@ -28,8 +28,17 @@ import (
 func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 	gatewaySpec := cell.Spec.GatewayTemplate.Spec
 
+	// Default to envoy gateway if not specified
+	if len(gatewaySpec.Type) == 0 {
+		gatewaySpec.Type = v1alpha1.GatewayTypeEnvoy
+	}
+
 	for i, _ := range gatewaySpec.HTTPRoutes {
-		gatewaySpec.HTTPRoutes[i].Backend = "http://" + cell.Name + "--" + gatewaySpec.HTTPRoutes[i].Backend + "-service"
+		if gatewaySpec.Type == v1alpha1.GatewayTypeMicroGateway {
+			gatewaySpec.HTTPRoutes[i].Backend = "http://" + cell.Name + "--" + gatewaySpec.HTTPRoutes[i].Backend + "-service"
+		} else {
+			gatewaySpec.HTTPRoutes[i].Backend = cell.Name + "--" + gatewaySpec.HTTPRoutes[i].Backend + "-service"
+		}
 	}
 
 	for i, _ := range gatewaySpec.TCPRoutes {
