@@ -1,0 +1,71 @@
+apiVersion: mesh.cellery.io/v1alpha1
+kind: Cell
+metadata:
+  name: pet-backend
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: pet-backend
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  gatewayTemplate:
+    spec:
+      type: MicroGateway
+      http:
+      - backend: controller
+        context: controller
+        definitions:
+        - method: GET
+          path: /catalog
+        - method: GET
+          path: /orders
+  servicesTemplates:
+  - metadata:
+      name: controller
+    spec:
+      container:
+        env:
+        - name: CATALOG_PORT
+          value: '80'
+        - name: ORDER_PORT
+          value: '80'
+        - name: ORDER_HOST
+          value: pet-backend--orders-service
+        - name: CUSTOMER_PORT
+          value: '80'
+        - name: CATALOG_HOST
+          value: pet-backend--catalog-service
+        - name: CUSTOMER_HOST
+          value: pet-backend--customers-service
+        image: celleryio/samples-pet-store-controller
+        ports:
+        - containerPort: 80
+      protocol: HTTP
+      replicas: 1
+      servicePort: 80
+  - metadata:
+      name: catalog
+    spec:
+      container:
+        image: celleryio/samples-pet-store-catalog
+        ports:
+        - containerPort: 80
+      replicas: 1
+      servicePort: 80
+  - metadata:
+      name: orders
+    spec:
+      container:
+        image: celleryio/samples-pet-store-orders
+        ports:
+        - containerPort: 80
+      replicas: 1
+      servicePort: 80
+  - metadata:
+      name: customers
+    spec:
+      container:
+        image: celleryio/samples-pet-store-customers
+        ports:
+        - containerPort: 80
+      replicas: 1
+      servicePort: 80
