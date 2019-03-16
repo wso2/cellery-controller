@@ -70,11 +70,37 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 									Name:  envCellNameKey,
 									Value: cellName,
 								},
+								{
+									Name:  "CELL_IMAGE_NAME",
+									Value: tokenService.Annotations["mesh.cellery.io/cell-image-name"],
+								},
+								{
+									Name:  "CELL_IMAGE_VERSION",
+									Value: tokenService.Annotations["mesh.cellery.io/cell-image-version"],
+								},
+								{
+									Name:  "CELL_INSTANCE_NAME",
+									Value: cellName,
+								},
+								{
+									Name:  "CELL_ORG_NAME",
+									Value: tokenService.Annotations["mesh.cellery.io/cell-image-org"],
+								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      configVolumeName,
 									MountPath: configMountPath,
+									ReadOnly:  true,
+								},
+								{
+									Name:      policyVolumeName,
+									MountPath: pocliyConfigMountPath,
+									ReadOnly:  true,
+								},
+								{
+									Name:      keyPairVolumeName,
+									MountPath: keyPairMountPath,
 									ReadOnly:  true,
 								},
 							},
@@ -118,6 +144,10 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 											Key:  tokenServiceConfigKey,
 											Path: tokenServiceConfigFile,
 										},
+										{
+											Key:  unsecuredPathsConfigKey,
+											Path: unsecuredPathsConfigFile,
+										},
 									},
 								},
 							},
@@ -129,12 +159,14 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: TokenServicePolicyConfigMapName(tokenService),
 									},
-									Items: []corev1.KeyToPath{
-										{
-											Key:  policyConfigKey,
-											Path: policyConfigFile,
-										},
-									},
+								},
+							},
+						},
+						{
+							Name: keyPairVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: cellName + "--secret",
 								},
 							},
 						},
