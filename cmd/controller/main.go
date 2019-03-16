@@ -83,6 +83,7 @@ func main() {
 	// Create K8s informers
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
 	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
+	secretInformer := kubeInformerFactory.Core().V1().Secrets()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
@@ -110,6 +111,7 @@ func main() {
 		tokenServiceInformer,
 		serviceInformer,
 		networkPolicyInformer,
+		secretInformer,
 		envoyFilterInformer,
 	)
 	gatewayController := gateway.NewController(
@@ -155,6 +157,7 @@ func main() {
 		k8sServiceInformer.Informer().HasSynced,
 		deploymentInformer.Informer().HasSynced,
 		configMapInformer.Informer().HasSynced,
+		secretInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
 		systemConfigMapInformer.Informer().HasSynced,
 		clusterIngressInformer.Informer().HasSynced,

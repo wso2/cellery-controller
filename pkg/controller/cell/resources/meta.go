@@ -61,3 +61,7 @@ func EnvoyFilterName(cell *v1alpha1.Cell) string {
 func ServiceName(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
 	return cell.Name + "--" + serviceTemplate.Name
 }
+
+func SecretName(cell *v1alpha1.Cell) string {
+	return cell.Name + "--secret"
+}
