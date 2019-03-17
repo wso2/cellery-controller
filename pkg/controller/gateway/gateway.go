@@ -27,43 +27,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
+	extensionsv1beta1listers "k8s.io/client-go/listers/extensions/v1beta1"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
-	extensionsv1beta1listers "k8s.io/client-go/listers/extensions/v1beta1"
-	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
+
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
+
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
+	extensionsv1beta1informers "k8s.io/client-go/informers/extensions/v1beta1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	extensionsv1beta1informers "k8s.io/client-go/informers/extensions/v1beta1"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 )
 
 type gatewayHandler struct {
-	kubeClient         kubernetes.Interface
-	meshClient         meshclientset.Interface
-	deploymentLister   appsv1listers.DeploymentLister
-	k8sServiceLister   corev1listers.ServiceLister
+	kubeClient           kubernetes.Interface
+	meshClient           meshclientset.Interface
+	deploymentLister     appsv1listers.DeploymentLister
+	k8sServiceLister     corev1listers.ServiceLister
 	clusterIngressLister extensionsv1beta1listers.IngressLister
-	istioGatewayLister istionetworklisters.GatewayLister
-	istioDRLister      istionetworklisters.DestinationRuleLister
-	istioVSLister      istionetworklisters.VirtualServiceLister
-	configMapLister    corev1listers.ConfigMapLister
-	gatewayLister      listers.GatewayLister
-	gatewayConfig      config.Gateway
+	istioGatewayLister   istionetworklisters.GatewayLister
+	istioDRLister        istionetworklisters.DestinationRuleLister
+	istioVSLister        istionetworklisters.VirtualServiceLister
+	envoyFilterLister    istionetworklisters.EnvoyFilterLister
+	configMapLister      corev1listers.ConfigMapLister
+	gatewayLister        listers.GatewayLister
+	gatewayConfig        config.Gateway
 }
 
 func NewController(
@@ -76,21 +80,23 @@ func NewController(
 	istioGatewayInformer istioinformers.GatewayInformer,
 	istioDRInformer istioinformers.DestinationRuleInformer,
 	istioVSInformer istioinformers.VirtualServiceInformer,
+	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer meshinformers.GatewayInformer,
 ) *controller.Controller {
 
 	h := &gatewayHandler{
-		kubeClient:         kubeClient,
-		meshClient:         meshClient,
-		deploymentLister:   deploymentInformer.Lister(),
-		k8sServiceLister:   k8sServiceInformer.Lister(),
+		kubeClient:           kubeClient,
+		meshClient:           meshClient,
+		deploymentLister:     deploymentInformer.Lister(),
+		k8sServiceLister:     k8sServiceInformer.Lister(),
 		clusterIngressLister: clusterIngressInformer.Lister(),
-		istioGatewayLister: istioGatewayInformer.Lister(),
-		istioDRLister:      istioDRInformer.Lister(),
-		istioVSLister:      istioVSInformer.Lister(),
-		configMapLister:    configMapInformer.Lister(),
-		gatewayLister:      gatewayInformer.Lister(),
+		istioGatewayLister:   istioGatewayInformer.Lister(),
+		istioDRLister:        istioDRInformer.Lister(),
+		istioVSLister:        istioVSInformer.Lister(),
+		envoyFilterLister:    envoyFilterInformer.Lister(),
+		configMapLister:      configMapInformer.Lister(),
+		gatewayLister:        gatewayInformer.Lister(),
 	}
 	c := controller.New(h, "Gateway")
 
@@ -162,6 +168,12 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		}
 
 		if err := h.handleIstioGateway(gateway); err != nil {
+			return err
+		}
+	}
+
+	if gateway.Spec.OidcConfig != nil {
+		if err := h.handleEnvoyFilter(gateway); err != nil {
 			return err
 		}
 	}
@@ -274,6 +286,21 @@ func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) er
 	}
 	glog.Infof("Istio virtual service created %+v", istioVS)
 
+	return nil
+}
+
+func (h *gatewayHandler) handleEnvoyFilter(gateway *v1alpha1.Gateway) error {
+	envoyFilter, err := h.envoyFilterLister.EnvoyFilters(gateway.Namespace).Get(resources.EnvoyFilterName(gateway))
+	if errors.IsNotFound(err) {
+		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(gateway.Namespace).Create(resources.CreateEnvoyFilter(gateway))
+		if err != nil {
+			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 

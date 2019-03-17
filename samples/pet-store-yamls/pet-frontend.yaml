@@ -11,6 +11,13 @@ spec:
     spec:
       type: Envoy
       host: pet-store.com
+      oidc:
+        provider: https://accounts.google.com
+        clientId: :)
+        clientSecret: :)
+        redirectUrl: http://pet-store.com/_auth/callback
+        baseUrl: http://pet-store.com/items/
+        subjectClaim: given_name
       http:
       - context: items
         definitions:

@@ -78,6 +78,15 @@ func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 		TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
 	})
 
+	if gateway.Spec.OidcConfig != nil {
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Name:       "http-oidc-callback",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       15810,
+			TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 15810},
+		})
+	}
+
 	for _, tcpRoute := range gateway.Spec.TCPRoutes {
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       fmt.Sprintf("tcp-%d", tcpRoute.Port),

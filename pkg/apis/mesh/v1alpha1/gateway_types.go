@@ -43,8 +43,21 @@ type GatewaySpec struct {
 	Type       GatewayType `json:"type,omitempty"`
 	Host       string      `json:"host,omitempty"`
 	TlsSecret  string      `json:"tlsSecret,omitempty"`
+	OidcConfig *OidcConfig `json:"oidc,omitempty"`
 	HTTPRoutes []HTTPRoute `json:"http,omitempty"`
 	TCPRoutes  []TCPRoute  `json:"tcp,omitempty"`
+}
+
+type OidcConfig struct {
+	ProviderUrl  string `json:"provider"`
+	ClientId     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+	DcrUrl       string `json:"dcrUrl"`
+	DcrUser      string `json:"dcrUser"`
+	DcrPassword  string `json:"dcrPassword"`
+	RedirectUrl  string `json:"redirectUrl"`
+	BaseUrl      string `json:"baseUrl"`
+	SubjectClaim string `json:"subjectClaim"`
 }
 
 type HTTPRoute struct {

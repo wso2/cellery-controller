@@ -144,9 +144,9 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 			return err
 		}
 
-		//if err := h.handleEnvoyFilter(cell); err != nil {
-		//	return err
-		//}
+		if err := h.handleEnvoyFilter(cell); err != nil {
+			return err
+		}
 	}
 
 	if err := h.handleServices(cell); err != nil {

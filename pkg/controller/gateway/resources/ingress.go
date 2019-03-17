@@ -29,6 +29,28 @@ import (
 )
 
 func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
+
+	var httpIngressPaths []networkv1.HTTPIngressPath
+
+	httpIngressPaths = append(httpIngressPaths, networkv1.HTTPIngressPath{
+		Path: "/",
+		Backend: v1beta1.IngressBackend{
+			ServiceName: GatewayK8sServiceName(gateway),
+			ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+		},
+	})
+
+	// add callback endpoint to the ingress if oidc is enabled
+	if gateway.Spec.OidcConfig != nil {
+		httpIngressPaths = append(httpIngressPaths, networkv1.HTTPIngressPath{
+			Path: "/_auth",
+			Backend: v1beta1.IngressBackend{
+				ServiceName: GatewayK8sServiceName(gateway),
+				ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 15810},
+			},
+		})
+	}
+
 	return &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ClusterIngressName(gateway),
@@ -44,22 +66,7 @@ func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
 					Host: gateway.Spec.Host,
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []networkv1.HTTPIngressPath{
-								{
-									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: GatewayK8sServiceName(gateway),
-										ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
-									},
-								},
-								{
-									Path: "/_auth",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "oidc-service",
-										ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 8990},
-									},
-								},
-							},
+							Paths: httpIngressPaths,
 						},
 					},
 				},

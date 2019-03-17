@@ -20,8 +20,9 @@ package main
 
 import (
 	"flag"
-	"github.com/cellery-io/mesh-controller/pkg/version"
 	"time"
+
+	"github.com/cellery-io/mesh-controller/pkg/version"
 
 	"k8s.io/client-go/tools/cache"
 
@@ -124,6 +125,7 @@ func main() {
 		istioGatewayInformer,
 		istioDRInformer,
 		istioVSInformer,
+		envoyFilterInformer,
 		configMapInformer,
 		gatewayInformer,
 	)

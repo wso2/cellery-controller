@@ -42,4 +42,12 @@ const (
 
 	// used for tracing
 	appLabelKey = "app"
+
+	// Envoy filter
+	filterInsertPositionFirst = "FIRST"
+	filterListenerTypeGateway = "GATEWAY"
+	HTTPProtocol              = "HTTP"
+	baseFilterName            = "envoy.ext_authz"
+	statPrefix                = "ext_authz"
+	filterTimeout             = "10s"
 )

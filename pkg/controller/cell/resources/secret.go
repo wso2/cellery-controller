@@ -24,11 +24,13 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/big"
 	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
@@ -69,7 +71,7 @@ func CreateKeyPairSecret(cell *v1alpha1.Cell) *corev1.Secret {
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
-		Type: mesh.GroupName+ "/key-and-cert",
+		Type: mesh.GroupName + "/key-and-cert",
 		Data: map[string][]byte{
 			"key.pem":  pem.EncodeToMemory(&privateKeyBlock),
 			"cert.pem": pem.EncodeToMemory(&certBlock),

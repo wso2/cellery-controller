@@ -169,6 +169,177 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment 
 		cellName = gateway.Name
 	}
 
+	var containers []corev1.Container
+
+	containers = append(containers, corev1.Container{
+		Name:  "cell-gateway",
+		Image: "gcr.io/istio-release/proxyv2:1.0.2",
+		Env: []corev1.EnvVar{
+			{
+				Name:  "CELL_NAME",
+				Value: cellName,
+			},
+			{
+				Name: "POD_NAME",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "metadata.name",
+					},
+				},
+			},
+			{
+				Name: "POD_NAMESPACE",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "metadata.namespace",
+					},
+				},
+			},
+			{
+				Name: "INSTANCE_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "status.podIP",
+					},
+				},
+			},
+			{
+				Name: "ISTIO_META_POD_NAME",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "metadata.name",
+					},
+				},
+			},
+		},
+		Args: []string{
+			"proxy",
+			"router",
+			"-v",
+			"2",
+			"--discoveryRefreshDelay",
+			"1s",
+			"--drainDuration",
+			"45s",
+			"--parentShutdownDuration",
+			"1m0s",
+			"--connectTimeout",
+			"10s",
+			"--serviceCluster",
+			GatewayDeploymentName(gateway),
+			"--zipkinAddress",
+			"zipkin.istio-system:9411",
+			"--statsdUdpAddress",
+			"istio-statsd-prom-bridge.istio-system:9125",
+			"--proxyAdminPort",
+			"15000",
+			"--controlPlaneAuthPolicy",
+			"NONE",
+			"--discoveryAddress",
+			"istio-pilot.istio-system:8080",
+		},
+		Ports: []corev1.ContainerPort{
+			{
+				ContainerPort: 80,
+				Protocol:      corev1.ProtocolTCP,
+			},
+			{
+				ContainerPort: 443,
+				Protocol:      corev1.ProtocolTCP,
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "istio-certs",
+				MountPath: "/etc/certs",
+			},
+		},
+	})
+
+	// add oidc filter container to the gateway if oidc is enabled
+	if gateway.Spec.OidcConfig != nil {
+		oidc := gateway.Spec.OidcConfig
+		containers = append(containers, corev1.Container{
+			Name:  "envoy-oidc-filter",
+			Image: "celleryio/envoy-oidc-filter",
+			Env: []corev1.EnvVar{
+				{
+					Name:  "IDP_DISCOVERY_URL",
+					Value: oidc.ProviderUrl,
+				},
+				{
+					Name:  "CLIENT_ID",
+					Value: oidc.ClientId,
+				},
+				{
+					Name:  "CLIENT_SECRET",
+					Value: oidc.ClientSecret,
+				},
+				{
+					Name:  "DCR_ENDPOINT",
+					Value: oidc.DcrUrl,
+				},
+				{
+					Name:  "DCR_USER",
+					Value: oidc.DcrUser,
+				},
+				{
+					Name:  "DCR_PASSWORD",
+					Value: oidc.DcrPassword,
+				},
+				{
+					Name:  "REDIRECT_URL",
+					Value: oidc.RedirectUrl,
+				},
+				{
+					Name:  "APP_BASE_URL",
+					Value: oidc.BaseUrl,
+				},
+				{
+					Name:  "PRIVATE_KEY_FILE",
+					Value: "/etc/certs/key.pem",
+				},
+				{
+					Name:  "CERTIFICATE_FILE",
+					Value: "/etc/certs/cert.pem",
+				},
+				{
+					Name:  "JWT_ISSUER",
+					Value: cellName + "--gateway",
+				},
+				{
+					Name:  "JWT_AUDIENCE",
+					Value: cellName,
+				},
+				{
+					Name:  "SUBJECT_CLAIM",
+					Value: oidc.SubjectClaim,
+				},
+			},
+			Ports: []corev1.ContainerPort{
+				{
+					ContainerPort: 15800,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					ContainerPort: 15810,
+					Protocol:      corev1.ProtocolTCP,
+				},
+			},
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      "cell-certs",
+					MountPath: "/etc/certs",
+					ReadOnly:  true,
+				},
+			},
+		})
+	}
+
 	one := int32(1)
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -188,102 +359,21 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment 
 					Annotations: podTemplateAnnotations,
 				},
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "cell-gateway",
-							Image: "gcr.io/istio-release/proxyv2:1.0.2",
-							Env: []corev1.EnvVar{
-								{
-									Name:  "CELL_NAME",
-									Value: cellName,
-								},
-								{
-									Name: "POD_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "metadata.name",
-										},
-									},
-								},
-								{
-									Name: "POD_NAMESPACE",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "metadata.namespace",
-										},
-									},
-								},
-								{
-									Name: "INSTANCE_IP",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "status.podIP",
-										},
-									},
-								},
-								{
-									Name: "ISTIO_META_POD_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "metadata.name",
-										},
-									},
-								},
-							},
-							Args: []string{
-								"proxy",
-								"router",
-								"-v",
-								"2",
-								"--discoveryRefreshDelay",
-								"1s",
-								"--drainDuration",
-								"45s",
-								"--parentShutdownDuration",
-								"1m0s",
-								"--connectTimeout",
-								"10s",
-								"--serviceCluster",
-								GatewayDeploymentName(gateway),
-								"--zipkinAddress",
-								"zipkin.istio-system:9411",
-								"--statsdUdpAddress",
-								"istio-statsd-prom-bridge.istio-system:9125",
-								"--proxyAdminPort",
-								"15000",
-								"--controlPlaneAuthPolicy",
-								"NONE",
-								"--discoveryAddress",
-								"istio-pilot.istio-system:8080",
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									ContainerPort: 80,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								{
-									ContainerPort: 443,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "istio-certs",
-									MountPath: "/etc/certs",
-								},
-							},
-						},
-					},
+					Containers: containers,
 					Volumes: []corev1.Volume{
 						{
 							Name: "istio-certs",
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: "istio.default",
+								},
+							},
+						},
+						{
+							Name: "cell-certs",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: cellName + "--secret",
 								},
 							},
 						},
