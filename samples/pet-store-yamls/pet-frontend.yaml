@@ -51,3 +51,6 @@ spec:
       container:
         image: docker.io/mirage20/k8s-debug-tools
       servicePort: 80
+#  stsTemplate:
+#    spec:
+#      unsecuredPaths: ["/items"]

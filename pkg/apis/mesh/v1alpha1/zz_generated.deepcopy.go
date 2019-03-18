@@ -132,6 +132,7 @@ func (in *CellSpec) DeepCopyInto(out *CellSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	in.TokenServiceTemplate.DeepCopyInto(&out.TokenServiceTemplate)
 	return
 }
 

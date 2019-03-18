@@ -69,3 +69,6 @@ spec:
         - containerPort: 80
       replicas: 1
       servicePort: 80
+#  stsTemplate:
+#    spec:
+#      unsecuredPaths: ["/controller"]
