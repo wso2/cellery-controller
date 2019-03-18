@@ -428,5 +428,11 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 		glog.Errorf("Cell gateway image missing.")
 	}
 
+	if oidcFilterImage, ok := configMap.Data["oidc-filter-image"]; ok {
+		conf.OidcFilterImage = oidcFilterImage
+	} else {
+		glog.Errorf("Cell gateway oidc filter image missing.")
+	}
+
 	h.gatewayConfig = conf
 }
