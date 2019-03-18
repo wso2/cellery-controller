@@ -33,7 +33,7 @@ func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gat
 	if gateway.Spec.Type == v1alpha1.GatewayTypeMicroGateway {
 		return createMicroGatewayDeployment(gateway, gatewayConfig)
 	} else {
-		return createEnvoyGatewayDeployment(gateway)
+		return createEnvoyGatewayDeployment(gateway, gatewayConfig)
 	}
 }
 
@@ -159,7 +159,7 @@ func createMicroGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 	}
 }
 
-func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment {
+func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
@@ -265,7 +265,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway) *appsv1.Deployment 
 		oidc := gateway.Spec.OidcConfig
 		containers = append(containers, corev1.Container{
 			Name:  "envoy-oidc-filter",
-			Image: "celleryio/envoy-oidc-filter",
+			Image: gatewayConfig.OidcFilterImage,
 			Env: []corev1.EnvVar{
 				{
 					Name:  "IDP_DISCOVERY_URL",

@@ -51,6 +51,15 @@ func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
 		})
 	}
 
+	var tlsIngressHosts []v1beta1.IngressTLS
+
+	if len(gateway.Spec.TlsSecret) > 0 {
+		tlsIngressHosts = append(tlsIngressHosts, networkv1.IngressTLS{
+			Hosts:      []string{gateway.Spec.Host},
+			SecretName: gateway.Spec.TlsSecret,
+		})
+	}
+
 	return &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ClusterIngressName(gateway),
@@ -71,6 +80,7 @@ func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
 					},
 				},
 			},
+			TLS: tlsIngressHosts,
 		},
 	}
 }

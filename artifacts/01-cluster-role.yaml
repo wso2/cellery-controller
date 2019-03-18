@@ -35,6 +35,18 @@ rules:
 #  - patch
 #  - watch
 - apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments

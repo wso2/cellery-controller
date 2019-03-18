@@ -69,6 +69,7 @@ data:
 
   cell-gateway-init-image: celleryio/cell-gateway-init
   cell-gateway-image: celleryio/cell-gateway
+  oidc-filter-image: celleryio/envoy-oidc-filter
   cell-sts-config: |
     {
         "endpoint": "https://gateway.cellery-system:9443/api/identity/cellery-auth/v1.0/sts/token",
