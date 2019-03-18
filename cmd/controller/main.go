@@ -20,8 +20,9 @@ package main
 
 import (
 	"flag"
-	"github.com/cellery-io/mesh-controller/pkg/version"
 	"time"
+
+	"github.com/cellery-io/mesh-controller/pkg/version"
 
 	"k8s.io/client-go/tools/cache"
 
@@ -83,9 +84,11 @@ func main() {
 	// Create K8s informers
 	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
 	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
+	secretInformer := kubeInformerFactory.Core().V1().Secrets()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
+	clusterIngressInformer := kubeInformerFactory.Extensions().V1beta1().Ingresses()
 
 	// Create Mesh informers
 	cellInformer := meshInformerFactory.Mesh().V1alpha1().Cells()
@@ -109,6 +112,7 @@ func main() {
 		tokenServiceInformer,
 		serviceInformer,
 		networkPolicyInformer,
+		secretInformer,
 		envoyFilterInformer,
 	)
 	gatewayController := gateway.NewController(
@@ -117,9 +121,11 @@ func main() {
 		systemConfigMapInformer,
 		deploymentInformer,
 		k8sServiceInformer,
+		clusterIngressInformer,
 		istioGatewayInformer,
 		istioDRInformer,
 		istioVSInformer,
+		envoyFilterInformer,
 		configMapInformer,
 		gatewayInformer,
 	)
@@ -153,8 +159,10 @@ func main() {
 		k8sServiceInformer.Informer().HasSynced,
 		deploymentInformer.Informer().HasSynced,
 		configMapInformer.Informer().HasSynced,
+		secretInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
 		systemConfigMapInformer.Informer().HasSynced,
+		clusterIngressInformer.Informer().HasSynced,
 		// Sync mesh informers
 		cellInformer.Informer().HasSynced,
 		gatewayInformer.Informer().HasSynced,

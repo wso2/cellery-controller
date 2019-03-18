@@ -44,12 +44,16 @@ import (
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
+
+	corev1informers "k8s.io/client-go/informers/core/v1"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 )
 
 type cellHandler struct {
 	kubeClient          kubernetes.Interface
 	meshClient          meshclientset.Interface
 	networkPilicyLister networkv1listers.NetworkPolicyLister
+	secretLister        corev1listers.SecretLister
 	cellLister          listers.CellLister
 	gatewayLister       listers.GatewayLister
 	tokenServiceLister  listers.TokenServiceLister
@@ -65,6 +69,7 @@ func NewController(
 	tokenServiceInformer meshinformers.TokenServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
 	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
+	secretInformer corev1informers.SecretInformer,
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 ) *controller.Controller {
 	h := &cellHandler{
@@ -75,6 +80,7 @@ func NewController(
 		gatewayLister:       gatewayInformer.Lister(),
 		tokenServiceLister:  tokenServiceInformer.Lister(),
 		networkPilicyLister: networkPolicyInformer.Lister(),
+		secretLister:        secretInformer.Lister(),
 		envoyFilterLister:   envoyFilterInformer.Lister(),
 	}
 	c := controller.New(h, "Cell")
@@ -125,6 +131,10 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 		return err
 	}
 
+	if err := h.handleSecret(cell); err != nil {
+		return err
+	}
+
 	if err := h.handleGateway(cell); err != nil {
 		return err
 	}
@@ -159,6 +169,21 @@ func (h *cellHandler) handleNetworkPolicy(cell *v1alpha1.Cell) error {
 		return err
 	}
 	glog.Infof("NetworkPolicy created %+v", networkPolicy)
+	return nil
+}
+
+func (h *cellHandler) handleSecret(cell *v1alpha1.Cell) error {
+	secret, err := h.secretLister.Secrets(cell.Namespace).Get(resources.SecretName(cell))
+	if errors.IsNotFound(err) {
+		secret, err = h.kubeClient.CoreV1().Secrets(cell.Namespace).Create(resources.CreateKeyPairSecret(cell))
+		if err != nil {
+			glog.Errorf("Failed to create cell Secret %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("cell Secret created %+v", secret)
 	return nil
 }
 

@@ -19,8 +19,6 @@
 package resources
 
 import (
-	"fmt"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
@@ -28,41 +26,40 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
-
-	var gatewayServers []*v1alpha3.Server
-
-	for _, tcpRoute := range gateway.Spec.TCPRoutes {
-		gatewayServers = append(gatewayServers, &v1alpha3.Server{
-			Hosts: []string{"*"},
-			Port: &v1alpha3.Port{
-				Number:   tcpRoute.Port,
-				Protocol: "TCP",
-				Name:     fmt.Sprintf("tcp-%d", tcpRoute.Port),
-			},
-		})
-	}
-	gatewayServers = append(gatewayServers, &v1alpha3.Server{
-		Hosts: []string{"*"},
-		Port: &v1alpha3.Port{
-			Number:   80,
-			Protocol: "HTTP",
-			Name:     fmt.Sprintf("http-%d", 80),
-		},
-	})
-
-	return &v1alpha3.Gateway{
+func CreateEnvoyFilter(gateway *v1alpha1.Gateway) *v1alpha3.EnvoyFilter {
+	return &v1alpha3.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioGatewayName(gateway),
+			Name:      EnvoyFilterName(gateway),
 			Namespace: gateway.Namespace,
 			Labels:    createGatewayLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
 		},
-		Spec: v1alpha3.GatewaySpec{
-			Servers:  gatewayServers,
-			Selector: createGatewayLabels(gateway),
+		Spec: v1alpha3.EnvoyFilterSpec{
+			WorkloadLabels: createGatewayLabels(gateway),
+			Filters: []v1alpha3.Filter{
+				{
+					InsertPosition: v1alpha3.InsertPosition{
+						Index: filterInsertPositionFirst,
+					},
+					ListenerMatch: v1alpha3.ListenerMatch{
+						ListenerType:     filterListenerTypeGateway,
+						ListenerProtocol: HTTPProtocol,
+					},
+					FilterName: baseFilterName,
+					FilterType: HTTPProtocol,
+					FilterConfig: v1alpha3.FilterConfig{
+						GRPCService: v1alpha3.GRPCService{
+							GoogleGRPC: v1alpha3.GoogleGRPC{
+								TargetUri:  "127.0.0.1:15800", // filter is attached as a sidecar
+								StatPrefix: statPrefix,
+							},
+							Timeout: filterTimeout,
+						},
+					},
+				},
+			},
 		},
 	}
 }

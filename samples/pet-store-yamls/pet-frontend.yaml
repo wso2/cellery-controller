@@ -1,0 +1,56 @@
+apiVersion: mesh.cellery.io/v1alpha1
+kind: Cell
+metadata:
+  name: pet-frontend
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: pet-frontend
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  gatewayTemplate:
+    spec:
+      type: Envoy
+      host: pet-store.com
+      oidc:
+        provider: https://accounts.google.com
+        clientId: :)
+        clientSecret: :)
+        redirectUrl: http://pet-store.com/_auth/callback
+        baseUrl: http://pet-store.com/items/
+        subjectClaim: given_name
+      http:
+      - context: items
+        definitions:
+        - path: /*
+          method: GET
+        backend: pet-store-portal
+        global: false
+  servicesTemplates:
+  - metadata:
+      name: pet-store-portal
+    spec:
+      replicas: 1
+      container:
+        image: celleryio/samples-pet-store-portal
+        name: portal
+        env:
+        - name: PET_STORE_CELL_URL
+          value: http://pet-backend--gateway-service/controller
+        - name: PORTAL_PORT
+          value: "80"
+        - name: BASE_PATH
+          value: "/items"
+        ports:
+        - name: http
+          containerPort: 80
+      servicePort: 80
+  - metadata:
+      name: debug
+    spec:
+      replicas: 1
+      container:
+        image: docker.io/mirage20/k8s-debug-tools
+      servicePort: 80
+#  stsTemplate:
+#    spec:
+#      unsecuredPaths: ["/items"]

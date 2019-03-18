@@ -34,8 +34,9 @@ type Cell struct {
 }
 
 type CellSpec struct {
-	GatewayTemplate  GatewayTemplateSpec   `json:"gatewayTemplate"`
-	ServiceTemplates []ServiceTemplateSpec `json:"servicesTemplates"`
+	GatewayTemplate      GatewayTemplateSpec      `json:"gatewayTemplate"`
+	ServiceTemplates     []ServiceTemplateSpec    `json:"servicesTemplates"`
+	TokenServiceTemplate TokenServiceTemplateSpec `json:"stsTemplate"`
 }
 
 type CellStatus struct {

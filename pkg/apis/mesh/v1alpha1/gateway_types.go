@@ -40,8 +40,24 @@ type GatewayTemplateSpec struct {
 }
 
 type GatewaySpec struct {
-	HTTPRoutes []HTTPRoute `json:"http"`
-	TCPRoutes  []TCPRoute  `json:"tcp"`
+	Type       GatewayType `json:"type,omitempty"`
+	Host       string      `json:"host,omitempty"`
+	TlsSecret  string      `json:"tlsSecret,omitempty"`
+	OidcConfig *OidcConfig `json:"oidc,omitempty"`
+	HTTPRoutes []HTTPRoute `json:"http,omitempty"`
+	TCPRoutes  []TCPRoute  `json:"tcp,omitempty"`
+}
+
+type OidcConfig struct {
+	ProviderUrl  string `json:"provider"`
+	ClientId     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+	DcrUrl       string `json:"dcrUrl"`
+	DcrUser      string `json:"dcrUser"`
+	DcrPassword  string `json:"dcrPassword"`
+	RedirectUrl  string `json:"redirectUrl"`
+	BaseUrl      string `json:"baseUrl"`
+	SubjectClaim string `json:"subjectClaim"`
 }
 
 type HTTPRoute struct {
@@ -67,6 +83,16 @@ type GatewayStatus struct {
 	HostName  string `json:"hostname"`
 	Status    string `json:"status"`
 }
+
+type GatewayType string
+
+const (
+	// GatewayTypeEnvoy uses envoy proxy as the gateway.
+	GatewayTypeEnvoy GatewayType = "Envoy"
+
+	// GatewayTypeMicroGateway uses WSO2 micro-gateway as the gateway.
+	GatewayTypeMicroGateway GatewayType = "MicroGateway"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

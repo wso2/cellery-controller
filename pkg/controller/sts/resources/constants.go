@@ -31,6 +31,9 @@ const (
 	tokenServiceContainerJWKSPort     = 8090
 	opaServicePort                    = 8181
 
+	unsecuredPathsConfigKey  = "unsecured-paths"
+	unsecuredPathsConfigFile = "unsecured-paths.json"
+
 	tokenServiceConfigKey  = "sts-config"
 	tokenServiceConfigFile = "sts.json"
 
@@ -39,6 +42,9 @@ const (
 
 	policyVolumeName      = "cell-policy"
 	pocliyConfigMountPath = "/policies"
+
+	keyPairVolumeName = "cell-keys"
+	keyPairMountPath  = "/etc/certs"
 
 	policyConfigKey  = "policy.rego"
 	policyConfigFile = "sample.rego"
