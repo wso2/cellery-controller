@@ -26,6 +26,15 @@ import (
 )
 
 func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {
+
+	tSpec := cell.Spec.TokenServiceTemplate.Spec
+
+	if cell.Spec.GatewayTemplate.Spec.Type == v1alpha1.GatewayTypeEnvoy {
+		tSpec.InterceptMode = v1alpha1.InterceptModeOutbound
+	} else {
+		tSpec.InterceptMode = v1alpha1.InterceptModeAny
+	}
+
 	return &v1alpha1.TokenService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceName(cell),
@@ -35,6 +44,6 @@ func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
-		Spec: cell.Spec.TokenServiceTemplate.Spec,
+		Spec: tSpec,
 	}
 }

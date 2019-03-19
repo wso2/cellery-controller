@@ -35,6 +35,17 @@ func CreateEnvoyFilter(tokenService *v1alpha1.TokenService) *v1alpha3.EnvoyFilte
 		cellName = tokenService.Name
 	}
 
+	var filters []v1alpha3.Filter
+	switch tokenService.Spec.InterceptMode {
+	case v1alpha1.InterceptModeInbound:
+		filters = append(filters, buildInboundFilter(tokenService))
+	case v1alpha1.InterceptModeOutbound:
+		filters = append(filters, buildOutboundFilter(tokenService))
+	case v1alpha1.InterceptModeAny:
+		filters = append(filters, buildInboundFilter(tokenService))
+		filters = append(filters, buildOutboundFilter(tokenService))
+	}
+
 	return &v1alpha3.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      EnvoyFilterName(tokenService),
@@ -48,47 +59,52 @@ func CreateEnvoyFilter(tokenService *v1alpha1.TokenService) *v1alpha3.EnvoyFilte
 			WorkloadLabels: map[string]string{
 				mesh.CellLabelKey: cellName,
 			},
-			Filters: []v1alpha3.Filter{
-				{
-					InsertPosition: v1alpha3.InsertPosition{
-						Index: filterInsertPositionFirst,
-					},
-					ListenerMatch: v1alpha3.ListenerMatch{
-						ListenerType:     filterListenerTypeInbound,
-						ListenerProtocol: HTTPProtocol,
-					},
-					FilterName: baseFilterName,
-					FilterType: HTTPProtocol,
-					FilterConfig: v1alpha3.FilterConfig{
-						GRPCService: v1alpha3.GRPCService{
-							GoogleGRPC: v1alpha3.GoogleGRPC{
-								TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8080",
-								StatPrefix: statPrefix,
-							},
-							Timeout: filterTimeout,
-						},
-					},
+			Filters: filters,
+		},
+	}
+}
+
+func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
+	return v1alpha3.Filter{
+		InsertPosition: v1alpha3.InsertPosition{
+			Index: filterInsertPositionFirst,
+		},
+		ListenerMatch: v1alpha3.ListenerMatch{
+			ListenerType:     filterListenerTypeInbound,
+			ListenerProtocol: HTTPProtocol,
+		},
+		FilterName: baseFilterName,
+		FilterType: HTTPProtocol,
+		FilterConfig: v1alpha3.FilterConfig{
+			GRPCService: v1alpha3.GRPCService{
+				GoogleGRPC: v1alpha3.GoogleGRPC{
+					TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8080",
+					StatPrefix: statPrefix,
 				},
-				{
-					InsertPosition: v1alpha3.InsertPosition{
-						Index: filterInsertPositionLast,
-					},
-					ListenerMatch: v1alpha3.ListenerMatch{
-						ListenerType:     filterListenerTypeOutbound,
-						ListenerProtocol: HTTPProtocol,
-					},
-					FilterName: baseFilterName,
-					FilterType: HTTPProtocol,
-					FilterConfig: v1alpha3.FilterConfig{
-						GRPCService: v1alpha3.GRPCService{
-							GoogleGRPC: v1alpha3.GoogleGRPC{
-								TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8081",
-								StatPrefix: statPrefix,
-							},
-							Timeout: filterTimeout,
-						},
-					},
+				Timeout: filterTimeout,
+			},
+		},
+	}
+}
+
+func buildOutboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
+	return v1alpha3.Filter{
+		InsertPosition: v1alpha3.InsertPosition{
+			Index: filterInsertPositionLast,
+		},
+		ListenerMatch: v1alpha3.ListenerMatch{
+			ListenerType:     filterListenerTypeOutbound,
+			ListenerProtocol: HTTPProtocol,
+		},
+		FilterName: baseFilterName,
+		FilterType: HTTPProtocol,
+		FilterConfig: v1alpha3.FilterConfig{
+			GRPCService: v1alpha3.GRPCService{
+				GoogleGRPC: v1alpha3.GoogleGRPC{
+					TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8081",
+					StatPrefix: statPrefix,
 				},
+				Timeout: filterTimeout,
 			},
 		},
 	}
