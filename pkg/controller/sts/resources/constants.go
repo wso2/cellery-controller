@@ -50,4 +50,16 @@ const (
 	policyConfigFile = "sample.rego"
 
 	envCellNameKey = "CELL_NAME"
+
+	// Envoy filter
+	filterInsertPositionFirst = "FIRST"
+	filterInsertPositionLast  = "LAST"
+
+	filterListenerTypeInbound  = "SIDECAR_INBOUND"
+	filterListenerTypeOutbound = "SIDECAR_OUTBOUND"
+
+	HTTPProtocol   = "HTTP"
+	baseFilterName = "envoy.ext_authz"
+	statPrefix     = "ext_authz"
+	filterTimeout  = "10s"
 )

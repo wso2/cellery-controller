@@ -135,6 +135,7 @@ func main() {
 		systemConfigMapInformer,
 		deploymentInformer,
 		k8sServiceInformer,
+		envoyFilterInformer,
 		configMapInformer,
 		tokenServiceInformer,
 	)
