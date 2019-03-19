@@ -54,3 +54,7 @@ func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
 func TokenServiceK8sServiceName(tokenService *v1alpha1.TokenService) string {
 	return tokenService.Name + "-service"
 }
+
+func EnvoyFilterName(tokenService *v1alpha1.TokenService) string {
+	return tokenService.Name + "-envoyfilter"
+}

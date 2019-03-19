@@ -46,6 +46,9 @@ import (
 
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
+	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 )
 
 type tokenServiceHandler struct {
@@ -53,6 +56,7 @@ type tokenServiceHandler struct {
 	meshClient         meshclientset.Interface
 	deploymentLister   appsv1listers.DeploymentLister
 	k8sServiceLister   corev1listers.ServiceLister
+	envoyFilterLister  istionetworklisters.EnvoyFilterLister
 	configMapLister    corev1listers.ConfigMapLister
 	tokenServiceLister listers.TokenServiceLister
 	tokenServiceConfig config.TokenService
@@ -64,6 +68,7 @@ func NewController(
 	systemConfigMapInformer corev1informers.ConfigMapInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
+	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	tokenServiceInformer meshinformers.TokenServiceInformer,
 ) *controller.Controller {
@@ -73,6 +78,7 @@ func NewController(
 		meshClient:         meshClient,
 		deploymentLister:   deploymentInformer.Lister(),
 		k8sServiceLister:   k8sServiceInformer.Lister(),
+		envoyFilterLister:  envoyFilterInformer.Lister(),
 		configMapLister:    configMapInformer.Lister(),
 		tokenServiceLister: tokenServiceInformer.Lister(),
 	}
@@ -124,6 +130,31 @@ func (h *tokenServiceHandler) Handle(key string) error {
 
 func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error {
 
+	if err := h.handleConfigMap(tokenService); err != nil {
+		return err
+	}
+
+	if err := h.handleOpaConfigMap(tokenService); err != nil {
+		return err
+	}
+
+	if err := h.handleDeployment(tokenService); err != nil {
+		return err
+	}
+
+	if err := h.handleK8sService(tokenService); err != nil {
+		return err
+	}
+
+	if err := h.handleEnvoyFilter(tokenService); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *tokenServiceHandler) handleConfigMap(tokenService *v1alpha1.TokenService) error {
+
 	configMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.TokenServiceConfigMapName(tokenService))
 	if errors.IsNotFound(err) {
 		configMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceConfigMap(tokenService, h.tokenServiceConfig))
@@ -136,10 +167,15 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	}
 	glog.Infof("TokenService config map created %+v", configMap)
 
-	pocliyConfigMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.
+	return nil
+}
+
+func (h *tokenServiceHandler) handleOpaConfigMap(tokenService *v1alpha1.TokenService) error {
+
+	policyConfigMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.
 		TokenServicePolicyConfigMapName(tokenService))
 	if errors.IsNotFound(err) {
-		pocliyConfigMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceOPAConfigMap(tokenService, h.tokenServiceConfig))
+		policyConfigMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceOPAConfigMap(tokenService, h.tokenServiceConfig))
 		if err != nil {
 			glog.Errorf("Failed to create TokenService OPA policy config map %v", err)
 			return err
@@ -147,8 +183,12 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	} else if err != nil {
 		return err
 	}
+	glog.Infof("TokenService OPA policy config map created %+v", policyConfigMap)
 
-	glog.Infof("TokenService OPA polciy config map created %+v", pocliyConfigMap)
+	return nil
+}
+
+func (h *tokenServiceHandler) handleDeployment(tokenService *v1alpha1.TokenService) error {
 
 	deployment, err := h.deploymentLister.Deployments(tokenService.Namespace).Get(resources.TokenServiceDeploymentName(tokenService))
 	if errors.IsNotFound(err) {
@@ -162,6 +202,11 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	}
 	glog.Infof("TokenService deployment created %+v", deployment)
 
+	return nil
+}
+
+func (h *tokenServiceHandler) handleK8sService(tokenService *v1alpha1.TokenService) error {
+
 	k8sService, err := h.k8sServiceLister.Services(tokenService.Namespace).Get(resources.TokenServiceK8sServiceName(tokenService))
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(tokenService.Namespace).Create(resources.CreateTokenServiceK8sService(tokenService))
@@ -174,6 +219,21 @@ func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error 
 	}
 	glog.Infof("TokenService service created %+v", k8sService)
 
+	return nil
+}
+
+func (h *tokenServiceHandler) handleEnvoyFilter(tokenService *v1alpha1.TokenService) error {
+	envoyFilter, err := h.envoyFilterLister.EnvoyFilters(tokenService.Namespace).Get(resources.EnvoyFilterName(tokenService))
+	if errors.IsNotFound(err) {
+		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Create(resources.CreateEnvoyFilter(tokenService))
+		if err != nil {
+			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 
