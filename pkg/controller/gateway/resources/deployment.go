@@ -269,7 +269,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			Env: []corev1.EnvVar{
 				{
 					Name:  "IDP_DISCOVERY_URL",
-					Value: oidc.ProviderUrl,
+					Value: oidc.DiscoveryUrl,
 				},
 				{
 					Name:  "CLIENT_ID",
