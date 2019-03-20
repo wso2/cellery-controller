@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -37,13 +37,15 @@ type Controller struct {
 	handler   Handler
 	name      string
 	workqueue workqueue.RateLimitingInterface
+	logger    *zap.SugaredLogger
 }
 
-func New(h Handler, workQueueName string) *Controller {
+func New(h Handler, logger *zap.SugaredLogger, workQueueName string) *Controller {
 	return &Controller{
 		handler:   h,
 		name:      workQueueName,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), workQueueName),
+		logger:    logger,
 	}
 }
 
@@ -51,7 +53,7 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer runtime.HandleCrash()
 	defer c.workqueue.ShutDown()
 
-	glog.Infof("Starting %s controller", c.name)
+	c.logger.Infof("Starting %s controller", c.name)
 
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
@@ -59,7 +61,7 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 
 	// wait until we're told to stop
 	<-stopCh
-	glog.Infof("Shutting down the %s controller", c.name)
+	c.logger.Infof("Shutting down the %s controller", c.name)
 }
 
 func (c *Controller) Enqueue(obj interface{}) {
@@ -108,14 +110,16 @@ func (c *Controller) processNextWorkItem() bool {
 			runtime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
 			return nil
 		}
+		t := time.Now()
 		// Run the handler, passing it the namespace/name string of the resource.
 		if err := c.handler.Handle(key); err != nil {
+			c.logger.Infow("Sync failed", "key", key, "time", time.Since(t))
 			return fmt.Errorf("error syncing '%s': %s", key, err.Error())
 		}
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workqueue.Forget(obj)
-		glog.Infof("Successfully synced '%s'", key)
+		c.logger.Infow("Successfully synced", "key", key, "time", time.Since(t))
 		return nil
 	}(obj)
 

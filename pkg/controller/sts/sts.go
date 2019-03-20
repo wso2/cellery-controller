@@ -21,7 +21,8 @@ package sts
 import (
 	"fmt"
 
-	"github.com/golang/glog"
+	"go.uber.org/zap"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
@@ -60,6 +61,7 @@ type tokenServiceHandler struct {
 	configMapLister    corev1listers.ConfigMapLister
 	tokenServiceLister listers.TokenServiceLister
 	tokenServiceConfig config.TokenService
+	logger             *zap.SugaredLogger
 }
 
 func NewController(
@@ -71,6 +73,7 @@ func NewController(
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	tokenServiceInformer meshinformers.TokenServiceInformer,
+	logger *zap.SugaredLogger,
 ) *controller.Controller {
 
 	h := &tokenServiceHandler{
@@ -81,14 +84,15 @@ func NewController(
 		envoyFilterLister:  envoyFilterInformer.Lister(),
 		configMapLister:    configMapInformer.Lister(),
 		tokenServiceLister: tokenServiceInformer.Lister(),
+		logger:             logger.Named("tokenservice-controller"),
 	}
-	c := controller.New(h, "TokenService")
+	c := controller.New(h, h.logger, "TokenService")
 
-	glog.Info("Setting up event handlers")
+	h.logger.Info("Setting up event handlers")
 	tokenServiceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.Enqueue,
 		UpdateFunc: func(old, new interface{}) {
-			glog.Infof("Old %+v\nnew %+v", old, new)
+			h.logger.Debugw("Informer update", "old", old, "new", new)
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
@@ -105,10 +109,10 @@ func NewController(
 }
 
 func (h *tokenServiceHandler) Handle(key string) error {
-	glog.Infof("Handle called with %s", key)
+	h.logger.Infof("Handle called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		glog.Errorf("invalid resource key: %s", key)
+		h.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
 	tokenServiceOriginal, err := h.tokenServiceLister.TokenServices(namespace).Get(name)
@@ -119,7 +123,7 @@ func (h *tokenServiceHandler) Handle(key string) error {
 		}
 		return err
 	}
-	glog.Infof("Found tokenService %+v", tokenServiceOriginal)
+	h.logger.Debugw("lister instance", key, tokenServiceOriginal)
 	tokenService := tokenServiceOriginal.DeepCopy()
 
 	if err = h.handle(tokenService); err != nil {
@@ -159,13 +163,13 @@ func (h *tokenServiceHandler) handleConfigMap(tokenService *v1alpha1.TokenServic
 	if errors.IsNotFound(err) {
 		configMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceConfigMap(tokenService, h.tokenServiceConfig))
 		if err != nil {
-			glog.Errorf("Failed to create TokenService ConfigMap %v", err)
+			h.logger.Errorf("Failed to create TokenService ConfigMap %v", err)
 			return err
 		}
+		h.logger.Debugw("Config map created", resources.TokenServiceConfigMapName(tokenService), configMap)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("TokenService config map created %+v", configMap)
 
 	return nil
 }
@@ -177,13 +181,13 @@ func (h *tokenServiceHandler) handleOpaConfigMap(tokenService *v1alpha1.TokenSer
 	if errors.IsNotFound(err) {
 		policyConfigMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceOPAConfigMap(tokenService, h.tokenServiceConfig))
 		if err != nil {
-			glog.Errorf("Failed to create TokenService OPA policy config map %v", err)
+			h.logger.Errorf("Failed to create TokenService OPA policy config map %v", err)
 			return err
 		}
+		h.logger.Debugw("OPA policy config map created", resources.TokenServicePolicyConfigMapName(tokenService), policyConfigMap)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("TokenService OPA policy config map created %+v", policyConfigMap)
 
 	return nil
 }
@@ -194,13 +198,13 @@ func (h *tokenServiceHandler) handleDeployment(tokenService *v1alpha1.TokenServi
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.CreateTokenServiceDeployment(tokenService, h.tokenServiceConfig))
 		if err != nil {
-			glog.Errorf("Failed to create TokenService Deployment %v", err)
+			h.logger.Errorf("Failed to create TokenService Deployment %v", err)
 			return err
 		}
+		h.logger.Debugw("Deployment created", resources.TokenServiceDeploymentName(tokenService), deployment)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("TokenService deployment created %+v", deployment)
 
 	return nil
 }
@@ -211,14 +215,13 @@ func (h *tokenServiceHandler) handleK8sService(tokenService *v1alpha1.TokenServi
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(tokenService.Namespace).Create(resources.CreateTokenServiceK8sService(tokenService))
 		if err != nil {
-			glog.Errorf("Failed to create TokenService service %v", err)
+			h.logger.Errorf("Failed to create TokenService service %v", err)
 			return err
 		}
+		h.logger.Debugw("Service created", resources.TokenServiceK8sServiceName(tokenService), k8sService)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("TokenService service created %+v", k8sService)
-
 	return nil
 }
 
@@ -227,13 +230,13 @@ func (h *tokenServiceHandler) handleEnvoyFilter(tokenService *v1alpha1.TokenServ
 	if errors.IsNotFound(err) {
 		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Create(resources.CreateEnvoyFilter(tokenService))
 		if err != nil {
-			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			h.logger.Errorf("Failed to create EnvoyFilter %v", err)
 			return err
 		}
+		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(tokenService), envoyFilter)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 
@@ -252,25 +255,25 @@ func (h *tokenServiceHandler) updateConfig(obj interface{}) {
 	if tokenServiceConfig, ok := configMap.Data["cell-sts-config"]; ok {
 		conf.Config = tokenServiceConfig
 	} else {
-		glog.Errorf("Cell sts config is missing.")
+		h.logger.Errorf("Cell sts config is missing.")
 	}
 
 	if tokenServiceImage, ok := configMap.Data["cell-sts-image"]; ok {
 		conf.Image = tokenServiceImage
 	} else {
-		glog.Errorf("Cell sts image missing.")
+		h.logger.Errorf("Cell sts image missing.")
 	}
 
 	if opaImage, ok := configMap.Data["cell-sts-opa-image"]; ok {
 		conf.OpaImage = opaImage
 	} else {
-		glog.Errorf("Cell sts OPA image missing.")
+		h.logger.Errorf("Cell sts OPA image missing.")
 	}
 
 	if opaPolicy, ok := configMap.Data["opa-default-policy"]; ok {
 		conf.Policy = opaPolicy
 	} else {
-		glog.Errorf("opa default polciy is missing")
+		h.logger.Errorf("opa default polciy is missing")
 	}
 
 	h.tokenServiceConfig = conf

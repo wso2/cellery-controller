@@ -22,7 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/golang/glog"
+	"go.uber.org/zap"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -54,6 +55,7 @@ type serviceHandler struct {
 	hpaLister        autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
 	k8sServiceLister corev1listers.ServiceLister
 	serviceLister    listers.ServiceLister
+	logger           *zap.SugaredLogger
 }
 
 func NewController(
@@ -63,6 +65,7 @@ func NewController(
 	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
+	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &serviceHandler{
 		kubeClient:       kubeClient,
@@ -71,14 +74,15 @@ func NewController(
 		hpaLister:        hpaInformer.Lister(),
 		k8sServiceLister: k8sServiceInformer.Lister(),
 		serviceLister:    serviceInformer.Lister(),
+		logger:           logger.Named("service-controller"),
 	}
-	c := controller.New(h, "Service")
+	c := controller.New(h, h.logger, "Service")
 
-	glog.Info("Setting up event handlers")
+	h.logger.Info("Setting up event handlers")
 	serviceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.Enqueue,
 		UpdateFunc: func(old, new interface{}) {
-			glog.Infof("Old %+v\nnew %+v", old, new)
+			h.logger.Debugw("Informer update", "old", old, "new", new)
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
@@ -87,10 +91,10 @@ func NewController(
 }
 
 func (h *serviceHandler) Handle(key string) error {
-	glog.Infof("Handle called with %s", key)
+	h.logger.Infof("Handle called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		glog.Errorf("invalid resource key: %s", key)
+		h.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
 	serviceOriginal, err := h.serviceLister.Services(namespace).Get(name)
@@ -101,7 +105,7 @@ func (h *serviceHandler) Handle(key string) error {
 		}
 		return err
 	}
-	glog.Infof("Found service %+v", serviceOriginal)
+	h.logger.Debugw("lister instance", key, serviceOriginal)
 	service := serviceOriginal.DeepCopy()
 
 	if err = h.handle(service); err != nil {
@@ -138,13 +142,13 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(service.Namespace).Create(resources.CreateServiceDeployment(service))
 		if err != nil {
-			glog.Errorf("Failed to create Service Deployment %v", err)
+			h.logger.Errorf("Failed to create Service Deployment %v", err)
 			return err
 		}
+		h.logger.Debugw("Deployment created", resources.ServiceDeploymentName(service), deployment)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Service deployment created %+v", deployment)
 
 	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
 
@@ -153,7 +157,7 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 
 func (h *serviceHandler) handleHpa(service *v1alpha1.Service) error {
 	if service.Spec.Autoscaling == nil {
-		glog.Infof("No Autoscaling configuration specified for service %s", service.Name)
+		h.logger.Infof("No Autoscaling configuration specified for service %s", service.Name)
 		return nil
 	}
 	hpa, err := h.hpaLister.HorizontalPodAutoscalers(service.Namespace).Get(resources.ServiceHpaName(service))
@@ -161,13 +165,13 @@ func (h *serviceHandler) handleHpa(service *v1alpha1.Service) error {
 		hpa, err = h.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(service.Namespace).
 			Create(resources.CreateHpa(service))
 		if err != nil {
-			glog.Errorf("Failed to create HPA %v", err)
+			h.logger.Errorf("Failed to create HPA %v", err)
 			return err
 		}
+		h.logger.Debugw("HPA created", resources.ServiceHpaName(service), hpa)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("HPA created %+v", hpa)
 	return nil
 }
 
@@ -176,13 +180,13 @@ func (h *serviceHandler) handleK8sService(service *v1alpha1.Service) error {
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(service.Namespace).Create(resources.CreateServiceK8sService(service))
 		if err != nil {
-			glog.Errorf("Failed to create Service service %v", err)
+			h.logger.Errorf("Failed to create Service service %v", err)
 			return err
 		}
+		h.logger.Debugw("Service created", resources.ServiceK8sServiceName(service), k8sService)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Service service created %+v", k8sService)
 
 	service.Status.HostName = k8sService.Name
 

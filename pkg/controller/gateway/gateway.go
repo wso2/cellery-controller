@@ -22,7 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/golang/glog"
+	"go.uber.org/zap"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -68,6 +69,7 @@ type gatewayHandler struct {
 	configMapLister      corev1listers.ConfigMapLister
 	gatewayLister        listers.GatewayLister
 	gatewayConfig        config.Gateway
+	logger               *zap.SugaredLogger
 }
 
 func NewController(
@@ -83,6 +85,7 @@ func NewController(
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer meshinformers.GatewayInformer,
+	logger *zap.SugaredLogger,
 ) *controller.Controller {
 
 	h := &gatewayHandler{
@@ -97,14 +100,15 @@ func NewController(
 		envoyFilterLister:    envoyFilterInformer.Lister(),
 		configMapLister:      configMapInformer.Lister(),
 		gatewayLister:        gatewayInformer.Lister(),
+		logger:               logger.Named("gateway-controller"),
 	}
-	c := controller.New(h, "Gateway")
+	c := controller.New(h, h.logger, "Gateway")
 
-	glog.Info("Setting up event handlers")
+	h.logger.Info("Setting up event handlers")
 	gatewayInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.Enqueue,
 		UpdateFunc: func(old, new interface{}) {
-			glog.Infof("Old %+v\nnew %+v", old, new)
+			h.logger.Debugw("Informer update", "old", old, "new", new)
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
@@ -120,10 +124,10 @@ func NewController(
 }
 
 func (h *gatewayHandler) Handle(key string) error {
-	glog.Infof("Handle called with %s", key)
+	h.logger.Infof("Handle called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		glog.Errorf("invalid resource key: %s", key)
+		h.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
 	gatewayOriginal, err := h.gatewayLister.Gateways(namespace).Get(name)
@@ -134,7 +138,7 @@ func (h *gatewayHandler) Handle(key string) error {
 		}
 		return err
 	}
-	glog.Infof("Found gateway %+v", gatewayOriginal)
+	h.logger.Debugw("lister instance", key, gatewayOriginal)
 	gateway := gatewayOriginal.DeepCopy()
 
 	if err = h.handle(gateway); err != nil {
@@ -206,13 +210,13 @@ func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 		}
 		configMap, err = h.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Create(gatewayConfigMap)
 		if err != nil {
-			glog.Errorf("Failed to create Gateway ConfigMap %v", err)
+			h.logger.Errorf("Failed to create Gateway ConfigMap %v", err)
 			return err
 		}
+		h.logger.Debugw("Config map created", resources.GatewayConfigMapName(gateway), configMap)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Gateway config map created %+v", configMap)
 
 	return nil
 }
@@ -222,13 +226,13 @@ func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	if errors.IsNotFound(err) {
 		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
 		if err != nil {
-			glog.Errorf("Failed to create Gateway Deployment %v", err)
+			h.logger.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
 		}
+		h.logger.Debugw("Deployment created", resources.GatewayDeploymentName(gateway), deployment)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Gateway deployment created %+v", deployment)
 
 	if deployment.Status.AvailableReplicas > 0 {
 		gateway.Status.Status = "Ready"
@@ -244,16 +248,14 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 	if errors.IsNotFound(err) {
 		k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateGatewayK8sService(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create Gateway service %v", err)
+			h.logger.Errorf("Failed to create Gateway service %v", err)
 			return err
 		}
+		h.logger.Debugw("Service created", resources.GatewayK8sServiceName(gateway), k8sService)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Gateway service created %+v", k8sService)
-
 	gateway.Status.HostName = k8sService.Name
-
 	return nil
 }
 
@@ -262,13 +264,13 @@ func (h *gatewayHandler) handleIstioGateway(gateway *v1alpha1.Gateway) error {
 	if errors.IsNotFound(err) {
 		istioGateway, err = h.meshClient.NetworkingV1alpha3().Gateways(gateway.Namespace).Create(resources.CreateIstioGateway(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create Gateway service %v", err)
+			h.logger.Errorf("Failed to create Gateway service %v", err)
 			return err
 		}
+		h.logger.Debugw("Istio gateway created", resources.IstioGatewayName(gateway), istioGateway)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Istio gateway created %+v", istioGateway)
 
 	return nil
 }
@@ -278,13 +280,13 @@ func (h *gatewayHandler) handleIstioVirtualService(gateway *v1alpha1.Gateway) er
 	if errors.IsNotFound(err) {
 		istioVS, err = h.meshClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(resources.CreateIstioVirtualService(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create Gateway service %v", err)
+			h.logger.Errorf("Failed to create Gateway service %v", err)
 			return err
 		}
+		h.logger.Debugw("Istio virtual service created", resources.IstioVSName(gateway), istioVS)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Istio virtual service created %+v", istioVS)
 
 	return nil
 }
@@ -294,13 +296,13 @@ func (h *gatewayHandler) handleEnvoyFilter(gateway *v1alpha1.Gateway) error {
 	if errors.IsNotFound(err) {
 		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(gateway.Namespace).Create(resources.CreateEnvoyFilter(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			h.logger.Errorf("Failed to create EnvoyFilter %v", err)
 			return err
 		}
+		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(gateway), envoyFilter)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 
@@ -309,13 +311,13 @@ func (h *gatewayHandler) handleClusterIngress(gateway *v1alpha1.Gateway) error {
 	if errors.IsNotFound(err) {
 		clusterIngress, err = h.kubeClient.ExtensionsV1beta1().Ingresses(gateway.Namespace).Create(resources.CreateClusterIngress(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create Ingress %v", err)
+			h.logger.Errorf("Failed to create Ingress %v", err)
 			return err
 		}
+		h.logger.Debugw("Ingress created", resources.ClusterIngressName(gateway), clusterIngress)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Ingress created %+v", clusterIngress)
 	return nil
 }
 
@@ -335,16 +337,16 @@ func (h *gatewayHandler) handleIstioVirtualServicesForIngress(gateway *v1alpha1.
 			istioVS, err = h.meshClient.NetworkingV1alpha3().VirtualServices(gateway.Namespace).Create(
 				resources.CreateIstioVirtualServiceForIngress(gateway))
 			if err != nil {
-				glog.Errorf("Failed to create virtual service for ingress %v", err)
+				h.logger.Errorf("Failed to create virtual service for ingress %v", err)
 				return err
 			}
 		} else if err != nil {
 			return err
 		}
 
-		glog.Infof("Istio virtual service for ingress created %+v", istioVS)
+		h.logger.Debugf("Istio virtual service for ingress created %+v", istioVS)
 	} else {
-		glog.Infof("Ingress virtual services not created since gateway %+v does not have global APIs", gateway.Name)
+		h.logger.Debugf("Ingress virtual services not created since gateway %+v does not have global APIs", gateway.Name)
 	}
 
 	return nil
@@ -356,13 +358,13 @@ func (h *gatewayHandler) handleIstioDestinationRules(gateway *v1alpha1.Gateway) 
 		istioDestinationRule, err = h.meshClient.NetworkingV1alpha3().DestinationRules(gateway.Namespace).Create(
 			resources.CreateIstioDestinationRule(gateway))
 		if err != nil {
-			glog.Errorf("Failed to create destination rule %v", err)
+			h.logger.Errorf("Failed to create destination rule %v", err)
 			return err
 		}
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Istio destination rule created %+v", istioDestinationRule)
+	h.logger.Debugf("Istio destination rule created %+v", istioDestinationRule)
 
 	return nil
 }
@@ -407,31 +409,31 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 	if gatewayInitConfig, ok := configMap.Data["cell-gateway-config"]; ok {
 		conf.InitConfig = gatewayInitConfig
 	} else {
-		glog.Errorf("Cell gateway config is missing.")
+		h.logger.Errorf("Cell gateway config is missing.")
 	}
 
 	if gatewaySetupConfig, ok := configMap.Data["cell-gateway-setup-config"]; ok {
 		conf.SetupConfig = gatewaySetupConfig
 	} else {
-		glog.Errorf("Cell gateway setup config is missing.")
+		h.logger.Errorf("Cell gateway setup config is missing.")
 	}
 
 	if gatewayInitImage, ok := configMap.Data["cell-gateway-init-image"]; ok {
 		conf.InitImage = gatewayInitImage
 	} else {
-		glog.Errorf("Cell gateway init image missing.")
+		h.logger.Errorf("Cell gateway init image missing.")
 	}
 
 	if gatewayImage, ok := configMap.Data["cell-gateway-image"]; ok {
 		conf.Image = gatewayImage
 	} else {
-		glog.Errorf("Cell gateway image missing.")
+		h.logger.Errorf("Cell gateway image missing.")
 	}
 
 	if oidcFilterImage, ok := configMap.Data["oidc-filter-image"]; ok {
 		conf.OidcFilterImage = oidcFilterImage
 	} else {
-		glog.Errorf("Cell gateway oidc filter image missing.")
+		h.logger.Errorf("Cell gateway oidc filter image missing.")
 	}
 
 	h.gatewayConfig = conf

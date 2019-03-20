@@ -22,7 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/golang/glog"
+	"go.uber.org/zap"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
@@ -59,6 +60,7 @@ type cellHandler struct {
 	tokenServiceLister  listers.TokenServiceLister
 	serviceLister       listers.ServiceLister
 	envoyFilterLister   istiov1alpha1listers.EnvoyFilterLister
+	logger              *zap.SugaredLogger
 }
 
 func NewController(
@@ -71,6 +73,7 @@ func NewController(
 	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
 	secretInformer corev1informers.SecretInformer,
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
+	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &cellHandler{
 		kubeClient:          kubeClient,
@@ -82,14 +85,15 @@ func NewController(
 		networkPilicyLister: networkPolicyInformer.Lister(),
 		secretLister:        secretInformer.Lister(),
 		envoyFilterLister:   envoyFilterInformer.Lister(),
+		logger:              logger.Named("cell-controller"),
 	}
-	c := controller.New(h, "Cell")
+	c := controller.New(h, h.logger, "Cell")
 
-	glog.Info("Setting up event handlers")
+	h.logger.Info("Setting up event handlers")
 	cellInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.Enqueue,
 		UpdateFunc: func(old, new interface{}) {
-			glog.Infof("Old %+v\nnew %+v", old, new)
+			h.logger.Debugw("Informer update", "old", old, "new", new)
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
@@ -98,10 +102,10 @@ func NewController(
 }
 
 func (h *cellHandler) Handle(key string) error {
-	glog.Infof("Handle called with %s", key)
+	h.logger.Infof("Handle called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		glog.Errorf("invalid resource key: %s", key)
+		h.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
 	cellOriginal, err := h.cellLister.Cells(namespace).Get(name)
@@ -112,7 +116,7 @@ func (h *cellHandler) Handle(key string) error {
 		}
 		return err
 	}
-	glog.Infof("Found cell %+v", cellOriginal)
+	h.logger.Debugw("lister instance", key, cellOriginal)
 	cell := cellOriginal.DeepCopy()
 
 	if err = h.handle(cell); err != nil {
@@ -156,13 +160,13 @@ func (h *cellHandler) handleNetworkPolicy(cell *v1alpha1.Cell) error {
 	if errors.IsNotFound(err) {
 		networkPolicy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
 		if err != nil {
-			glog.Errorf("Failed to create NetworkPolicy %v", err)
+			h.logger.Errorf("Failed to create NetworkPolicy %v", err)
 			return err
 		}
+		h.logger.Debugw("NetworkPolicy created", resources.NetworkPolicyName(cell), networkPolicy)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("NetworkPolicy created %+v", networkPolicy)
 	return nil
 }
 
@@ -171,13 +175,13 @@ func (h *cellHandler) handleSecret(cell *v1alpha1.Cell) error {
 	if errors.IsNotFound(err) {
 		secret, err = h.kubeClient.CoreV1().Secrets(cell.Namespace).Create(resources.CreateKeyPairSecret(cell))
 		if err != nil {
-			glog.Errorf("Failed to create cell Secret %v", err)
+			h.logger.Errorf("Failed to create cell Secret %v", err)
 			return err
 		}
+		h.logger.Debugw("Secret created", resources.SecretName(cell), secret)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("cell Secret created %+v", secret)
 	return nil
 }
 
@@ -186,13 +190,13 @@ func (h *cellHandler) handleGateway(cell *v1alpha1.Cell) error {
 	if errors.IsNotFound(err) {
 		gateway, err = h.meshClient.MeshV1alpha1().Gateways(cell.Namespace).Create(resources.CreateGateway(cell))
 		if err != nil {
-			glog.Errorf("Failed to create Gateway %v", err)
+			h.logger.Errorf("Failed to create Gateway %v", err)
 			return err
 		}
+		h.logger.Debugw("Gateway created", resources.GatewayName(cell), gateway)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("Gateway created %+v", gateway)
 
 	cell.Status.GatewayHostname = gateway.Status.HostName
 	cell.Status.GatewayStatus = gateway.Status.Status
@@ -204,13 +208,13 @@ func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {
 	if errors.IsNotFound(err) {
 		tokenService, err = h.meshClient.MeshV1alpha1().TokenServices(cell.Namespace).Create(resources.CreateTokenService(cell))
 		if err != nil {
-			glog.Errorf("Failed to create TokenService %v", err)
+			h.logger.Errorf("Failed to create TokenService %v", err)
 			return err
 		}
+		h.logger.Debugw("TokenService created", resources.TokenServiceName(cell), tokenService)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("TokenService created %+v", tokenService)
 	return nil
 }
 
@@ -219,13 +223,13 @@ func (h *cellHandler) handleEnvoyFilter(cell *v1alpha1.Cell) error {
 	if errors.IsNotFound(err) {
 		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(cell.Namespace).Create(resources.CreateEnvoyFilter(cell))
 		if err != nil {
-			glog.Errorf("Failed to create EnvoyFilter %v", err)
+			h.logger.Errorf("Failed to create EnvoyFilter %v", err)
 			return err
 		}
+		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(cell), envoyFilter)
 	} else if err != nil {
 		return err
 	}
-	glog.Infof("EnvoyFilter created %+v", envoyFilter)
 	return nil
 }
 
@@ -237,13 +241,13 @@ func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 		if errors.IsNotFound(err) {
 			service, err = h.meshClient.MeshV1alpha1().Services(cell.Namespace).Create(resources.CreateService(cell, serviceSpec))
 			if err != nil {
-				glog.Errorf("Failed to create Service: %s : %v", serviceSpec.Name, err)
+				h.logger.Errorf("Failed to create Service: %s : %v", serviceSpec.Name, err)
 				return err
 			}
+			h.logger.Debugw("Service created", resources.ServiceName(cell, serviceSpec), service)
 		} else if err != nil {
 			return err
 		}
-		glog.Infof("Service '%s' created %+v", serviceSpec.Name, service)
 		if service.Status.AvailableReplicas > 0 {
 			cell.Status.ServiceCount++
 		}

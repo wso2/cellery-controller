@@ -20,15 +20,12 @@ package main
 
 import (
 	"flag"
+	"log"
 	"time"
 
-	"github.com/cellery-io/mesh-controller/pkg/version"
-
-	"k8s.io/client-go/tools/cache"
-
-	"github.com/golang/glog"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
@@ -38,7 +35,9 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
 	"github.com/cellery-io/mesh-controller/pkg/controller/service"
 	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
+	"github.com/cellery-io/mesh-controller/pkg/logging"
 	"github.com/cellery-io/mesh-controller/pkg/signals"
+	"github.com/cellery-io/mesh-controller/pkg/version"
 )
 
 const (
@@ -55,21 +54,27 @@ func main() {
 
 	stopCh := signals.SetupSignalHandler()
 
-	glog.Infoln(version.String())
+	logger, err := logging.NewLogger()
+	if err != nil {
+		log.Fatalf("Error building logger: %s", err.Error())
+	}
+	defer logger.Sync()
+
+	logger.Info(version.String())
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
-		glog.Fatalf("Error building kubeconfig: %s", err.Error())
+		logger.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building kubernetes clientset: %s", err.Error())
+		logger.Fatalf("Error building kubernetes clientset: %s", err.Error())
 	}
 
 	meshClient, err := meshclientset.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building mesh clientset: %s", err.Error())
+		logger.Fatalf("Error building mesh clientset: %s", err.Error())
 	}
 
 	// Create informer factories
@@ -114,6 +119,7 @@ func main() {
 		networkPolicyInformer,
 		secretInformer,
 		envoyFilterInformer,
+		logger,
 	)
 	gatewayController := gateway.NewController(
 		kubeClient,
@@ -128,6 +134,7 @@ func main() {
 		envoyFilterInformer,
 		configMapInformer,
 		gatewayInformer,
+		logger,
 	)
 	tokenServiceController := sts.NewController(
 		kubeClient,
@@ -138,6 +145,7 @@ func main() {
 		envoyFilterInformer,
 		configMapInformer,
 		tokenServiceInformer,
+		logger,
 	)
 	serviceController := service.NewController(
 		kubeClient,
@@ -146,6 +154,7 @@ func main() {
 		hpaInformer,
 		k8sServiceInformer,
 		serviceInformer,
+		logger,
 	)
 
 	// Start informers
@@ -154,7 +163,7 @@ func main() {
 	go meshSystemInformerFactory.Start(stopCh)
 
 	// Wait for cache sync
-	glog.Info("Waiting for informer caches to sync")
+	logger.Info("Waiting for informer caches to sync")
 	if ok := cache.WaitForCacheSync(stopCh,
 		// Sync K8s informers
 		k8sServiceInformer.Informer().HasSynced,
@@ -174,7 +183,7 @@ func main() {
 		istioDRInformer.Informer().HasSynced,
 		istioVSInformer.Informer().HasSynced,
 	); !ok {
-		glog.Fatal("failed to wait for caches to sync")
+		logger.Fatal("failed to wait for caches to sync")
 	}
 
 	//Start controllers
