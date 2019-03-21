@@ -49,15 +49,16 @@ type GatewaySpec struct {
 }
 
 type OidcConfig struct {
-	DiscoveryUrl string `json:"discoveryUrl"`
-	ClientId     string `json:"clientId"`
-	ClientSecret string `json:"clientSecret"`
-	DcrUrl       string `json:"dcrUrl"`
-	DcrUser      string `json:"dcrUser"`
-	DcrPassword  string `json:"dcrPassword"`
-	RedirectUrl  string `json:"redirectUrl"`
-	BaseUrl      string `json:"baseUrl"`
-	SubjectClaim string `json:"subjectClaim"`
+	DiscoveryUrl   string   `json:"discoveryUrl"`
+	ClientId       string   `json:"clientId"`
+	ClientSecret   string   `json:"clientSecret"`
+	DcrUrl         string   `json:"dcrUrl"`
+	DcrUser        string   `json:"dcrUser"`
+	DcrPassword    string   `json:"dcrPassword"`
+	RedirectUrl    string   `json:"redirectUrl"`
+	BaseUrl        string   `json:"baseUrl"`
+	SubjectClaim   string   `json:"subjectClaim"`
+	NonSecurePaths []string `json:"nonSecurePaths,omitempty"`
 }
 
 type HTTPRoute struct {

@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
@@ -263,7 +264,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 	// add oidc filter container to the gateway if oidc is enabled
 	if gateway.Spec.OidcConfig != nil {
 		oidc := gateway.Spec.OidcConfig
-		containers = append(containers, corev1.Container{
+		oidcFilterContainer := &corev1.Container{
 			Name:  "envoy-oidc-filter",
 			Image: gatewayConfig.OidcFilterImage,
 			Env: []corev1.EnvVar{
@@ -337,7 +338,12 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 					ReadOnly:  true,
 				},
 			},
-		})
+		}
+		// if non secured paths are present, set them as an env variable in the container
+		if nonSecPathsEnvVar := nonSecuredPathsEnvVar(oidc); nonSecPathsEnvVar != nil {
+			addEnvVar(oidcFilterContainer, nonSecPathsEnvVar)
+		}
+		containers = append(containers, *oidcFilterContainer)
 	}
 
 	one := int32(1)
@@ -382,4 +388,27 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			},
 		},
 	}
+}
+
+func addEnvVar(container *corev1.Container, envVar *corev1.EnvVar) {
+	container.Env = append(container.Env, *envVar)
+}
+
+func nonSecuredPathsEnvVar(oidcConfig *v1alpha1.OidcConfig) *corev1.EnvVar {
+	if oidcConfig.NonSecurePaths != nil && len(oidcConfig.NonSecurePaths) > 0 {
+		return &corev1.EnvVar{
+			Name: "NON_SECURE_PATHS",
+			Value: buildCommaSeparatedNonSecPaths(oidcConfig.NonSecurePaths),
+		}
+	}
+	return nil
+}
+
+func buildCommaSeparatedNonSecPaths(nonSecPathArr []string) string {
+	var nonSecPaths strings.Builder
+	for _, path := range nonSecPathArr {
+		nonSecPaths.WriteString(path)
+		nonSecPaths.WriteString(",")
+	}
+	return strings.TrimSuffix(nonSecPaths.String(), ",")
 }
