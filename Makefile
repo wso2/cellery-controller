@@ -35,7 +35,7 @@ GO_LDFLAGS += -X $(PROJECT_PKG)/pkg/version.buildTime=$(shell date +%Y-%m-%dT%H:
 
 DOCKER_TARGETS := $(addprefix docker., $(MAIN_PACKAGES))
 DOCKER_PUSH_TARGETS := $(addprefix docker-push., $(MAIN_PACKAGES))
-DOCKER_REPO ?= celleryio
+DOCKER_REPO ?= wso2cellery
 DOCKER_IMAGE_PREFIX := mesh
 DOCKER_IMAGE_TAG ?= $(VERSION)
 

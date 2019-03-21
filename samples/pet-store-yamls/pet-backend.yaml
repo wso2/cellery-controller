@@ -36,7 +36,7 @@ spec:
           value: pet-backend--catalog-service
         - name: CUSTOMER_HOST
           value: pet-backend--customers-service
-        image: celleryio/samples-pet-store-controller
+        image: wso2cellery/samples-pet-store-controller
         ports:
         - containerPort: 80
       protocol: HTTP
@@ -46,7 +46,7 @@ spec:
       name: catalog
     spec:
       container:
-        image: celleryio/samples-pet-store-catalog
+        image: wso2cellery/samples-pet-store-catalog
         ports:
         - containerPort: 80
       replicas: 1
@@ -55,7 +55,7 @@ spec:
       name: orders
     spec:
       container:
-        image: celleryio/samples-pet-store-orders
+        image: wso2cellery/samples-pet-store-orders
         ports:
         - containerPort: 80
       replicas: 1
@@ -64,7 +64,7 @@ spec:
       name: customers
     spec:
       container:
-        image: celleryio/samples-pet-store-customers
+        image: wso2cellery/samples-pet-store-customers
         ports:
         - containerPort: 80
       replicas: 1
