@@ -33,7 +33,7 @@ spec:
     spec:
       replicas: 1
       container:
-        image: celleryio/samples-pet-store-portal
+        image: wso2cellery/samples-pet-store-portal
         name: portal
         env:
         - name: PET_STORE_CELL_URL
