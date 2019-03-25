@@ -325,6 +325,10 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 					Name:  "NON_SECURE_PATHS",
 					Value: strings.Join(oidc.NonSecurePaths, ","),
 				},
+				{
+					Name:  "SECURE_PATHS",
+					Value: strings.Join(oidc.SecurePaths, ","),
+				},
 			},
 			Ports: []corev1.ContainerPort{
 				{

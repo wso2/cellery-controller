@@ -58,6 +58,7 @@ type OidcConfig struct {
 	RedirectUrl    string   `json:"redirectUrl"`
 	BaseUrl        string   `json:"baseUrl"`
 	SubjectClaim   string   `json:"subjectClaim"`
+	SecurePaths    []string `json:"securePaths,omitempty"`
 	NonSecurePaths []string `json:"nonSecurePaths,omitempty"`
 }
 
