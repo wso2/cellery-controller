@@ -20,6 +20,8 @@ spec:
         subjectClaim: given_name
 #        nonSecurePaths:
 #          - "/items/*"
+#        securePaths:
+#          - "/items/*"
       http:
       - context: items
         definitions:
