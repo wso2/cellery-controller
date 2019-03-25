@@ -19,6 +19,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -44,7 +45,22 @@ type CellStatus struct {
 	GatewayHostname string `json:"gatewayHostname"`
 	GatewayStatus   string `json:"gatewayStatus"`
 	Status          string `json:"status"`
+	// Current conditions of the cell.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions []CellCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
+
+type CellCondition struct {
+	Type   CellConditionType      `json:"type"`
+	Status corev1.ConditionStatus `json:"status"`
+}
+
+type CellConditionType string
+
+const (
+	CellReady CellConditionType = "Ready"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
