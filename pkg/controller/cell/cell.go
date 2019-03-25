@@ -46,6 +46,7 @@ import (
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 
+	corev1 "k8s.io/api/core/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 )
@@ -271,7 +272,21 @@ func (h *cellHandler) updateStatus(cell *v1alpha1.Cell) (*v1alpha1.Cell, error) 
 func (h *cellHandler) updateCellStatus(cell *v1alpha1.Cell) {
 	if cell.Status.GatewayStatus == "Ready" && int(cell.Status.ServiceCount) == len(cell.Spec.ServiceTemplates) {
 		cell.Status.Status = "Ready"
+		c := []v1alpha1.CellCondition{
+			{
+				Type:   v1alpha1.CellReady,
+				Status: corev1.ConditionTrue,
+			},
+		}
+		cell.Status.Conditions = c
 	} else {
 		cell.Status.Status = "NotReady"
+		c := []v1alpha1.CellCondition{
+			{
+				Type:   v1alpha1.CellReady,
+				Status: corev1.ConditionFalse,
+			},
+		}
+		cell.Status.Conditions = c
 	}
 }
