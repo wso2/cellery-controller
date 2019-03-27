@@ -436,5 +436,11 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 		h.logger.Errorf("Cell gateway oidc filter image missing.")
 	}
 
+	if skipTlsVerify, ok := configMap.Data["skip-tls-verification"]; ok {
+		conf.SkipTlsVerify = skipTlsVerify
+	} else {
+		conf.SkipTlsVerify = "false"
+	}
+
 	h.gatewayConfig = conf
 }
