@@ -1,5 +1,7 @@
 # Mesh Controller
 
+[![Build Status](https://travis-ci.org/wso2-cellery/mesh-controller.svg?branch=master)](https://travis-ci.org/wso2-cellery/mesh-controller)
+[![codecov.io](https://codecov.io/gh/wso2-cellery/mesh-controller/branch/master/graph/badge.svg)](https://codecov.io/gh/wso2-cellery/mesh-controller/branch/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cellery-io/mesh-controller)](https://goreportcard.com/report/github.com/cellery-io/mesh-controller)
 [![GitHub (pre-)release](https://img.shields.io/github/release/cellery-io/mesh-controller/all.svg)](https://github.com/cellery-io/mesh-controller/releases)
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/releases)
