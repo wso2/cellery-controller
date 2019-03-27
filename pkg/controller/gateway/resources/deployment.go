@@ -330,6 +330,10 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 					Name:  "SECURE_PATHS",
 					Value: strings.Join(oidc.SecurePaths, ","),
 				},
+				{
+					Name:  "SKIP_DISCOVERY_URL_CERT_VERIFY",
+					Value: gatewayConfig.SkipTlsVerify,
+				},
 			},
 			Ports: []corev1.ContainerPort{
 				{

@@ -24,4 +24,5 @@ type Gateway struct {
 	InitImage       string
 	Image           string
 	OidcFilterImage string
+	SkipTlsVerify   string
 }
