@@ -64,6 +64,7 @@ coverage: test
 $(DOCKER_TARGETS): docker.% : build.%
 	$(eval TARGET=$(patsubst docker.%,%,$@))
 	docker build -f $(PROJECT_ROOT)/docker/$(TARGET)/Dockerfile $(BUILD_ROOT) -t $(DOCKER_REPO)/$(DOCKER_IMAGE_PREFIX)-$(TARGET):$(DOCKER_IMAGE_TAG)
+	docker tag $(DOCKER_REPO)/$(DOCKER_IMAGE_PREFIX)-$(TARGET):$(DOCKER_IMAGE_TAG) $(DOCKER_REPO)/$(DOCKER_IMAGE_PREFIX)-$(TARGET):latest
 
 .PHONY: docker
 docker: $(DOCKER_TARGETS)
