@@ -33,3 +33,4 @@ deploy:
   script: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make docker-push.controller
   on:
     branch: master
+  skip_cleanup: true
