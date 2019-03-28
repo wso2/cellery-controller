@@ -27,3 +27,9 @@ script:
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  provider: script
+  script: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make docker-push.controller
+  on:
+    branch: master

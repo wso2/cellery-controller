@@ -72,6 +72,7 @@ docker: $(DOCKER_TARGETS)
 $(DOCKER_PUSH_TARGETS): docker-push.% : docker.%
 	$(eval TARGET=$(patsubst docker-push.%,%,$@))
 	docker push $(DOCKER_REPO)/$(DOCKER_IMAGE_PREFIX)-$(TARGET):$(DOCKER_IMAGE_TAG)
+	docker push $(DOCKER_REPO)/$(DOCKER_IMAGE_PREFIX)-$(TARGET):latest
 
 .PHONY: docker-push
 docker-push: $(DOCKER_PUSH_TARGETS)
