@@ -38,7 +38,7 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 				{
 					Uri: &v1alpha3.StringMatch{
 						//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
-						Prefix: fmt.Sprintf("/%s/", httpRoute.Context),
+						Prefix: httpRoute.Context,
 					},
 				},
 			},

@@ -16,14 +16,14 @@ spec:
         clientId: :)
         clientSecret: :)
         redirectUrl: http://pet-store.com/_auth/callback
-        baseUrl: http://pet-store.com/items/
+        baseUrl: http://pet-store.com/
         subjectClaim: given_name
 #        nonSecurePaths:
 #          - "/items/*"
 #        securePaths:
 #          - "/items/*"
       http:
-      - context: items
+      - context: /
         definitions:
         - path: /*
           method: GET
@@ -43,7 +43,7 @@ spec:
         - name: PORTAL_PORT
           value: "80"
         - name: BASE_PATH
-          value: "/items"
+          value: "."
         ports:
         - name: http
           containerPort: 80
