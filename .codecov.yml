@@ -1,0 +1,9 @@
+coverage:
+  precision: 2
+  round: down
+  range: "50...70"
+
+  status:
+    project: yes
+    patch: yes
+    changes: no
