@@ -125,7 +125,7 @@ func TestCreateNetworkPolicy(t *testing.T) {
 				Spec: v1alpha1.CellSpec{
 					GatewayTemplate: v1alpha1.GatewayTemplateSpec{
 						Spec: v1alpha1.GatewaySpec{
-							APIRoutes: []v1alpha1.APIRoute{
+							HTTPRoutes: []v1alpha1.HTTPRoute{
 								{
 									Context: "/context-1",
 									Backend: "my-service",

@@ -64,7 +64,8 @@ func TestCreateTokenServiceConfigMap(t *testing.T) {
 					}},
 				},
 				Data: map[string]string{
-					"sts-config": "{my-key:my-value}",
+					"sts-config":      "{my-key:my-value}",
+					"unsecured-paths": "[]",
 				},
 			},
 		},

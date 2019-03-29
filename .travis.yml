@@ -27,7 +27,7 @@ script:
 - test -z "$(make code.format-check| tee /dev/stderr)"
 - make build.controller
 - make docker.controller
-- go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/controller/service/resources/
+- make test.controller
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)

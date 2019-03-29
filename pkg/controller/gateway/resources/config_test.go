@@ -52,6 +52,7 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 					Name:      "foo-config",
 					Labels: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -79,7 +80,7 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 					},
 				},
 				Spec: v1alpha1.GatewaySpec{
-					APIRoutes: []v1alpha1.APIRoute{
+					HTTPRoutes: []v1alpha1.HTTPRoute{
 						{
 							Context: "/context-1",
 							Backend: "my-service",
@@ -111,6 +112,7 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 					Labels: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
 						"my-label-key":           "my-label-value",
+						appLabelKey:              "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),

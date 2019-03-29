@@ -50,6 +50,11 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 					Labels: map[string]string{
 						mesh.CellLabelKey: "my-cell",
 					},
+					Annotations: map[string]string{
+						"mesh.cellery.io/cell-image-org":     "my-org",
+						"mesh.cellery.io/cell-image-name":    "my-cell-image",
+						"mesh.cellery.io/cell-image-version": "1.2.3",
+					},
 				},
 			},
 			config: config.TokenService{
@@ -107,11 +112,62 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 											Name:  envCellNameKey,
 											Value: "my-cell",
 										},
+										{
+											Name:  "CELL_IMAGE_NAME",
+											Value: "my-cell-image",
+										},
+										{
+											Name:  "CELL_IMAGE_VERSION",
+											Value: "1.2.3",
+										},
+										{
+											Name:  "CELL_INSTANCE_NAME",
+											Value: "my-cell",
+										},
+										{
+											Name:  "CELL_ORG_NAME",
+											Value: "my-org",
+										},
 									},
 									VolumeMounts: []corev1.VolumeMount{
 										{
 											Name:      configVolumeName,
 											MountPath: configMountPath,
+											ReadOnly:  true,
+										},
+										{
+											Name:      policyVolumeName,
+											MountPath: pocliyConfigMountPath,
+											ReadOnly:  true,
+										},
+										{
+											Name:      keyPairVolumeName,
+											MountPath: keyPairMountPath,
+											ReadOnly:  true,
+										},
+									},
+								},
+								{
+									Name:  "opa",
+									Image: "",
+									Ports: []corev1.ContainerPort{
+										{
+											ContainerPort: opaServicePort,
+											Name:          "http",
+										},
+									},
+									Args: []string{
+										"run",
+										"--ignore=.*",
+										"--server",
+										"--watch",
+										"/policies",
+									},
+
+									VolumeMounts: []corev1.VolumeMount{
+										{
+											Name:      policyVolumeName,
+											MountPath: pocliyConfigMountPath,
 											ReadOnly:  true,
 										},
 									},
@@ -130,7 +186,29 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 													Key:  tokenServiceConfigKey,
 													Path: tokenServiceConfigFile,
 												},
+												{
+													Key:  unsecuredPathsConfigKey,
+													Path: unsecuredPathsConfigFile,
+												},
 											},
+										},
+									},
+								},
+								{
+									Name: policyVolumeName,
+									VolumeSource: corev1.VolumeSource{
+										ConfigMap: &corev1.ConfigMapVolumeSource{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "foo-policy",
+											},
+										},
+									},
+								},
+								{
+									Name: keyPairVolumeName,
+									VolumeSource: corev1.VolumeSource{
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "my-cell--secret",
 										},
 									},
 								},
