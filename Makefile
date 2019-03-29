@@ -52,13 +52,13 @@ build: $(BUILD_TARGETS)
 .PHONY: $(TEST_TARGETS)
 $(TEST_TARGETS):
 	$(eval TARGET=$(patsubst test.%,%,$@))
-	go test -covermode=count -coverprofile=$(BUILD_ROOT)/coverage.out ./pkg/$(TARGET)/...
+	go test -race -covermode=atomic -coverprofile=$(PROJECT_ROOT)/coverage.txt ./pkg/$(TARGET)/...
 
 .PHONY: test
 test: $(TEST_TARGETS)
 
 coverage: test
-	go tool cover -html=$(BUILD_ROOT)/coverage.out
+	go tool cover -html=$(PROJECT_ROOT)/coverage.txt
 
 .PHONY: $(DOCKER_TARGETS)
 $(DOCKER_TARGETS): docker.% : build.%

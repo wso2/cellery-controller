@@ -75,6 +75,12 @@ func TestCreateTokenServiceK8sService(t *testing.T) {
 							Port:       8081,
 							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8081},
 						},
+						{
+							Name:       "http-jwks",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       8090,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8090},
+						},
 					},
 					Selector: map[string]string{
 						mesh.CellTokenServiceLabelKey: "foo",

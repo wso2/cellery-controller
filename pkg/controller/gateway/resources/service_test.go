@@ -52,6 +52,7 @@ func TestCreateGatewayK8sService(t *testing.T) {
 					Name:      "foo-service",
 					Labels: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -62,14 +63,23 @@ func TestCreateGatewayK8sService(t *testing.T) {
 					}},
 				},
 				Spec: corev1.ServiceSpec{
-					Ports: []corev1.ServicePort{{
-						Name:       "http",
-						Protocol:   corev1.ProtocolTCP,
-						Port:       80,
-						TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
-					}},
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "http2",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+						},
+						{
+							Name:       "https",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       443,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
+						},
+					},
 					Selector: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
 					},
 				},
 			},

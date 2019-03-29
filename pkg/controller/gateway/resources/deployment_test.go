@@ -56,6 +56,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Name:      "foo-deployment",
 					Labels: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -70,102 +71,125 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							mesh.CellGatewayLabelKey: "foo",
+							appLabelKey:              "foo",
 						},
 					},
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								mesh.CellGatewayLabelKey: "foo",
+								appLabelKey:              "foo",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "false",
 							},
 						},
 						Spec: corev1.PodSpec{
-							InitContainers: []corev1.Container{
-								{
-									Name: "cell-gateway-init",
-									VolumeMounts: []corev1.VolumeMount{
-										{
-											Name:      configVolumeName,
-											MountPath: configMountPath,
-											ReadOnly:  true,
-										},
-										{
-											Name:      setupConfigVolumeName,
-											MountPath: setupConfigMountPath,
-											ReadOnly:  true,
-										},
-										{
-											Name:      gatewayBuildVolumeName,
-											MountPath: gatewayBuildMountPath,
-										},
-									},
-								},
-							},
 							Containers: []corev1.Container{
 								{
-									Name: "cell-gateway",
+									Name:  "cell-gateway",
+									Image: "gcr.io/istio-release/proxyv2:1.0.2",
 									Ports: []corev1.ContainerPort{
 										{
-											ContainerPort: 8080,
+											Protocol:      corev1.ProtocolTCP,
+											ContainerPort: 80,
 										},
+										{
+											ContainerPort: 443,
+											Protocol:      corev1.ProtocolTCP,
+										},
+									},
+									Args: []string{
+										"proxy",
+										"router",
+										"-v",
+										"2",
+										"--discoveryRefreshDelay",
+										"1s",
+										"--drainDuration",
+										"45s",
+										"--parentShutdownDuration",
+										"1m0s",
+										"--connectTimeout",
+										"10s",
+										"--serviceCluster",
+										"foo-deployment",
+										"--zipkinAddress",
+										"zipkin.istio-system:9411",
+										"--statsdUdpAddress",
+										"istio-statsd-prom-bridge.istio-system:9125",
+										"--proxyAdminPort",
+										"15000",
+										"--controlPlaneAuthPolicy",
+										"NONE",
+										"--discoveryAddress",
+										"istio-pilot.istio-system:8080",
 									},
 									Env: []corev1.EnvVar{
 										{
 											Name:  "CELL_NAME",
 											Value: "foo",
 										},
+										{
+											Name: "POD_NAME",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.name",
+												},
+											},
+										},
+										{
+											Name: "POD_NAMESPACE",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.namespace",
+												},
+											},
+										},
+										{
+											Name: "INSTANCE_IP",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "status.podIP",
+												},
+											},
+										},
+										{
+											Name: "ISTIO_META_POD_NAME",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.name",
+												},
+											},
+										},
 									},
 									VolumeMounts: []corev1.VolumeMount{
 										{
-											Name:      gatewayBuildVolumeName,
-											MountPath: gatewayBuildMountPath,
+											Name:      "istio-certs",
+											MountPath: "/etc/certs",
 										},
 									},
 								},
 							},
 							Volumes: []corev1.Volume{
 								{
-									Name: configVolumeName,
+									Name: "istio-certs",
 									VolumeSource: corev1.VolumeSource{
-										ConfigMap: &corev1.ConfigMapVolumeSource{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "foo-config",
-											},
-											Items: []corev1.KeyToPath{
-												{
-													Key:  apiConfigKey,
-													Path: apiConfigFile,
-												},
-												{
-													Key:  gatewayConfigKey,
-													Path: gatewayConfigFile,
-												},
-											},
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "istio.default",
 										},
 									},
 								},
 								{
-									Name: setupConfigVolumeName,
+									Name: "cell-certs",
 									VolumeSource: corev1.VolumeSource{
-										ConfigMap: &corev1.ConfigMapVolumeSource{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "foo-config",
-											},
-											Items: []corev1.KeyToPath{
-												{
-													Key:  gatewaySetupConfigKey,
-													Path: gatewaySetupConfigFile,
-												},
-											},
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "foo--secret",
 										},
-									},
-								},
-								{
-									Name: gatewayBuildVolumeName,
-									VolumeSource: corev1.VolumeSource{
-										EmptyDir: &corev1.EmptyDirVolumeSource{},
 									},
 								},
 							},
@@ -184,6 +208,9 @@ func TestCreateGatewayDeployment(t *testing.T) {
 						"my-label-key": "my-label-value",
 					},
 				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeMicroGateway,
+				},
 			},
 			config: config.Gateway{
 				InitConfig:  "",
@@ -197,6 +224,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Name:      "foo-deployment",
 					Labels: map[string]string{
 						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
 						"my-label-key":           "my-label-value",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
@@ -212,6 +240,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							mesh.CellGatewayLabelKey: "foo",
+							appLabelKey:              "foo",
 							"my-label-key":           "my-label-value",
 						},
 					},
@@ -219,10 +248,11 @@ func TestCreateGatewayDeployment(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								mesh.CellGatewayLabelKey: "foo",
+								appLabelKey:              "foo",
 								"my-label-key":           "my-label-value",
 							},
 							Annotations: map[string]string{
-								controller.IstioSidecarInjectAnnotation: "false",
+								controller.IstioSidecarInjectAnnotation: "true",
 							},
 						},
 						Spec: corev1.PodSpec{

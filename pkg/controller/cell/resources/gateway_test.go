@@ -57,6 +57,9 @@ func TestCreateGateway(t *testing.T) {
 						BlockOwnerDeletion: &boolTrue,
 					}},
 				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeEnvoy,
+				},
 			},
 		},
 		{
@@ -69,7 +72,7 @@ func TestCreateGateway(t *testing.T) {
 				Spec: v1alpha1.CellSpec{
 					GatewayTemplate: v1alpha1.GatewayTemplateSpec{
 						Spec: v1alpha1.GatewaySpec{
-							APIRoutes: []v1alpha1.APIRoute{
+							HTTPRoutes: []v1alpha1.HTTPRoute{
 								{
 									Context: "/context-1",
 									Backend: "my-service",
@@ -106,10 +109,11 @@ func TestCreateGateway(t *testing.T) {
 					}},
 				},
 				Spec: v1alpha1.GatewaySpec{
-					APIRoutes: []v1alpha1.APIRoute{
+					Type: v1alpha1.GatewayTypeEnvoy,
+					HTTPRoutes: []v1alpha1.HTTPRoute{
 						{
 							Context: "/context-1",
-							Backend: "http://foo--my-service-service",
+							Backend: "foo--my-service-service",
 							Global:  true,
 							Definitions: []v1alpha1.APIDefinition{
 								{

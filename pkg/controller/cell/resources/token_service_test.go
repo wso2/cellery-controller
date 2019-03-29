@@ -66,6 +66,9 @@ func TestCreateTokenService(t *testing.T) {
 						BlockOwnerDeletion: &boolTrue,
 					}},
 				},
+				Spec: v1alpha1.TokenServiceSpec{
+					InterceptMode: v1alpha1.InterceptModeAny,
+				},
 			},
 		},
 	}
