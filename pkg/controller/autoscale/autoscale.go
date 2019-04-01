@@ -20,11 +20,8 @@ package autoscale
 
 import (
 	"fmt"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale/resources"
+	"reflect"
+
 	"go.uber.org/zap"
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +30,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 	"k8s.io/client-go/tools/cache"
-	"reflect"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale/resources"
 )
 
 type autoscalePolicyeHandler struct {

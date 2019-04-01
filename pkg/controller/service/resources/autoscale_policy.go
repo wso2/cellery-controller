@@ -19,11 +19,12 @@
 package resources
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
 const scaleTargetDeploymentKind = "Deployment"
