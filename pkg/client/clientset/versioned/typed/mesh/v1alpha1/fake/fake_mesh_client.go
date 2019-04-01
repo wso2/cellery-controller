@@ -30,6 +30,10 @@ type FakeMeshV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeMeshV1alpha1) AutoscalePolicies(namespace string) v1alpha1.AutoscalePolicyInterface {
+	return &FakeAutoscalePolicies{c, namespace}
+}
+
 func (c *FakeMeshV1alpha1) Cells(namespace string) v1alpha1.CellInterface {
 	return &FakeCells{c, namespace}
 }

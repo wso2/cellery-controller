@@ -20,6 +20,8 @@
 
 package v1alpha1
 
+type AutoscalePolicyExpansion interface{}
+
 type CellExpansion interface{}
 
 type GatewayExpansion interface{}

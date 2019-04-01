@@ -20,6 +20,14 @@
 
 package v1alpha1
 
+// AutoscalePolicyListerExpansion allows custom methods to be added to
+// AutoscalePolicyLister.
+type AutoscalePolicyListerExpansion interface{}
+
+// AutoscalePolicyNamespaceListerExpansion allows custom methods to be added to
+// AutoscalePolicyNamespaceLister.
+type AutoscalePolicyNamespaceListerExpansion interface{}
+
 // CellListerExpansion allows custom methods to be added to
 // CellLister.
 type CellListerExpansion interface{}
