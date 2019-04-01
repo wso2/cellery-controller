@@ -55,6 +55,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&TokenServiceList{},
 		&Service{},
 		&ServiceList{},
+		&AutoscalePolicy{},
+		&AutoscalePolicyList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

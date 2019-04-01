@@ -49,7 +49,3 @@ func ServiceDeploymentName(service *v1alpha1.Service) string {
 func ServiceK8sServiceName(service *v1alpha1.Service) string {
 	return service.Name + "-service"
 }
-
-func ServiceHpaName(service *v1alpha1.Service) string {
-	return service.Name + "-hpa"
-}

@@ -29,6 +29,7 @@ import (
 
 type MeshV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	AutoscalePoliciesGetter
 	CellsGetter
 	GatewaysGetter
 	ServicesGetter
@@ -38,6 +39,10 @@ type MeshV1alpha1Interface interface {
 // MeshV1alpha1Client is used to interact with features provided by the mesh group.
 type MeshV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *MeshV1alpha1Client) AutoscalePolicies(namespace string) AutoscalePolicyInterface {
+	return newAutoscalePolicies(c, namespace)
 }
 
 func (c *MeshV1alpha1Client) Cells(namespace string) CellInterface {

@@ -35,6 +35,7 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
 	"github.com/cellery-io/mesh-controller/pkg/controller/service"
 	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
+	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
 	"github.com/cellery-io/mesh-controller/pkg/logging"
 	"github.com/cellery-io/mesh-controller/pkg/signals"
 	"github.com/cellery-io/mesh-controller/pkg/version"
@@ -104,6 +105,7 @@ func main() {
 	istioGatewayInformer := meshInformerFactory.Networking().V1alpha3().Gateways()
 	istioDRInformer := meshInformerFactory.Networking().V1alpha3().DestinationRules()
 	istioVSInformer := meshInformerFactory.Networking().V1alpha3().VirtualServices()
+	autoscalerInformer := meshInformerFactory.Mesh().V1alpha1().AutoscalePolicies()
 
 	// Create Mesh system informers
 	systemConfigMapInformer := meshSystemInformerFactory.Core().V1().ConfigMaps()
@@ -152,8 +154,15 @@ func main() {
 		meshClient,
 		deploymentInformer,
 		hpaInformer,
+		autoscalerInformer,
 		k8sServiceInformer,
 		serviceInformer,
+		logger,
+	)
+	autoscaleController := autoscale.NewController(
+		kubeClient,
+		autoscalerInformer,
+		hpaInformer,
 		logger,
 	)
 
@@ -191,6 +200,7 @@ func main() {
 	go gatewayController.Run(threadsPerController, stopCh)
 	go tokenServiceController.Run(threadsPerController, stopCh)
 	go serviceController.Run(threadsPerController, stopCh)
+	go autoscaleController.Run(threadsPerController, stopCh)
 
 	// Prevent exiting the main process
 	<-stopCh

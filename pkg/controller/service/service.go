@@ -49,13 +49,14 @@ import (
 )
 
 type serviceHandler struct {
-	kubeClient       kubernetes.Interface
-	meshClient       meshclientset.Interface
-	deploymentLister appsv1listers.DeploymentLister
-	hpaLister        autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
-	k8sServiceLister corev1listers.ServiceLister
-	serviceLister    listers.ServiceLister
-	logger           *zap.SugaredLogger
+	kubeClient            kubernetes.Interface
+	meshClient            meshclientset.Interface
+	deploymentLister      appsv1listers.DeploymentLister
+	hpaLister             autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
+	autoscalePolicyLister listers.AutoscalePolicyLister
+	k8sServiceLister      corev1listers.ServiceLister
+	serviceLister         listers.ServiceLister
+	logger                *zap.SugaredLogger
 }
 
 func NewController(
@@ -63,18 +64,20 @@ func NewController(
 	meshClient meshclientset.Interface,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
+	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &serviceHandler{
-		kubeClient:       kubeClient,
-		meshClient:       meshClient,
-		deploymentLister: deploymentInformer.Lister(),
-		hpaLister:        hpaInformer.Lister(),
-		k8sServiceLister: k8sServiceInformer.Lister(),
-		serviceLister:    serviceInformer.Lister(),
-		logger:           logger.Named("service-controller"),
+		kubeClient:            kubeClient,
+		meshClient:            meshClient,
+		deploymentLister:      deploymentInformer.Lister(),
+		hpaLister:             hpaInformer.Lister(),
+		autoscalePolicyLister: autoscalePolicyInformer.Lister(),
+		k8sServiceLister:      k8sServiceInformer.Lister(),
+		serviceLister:         serviceInformer.Lister(),
+		logger:                logger.Named("service-controller"),
 	}
 	c := controller.New(h, h.logger, "Service")
 
@@ -125,7 +128,7 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 		return err
 	}
 
-	if err := h.handleHpa(service); err != nil {
+	if err := h.handleAutoscalePolicy(service); err != nil {
 		return err
 	}
 
@@ -155,21 +158,32 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 	return nil
 }
 
-func (h *serviceHandler) handleHpa(service *v1alpha1.Service) error {
-	if service.Spec.Autoscaling == nil {
-		h.logger.Infof("No Autoscaling configuration specified for service %s", service.Name)
-		return nil
-	}
-	hpa, err := h.hpaLister.HorizontalPodAutoscalers(service.Namespace).Get(resources.ServiceHpaName(service))
+func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error {
+	autoscalePolicy, err := h.autoscalePolicyLister.AutoscalePolicies(service.Namespace).Get(resources.ServiceAutoscalePolicyName(service))
 	if errors.IsNotFound(err) {
-		hpa, err = h.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(service.Namespace).
-			Create(resources.CreateHpa(service))
+		if service.Spec.Autoscaling != nil {
+			autoscalePolicy = resources.CreateAutoscalePolicy(service)
+		} else {
+			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(service)
+		}
+		autoscalePolicy, err = h.meshClient.MeshV1alpha1().AutoscalePolicies(service.Namespace).Create(autoscalePolicy)
 		if err != nil {
-			h.logger.Errorf("Failed to create HPA %v", err)
+			h.logger.Errorf("Failed to create Autoscale policy %v", err)
 			return err
 		}
-		h.logger.Debugw("HPA created", resources.ServiceHpaName(service), hpa)
+		h.logger.Infow("Autoscale policy created", resources.ServiceAutoscalePolicyName(service), autoscalePolicy)
+		autoscalePolicy.Status = "Ready"
+		h.updateAutoscalePolicyStatus(autoscalePolicy)
+
 	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *serviceHandler) updateAutoscalePolicyStatus(policy *v1alpha1.AutoscalePolicy) error {
+	_, err := h.meshClient.MeshV1alpha1().AutoscalePolicies(policy.Namespace).Update(policy)
+	if err != nil {
 		return err
 	}
 	return nil
