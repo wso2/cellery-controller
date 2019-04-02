@@ -89,6 +89,7 @@ rules:
   - services
   - gateways
   - tokenservices
+  - autoscalepolicies
   verbs:
   - get
   - list
