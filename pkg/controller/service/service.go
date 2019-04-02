@@ -161,7 +161,7 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error {
 	// temporarily remove creating autoscaling policies
 	if service.Spec.Autoscaling == nil {
-		h.logger.Debugw("No autoscaling policies defined in Service ", service.Name)
+		h.logger.Debugf("No autoscaling policies defined in Service %s", service.Name)
 		return nil
 	}
 
