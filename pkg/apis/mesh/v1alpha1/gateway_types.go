@@ -49,7 +49,7 @@ type GatewaySpec struct {
 }
 
 type OidcConfig struct {
-	DiscoveryUrl   string   `json:"discoveryUrl"`
+	ProviderUrl    string   `json:"providerUrl"`
 	ClientId       string   `json:"clientId"`
 	ClientSecret   string   `json:"clientSecret"`
 	DcrUrl         string   `json:"dcrUrl"`

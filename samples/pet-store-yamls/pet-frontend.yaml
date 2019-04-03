@@ -12,7 +12,7 @@ spec:
       type: Envoy
       host: pet-store.com
       oidc:
-        discoveryUrl: https://accounts.google.com
+        providerUrl: https://accounts.google.com
         clientId: :)
         clientSecret: :)
         redirectUrl: http://pet-store.com/_auth/callback
