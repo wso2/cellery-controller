@@ -271,8 +271,8 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			Image: gatewayConfig.OidcFilterImage,
 			Env: []corev1.EnvVar{
 				{
-					Name:  "IDP_DISCOVERY_URL",
-					Value: oidc.DiscoveryUrl,
+					Name:  "PROVIDER_URL",
+					Value: oidc.ProviderUrl,
 				},
 				{
 					Name:  "CLIENT_ID",
