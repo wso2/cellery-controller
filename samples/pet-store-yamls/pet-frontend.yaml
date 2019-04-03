@@ -18,8 +18,9 @@ spec:
         redirectUrl: http://pet-store.com/_auth/callback
         baseUrl: http://pet-store.com/
         subjectClaim: given_name
-#        nonSecurePaths:
-#          - "/items/*"
+        nonSecurePaths:
+        - "/"
+        - "/app/*"
 #        securePaths:
 #          - "/items/*"
       http:
