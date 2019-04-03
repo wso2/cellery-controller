@@ -19,6 +19,8 @@
 package gateway
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"reflect"
 
@@ -62,6 +64,7 @@ type gatewayHandler struct {
 	deploymentLister     appsv1listers.DeploymentLister
 	k8sServiceLister     corev1listers.ServiceLister
 	clusterIngressLister extensionsv1beta1listers.IngressLister
+	secretLister         corev1listers.SecretLister
 	istioGatewayLister   istionetworklisters.GatewayLister
 	istioDRLister        istionetworklisters.DestinationRuleLister
 	istioVSLister        istionetworklisters.VirtualServiceLister
@@ -69,6 +72,7 @@ type gatewayHandler struct {
 	configMapLister      corev1listers.ConfigMapLister
 	gatewayLister        listers.GatewayLister
 	gatewayConfig        config.Gateway
+	gatewaySecret        config.Secret
 	logger               *zap.SugaredLogger
 }
 
@@ -76,9 +80,11 @@ func NewController(
 	kubeClient kubernetes.Interface,
 	meshClient meshclientset.Interface,
 	systemConfigMapInformer corev1informers.ConfigMapInformer,
+	systemSecretInformer corev1informers.SecretInformer,
 	deploymentInformer appsv1informers.DeploymentInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	clusterIngressInformer extensionsv1beta1informers.IngressInformer,
+	secretInformer corev1informers.SecretInformer,
 	istioGatewayInformer istioinformers.GatewayInformer,
 	istioDRInformer istioinformers.DestinationRuleInformer,
 	istioVSInformer istioinformers.VirtualServiceInformer,
@@ -94,6 +100,7 @@ func NewController(
 		deploymentLister:     deploymentInformer.Lister(),
 		k8sServiceLister:     k8sServiceInformer.Lister(),
 		clusterIngressLister: clusterIngressInformer.Lister(),
+		secretLister:         secretInformer.Lister(),
 		istioGatewayLister:   istioGatewayInformer.Lister(),
 		istioDRLister:        istioDRInformer.Lister(),
 		istioVSLister:        istioVSInformer.Lister(),
@@ -118,6 +125,13 @@ func NewController(
 		AddFunc: h.updateConfig,
 		UpdateFunc: func(old, new interface{}) {
 			h.updateConfig(new)
+		},
+	})
+
+	systemSecretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateSecret,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateSecret(new)
 		},
 	})
 	return c
@@ -183,6 +197,11 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	}
 
 	if len(gateway.Spec.Host) > 0 {
+		if len(gateway.Spec.Tls.Key) > 0 && len(gateway.Spec.Tls.Cert) > 0 {
+			if err := h.handleClusterIngressSecret(gateway); err != nil {
+				return err
+			}
+		}
 		if err := h.handleClusterIngress(gateway); err != nil {
 			return err
 		}
@@ -224,7 +243,12 @@ func (h *gatewayHandler) handleConfigMap(gateway *v1alpha1.Gateway) error {
 func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 	deployment, err := h.deploymentLister.Deployments(gateway.Namespace).Get(resources.GatewayDeploymentName(gateway))
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(resources.CreateGatewayDeployment(gateway, h.gatewayConfig))
+		desiredDeployment, err := resources.CreateGatewayDeployment(gateway, h.gatewayConfig, h.gatewaySecret)
+		if err != nil {
+			h.logger.Errorf("Cannot build the Gateway Deployment %v", err)
+			return err
+		}
+		deployment, err = h.kubeClient.AppsV1().Deployments(gateway.Namespace).Create(desiredDeployment)
 		if err != nil {
 			h.logger.Errorf("Failed to create Gateway Deployment %v", err)
 			return err
@@ -300,6 +324,26 @@ func (h *gatewayHandler) handleEnvoyFilter(gateway *v1alpha1.Gateway) error {
 			return err
 		}
 		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(gateway), envoyFilter)
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *gatewayHandler) handleClusterIngressSecret(gateway *v1alpha1.Gateway) error {
+	secret, err := h.secretLister.Secrets(gateway.Namespace).Get(resources.ClusterIngressSecretName(gateway))
+	if errors.IsNotFound(err) {
+		desiredSecret, err := resources.CreateClusterIngressSecret(gateway, h.gatewaySecret)
+		if err != nil {
+			h.logger.Errorf("Cannot build the cell ingress Secret %v", err)
+			return err
+		}
+		secret, err = h.kubeClient.CoreV1().Secrets(gateway.Namespace).Create(desiredSecret)
+		if err != nil {
+			h.logger.Errorf("Failed to create cell ingress Secret %v", err)
+			return err
+		}
+		h.logger.Debugw("Ingress Secret created", resources.ClusterIngressSecretName(gateway), secret)
 	} else if err != nil {
 		return err
 	}
@@ -443,4 +487,31 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 	}
 
 	h.gatewayConfig = conf
+}
+
+func (h *gatewayHandler) updateSecret(obj interface{}) {
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		return
+	}
+
+	if secret.Name != mesh.SystemSecretName {
+		return
+	}
+
+	s := config.Secret{}
+
+	if keyBytes, ok := secret.Data["tls.key"]; ok {
+		block, _ := pem.Decode(keyBytes)
+		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			h.logger.Errorf("error while parsing cellery-secret: %v", err)
+			s.PrivateKey = nil
+		}
+		s.PrivateKey = key
+	} else {
+		h.logger.Errorf("Missing tls.key in the cellery secret.")
+	}
+
+	h.gatewaySecret = s
 }

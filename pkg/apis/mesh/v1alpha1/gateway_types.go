@@ -42,10 +42,16 @@ type GatewayTemplateSpec struct {
 type GatewaySpec struct {
 	Type       GatewayType `json:"type,omitempty"`
 	Host       string      `json:"host,omitempty"`
-	TlsSecret  string      `json:"tlsSecret,omitempty"`
+	Tls        TlsConfig   `json:"tls,omitempty"`
 	OidcConfig *OidcConfig `json:"oidc,omitempty"`
 	HTTPRoutes []HTTPRoute `json:"http,omitempty"`
 	TCPRoutes  []TCPRoute  `json:"tcp,omitempty"`
+}
+
+type TlsConfig struct {
+	Secret string `json:"secret,omitempty"`
+	Key    string `json:"key,omitempty"`
+	Cert   string `json:"cert,omitempty"`
 }
 
 type OidcConfig struct {

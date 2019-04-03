@@ -79,3 +79,7 @@ func EnvoyFilterName(gateway *v1alpha1.Gateway) string {
 func ClusterIngressName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-ingress"
 }
+
+func ClusterIngressSecretName(gateway *v1alpha1.Gateway) string {
+	return ClusterIngressName(gateway) + "-secret"
+}

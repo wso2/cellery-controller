@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,13 +30,14 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/config"
+	"github.com/cellery-io/mesh-controller/pkg/crypto"
 )
 
-func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
+func CreateGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway, secret config.Secret) (*appsv1.Deployment, error) {
 	if gateway.Spec.Type == v1alpha1.GatewayTypeMicroGateway {
-		return createMicroGatewayDeployment(gateway, gatewayConfig)
+		return createMicroGatewayDeployment(gateway, gatewayConfig), nil
 	} else {
-		return createEnvoyGatewayDeployment(gateway, gatewayConfig)
+		return createEnvoyGatewayDeployment(gateway, gatewayConfig, secret)
 	}
 }
 
@@ -161,7 +163,7 @@ func createMicroGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 	}
 }
 
-func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) *appsv1.Deployment {
+func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway, secret config.Secret) (*appsv1.Deployment, error) {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
@@ -266,6 +268,11 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 	if gateway.Spec.OidcConfig != nil {
 		oidc := gateway.Spec.OidcConfig
 
+		clientSecretBytes, err := crypto.TryDecrypt(oidc.ClientSecret, secret.PrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decrypt the clientSecret: %v", err)
+		}
+
 		containers = append(containers, corev1.Container{
 			Name:  "envoy-oidc-filter",
 			Image: gatewayConfig.OidcFilterImage,
@@ -280,7 +287,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 				},
 				{
 					Name:  "CLIENT_SECRET",
-					Value: oidc.ClientSecret,
+					Value: string(clientSecretBytes),
 				},
 				{
 					Name:  "DCR_ENDPOINT",
@@ -396,5 +403,5 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 				},
 			},
 		},
-	}
+	}, nil
 }
