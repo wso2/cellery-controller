@@ -39,6 +39,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 		name    string
 		gateway *v1alpha1.Gateway
 		config  config.Gateway
+		secret  config.Secret
 		want    *appsv1.Deployment
 	}{
 		{
@@ -50,6 +51,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 				},
 			},
 			config: config.Gateway{},
+			secret: config.Secret{},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo-namespace",
@@ -218,6 +220,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 				InitImage:   "vick/init-cell-gateway",
 				Image:       "vick/cell-gateway",
 			},
+			secret: config.Secret{},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo-namespace",
@@ -617,7 +620,7 @@ func TestCreateGatewayDeployment(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := CreateGatewayDeployment(test.gateway, test.config)
+			got, _ := CreateGatewayDeployment(test.gateway, test.config, test.secret)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("TestCreateGatewayDeployment (-want, +got)\n%v", diff)
 			}

@@ -18,6 +18,8 @@
 
 package config
 
+import "crypto/rsa"
+
 type Gateway struct {
 	InitConfig      string
 	SetupConfig     string
@@ -25,4 +27,8 @@ type Gateway struct {
 	Image           string
 	OidcFilterImage string
 	SkipTlsVerify   string
+}
+
+type Secret struct {
+	PrivateKey *rsa.PrivateKey
 }

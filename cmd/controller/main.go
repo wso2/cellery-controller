@@ -109,6 +109,7 @@ func main() {
 
 	// Create Mesh system informers
 	systemConfigMapInformer := meshSystemInformerFactory.Core().V1().ConfigMaps()
+	systemSecretInformer := meshSystemInformerFactory.Core().V1().Secrets()
 
 	// Create crd controllers
 	cellController := cell.NewController(
@@ -127,9 +128,11 @@ func main() {
 		kubeClient,
 		meshClient,
 		systemConfigMapInformer,
+		systemSecretInformer,
 		deploymentInformer,
 		k8sServiceInformer,
 		clusterIngressInformer,
+		secretInformer,
 		istioGatewayInformer,
 		istioDRInformer,
 		istioVSInformer,
@@ -181,6 +184,7 @@ func main() {
 		secretInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
 		systemConfigMapInformer.Informer().HasSynced,
+		systemSecretInformer.Informer().HasSynced,
 		clusterIngressInformer.Informer().HasSynced,
 		// Sync mesh informers
 		cellInformer.Informer().HasSynced,

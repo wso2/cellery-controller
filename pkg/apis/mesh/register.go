@@ -33,4 +33,5 @@ const (
 	// Cellery System
 	SystemNamespace     = "cellery-system"
 	SystemConfigMapName = "cellery-config"
+	SystemSecretName    = "cellery-secret"
 )

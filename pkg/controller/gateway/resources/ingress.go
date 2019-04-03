@@ -53,10 +53,15 @@ func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {
 
 	var tlsIngressHosts []v1beta1.IngressTLS
 
-	if len(gateway.Spec.TlsSecret) > 0 {
+	if len(gateway.Spec.Tls.Secret) > 0 {
 		tlsIngressHosts = append(tlsIngressHosts, networkv1.IngressTLS{
 			Hosts:      []string{gateway.Spec.Host},
-			SecretName: gateway.Spec.TlsSecret,
+			SecretName: gateway.Spec.Tls.Secret,
+		})
+	} else if len(gateway.Spec.Tls.Key) > 0 && len(gateway.Spec.Tls.Cert) > 0 {
+		tlsIngressHosts = append(tlsIngressHosts, networkv1.IngressTLS{
+			Hosts:      []string{gateway.Spec.Host},
+			SecretName: ClusterIngressSecretName(gateway),
 		})
 	}
 
