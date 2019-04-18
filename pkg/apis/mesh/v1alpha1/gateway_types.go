@@ -63,10 +63,11 @@ type OidcConfig struct {
 }
 
 type HTTPRoute struct {
-	Context     string          `json:"context"`
-	Definitions []APIDefinition `json:"definitions"`
-	Backend     string          `json:"backend"`
-	Global      bool            `json:"global"`
+	Context      string          `json:"context"`
+	Definitions  []APIDefinition `json:"definitions"`
+	Backend      string          `json:"backend"`
+	Global       bool            `json:"global"`
+	Authenticate bool            `json:"authenticate"`
 }
 
 type APIDefinition struct {

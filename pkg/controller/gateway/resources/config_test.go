@@ -82,9 +82,10 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 				Spec: v1alpha1.GatewaySpec{
 					HTTPRoutes: []v1alpha1.HTTPRoute{
 						{
-							Context: "/context-1",
-							Backend: "my-service",
-							Global:  true,
+							Context:      "/context-1",
+							Backend:      "my-service",
+							Global:       true,
+							Authenticate: true,
 							Definitions: []v1alpha1.APIDefinition{
 								{
 									Path:   "path1",
@@ -123,7 +124,7 @@ func TestCreateGatewayConfigMap(t *testing.T) {
 					}},
 				},
 				Data: map[string]string{
-					apiConfigKey:          `{"cell":"foo","version":"1.0.0","hostname":"foo-service.foo-namespace","apis":[{"context":"/context-1","definitions":[{"path":"path1","method":"GET"},{"path":"path2","method":"POST"}],"backend":"my-service","global":true}]}`,
+					apiConfigKey:          `{"cell":"foo","version":"1.0.0","hostname":"foo-service.foo-namespace","apis":[{"context":"/context-1","definitions":[{"path":"path1","method":"GET"},{"path":"path2","method":"POST"}],"backend":"my-service","global":true,"authenticate":true}]}`,
 					gatewayConfigKey:      "{key:value}",
 					gatewaySetupConfigKey: "{key:value}",
 				},
