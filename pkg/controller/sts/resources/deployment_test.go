@@ -145,6 +145,11 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 											MountPath: keyPairMountPath,
 											ReadOnly:  true,
 										},
+										{
+											Name:      caCertsVolumeName,
+											MountPath: caCertsMountPath,
+											ReadOnly:  true,
+										},
 									},
 								},
 								{
@@ -209,6 +214,34 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 									VolumeSource: corev1.VolumeSource{
 										Secret: &corev1.SecretVolumeSource{
 											SecretName: "my-cell--secret",
+											Items: []corev1.KeyToPath{
+												{
+													Key:  "key.pem",
+													Path: "key.pem",
+												},
+												{
+													Key:  "cert.pem",
+													Path: "cert.pem",
+												},
+											},
+										},
+									},
+								},
+								{
+									Name: caCertsVolumeName,
+									VolumeSource: corev1.VolumeSource{
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "my-cell--secret",
+											Items: []corev1.KeyToPath{
+												{
+													Key:  "cellery-cert.pem",
+													Path: "cellery-cert.pem",
+												},
+												{
+													Key:  "cert-bundle.pem",
+													Path: "cert-bundle.pem",
+												},
+											},
 										},
 									},
 								},

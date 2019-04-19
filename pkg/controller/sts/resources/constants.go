@@ -46,6 +46,9 @@ const (
 	keyPairVolumeName = "cell-keys"
 	keyPairMountPath  = "/etc/certs"
 
+	caCertsVolumeName = "ca-certs"
+	caCertsMountPath  = "/etc/certs/trusted-certs"
+
 	policyConfigKey  = "policy.rego"
 	policyConfigFile = "sample.rego"
 

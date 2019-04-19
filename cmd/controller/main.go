@@ -122,6 +122,7 @@ func main() {
 		networkPolicyInformer,
 		secretInformer,
 		envoyFilterInformer,
+		systemSecretInformer,
 		logger,
 	)
 	gatewayController := gateway.NewController(

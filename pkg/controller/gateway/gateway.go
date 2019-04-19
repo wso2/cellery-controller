@@ -19,6 +19,7 @@
 package gateway
 
 import (
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -503,9 +504,14 @@ func (h *gatewayHandler) updateSecret(obj interface{}) {
 
 	if keyBytes, ok := secret.Data["tls.key"]; ok {
 		block, _ := pem.Decode(keyBytes)
-		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			h.logger.Errorf("error while parsing cellery-secret: %v", err)
+			h.logger.Errorf("error while parsing cellery-secret tls.key: %v", err)
+			s.PrivateKey = nil
+		}
+		key, ok := parsedKey.(*rsa.PrivateKey)
+		if !ok {
+			h.logger.Errorf("error while parsing cellery-secret tls.key: non rsa private key")
 			s.PrivateKey = nil
 		}
 		s.PrivateKey = key
