@@ -24,6 +24,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -31,25 +32,34 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell/config"
 )
 
-func CreateKeyPairSecret(cell *v1alpha1.Cell) *corev1.Secret {
+func CreateKeyPairSecret(cell *v1alpha1.Cell, cellerySecret config.Secret) (*corev1.Secret, error) {
 
-	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
-	privateKeyBlock := pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   x509.MarshalPKCS1PrivateKey(privateKey),
+	if err != nil {
+		return nil, fmt.Errorf("fail to generate rsa private key: %v", err)
 	}
 
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{cell.Name},
+			CommonName:         fmt.Sprintf("%s--sts-service", cell.Name),
+			Country:            []string{"LK"},
+			Locality:           []string{"Colombo"},
+			Organization:       []string{"WSO2"},
+			OrganizationalUnit: []string{"WSO2"},
+			Province:           []string{"West"},
+		},
+		ExtraExtensions: []pkix.Extension{
+			{
+				Id:    []int{2, 5, 29, 17}, // https://tools.ietf.org/html/rfc5280#section-4.2.1.6
+				Value: []byte(fmt.Sprintf("DNS:%s", cell.Name)),
+			},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 180),
@@ -58,9 +68,16 @@ func CreateKeyPairSecret(cell *v1alpha1.Cell) *corev1.Secret {
 		BasicConstraintsValid: true,
 	}
 
-	certBytes, _ := x509.CreateCertificate(rand.Reader, &template, &template, privateKey.Public(), privateKey)
+	err = cellerySecret.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("cellery system secret validation failed: %v", err)
+	}
 
-	certBlock := pem.Block{Type: "CERTIFICATE", Bytes: certBytes}
+	certBytes, err := x509.CreateCertificate(rand.Reader, &template, cellerySecret.Certificate, privateKey.Public(), cellerySecret.PrivateKey)
+
+	if err != nil {
+		return nil, fmt.Errorf("fail to sign cell certificate: %v", err)
+	}
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -73,8 +90,10 @@ func CreateKeyPairSecret(cell *v1alpha1.Cell) *corev1.Secret {
 		},
 		Type: mesh.GroupName + "/key-and-cert",
 		Data: map[string][]byte{
-			"key.pem":  pem.EncodeToMemory(&privateKeyBlock),
-			"cert.pem": pem.EncodeToMemory(&certBlock),
+			"key.pem":          pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}),
+			"cert.pem":         pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes}),
+			"cellery-cert.pem": pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cellerySecret.Certificate.Raw}),
+			"cert-bundle.pem":  cellerySecret.CertBundle,
 		},
-	}
+	}, nil
 }

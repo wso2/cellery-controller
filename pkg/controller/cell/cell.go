@@ -19,36 +19,33 @@
 package cell
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"reflect"
 
 	"go.uber.org/zap"
-
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
-
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
-
-	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
-	//appsv1informers "k8s.io/client-go/informers/apps/v1"
-	//corev1informers "k8s.io/client-go/informers/core/v1"
+	corev1informers "k8s.io/client-go/informers/core/v1"
+	networkv1informers "k8s.io/client-go/informers/networking/v1"
 	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
+	networkv1listers "k8s.io/client-go/listers/networking/v1"
 	"k8s.io/client-go/tools/cache"
 
-	//corev1informers "k8s.io/client-go/informers/core/v1"
-	networkv1informers "k8s.io/client-go/informers/networking/v1"
-	networkv1listers "k8s.io/client-go/listers/networking/v1"
-
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
-
-	corev1 "k8s.io/api/core/v1"
-	corev1informers "k8s.io/client-go/informers/core/v1"
-	corev1listers "k8s.io/client-go/listers/core/v1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell/config"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
 )
 
 type cellHandler struct {
@@ -61,6 +58,7 @@ type cellHandler struct {
 	tokenServiceLister  listers.TokenServiceLister
 	serviceLister       listers.ServiceLister
 	envoyFilterLister   istiov1alpha1listers.EnvoyFilterLister
+	cellerySecret       config.Secret
 	logger              *zap.SugaredLogger
 }
 
@@ -74,6 +72,7 @@ func NewController(
 	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
 	secretInformer corev1informers.SecretInformer,
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
+	systemSecretInformer corev1informers.SecretInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &cellHandler{
@@ -99,6 +98,14 @@ func NewController(
 		},
 		DeleteFunc: c.Enqueue,
 	})
+
+	systemSecretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateSecret,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateSecret(new)
+		},
+	})
+
 	return c
 }
 
@@ -174,7 +181,12 @@ func (h *cellHandler) handleNetworkPolicy(cell *v1alpha1.Cell) error {
 func (h *cellHandler) handleSecret(cell *v1alpha1.Cell) error {
 	secret, err := h.secretLister.Secrets(cell.Namespace).Get(resources.SecretName(cell))
 	if errors.IsNotFound(err) {
-		secret, err = h.kubeClient.CoreV1().Secrets(cell.Namespace).Create(resources.CreateKeyPairSecret(cell))
+		desiredSecret, err := resources.CreateKeyPairSecret(cell, h.cellerySecret)
+		if err != nil {
+			h.logger.Errorf("Cannot build the Cell Secret %v", err)
+			return err
+		}
+		secret, err = h.kubeClient.CoreV1().Secrets(cell.Namespace).Create(desiredSecret)
 		if err != nil {
 			h.logger.Errorf("Failed to create cell Secret %v", err)
 			return err
@@ -289,4 +301,54 @@ func (h *cellHandler) updateCellStatus(cell *v1alpha1.Cell) {
 		}
 		cell.Status.Conditions = c
 	}
+}
+
+func (h *cellHandler) updateSecret(obj interface{}) {
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		return
+	}
+
+	if secret.Name != mesh.SystemSecretName {
+		return
+	}
+
+	s := config.Secret{}
+
+	if keyBytes, ok := secret.Data["tls.key"]; ok {
+		block, _ := pem.Decode(keyBytes)
+		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			h.logger.Errorf("error while parsing cellery-secret tls.key: %v", err)
+			s.PrivateKey = nil
+		}
+		key, ok := parsedKey.(*rsa.PrivateKey)
+		if !ok {
+			h.logger.Errorf("error while parsing cellery-secret tls.key: non rsa private key")
+			s.PrivateKey = nil
+		}
+		s.PrivateKey = key
+	} else {
+		h.logger.Errorf("Missing tls.key in the cellery secret.")
+	}
+
+	if certBytes, ok := secret.Data["tls.crt"]; ok {
+		block, _ := pem.Decode(certBytes)
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			h.logger.Errorf("error while parsing cellery-secret tls.crt: %v", err)
+			s.PrivateKey = nil
+		}
+		s.Certificate = cert
+	} else {
+		h.logger.Errorf("Missing tls.cert in the cellery secret.")
+	}
+
+	if certBundle, ok := secret.Data["cert-bundle.pem"]; ok {
+		s.CertBundle = certBundle
+	} else {
+		h.logger.Errorf("Missing cert-bundle.pem in the cellery secret.")
+	}
+
+	h.cellerySecret = s
 }
