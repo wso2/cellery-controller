@@ -48,19 +48,14 @@ func CreateKeyPairSecret(cell *v1alpha1.Cell, cellerySecret config.Secret) (*cor
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName:         fmt.Sprintf("%s--sts-service", cell.Name),
+			CommonName:         cell.Name,
 			Country:            []string{"LK"},
 			Locality:           []string{"Colombo"},
 			Organization:       []string{"WSO2"},
 			OrganizationalUnit: []string{"WSO2"},
 			Province:           []string{"West"},
 		},
-		ExtraExtensions: []pkix.Extension{
-			{
-				Id:    []int{2, 5, 29, 17}, // https://tools.ietf.org/html/rfc5280#section-4.2.1.6
-				Value: []byte(fmt.Sprintf("DNS:%s", cell.Name)),
-			},
-		},
+		DNSNames:              []string{fmt.Sprintf("%s--sts-service", cell.Name), cell.Name},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 180),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
