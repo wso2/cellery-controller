@@ -69,6 +69,41 @@ func TestCreateTokenServiceConfigMap(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "foo token service with unsecured path",
+			tokenService: &v1alpha1.TokenService{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.TokenServiceSpec{
+					UnsecuredPaths: []string{"/path1", "/path2"},
+				},
+			},
+			config: config.TokenService{
+				Config: "{my-key:my-value}",
+			},
+			want: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-config",
+					Labels: map[string]string{
+						mesh.CellTokenServiceLabelKey: "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "TokenService",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Data: map[string]string{
+					"sts-config":      "{my-key:my-value}",
+					"unsecured-paths": "[\"/path1\",\"/path2\"]",
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -76,6 +111,65 @@ func TestCreateTokenServiceConfigMap(t *testing.T) {
 			got := CreateTokenServiceConfigMap(test.tokenService, test.config)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("CreateTokenServiceConfigMap (-want, +got)\n%v", diff)
+			}
+		})
+	}
+}
+
+func TestCreateTokenServiceOPAConfigMap(t *testing.T) {
+	tests := []struct {
+		name         string
+		tokenService *v1alpha1.TokenService
+		config       config.TokenService
+		want         *corev1.ConfigMap
+	}{
+		{
+			name: "foo token service with a policy spec",
+			tokenService: &v1alpha1.TokenService{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.TokenServiceSpec{
+					OpaPolicies: []v1alpha1.OpaPolicy{
+						{
+							Key:    "policy-key",
+							Policy: "policy rego",
+						},
+					},
+				},
+			},
+			config: config.TokenService{
+				Policy: "default policy",
+			},
+			want: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-policy",
+					Labels: map[string]string{
+						mesh.CellTokenServiceLabelKey: "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "TokenService",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Data: map[string]string{
+					"default.rego":    "default policy",
+					"policy-key.rego": "policy rego",
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := CreateTokenServiceOPAConfigMap(test.tokenService, test.config)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("TestCreateTokenServiceOPAConfigMap (-want, +got)\n%v", diff)
 			}
 		})
 	}
