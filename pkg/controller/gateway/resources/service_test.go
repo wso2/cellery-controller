@@ -84,6 +84,172 @@ func TestCreateGatewayK8sService(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "foo gateway with micro-gateway type",
+			gateway: &v1alpha1.Gateway{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeMicroGateway,
+				},
+			},
+			want: &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-service",
+					Labels: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "Gateway",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "http",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+						},
+					},
+					Selector: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+				},
+			},
+		},
+		{
+			name: "foo gateway with envoy-gateway type and oidc config",
+			gateway: &v1alpha1.Gateway{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeEnvoy,
+					OidcConfig: &v1alpha1.OidcConfig{
+						ProviderUrl:  "http://provider.com",
+						ClientId:     "cid",
+						ClientSecret: "secret",
+						BaseUrl:      "http://example.com",
+					},
+				},
+			},
+			want: &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-service",
+					Labels: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "Gateway",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "http2",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+						},
+						{
+							Name:       "https",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       443,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
+						},
+						{
+							Name:       "http-oidc-callback",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       15810,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 15810},
+						},
+					},
+					Selector: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+				},
+			},
+		},
+		{
+			name: "foo gateway with tcp mode envoy-gateway type",
+			gateway: &v1alpha1.Gateway{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeEnvoy,
+					TCPRoutes: []v1alpha1.TCPRoute{
+						{
+							Port:        31220,
+							BackendHost: "tcp-host",
+							BackendPort: 8080,
+						},
+					},
+				},
+			},
+			want: &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-service",
+					Labels: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "Gateway",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "http2",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       80,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+						},
+						{
+							Name:       "https",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       443,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
+						},
+						{
+							Name:       "tcp-31220",
+							Protocol:   corev1.ProtocolTCP,
+							Port:       31220,
+							TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 31220},
+						},
+					},
+					Selector: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
