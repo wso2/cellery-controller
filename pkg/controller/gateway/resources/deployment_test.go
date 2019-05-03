@@ -350,6 +350,269 @@ func TestCreateGatewayDeployment(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "foo gateway with oidc config",
+			gateway: &v1alpha1.Gateway{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo",
+				},
+				Spec: v1alpha1.GatewaySpec{
+					Type: v1alpha1.GatewayTypeEnvoy,
+					OidcConfig: &v1alpha1.OidcConfig{
+						ProviderUrl:    "http://provider.com",
+						ClientId:       "cid",
+						ClientSecret:   "secret",
+						BaseUrl:        "http://example.com",
+						NonSecurePaths: []string{"/foo1", "/foo2"},
+						SubjectClaim:   "claim",
+						RedirectUrl:    "http://example.com",
+						DcrUser:        "dcr-user",
+						DcrPassword:    "dcr-pass",
+						DcrUrl:         "http://dcr-url",
+						SecurePaths:    []string{"/bar1", "/bar2"},
+					},
+				},
+			},
+			config: config.Gateway{
+				OidcFilterImage: "oidc-image",
+				SkipTlsVerify:   "false",
+			},
+			want: &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo-namespace",
+					Name:      "foo-deployment",
+					Labels: map[string]string{
+						mesh.CellGatewayLabelKey: "foo",
+						appLabelKey:              "foo",
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+						Kind:               "Gateway",
+						Name:               "foo",
+						Controller:         &boolTrue,
+						BlockOwnerDeletion: &boolTrue,
+					}},
+				},
+				Spec: appsv1.DeploymentSpec{
+					Replicas: &intOne,
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							mesh.CellGatewayLabelKey: "foo",
+							appLabelKey:              "foo",
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								mesh.CellGatewayLabelKey: "foo",
+								appLabelKey:              "foo",
+							},
+							Annotations: map[string]string{
+								controller.IstioSidecarInjectAnnotation: "false",
+							},
+						},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "cell-gateway",
+									Image: "gcr.io/istio-release/proxyv2:1.0.2",
+									Ports: []corev1.ContainerPort{
+										{
+											Protocol:      corev1.ProtocolTCP,
+											ContainerPort: 80,
+										},
+										{
+											ContainerPort: 443,
+											Protocol:      corev1.ProtocolTCP,
+										},
+									},
+									Args: []string{
+										"proxy",
+										"router",
+										"-v",
+										"2",
+										"--discoveryRefreshDelay",
+										"1s",
+										"--drainDuration",
+										"45s",
+										"--parentShutdownDuration",
+										"1m0s",
+										"--connectTimeout",
+										"10s",
+										"--serviceCluster",
+										"foo",
+										"--zipkinAddress",
+										"wso2sp-worker.cellery-system:9411",
+										"--statsdUdpAddress",
+										"istio-statsd-prom-bridge.istio-system:9125",
+										"--proxyAdminPort",
+										"15000",
+										"--controlPlaneAuthPolicy",
+										"NONE",
+										"--discoveryAddress",
+										"istio-pilot.istio-system:8080",
+									},
+									Env: []corev1.EnvVar{
+										{
+											Name:  "CELL_NAME",
+											Value: "foo",
+										},
+										{
+											Name: "POD_NAME",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.name",
+												},
+											},
+										},
+										{
+											Name: "POD_NAMESPACE",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.namespace",
+												},
+											},
+										},
+										{
+											Name: "INSTANCE_IP",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "status.podIP",
+												},
+											},
+										},
+										{
+											Name: "ISTIO_META_POD_NAME",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													APIVersion: "v1",
+													FieldPath:  "metadata.name",
+												},
+											},
+										},
+									},
+									VolumeMounts: []corev1.VolumeMount{
+										{
+											Name:      "istio-certs",
+											MountPath: "/etc/certs",
+										},
+									},
+								},
+								{
+									Name:  "envoy-oidc-filter",
+									Image: "oidc-image",
+									Env: []corev1.EnvVar{
+										{
+											Name:  "PROVIDER_URL",
+											Value: "http://provider.com",
+										},
+										{
+											Name:  "CLIENT_ID",
+											Value: "cid",
+										},
+										{
+											Name:  "CLIENT_SECRET",
+											Value: "secret",
+										},
+										{
+											Name:  "DCR_ENDPOINT",
+											Value: "http://dcr-url",
+										},
+										{
+											Name:  "DCR_USER",
+											Value: "dcr-user",
+										},
+										{
+											Name:  "DCR_PASSWORD",
+											Value: "dcr-pass",
+										},
+										{
+											Name:  "REDIRECT_URL",
+											Value: "http://example.com",
+										},
+										{
+											Name:  "APP_BASE_URL",
+											Value: "http://example.com",
+										},
+										{
+											Name:  "PRIVATE_KEY_FILE",
+											Value: "/etc/certs/key.pem",
+										},
+										{
+											Name:  "CERTIFICATE_FILE",
+											Value: "/etc/certs/cert.pem",
+										},
+										{
+											Name:  "JWT_ISSUER",
+											Value: "foo--gateway",
+										},
+										{
+											Name:  "JWT_AUDIENCE",
+											Value: "foo",
+										},
+										{
+											Name:  "SUBJECT_CLAIM",
+											Value: "claim",
+										},
+										{
+											Name:  "NON_SECURE_PATHS",
+											Value: "/foo1,/foo2",
+										},
+										{
+											Name:  "SECURE_PATHS",
+											Value: "/bar1,/bar2",
+										},
+										{
+											Name:  "SKIP_DISCOVERY_URL_CERT_VERIFY",
+											Value: "false",
+										},
+									},
+									Ports: []corev1.ContainerPort{
+										{
+											ContainerPort: 15800,
+											Protocol:      corev1.ProtocolTCP,
+										},
+										{
+											ContainerPort: 15810,
+											Protocol:      corev1.ProtocolTCP,
+										},
+									},
+									VolumeMounts: []corev1.VolumeMount{
+										{
+											Name:      "cell-certs",
+											MountPath: "/etc/certs",
+											ReadOnly:  true,
+										},
+									},
+								},
+							},
+							Volumes: []corev1.Volume{
+								{
+									Name: "istio-certs",
+									VolumeSource: corev1.VolumeSource{
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "istio.default",
+										},
+									},
+								},
+								{
+									Name: "cell-certs",
+									VolumeSource: corev1.VolumeSource{
+										Secret: &corev1.SecretVolumeSource{
+											SecretName: "foo--secret",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
