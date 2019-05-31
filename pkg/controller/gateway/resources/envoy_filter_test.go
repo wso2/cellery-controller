@@ -99,7 +99,9 @@ func TestCreateEnvoyFilterForEnvoyMicroGateway(t *testing.T) {
 					},
 				},
 			},
-			TlsSecret: "mytlssecret",
+			Tls: v1alpha1.TlsConfig{
+				Secret: "mytlssecret",
+			},
 		},
 	}
 	filter := CreateEnvoyFilter(gateway)
@@ -129,7 +131,9 @@ func TestCreateEnvoyFilterForEnvoyWebCell(t *testing.T) {
 					},
 				},
 			},
-			TlsSecret: "mytlssecret",
+			Tls: v1alpha1.TlsConfig{
+				Secret: "mytlssecret",
+			},
 			OidcConfig: &v1alpha1.OidcConfig{
 				ProviderUrl:  "https://accounts.google.com",
 				ClientId:     "xxxxxxxxxxxxxxxxxxx",
