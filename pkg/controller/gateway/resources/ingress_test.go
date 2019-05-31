@@ -163,9 +163,11 @@ func TestCreateClusterIngress(t *testing.T) {
 					Name:      "foo",
 				},
 				Spec: v1alpha1.GatewaySpec{
-					Type:      v1alpha1.GatewayTypeMicroGateway,
-					Host:      "my-host.com",
-					TlsSecret: "my-secret",
+					Type: v1alpha1.GatewayTypeMicroGateway,
+					Host: "my-host.com",
+					Tls: v1alpha1.TlsConfig{
+						Secret: "my-secret",
+					},
 				},
 			},
 			want: &v1beta1.Ingress{
