@@ -21,6 +21,10 @@ package service
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+	"github.com/cellery-io/mesh-controller/pkg/controller/service/config"
 
 	"go.uber.org/zap"
 
@@ -44,6 +48,10 @@ import (
 	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
 	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 
+	corev1 "k8s.io/api/core/v1"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 )
@@ -56,6 +64,8 @@ type serviceHandler struct {
 	autoscalePolicyLister listers.AutoscalePolicyLister
 	k8sServiceLister      corev1listers.ServiceLister
 	serviceLister         listers.ServiceLister
+	configMapLister       corev1listers.ConfigMapLister
+	serviceConfig         config.Service
 	logger                *zap.SugaredLogger
 }
 
@@ -67,6 +77,7 @@ func NewController(
 	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
+	configMapInformer corev1informers.ConfigMapInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &serviceHandler{
@@ -77,6 +88,7 @@ func NewController(
 		autoscalePolicyLister: autoscalePolicyInformer.Lister(),
 		k8sServiceLister:      k8sServiceInformer.Lister(),
 		serviceLister:         serviceInformer.Lister(),
+		configMapLister:       configMapInformer.Lister(),
 		logger:                logger.Named("service-controller"),
 	}
 	c := controller.New(h, h.logger, "Service")
@@ -90,6 +102,14 @@ func NewController(
 		},
 		DeleteFunc: c.Enqueue,
 	})
+
+	configMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateConfig,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateConfig(new)
+		},
+	})
+
 	return c
 }
 
@@ -159,9 +179,28 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 }
 
 func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error {
-	// temporarily remove creating autoscaling policies
-	if service.Spec.Autoscaling == nil {
-		h.logger.Debugf("No autoscaling policies defined in Service %s", service.Name)
+	// if autoscaling is disabled in cellery system wide configs, do nothing
+	if !h.serviceConfig.EnableAutoscaling {
+		// if the Autoscaler has been previously created, delete it
+		_, err := h.autoscalePolicyLister.AutoscalePolicies(service.Namespace).Get(resources.ServiceAutoscalePolicyName(service))
+		if errors.IsNotFound(err) {
+			// has not been created previously
+			h.logger.Debugf("Autoscaling disabled, hence no autoscaler created for Service %s", service.Name)
+			return nil
+		} else if err != nil {
+			return err
+		}
+		// created previously, delete it
+		var delPropPtr = v1.DeletePropagationBackground
+		err = h.meshClient.MeshV1alpha1().AutoscalePolicies(service.Namespace).Delete(resources.ServiceAutoscalePolicyName(service),
+			&v1.DeleteOptions{
+				PropagationPolicy: &delPropPtr,
+			})
+		if err != nil {
+			return err
+		}
+		h.logger.Debugf("Terminated Autoscaler for Service %s", service.Name)
+
 		return nil
 	}
 
@@ -236,4 +275,33 @@ func (h *serviceHandler) updateOwnerCell(service *v1alpha1.Service) {
 			service.Status.OwnerCell = "<none>"
 		}
 	}
+}
+
+func (h *serviceHandler) updateConfig(obj interface{}) {
+
+	configMap, ok := obj.(*corev1.ConfigMap)
+	if !ok {
+		return
+	}
+
+	if configMap.Name != mesh.SystemConfigMapName {
+		return
+	}
+
+	conf := config.Service{}
+
+	if enableAutoscaling, ok := configMap.Data["enable-autoscaling"]; ok {
+		conf.EnableAutoscaling = isAutoscalingEnabled(enableAutoscaling)
+	} else {
+		conf.EnableAutoscaling = false
+	}
+
+	h.serviceConfig = conf
+}
+
+func isAutoscalingEnabled(str string) bool {
+	if enabled, err := strconv.ParseBool(str); err == nil {
+		return enabled
+	}
+	return false
 }
