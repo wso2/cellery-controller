@@ -19,11 +19,15 @@
 package resources
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller/cell/config"
 )
 
 func TestCreateKeyPairSecret(t *testing.T) {
@@ -43,7 +47,17 @@ func TestCreateKeyPairSecret(t *testing.T) {
 		},
 	}
 
-	if CreateKeyPairSecret(cell) == nil {
-		t.Errorf("Secret for cell with spec: %v not created properly", cell.Spec)
+	sec := config.Secret{
+		PrivateKey: func() *rsa.PrivateKey {
+			key, _ := rsa.GenerateKey(rand.Reader, 2048)
+			return key
+		}(),
+		Certificate: func() *x509.Certificate {
+			return &x509.Certificate{}
+		}(),
+	}
+
+	if _, err := CreateKeyPairSecret(cell, sec); err != nil {
+		t.Errorf("Secret creation failed with error: %v", err)
 	}
 }
