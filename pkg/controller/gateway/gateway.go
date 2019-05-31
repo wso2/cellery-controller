@@ -24,6 +24,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -486,8 +487,20 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 	} else {
 		conf.SkipTlsVerify = "false"
 	}
+	if enableAutoscaling, ok := configMap.Data["enable-autoscaling"]; ok {
+		conf.EnableAutoscaling = isAutoscalingEnabled(enableAutoscaling)
+	} else {
+		conf.EnableAutoscaling = false
+	}
 
 	h.gatewayConfig = conf
+}
+
+func isAutoscalingEnabled(str string) bool {
+	if enabled, err := strconv.ParseBool(str); err == nil {
+		return enabled
+	}
+	return false
 }
 
 func (h *gatewayHandler) updateSecret(obj interface{}) {

@@ -161,6 +161,7 @@ func main() {
 		autoscalerInformer,
 		k8sServiceInformer,
 		serviceInformer,
+		configMapInformer,
 		logger,
 	)
 	autoscaleController := autoscale.NewController(
