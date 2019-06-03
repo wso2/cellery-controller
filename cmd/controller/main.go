@@ -140,6 +140,7 @@ func main() {
 		envoyFilterInformer,
 		configMapInformer,
 		gatewayInformer,
+		autoscalerInformer,
 		logger,
 	)
 	tokenServiceController := sts.NewController(

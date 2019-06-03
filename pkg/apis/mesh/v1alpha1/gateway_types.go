@@ -40,12 +40,13 @@ type GatewayTemplateSpec struct {
 }
 
 type GatewaySpec struct {
-	Type       GatewayType `json:"type,omitempty"`
-	Host       string      `json:"host,omitempty"`
-	Tls        TlsConfig   `json:"tls,omitempty"`
-	OidcConfig *OidcConfig `json:"oidc,omitempty"`
-	HTTPRoutes []HTTPRoute `json:"http,omitempty"`
-	TCPRoutes  []TCPRoute  `json:"tcp,omitempty"`
+	Type        GatewayType          `json:"type,omitempty"`
+	Host        string               `json:"host,omitempty"`
+	Tls         TlsConfig            `json:"tls,omitempty"`
+	OidcConfig  *OidcConfig          `json:"oidc,omitempty"`
+	HTTPRoutes  []HTTPRoute          `json:"http,omitempty"`
+	TCPRoutes   []TCPRoute           `json:"tcp,omitempty"`
+	Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
 
 type TlsConfig struct {

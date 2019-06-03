@@ -58,24 +58,27 @@ import (
 	extensionsv1beta1informers "k8s.io/client-go/informers/extensions/v1beta1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type gatewayHandler struct {
-	kubeClient           kubernetes.Interface
-	meshClient           meshclientset.Interface
-	deploymentLister     appsv1listers.DeploymentLister
-	k8sServiceLister     corev1listers.ServiceLister
-	clusterIngressLister extensionsv1beta1listers.IngressLister
-	secretLister         corev1listers.SecretLister
-	istioGatewayLister   istionetworklisters.GatewayLister
-	istioDRLister        istionetworklisters.DestinationRuleLister
-	istioVSLister        istionetworklisters.VirtualServiceLister
-	envoyFilterLister    istionetworklisters.EnvoyFilterLister
-	configMapLister      corev1listers.ConfigMapLister
-	gatewayLister        listers.GatewayLister
-	gatewayConfig        config.Gateway
-	gatewaySecret        config.Secret
-	logger               *zap.SugaredLogger
+	kubeClient            kubernetes.Interface
+	meshClient            meshclientset.Interface
+	deploymentLister      appsv1listers.DeploymentLister
+	k8sServiceLister      corev1listers.ServiceLister
+	clusterIngressLister  extensionsv1beta1listers.IngressLister
+	secretLister          corev1listers.SecretLister
+	istioGatewayLister    istionetworklisters.GatewayLister
+	istioDRLister         istionetworklisters.DestinationRuleLister
+	istioVSLister         istionetworklisters.VirtualServiceLister
+	envoyFilterLister     istionetworklisters.EnvoyFilterLister
+	configMapLister       corev1listers.ConfigMapLister
+	gatewayLister         listers.GatewayLister
+	gatewayConfig         config.Gateway
+	gatewaySecret         config.Secret
+	autoscalePolicyLister listers.AutoscalePolicyLister
+	logger                *zap.SugaredLogger
 }
 
 func NewController(
@@ -93,23 +96,25 @@ func NewController(
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	gatewayInformer meshinformers.GatewayInformer,
+	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 
 	h := &gatewayHandler{
-		kubeClient:           kubeClient,
-		meshClient:           meshClient,
-		deploymentLister:     deploymentInformer.Lister(),
-		k8sServiceLister:     k8sServiceInformer.Lister(),
-		clusterIngressLister: clusterIngressInformer.Lister(),
-		secretLister:         secretInformer.Lister(),
-		istioGatewayLister:   istioGatewayInformer.Lister(),
-		istioDRLister:        istioDRInformer.Lister(),
-		istioVSLister:        istioVSInformer.Lister(),
-		envoyFilterLister:    envoyFilterInformer.Lister(),
-		configMapLister:      configMapInformer.Lister(),
-		gatewayLister:        gatewayInformer.Lister(),
-		logger:               logger.Named("gateway-controller"),
+		kubeClient:            kubeClient,
+		meshClient:            meshClient,
+		deploymentLister:      deploymentInformer.Lister(),
+		k8sServiceLister:      k8sServiceInformer.Lister(),
+		clusterIngressLister:  clusterIngressInformer.Lister(),
+		secretLister:          secretInformer.Lister(),
+		istioGatewayLister:    istioGatewayInformer.Lister(),
+		istioDRLister:         istioDRInformer.Lister(),
+		istioVSLister:         istioVSInformer.Lister(),
+		envoyFilterLister:     envoyFilterInformer.Lister(),
+		configMapLister:       configMapInformer.Lister(),
+		gatewayLister:         gatewayInformer.Lister(),
+		autoscalePolicyLister: autoscalePolicyInformer.Lister(),
+		logger:                logger.Named("gateway-controller"),
 	}
 	c := controller.New(h, h.logger, "Gateway")
 
@@ -175,6 +180,10 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 	}
 
 	if err := h.handleDeployment(gateway); err != nil {
+		return err
+	}
+
+	if err := h.handleAutoscalePolicy(gateway); err != nil {
 		return err
 	}
 
@@ -266,6 +275,62 @@ func (h *gatewayHandler) handleDeployment(gateway *v1alpha1.Gateway) error {
 		gateway.Status.Status = "NotReady"
 	}
 
+	return nil
+}
+
+func (h *gatewayHandler) handleAutoscalePolicy(gateway *v1alpha1.Gateway) error {
+	// if autoscaling is disabled in cellery system wide configs, do nothing
+	if !h.gatewayConfig.EnableAutoscaling {
+		// if the Autoscaler has been previously created, delete it
+		_, err := h.autoscalePolicyLister.AutoscalePolicies(gateway.Namespace).Get(resources.GatewayAutoscalePolicyName(gateway))
+		if errors.IsNotFound(err) {
+			// has not been created previously
+			h.logger.Debugf("Autoscaling disabled, hence no autoscaler created for Gateway %s", gateway.Name)
+			return nil
+		} else if err != nil {
+			return err
+		}
+		// created previously, delete it
+		var delPropPtr = v1.DeletePropagationBackground
+		err = h.meshClient.MeshV1alpha1().AutoscalePolicies(gateway.Namespace).Delete(resources.GatewayAutoscalePolicyName(gateway),
+			&v1.DeleteOptions{
+				PropagationPolicy: &delPropPtr,
+			})
+		if err != nil {
+			return err
+		}
+		h.logger.Debugf("Terminated Autoscaler for Gateway %s", gateway.Name)
+
+		return nil
+	}
+
+	autoscalePolicy, err := h.autoscalePolicyLister.AutoscalePolicies(gateway.Namespace).Get(resources.GatewayAutoscalePolicyName(gateway))
+	if errors.IsNotFound(err) {
+		if gateway.Spec.Autoscaling != nil {
+			autoscalePolicy = resources.CreateAutoscalePolicy(gateway)
+		} else {
+			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(gateway)
+		}
+		autoscalePolicy, err = h.meshClient.MeshV1alpha1().AutoscalePolicies(gateway.Namespace).Create(autoscalePolicy)
+		if err != nil {
+			h.logger.Errorf("Failed to create Autoscale policy %v", err)
+			return err
+		}
+		h.logger.Infow("Autoscale policy created", resources.GatewayAutoscalePolicyName(gateway), autoscalePolicy)
+		autoscalePolicy.Status = "Ready"
+		h.updateAutoscalePolicyStatus(autoscalePolicy)
+
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *gatewayHandler) updateAutoscalePolicyStatus(policy *v1alpha1.AutoscalePolicy) error {
+	_, err := h.meshClient.MeshV1alpha1().AutoscalePolicies(policy.Namespace).Update(policy)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
