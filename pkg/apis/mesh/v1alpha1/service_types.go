@@ -47,7 +47,7 @@ type ServiceSpec struct {
 	ServiceAccountName string               `json:"serviceAccountName"`
 	Protocol           string               `json:"protocol"`
 	Container          corev1.Container     `json:"container"`
-	Autoscaling        *AutoscalePolicySpec `json:"autoscaling"`
+	Autoscaling        *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
 
 type ServiceStatus struct {
