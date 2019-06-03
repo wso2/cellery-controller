@@ -23,8 +23,6 @@ import (
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
@@ -37,7 +35,7 @@ func CreateAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayAutoscalePolicyName(gateway),
 			Namespace: gateway.Namespace,
-			Labels:    createLabels(gateway),
+			Labels:    createGatewayLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
@@ -70,7 +68,7 @@ func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.Autoscale
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayAutoscalePolicyName(gateway),
 			Namespace: gateway.Namespace,
-			Labels:    createLabels(gateway),
+			Labels:    createGatewayLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
@@ -93,17 +91,4 @@ func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.Autoscale
 
 func GatewayAutoscalePolicyName(gateway *v1alpha1.Gateway) string {
 	return gateway.Name + "-autoscalepolicy"
-}
-
-func createLabels(gateway *v1alpha1.Gateway) map[string]string {
-	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+2)
-
-	labels[mesh.CellGatewayLabelKey] = gateway.Name
-	labels[appLabelKey] = gateway.Name
-	// order matters
-	// todo: update the code if override is not possible
-	for k, v := range gateway.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
 }
