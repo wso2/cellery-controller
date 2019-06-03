@@ -63,7 +63,7 @@ func TestCreateAutoscalePolicy(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayAutoscalePolicyName(gw),
 			Namespace: gw.Namespace,
-			Labels:    createLabels(gw),
+			Labels:    createGatewayLabels(gw),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gw),
 			},
@@ -106,7 +106,7 @@ func TestCreateDefaultAutoscalePolicy(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayAutoscalePolicyName(gw),
 			Namespace: gw.Namespace,
-			Labels:    createLabels(gw),
+			Labels:    createGatewayLabels(gw),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gw),
 			},
