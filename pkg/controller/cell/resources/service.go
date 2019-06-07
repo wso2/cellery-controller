@@ -36,6 +36,9 @@ func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplate
 	for _, serviceTemplate := range cell.Spec.ServiceTemplates {
 		envKey := strings.Replace(strings.ToUpper(serviceTemplate.Name), "-", "_", -1)
 		envValue := ServiceName(cell, serviceTemplate) + "-service"
+		if serviceSpec.IsZeroScaled() {
+			envValue += "-rev"
+		}
 		serviceEnvVars = append(serviceEnvVars,
 			corev1.EnvVar{
 				Name:  envKey,

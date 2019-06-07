@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2019 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -30,6 +30,7 @@ import (
 	internalinterfaces "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/internalinterfaces"
 	mesh "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh"
 	networking "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking"
+	serving "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/serving"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -179,6 +180,7 @@ type SharedInformerFactory interface {
 	Authentication() authentication.Interface
 	Mesh() mesh.Interface
 	Networking() networking.Interface
+	Serving() serving.Interface
 }
 
 func (f *sharedInformerFactory) Authentication() authentication.Interface {
@@ -191,4 +193,8 @@ func (f *sharedInformerFactory) Mesh() mesh.Interface {
 
 func (f *sharedInformerFactory) Networking() networking.Interface {
 	return networking.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Serving() serving.Interface {
+	return serving.New(f, f.namespace, f.tweakListOptions)
 }

@@ -33,7 +33,20 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 		gatewaySpec.Type = v1alpha1.GatewayTypeEnvoy
 	}
 
+	// Find the zero scale services to inform the gateway
+	zeroScale := make(map[string]bool)
+	for _, v := range cell.Spec.ServiceTemplates {
+		if v.Spec.IsZeroScaled() {
+			zeroScale[v.Name] = true
+		} else {
+			zeroScale[v.Name] = false
+		}
+	}
+
 	for i, _ := range gatewaySpec.HTTPRoutes {
+		if zeroScale[gatewaySpec.HTTPRoutes[i].Backend] {
+			gatewaySpec.HTTPRoutes[i].ZeroScale = true
+		}
 		if gatewaySpec.Type == v1alpha1.GatewayTypeMicroGateway {
 			gatewaySpec.HTTPRoutes[i].Backend = "http://" + cell.Name + "--" + gatewaySpec.HTTPRoutes[i].Backend + "-service"
 		} else {

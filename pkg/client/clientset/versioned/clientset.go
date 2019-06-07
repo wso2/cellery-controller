@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2019 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -24,6 +24,8 @@ import (
 	authenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/authentication/v1alpha1"
 	meshv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/mesh/v1alpha1"
 	networkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
+	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1alpha1"
+	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -40,6 +42,10 @@ type Interface interface {
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Networking() networkingv1alpha3.NetworkingV1alpha3Interface
+	ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface
+	ServingV1beta1() servingv1beta1.ServingV1beta1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Serving() servingv1beta1.ServingV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -49,6 +55,8 @@ type Clientset struct {
 	authenticationV1alpha1 *authenticationv1alpha1.AuthenticationV1alpha1Client
 	meshV1alpha1           *meshv1alpha1.MeshV1alpha1Client
 	networkingV1alpha3     *networkingv1alpha3.NetworkingV1alpha3Client
+	servingV1alpha1        *servingv1alpha1.ServingV1alpha1Client
+	servingV1beta1         *servingv1beta1.ServingV1beta1Client
 }
 
 // AuthenticationV1alpha1 retrieves the AuthenticationV1alpha1Client
@@ -84,6 +92,22 @@ func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface 
 	return c.networkingV1alpha3
 }
 
+// ServingV1alpha1 retrieves the ServingV1alpha1Client
+func (c *Clientset) ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface {
+	return c.servingV1alpha1
+}
+
+// ServingV1beta1 retrieves the ServingV1beta1Client
+func (c *Clientset) ServingV1beta1() servingv1beta1.ServingV1beta1Interface {
+	return c.servingV1beta1
+}
+
+// Deprecated: Serving retrieves the default version of ServingClient.
+// Please explicitly pick a version.
+func (c *Clientset) Serving() servingv1beta1.ServingV1beta1Interface {
+	return c.servingV1beta1
+}
+
 // Discovery retrieves the DiscoveryClient
 func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 	if c == nil {
@@ -112,6 +136,14 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.servingV1alpha1, err = servingv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.servingV1beta1, err = servingv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -127,6 +159,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	cs.authenticationV1alpha1 = authenticationv1alpha1.NewForConfigOrDie(c)
 	cs.meshV1alpha1 = meshv1alpha1.NewForConfigOrDie(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.NewForConfigOrDie(c)
+	cs.servingV1alpha1 = servingv1alpha1.NewForConfigOrDie(c)
+	cs.servingV1beta1 = servingv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -138,6 +172,8 @@ func New(c rest.Interface) *Clientset {
 	cs.authenticationV1alpha1 = authenticationv1alpha1.New(c)
 	cs.meshV1alpha1 = meshv1alpha1.New(c)
 	cs.networkingV1alpha3 = networkingv1alpha3.New(c)
+	cs.servingV1alpha1 = servingv1alpha1.New(c)
+	cs.servingV1beta1 = servingv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

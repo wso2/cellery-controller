@@ -109,6 +109,13 @@ func TestCreateNetworkPolicy(t *testing.T) {
 										},
 									},
 								},
+								{
+									NamespaceSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											"name": "knative-serving",
+										},
+									},
+								},
 							},
 						},
 					},
@@ -244,6 +251,13 @@ func TestCreateNetworkPolicy(t *testing.T) {
 												Operator: metav1.LabelSelectorOpIn,
 												Values:   []string{"foo--bar-service", "foo--baz-service"},
 											},
+										},
+									},
+								},
+								{
+									NamespaceSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											"name": "knative-serving",
 										},
 									},
 								},

@@ -114,6 +114,18 @@ rules:
   - patch
   - watch
 - apiGroups:
+  - serving.knative.dev
+  resources:
+  - configurations
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
   - autoscaling
   resources:
   - horizontalpodautoscalers

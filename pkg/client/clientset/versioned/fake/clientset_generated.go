@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2019 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -28,6 +28,10 @@ import (
 	fakemeshv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/mesh/v1alpha1/fake"
 	networkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3"
 	fakenetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/networking/v1alpha3/fake"
+	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1alpha1"
+	fakeservingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1alpha1/fake"
+	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1beta1"
+	fakeservingv1beta1 "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -105,4 +109,19 @@ func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3In
 // Networking retrieves the NetworkingV1alpha3Client
 func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
 	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
+}
+
+// ServingV1alpha1 retrieves the ServingV1alpha1Client
+func (c *Clientset) ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface {
+	return &fakeservingv1alpha1.FakeServingV1alpha1{Fake: &c.Fake}
+}
+
+// ServingV1beta1 retrieves the ServingV1beta1Client
+func (c *Clientset) ServingV1beta1() servingv1beta1.ServingV1beta1Interface {
+	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
+}
+
+// Serving retrieves the ServingV1beta1Client
+func (c *Clientset) Serving() servingv1beta1.ServingV1beta1Interface {
+	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
 }

@@ -56,6 +56,17 @@ type ServiceStatus struct {
 	HostName          string `json:"hostname"`
 }
 
+func (s *ServiceSpec) IsZeroScaled() bool {
+	if s.Autoscaling == nil {
+		return false
+	}
+
+	if s.Autoscaling.Policy.MinReplicas != nil && *(s.Autoscaling.Policy.MinReplicas) == 0 {
+		return true
+	}
+	return false
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ServiceList struct {

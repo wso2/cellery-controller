@@ -106,6 +106,9 @@ type HTTPRoute struct {
 	// Rewrite HTTP URIs and Authority headers. Rewrite cannot be used with
 	// Redirect primitive. Rewrite will be performed before forwarding.
 	Rewrite *HTTPRewrite `json:"rewrite,omitempty"`
+	// Additional HTTP headers to add before forwarding a request to the
+	// destination service.
+	AppendHeaders map[string]string `json:"appendHeaders,omitempty"`
 }
 
 type HTTPMatchRequest struct {
