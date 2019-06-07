@@ -106,6 +106,7 @@ func main() {
 	istioDRInformer := meshInformerFactory.Networking().V1alpha3().DestinationRules()
 	istioVSInformer := meshInformerFactory.Networking().V1alpha3().VirtualServices()
 	autoscalerInformer := meshInformerFactory.Mesh().V1alpha1().AutoscalePolicies()
+	servingConfigurationInformer := meshInformerFactory.Serving().V1alpha1().Configurations()
 
 	// Create Mesh system informers
 	systemConfigMapInformer := meshSystemInformerFactory.Core().V1().ConfigMaps()
@@ -160,6 +161,8 @@ func main() {
 		deploymentInformer,
 		hpaInformer,
 		autoscalerInformer,
+		servingConfigurationInformer,
+		istioVSInformer,
 		k8sServiceInformer,
 		serviceInformer,
 		configMapInformer,
@@ -198,6 +201,7 @@ func main() {
 		istioGatewayInformer.Informer().HasSynced,
 		istioDRInformer.Informer().HasSynced,
 		istioVSInformer.Informer().HasSynced,
+		servingConfigurationInformer.Informer().HasSynced,
 	); !ok {
 		logger.Fatal("failed to wait for caches to sync")
 	}

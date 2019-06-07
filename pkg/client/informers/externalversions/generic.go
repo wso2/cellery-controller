@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2019 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -25,6 +25,8 @@ import (
 
 	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
 	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
+	v1beta1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
 	meshv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -81,6 +83,26 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().Gateways().Informer()}, nil
 	case v1alpha3.SchemeGroupVersion.WithResource("virtualservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().VirtualServices().Informer()}, nil
+
+		// Group=serving.knative.dev, Version=v1alpha1
+	case servingv1alpha1.SchemeGroupVersion.WithResource("configurations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1alpha1().Configurations().Informer()}, nil
+	case servingv1alpha1.SchemeGroupVersion.WithResource("revisions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1alpha1().Revisions().Informer()}, nil
+	case servingv1alpha1.SchemeGroupVersion.WithResource("routes"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1alpha1().Routes().Informer()}, nil
+	case servingv1alpha1.SchemeGroupVersion.WithResource("services"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1alpha1().Services().Informer()}, nil
+
+		// Group=serving.knative.dev, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("configurations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1beta1().Configurations().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("revisions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1beta1().Revisions().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("routes"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1beta1().Routes().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("services"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Serving().V1beta1().Services().Informer()}, nil
 
 	}
 

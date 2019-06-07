@@ -29,7 +29,7 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   github.com/cellery-io/mesh-controller/pkg/client github.com/cellery-io/mesh-controller/pkg/apis \
-  "mesh:v1alpha1 istio/networking:v1alpha3 istio/authentication:v1alpha1" \
+  "mesh:v1alpha1 istio/networking:v1alpha3 istio/authentication:v1alpha1 knative/serving:v1alpha1 knative/serving:v1beta1" \
   --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.go.txt
 #  --output-base "$(dirname ${BASH_SOURCE})/../../.." \
 

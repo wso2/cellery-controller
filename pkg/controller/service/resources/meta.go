@@ -49,3 +49,15 @@ func ServiceDeploymentName(service *v1alpha1.Service) string {
 func ServiceK8sServiceName(service *v1alpha1.Service) string {
 	return service.Name + "-service"
 }
+
+func ServiceServingConfigurationName(service *v1alpha1.Service) string {
+	return service.Name + "-service"
+}
+
+func ServiceServingVirtualServiceName(service *v1alpha1.Service) string {
+	return service.Name + "-mesh"
+}
+
+func ServiceServingRevisionName(service *v1alpha1.Service) string {
+	return ServiceServingConfigurationName(service) + "-rev"
+}

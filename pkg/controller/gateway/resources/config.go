@@ -46,10 +46,21 @@ func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayConfig config.Gate
 	}
 
 	api := &apiConfig{
-		Cell:       cellName,
-		Version:    "1.0.0",
-		Hostname:   GatewayFullK8sServiceName(gateway),
-		HTTPRoutes: gateway.Spec.HTTPRoutes,
+		Cell:     cellName,
+		Version:  "1.0.0",
+		Hostname: GatewayFullK8sServiceName(gateway),
+		HTTPRoutes: func() []v1alpha1.HTTPRoute {
+			var routes []v1alpha1.HTTPRoute
+			for _, v := range gateway.Spec.HTTPRoutes {
+				if v.ZeroScale {
+					v.Backend = v.Backend + "-rev"
+					// temp fix for gateway init crashloop
+					v.ZeroScale = false
+				}
+				routes = append(routes, v)
+			}
+			return routes
+		}(),
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
 	if err != nil {

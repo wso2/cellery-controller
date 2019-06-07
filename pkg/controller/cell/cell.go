@@ -261,7 +261,7 @@ func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 		} else if err != nil {
 			return err
 		}
-		if service.Status.AvailableReplicas > 0 {
+		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() {
 			cell.Status.ServiceCount++
 		}
 	}

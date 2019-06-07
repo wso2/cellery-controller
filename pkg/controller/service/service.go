@@ -24,51 +24,49 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/controller/service/config"
-
 	"go.uber.org/zap"
-
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
+	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
+	appsv1listers "k8s.io/client-go/listers/apps/v1"
+	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/service/resources"
-
-	//corev1informers "k8s.io/client-go/informers/core/v1"
-	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	corev1listers "k8s.io/client-go/listers/core/v1"
-
-	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
-	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
-
-	corev1 "k8s.io/api/core/v1"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
+	knativeservinginformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/serving/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
+	knativeservinglisters "github.com/cellery-io/mesh-controller/pkg/client/listers/serving/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
+	"github.com/cellery-io/mesh-controller/pkg/controller/service/config"
+	"github.com/cellery-io/mesh-controller/pkg/controller/service/resources"
 )
 
 type serviceHandler struct {
-	kubeClient            kubernetes.Interface
-	meshClient            meshclientset.Interface
-	deploymentLister      appsv1listers.DeploymentLister
-	hpaLister             autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
-	autoscalePolicyLister listers.AutoscalePolicyLister
-	k8sServiceLister      corev1listers.ServiceLister
-	serviceLister         listers.ServiceLister
-	configMapLister       corev1listers.ConfigMapLister
-	serviceConfig         config.Service
-	logger                *zap.SugaredLogger
+	kubeClient                 kubernetes.Interface
+	meshClient                 meshclientset.Interface
+	deploymentLister           appsv1listers.DeploymentLister
+	hpaLister                  autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
+	autoscalePolicyLister      listers.AutoscalePolicyLister
+	servingConfigurationLister knativeservinglisters.ConfigurationLister
+	istioVSLister              istionetworklisters.VirtualServiceLister
+	k8sServiceLister           corev1listers.ServiceLister
+	serviceLister              listers.ServiceLister
+	configMapLister            corev1listers.ConfigMapLister
+	serviceConfig              config.Service
+	logger                     *zap.SugaredLogger
 }
 
 func NewController(
@@ -77,21 +75,25 @@ func NewController(
 	deploymentInformer appsv1informers.DeploymentInformer,
 	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
 	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
+	servingConfigurationInformer knativeservinginformers.ConfigurationInformer,
+	istioVSInformer istioinformers.VirtualServiceInformer,
 	k8sServiceInformer corev1informers.ServiceInformer,
 	serviceInformer meshinformers.ServiceInformer,
 	configMapInformer corev1informers.ConfigMapInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &serviceHandler{
-		kubeClient:            kubeClient,
-		meshClient:            meshClient,
-		deploymentLister:      deploymentInformer.Lister(),
-		hpaLister:             hpaInformer.Lister(),
-		autoscalePolicyLister: autoscalePolicyInformer.Lister(),
-		k8sServiceLister:      k8sServiceInformer.Lister(),
-		serviceLister:         serviceInformer.Lister(),
-		configMapLister:       configMapInformer.Lister(),
-		logger:                logger.Named("service-controller"),
+		kubeClient:                 kubeClient,
+		meshClient:                 meshClient,
+		deploymentLister:           deploymentInformer.Lister(),
+		hpaLister:                  hpaInformer.Lister(),
+		autoscalePolicyLister:      autoscalePolicyInformer.Lister(),
+		servingConfigurationLister: servingConfigurationInformer.Lister(),
+		istioVSLister:              istioVSInformer.Lister(),
+		k8sServiceLister:           k8sServiceInformer.Lister(),
+		serviceLister:              serviceInformer.Lister(),
+		configMapLister:            configMapInformer.Lister(),
+		logger:                     logger.Named("service-controller"),
 	}
 	c := controller.New(h, h.logger, "Service")
 
@@ -146,16 +148,25 @@ func (h *serviceHandler) Handle(key string) error {
 
 func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 
-	if err := h.handleDeployment(service); err != nil {
-		return err
-	}
+	if service.Spec.IsZeroScaled() {
+		if err := h.handleZeroScaleDeployment(service); err != nil {
+			return err
+		}
+		if err := h.handleZeroScaleVirtualService(service); err != nil {
+			return err
+		}
+	} else {
+		if err := h.handleDeployment(service); err != nil {
+			return err
+		}
 
-	if err := h.handleAutoscalePolicy(service); err != nil {
-		return err
-	}
+		if err := h.handleAutoscalePolicy(service); err != nil {
+			return err
+		}
 
-	if err := h.handleK8sService(service); err != nil {
-		return err
+		if err := h.handleK8sService(service); err != nil {
+			return err
+		}
 	}
 
 	h.updateOwnerCell(service)
@@ -228,6 +239,38 @@ func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error 
 		autoscalePolicy.Status = "Ready"
 		h.updateAutoscalePolicyStatus(autoscalePolicy)
 
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *serviceHandler) handleZeroScaleDeployment(service *v1alpha1.Service) error {
+	zeroScaleDeployment, err := h.servingConfigurationLister.Configurations(service.Namespace).Get(resources.ServiceServingConfigurationName(service))
+	if errors.IsNotFound(err) {
+		zeroScaleDeployment, err = h.meshClient.ServingV1alpha1().Configurations(service.Namespace).Create(resources.CreateZeroScaleService(service))
+		if err != nil {
+			h.logger.Errorf("Failed to create Zero Scale Service Deployment %v", err)
+			return err
+		}
+		h.logger.Debugw("Zero Scale Deployment created", resources.ServiceServingConfigurationName(service), zeroScaleDeployment)
+	} else if err != nil {
+		return err
+	}
+
+	service.Status.HostName = zeroScaleDeployment.Status.LatestReadyRevisionName
+	return nil
+}
+
+func (h *serviceHandler) handleZeroScaleVirtualService(service *v1alpha1.Service) error {
+	zeroScaleVirtualService, err := h.istioVSLister.VirtualServices(service.Namespace).Get(resources.ServiceServingVirtualServiceName(service))
+	if errors.IsNotFound(err) {
+		zeroScaleVirtualService, err = h.meshClient.NetworkingV1alpha3().VirtualServices(service.Namespace).Create(resources.CreateZeroScaleVirtualService(service))
+		if err != nil {
+			h.logger.Errorf("Failed to create Zero Scale VirtualService %v", err)
+			return err
+		}
+		h.logger.Debugw("Zero Scale VirtualService created", resources.ServiceServingVirtualServiceName(service), zeroScaleVirtualService)
 	} else if err != nil {
 		return err
 	}

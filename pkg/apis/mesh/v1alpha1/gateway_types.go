@@ -75,6 +75,7 @@ type HTTPRoute struct {
 	Backend      string          `json:"backend"`
 	Global       bool            `json:"global"`
 	Authenticate bool            `json:"authenticate"`
+	ZeroScale    bool            `json:"zeroScale,omitempty"`
 }
 
 type APIDefinition struct {

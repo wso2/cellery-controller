@@ -48,6 +48,26 @@ func TestCreateIstioVirtualService(t *testing.T) {
 						},
 					},
 				},
+				{
+					Authenticate: true,
+					Global:       true,
+					ZeroScale:    true,
+					Backend:      "myzeroservice",
+					Context:      "zero",
+					Definitions: []v1alpha1.APIDefinition{
+						{
+							Path:   "/",
+							Method: "GET",
+						},
+					},
+				},
+			},
+			TCPRoutes: []v1alpha1.TCPRoute{
+				{
+					Port:        32400,
+					BackendPort: 8080,
+					BackendHost: "my-service",
+				},
 			},
 		},
 	}
@@ -148,28 +168,53 @@ func getHttpRoutes(gateway *v1alpha1.Gateway) []*v1alpha3.HTTPRoute {
 
 	var httpRoutes []*v1alpha3.HTTPRoute
 
-	for _, httpRoute := range gateway.Spec.HTTPRoutes {
-		httpRoutes = append(httpRoutes, &v1alpha3.HTTPRoute{
-			Match: []*v1alpha3.HTTPMatchRequest{
-				{
-					Uri: &v1alpha3.StringMatch{
-						//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
-						Prefix: httpRoute.Context,
-					},
+	httpRoutes = append(httpRoutes, &v1alpha3.HTTPRoute{
+		Match: []*v1alpha3.HTTPMatchRequest{
+			{
+				Uri: &v1alpha3.StringMatch{
+					//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
+					Prefix: gateway.Spec.HTTPRoutes[0].Context,
 				},
 			},
-			Route: []*v1alpha3.DestinationWeight{
-				{
-					Destination: &v1alpha3.Destination{
-						Host: httpRoute.Backend,
-					},
+		},
+		Route: []*v1alpha3.DestinationWeight{
+			{
+				Destination: &v1alpha3.Destination{
+					Host: gateway.Spec.HTTPRoutes[0].Backend,
 				},
 			},
-			Rewrite: &v1alpha3.HTTPRewrite{
-				Uri: "/",
+		},
+		Rewrite: &v1alpha3.HTTPRewrite{
+			Uri: "/",
+		},
+		AppendHeaders: map[string]string{},
+	})
+
+	httpRoutes = append(httpRoutes, &v1alpha3.HTTPRoute{
+		Match: []*v1alpha3.HTTPMatchRequest{
+			{
+				Uri: &v1alpha3.StringMatch{
+					//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
+					Prefix: gateway.Spec.HTTPRoutes[1].Context,
+				},
 			},
-		})
-	}
+		},
+		Route: []*v1alpha3.DestinationWeight{
+			{
+				Destination: &v1alpha3.Destination{
+					Host: gateway.Spec.HTTPRoutes[1].Backend + "-rev",
+				},
+			},
+		},
+		Rewrite: &v1alpha3.HTTPRewrite{
+			Uri: "/",
+		},
+		AppendHeaders: map[string]string{
+			"knative-serving-namespace": "default",
+			"knative-serving-revision":  gateway.Spec.HTTPRoutes[1].Backend + "-rev",
+		},
+	})
+
 	return httpRoutes
 }
 
