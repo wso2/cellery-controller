@@ -21,6 +21,7 @@ package gateway
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"reflect"
@@ -60,6 +61,8 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
 )
 
 type gatewayHandler struct {
@@ -311,6 +314,12 @@ func (h *gatewayHandler) handleAutoscalePolicy(gateway *v1alpha1.Gateway) error 
 		} else {
 			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(gateway)
 		}
+		lastAppliedConfig, err := json.Marshal(autoscale.BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy))
+		if err != nil {
+			h.logger.Errorf("Failed to create Autoscale policy %v", err)
+			return err
+		}
+		autoscale.Annotate(autoscalePolicy, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
 		autoscalePolicy, err = h.meshClient.MeshV1alpha1().AutoscalePolicies(gateway.Namespace).Create(autoscalePolicy)
 		if err != nil {
 			h.logger.Errorf("Failed to create Autoscale policy %v", err)

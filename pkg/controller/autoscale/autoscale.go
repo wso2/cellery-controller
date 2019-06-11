@@ -31,6 +31,8 @@ import (
 	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 	"k8s.io/client-go/tools/cache"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
@@ -128,4 +130,27 @@ func isEqual(oldHpa *autoscalingV2Beta1.HorizontalPodAutoscaler, newHpa *autosca
 	return reflect.DeepEqual(oldHpa.Spec.MinReplicas, newHpa.Spec.MinReplicas) &&
 		reflect.DeepEqual(oldHpa.Spec.MaxReplicas, newHpa.Spec.MaxReplicas) &&
 		reflect.DeepEqual(oldHpa.Spec.Metrics, newHpa.Spec.Metrics)
+}
+
+func Annotate(autoscalePolicy *v1alpha1.AutoscalePolicy, name string, value string) {
+	annotations := make(map[string]string, len(autoscalePolicy.ObjectMeta.Annotations)+1)
+	annotations[name] = value
+	for k, v := range autoscalePolicy.ObjectMeta.Annotations {
+		annotations[k] = v
+	}
+	autoscalePolicy.Annotations = annotations
+}
+
+func BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy *v1alpha1.AutoscalePolicy) *v1alpha1.AutoscalePolicy {
+	return &v1alpha1.AutoscalePolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AutoscalePolicy",
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      autoscalePolicy.Name,
+			Namespace: autoscalePolicy.Namespace,
+		},
+		Spec: autoscalePolicy.Spec,
+	}
 }
