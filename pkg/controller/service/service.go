@@ -19,6 +19,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -54,6 +55,7 @@ import (
 
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
 )
 
 type serviceHandler struct {
@@ -211,6 +213,12 @@ func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error 
 		} else {
 			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(service)
 		}
+		lastAppliedConfig, err := json.Marshal(autoscale.BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy))
+		if err != nil {
+			h.logger.Errorf("Failed to create Autoscale policy %v", err)
+			return err
+		}
+		autoscale.Annotate(autoscalePolicy, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
 		autoscalePolicy, err = h.meshClient.MeshV1alpha1().AutoscalePolicies(service.Namespace).Create(autoscalePolicy)
 		if err != nil {
 			h.logger.Errorf("Failed to create Autoscale policy %v", err)
