@@ -138,7 +138,7 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 						},
 						{
 							Name:  "jwks-server",
-							Image: "wso2cellery/jwks-server",
+							Image: tokenServiceConfig.JwksImage,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "jwksPort",

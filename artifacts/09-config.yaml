@@ -90,6 +90,7 @@ data:
       default allow = true
   cell-sts-image: wso2cellery/cell-sts
   cell-sts-opa-image: openpolicyagent/opa:0.10.3
+  cell-sts-jwks-image: wso2cellery/jwks-server
 kind: ConfigMap
 metadata:
   name: cellery-config
