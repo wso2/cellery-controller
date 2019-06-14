@@ -273,6 +273,12 @@ func (h *tokenServiceHandler) updateConfig(obj interface{}) {
 		h.logger.Errorf("Cell sts OPA image missing.")
 	}
 
+	if jwksImage, ok := configMap.Data["cell-sts-jwks-image"]; ok {
+		conf.JwksImage = jwksImage
+	} else {
+		h.logger.Errorf("Cell sts jwks image missing.")
+	}
+
 	if opaPolicy, ok := configMap.Data["opa-default-policy"]; ok {
 		conf.Policy = opaPolicy
 	} else {

@@ -58,7 +58,8 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 				},
 			},
 			config: config.TokenService{
-				Image: "vick/cell-sts",
+				Image:     "vick/cell-sts",
+				JwksImage: "wso2cellery/jwks-server",
 			},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
