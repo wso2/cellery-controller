@@ -19,6 +19,8 @@
 package resources
 
 import (
+	"strconv"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,11 +128,37 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 								"--watch",
 								"/policies",
 							},
-
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      policyVolumeName,
 									MountPath: pocliyConfigMountPath,
+									ReadOnly:  true,
+								},
+							},
+						},
+						{
+							Name:  "jwks-server",
+							Image: "wso2cellery/jwks-server",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "jwksPort",
+									Value: strconv.Itoa(tokenServiceContainerJWKSPort),
+								},
+							},
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: tokenServiceContainerJWKSPort,
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      keyPairVolumeName,
+									MountPath: keyPairMountPath,
+									ReadOnly:  true,
+								},
+								{
+									Name:      caCertsVolumeName,
+									MountPath: caCertsMountPath,
 									ReadOnly:  true,
 								},
 							},

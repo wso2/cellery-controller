@@ -16,7 +16,7 @@ spec:
         - path: /
           method: GET
         backend: hr
-        global: true
+        global: false
         authenticate: true
   servicesTemplates:
   - metadata:
@@ -39,3 +39,6 @@ spec:
       container:
         image: docker.io/mirage20/k8s-debug-tools
       servicePort: 80
+  stsTemplate:
+    spec:
+      interceptMode: None
