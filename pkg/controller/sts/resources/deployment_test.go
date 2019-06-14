@@ -177,6 +177,33 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 										},
 									},
 								},
+								{
+									Name:  "jwks-server",
+									Image: "wso2cellery/jwks-server",
+									Env: []corev1.EnvVar{
+										{
+											Name:  "jwksPort",
+											Value: "8090",
+										},
+									},
+									Ports: []corev1.ContainerPort{
+										{
+											ContainerPort: 8090,
+										},
+									},
+									VolumeMounts: []corev1.VolumeMount{
+										{
+											Name:      keyPairVolumeName,
+											MountPath: keyPairMountPath,
+											ReadOnly:  true,
+										},
+										{
+											Name:      caCertsVolumeName,
+											MountPath: caCertsMountPath,
+											ReadOnly:  true,
+										},
+									},
+								},
 							},
 							Volumes: []corev1.Volume{
 								{

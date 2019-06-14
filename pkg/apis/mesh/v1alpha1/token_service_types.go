@@ -62,6 +62,8 @@ const (
 	InterceptModeOutbound InterceptMode = "Outbound"
 	// Intercept both incoming and outgoing traffic
 	InterceptModeAny InterceptMode = "Any"
+	// Do not intercept any traffic. This will disable the STS
+	InterceptModeNone InterceptMode = "None"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

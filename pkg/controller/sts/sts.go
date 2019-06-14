@@ -134,6 +134,9 @@ func (h *tokenServiceHandler) Handle(key string) error {
 
 func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error {
 
+	if tokenService.Spec.InterceptMode == v1alpha1.InterceptModeNone {
+		return nil
+	}
 	if err := h.handleConfigMap(tokenService); err != nil {
 		return err
 	}
