@@ -24,11 +24,12 @@ import (
 	"reflect"
 	"strconv"
 
+	v1 "k8s.io/api/apps/v1"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
@@ -185,10 +186,30 @@ func (h *serviceHandler) handleDeployment(service *v1alpha1.Service) error {
 	} else if err != nil {
 		return err
 	}
+	if deployment != nil {
+		// deployment already exists, update if there is a change.
+		newDeployment := resources.UpdateContainersOfServiceDeployment(deployment, service)
+		// set the previous deployment's `ResourceVersion` to the newDeployment.
+		// Else the issue `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update` will occur.
+		newDeployment.ResourceVersion = deployment.ResourceVersion
+		if !isEqual(deployment, newDeployment) {
+			deployment, err = h.kubeClient.AppsV1().Deployments(service.Namespace).Update(newDeployment)
+			if err != nil {
+				h.logger.Errorf("Failed to update Service Deployment %v", err)
+				return err
+			}
+			h.logger.Debugw("Deployment updated", resources.ServiceDeploymentName(service), deployment)
+		}
+	}
 
 	service.Status.AvailableReplicas = deployment.Status.AvailableReplicas
 
 	return nil
+}
+
+func isEqual(oldDeployment *v1.Deployment, newDeployment *v1.Deployment) bool {
+	// only the container specs of the two deployments are considered for any differences
+	return reflect.DeepEqual(oldDeployment.Spec.Template.Spec.Containers, newDeployment.Spec.Template.Spec.Containers)
 }
 
 func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error {
@@ -204,9 +225,9 @@ func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error 
 			return err
 		}
 		// created previously, delete it
-		var delPropPtr = v1.DeletePropagationBackground
+		var delPropPtr = metav1.DeletePropagationBackground
 		err = h.meshClient.MeshV1alpha1().AutoscalePolicies(service.Namespace).Delete(resources.ServiceAutoscalePolicyName(service),
-			&v1.DeleteOptions{
+			&metav1.DeleteOptions{
 				PropagationPolicy: &delPropPtr,
 			})
 		if err != nil {
