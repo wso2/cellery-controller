@@ -261,11 +261,31 @@ func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 		} else if err != nil {
 			return err
 		}
+		if service != nil {
+			// service exists. if the new obj is not equal to old one, perform an update.
+			newService := resources.CreateService(cell, serviceSpec)
+			// set the previous service's `ResourceVersion` to the newService
+			// Else the issue `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update` will occur.
+			newService.ResourceVersion = service.ResourceVersion
+			if !isEqual(service, newService) {
+				service, err = h.meshClient.MeshV1alpha1().Services(cell.Namespace).Update(newService)
+				if err != nil {
+					h.logger.Errorf("Failed to update Service: %s : %v", service.Name, err)
+					return err
+				}
+				h.logger.Debugw("Service updated", resources.ServiceName(cell, serviceSpec), service)
+			}
+		}
 		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() {
 			cell.Status.ServiceCount++
 		}
 	}
 	return nil
+}
+
+func isEqual(oldService *v1alpha1.Service, newService *v1alpha1.Service) bool {
+	// we only consider equality of the spec
+	return reflect.DeepEqual(oldService.Spec, newService.Spec)
 }
 
 func (h *cellHandler) updateStatus(cell *v1alpha1.Cell) (*v1alpha1.Cell, error) {
