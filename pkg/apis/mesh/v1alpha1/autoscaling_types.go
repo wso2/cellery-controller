@@ -44,6 +44,7 @@ type Policy struct {
 	MinReplicas    *int32                                         `json:"minReplicas"`
 	MaxReplicas    int32                                          `json:"maxReplicas"`
 	Metrics        []autoscalingV2beta1.MetricSpec                `json:"metrics"`
+	Concurrency    int64                                          `json:"concurrency"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
