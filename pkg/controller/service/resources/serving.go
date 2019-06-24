@@ -66,6 +66,13 @@ func CreateZeroScaleService(service *v1alpha1.Service) *servingv1alpha1.Configur
 								service.Spec.Container,
 							},
 						},
+						ContainerConcurrency: func() servingv1beta1.RevisionContainerConcurrencyType {
+							c := service.Spec.Autoscaling.Policy.Concurrency
+							if c < 1 {
+								return 0
+							}
+							return servingv1beta1.RevisionContainerConcurrencyType(c)
+						}(),
 					},
 				},
 			},
