@@ -19,9 +19,6 @@
 package resources
 
 import (
-	"strings"
-
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
@@ -31,22 +28,6 @@ import (
 func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) *v1alpha1.Service {
 	serviceSpec := serviceTemplate.Spec.DeepCopy()
 	serviceSpec.Container.Name = serviceTemplate.Name
-
-	var serviceEnvVars []corev1.EnvVar
-	for _, serviceTemplate := range cell.Spec.ServiceTemplates {
-		envKey := strings.Replace(strings.ToUpper(serviceTemplate.Name), "-", "_", -1)
-		envValue := ServiceName(cell, serviceTemplate) + "-service"
-		if serviceSpec.IsZeroScaled() {
-			envValue += "-rev"
-		}
-		serviceEnvVars = append(serviceEnvVars,
-			corev1.EnvVar{
-				Name:  envKey,
-				Value: envValue,
-			},
-		)
-	}
-	serviceSpec.Container.Env = append(serviceEnvVars, serviceSpec.Container.Env...)
 
 	return &v1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{

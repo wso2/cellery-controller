@@ -74,12 +74,6 @@ func TestCreateService(t *testing.T) {
 				Spec: v1alpha1.ServiceSpec{
 					Container: corev1.Container{
 						Name: "bar-service",
-						Env: []corev1.EnvVar{
-							{
-								Name:  "BAR_SERVICE",
-								Value: "foo--bar-service-service",
-							},
-						},
 					},
 				},
 			},
@@ -163,14 +157,6 @@ func TestCreateService(t *testing.T) {
 						Name:  "bar-service",
 						Image: "sample/bar:v1",
 						Env: []corev1.EnvVar{
-							{
-								Name:  "BAR_SERVICE",
-								Value: "foo--bar-service-service",
-							},
-							{
-								Name:  "BAZ_SERVICE",
-								Value: "foo--baz-service-service",
-							},
 							{
 								Name:  "my-key",
 								Value: "my-value",
