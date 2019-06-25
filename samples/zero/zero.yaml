@@ -13,6 +13,8 @@ spec:
       http:
       - backend: hello
         context: /hello
+      - backend: autoscale-zero
+        context: /scale
   servicesTemplates:
   - metadata:
       name: hello
@@ -23,20 +25,19 @@ spec:
       container:
         env:
         - name: TARGET
-          value: 'Hello Cellery'
+          value: 'Cellery'
         image: gcr.io/knative-samples/helloworld-go
       protocol: HTTP
   - metadata:
-      name: test-zero
+      name: autoscale-zero
     spec:
       autoscaling:
         policy:
           minReplicas: 0
+          concurrency: 5
       container:
-        env:
-        - name: TARGET
-          value: 'Cellery Zero Scale Test'
-        image: gcr.io/knative-samples/helloworld-go
+        # hey -z 30s -c 50 "http://zero-cell--gateway-service/scale?sleep=100&prime=10000&bloat=5"
+        image: gcr.io/knative-samples/autoscale-go:0.1
       protocol: HTTP
   - metadata:
       name: debug
