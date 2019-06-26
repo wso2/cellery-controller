@@ -114,6 +114,14 @@ func TestCreateTokenServiceDeployment(t *testing.T) {
 											Value: "my-cell",
 										},
 										{
+											Name:  "VALIDATE_SERVER_CERT",
+											Value: "true",
+										},
+										{
+											Name:  "ENABLE_HOSTNAME_VERIFICATION",
+											Value: "true",
+										},
+										{
 											Name:  "CELL_IMAGE_NAME",
 											Value: "my-cell-image",
 										},
