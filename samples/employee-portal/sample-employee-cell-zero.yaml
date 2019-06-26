@@ -27,6 +27,9 @@ spec:
           concurrency: 5
       container:
         image: docker.io/celleryio/sampleapp-employee
+        env:
+        - name: SALARY
+          value: 'employee--salary-service-rev'
         ports:
         - containerPort: 8080
       servicePort: 80

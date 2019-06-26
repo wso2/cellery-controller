@@ -73,6 +73,14 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 									Value: cellName,
 								},
 								{
+									Name:  "VALIDATE_SERVER_CERT",
+									Value: "true",
+								},
+								{
+									Name:  "ENABLE_HOSTNAME_VERIFICATION",
+									Value: "true",
+								},
+								{
 									Name:  "CELL_IMAGE_NAME",
 									Value: tokenService.Annotations["mesh.cellery.io/cell-image-name"],
 								},
