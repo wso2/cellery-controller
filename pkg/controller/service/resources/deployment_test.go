@@ -77,6 +77,7 @@ func TestCreateServiceDeployment(t *testing.T) {
 							Labels: map[string]string{
 								appLabelKey:              "foo",
 								mesh.CellServiceLabelKey: "foo",
+								mesh.ComponentLabelKey:   "true",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "true",
@@ -155,6 +156,7 @@ func TestCreateServiceDeployment(t *testing.T) {
 							Labels: map[string]string{
 								appLabelKey:              "foo",
 								mesh.CellServiceLabelKey: "foo",
+								mesh.ComponentLabelKey:   "true",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "true",
