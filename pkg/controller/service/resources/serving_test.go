@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -93,6 +95,7 @@ func TestCreateZeroScaleDeployment(t *testing.T) {
 							Labels: map[string]string{
 								"app":                     "foo",
 								"mesh.cellery.io/service": "foo",
+								mesh.ComponentLabelKey:    "true",
 							},
 						},
 						Spec: servingv1alpha1.RevisionSpec{
