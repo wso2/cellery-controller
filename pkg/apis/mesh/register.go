@@ -26,9 +26,11 @@ const (
 	CellGatewayLabelKey      = GroupName + "/gateway"
 	CellTokenServiceLabelKey = GroupName + "/sts"
 	CellServiceLabelKey      = GroupName + "/service"
+	ComponentLabelKey        = GroupName + "/component"
 
 	// Cellery Annotations
-	CellServicesAnnotationKey = GroupName + "/cell-services"
+	CellServicesAnnotationKey     = GroupName + "/cell-services"
+	CellDependenciesAnnotationKey = GroupName + "/cell-dependencies"
 
 	// Cellery System
 	SystemNamespace     = "cellery-system"

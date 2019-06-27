@@ -124,6 +124,7 @@ func main() {
 		secretInformer,
 		envoyFilterInformer,
 		systemSecretInformer,
+		istioVSInformer,
 		logger,
 	)
 	gatewayController := gateway.NewController(

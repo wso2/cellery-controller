@@ -21,6 +21,7 @@ package cell
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"reflect"
@@ -59,6 +60,7 @@ type cellHandler struct {
 	serviceLister       listers.ServiceLister
 	envoyFilterLister   istiov1alpha1listers.EnvoyFilterLister
 	cellerySecret       config.Secret
+	virtualSvcLister    istiov1alpha1listers.VirtualServiceLister
 	logger              *zap.SugaredLogger
 }
 
@@ -73,6 +75,7 @@ func NewController(
 	secretInformer corev1informers.SecretInformer,
 	envoyFilterInformer istioinformers.EnvoyFilterInformer,
 	systemSecretInformer corev1informers.SecretInformer,
+	virtualSvcInformer istioinformers.VirtualServiceInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &cellHandler{
@@ -85,6 +88,7 @@ func NewController(
 		networkPilicyLister: networkPolicyInformer.Lister(),
 		secretLister:        secretInformer.Lister(),
 		envoyFilterLister:   envoyFilterInformer.Lister(),
+		virtualSvcLister:    virtualSvcInformer.Lister(),
 		logger:              logger.Named("cell-controller"),
 	}
 	c := controller.New(h, h.logger, "Cell")
@@ -156,6 +160,10 @@ func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
 	}
 
 	if err := h.handleServices(cell); err != nil {
+		return err
+	}
+
+	if err := h.handleVirtualService(cell); err != nil {
 		return err
 	}
 
@@ -279,6 +287,36 @@ func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() {
 			cell.Status.ServiceCount++
 		}
+	}
+	return nil
+}
+
+func (h *cellHandler) handleVirtualService(cell *v1alpha1.Cell) error {
+	cellVs, err := h.virtualSvcLister.VirtualServices(cell.Namespace).Get(resources.CellVirtualServiceName(cell))
+	if errors.IsNotFound(err) {
+		cellVs, err = resources.CreateCellVirtualService(cell, h.cellLister)
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, cell.Name)
+			return err
+		}
+		if cellVs == nil {
+			h.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
+			return nil
+		}
+		lastAppliedConfig, err := json.Marshal(resources.BuildVirtualServiceiedConfig(cellVs))
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VS %v for instance %s", err, cell.Name)
+			return err
+		}
+		resources.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		cellVs, err = h.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(cellVs)
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, cell.Name)
+			return err
+		}
+		h.logger.Debugw("Cell VirtualService created", resources.CellVirtualServiceName(cell), cellVs)
+	} else if err != nil {
+		return err
 	}
 	return nil
 }
