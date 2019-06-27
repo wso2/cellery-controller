@@ -53,7 +53,7 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 			Selector: createSelector(service),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      createLabels(service),
+					Labels:      createLabelsWithComponentFlag(createLabels(service)),
 					Annotations: podTemplateAnnotations,
 				},
 				Spec: corev1.PodSpec{

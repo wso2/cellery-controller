@@ -57,7 +57,7 @@ func CreateZeroScaleService(service *v1alpha1.Service) *servingv1alpha1.Configur
 							return strconv.Itoa(int(service.Spec.Autoscaling.Policy.MaxReplicas))
 						}(),
 					},
-					Labels: createLabels(service),
+					Labels: createLabelsWithComponentFlag(createLabels(service)),
 				},
 				Spec: servingv1alpha1.RevisionSpec{
 					RevisionSpec: servingv1beta1.RevisionSpec{

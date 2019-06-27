@@ -38,6 +38,15 @@ func createLabels(service *v1alpha1.Service) map[string]string {
 	return labels
 }
 
+func createLabelsWithComponentFlag(labels map[string]string) map[string]string {
+	newLabels := make(map[string]string, len(labels)+1)
+	newLabels[mesh.ComponentLabelKey] = "true"
+	for k, v := range labels {
+		newLabels[k] = v
+	}
+	return newLabels
+}
+
 func createSelector(service *v1alpha1.Service) *metav1.LabelSelector {
 	return &metav1.LabelSelector{MatchLabels: createLabels(service)}
 }
