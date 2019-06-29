@@ -75,6 +75,7 @@ func TestCreateService(t *testing.T) {
 					Container: corev1.Container{
 						Name: "bar-service",
 					},
+					Type: v1alpha1.ServiceTypeDeployment,
 				},
 			},
 		},
@@ -168,6 +169,7 @@ func TestCreateService(t *testing.T) {
 							},
 						},
 					},
+					Type: v1alpha1.ServiceTypeDeployment,
 				},
 			},
 		},

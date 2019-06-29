@@ -55,6 +55,10 @@ func ServiceDeploymentName(service *v1alpha1.Service) string {
 	return service.Name + "-deployment"
 }
 
+func ServiceJobName(service *v1alpha1.Service) string {
+	return service.Name + "-job"
+}
+
 func ServiceK8sServiceName(service *v1alpha1.Service) string {
 	return service.Name + "-service"
 }

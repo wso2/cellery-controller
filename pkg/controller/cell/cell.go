@@ -284,7 +284,7 @@ func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 				h.logger.Debugw("Service updated", resources.ServiceName(cell, serviceSpec), service)
 			}
 		}
-		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() {
+		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() || service.Spec.Type == v1alpha1.ServiceTypeJob {
 			cell.Status.ServiceCount++
 		}
 	}

@@ -24,19 +24,20 @@ import (
 	"reflect"
 	"strconv"
 
-	v1 "k8s.io/api/apps/v1"
-
 	"go.uber.org/zap"
+	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	appsv1informers "k8s.io/client-go/informers/apps/v1"
 	autoscalingV2beta1Informer "k8s.io/client-go/informers/autoscaling/v2beta1"
+	batchv1informers "k8s.io/client-go/informers/batch/v1"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	autoscalingV2beta1Lister "k8s.io/client-go/listers/autoscaling/v2beta1"
+	batchv1listers "k8s.io/client-go/listers/batch/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
@@ -59,6 +60,7 @@ type serviceHandler struct {
 	kubeClient                 kubernetes.Interface
 	meshClient                 meshclientset.Interface
 	deploymentLister           appsv1listers.DeploymentLister
+	jobLister                  batchv1listers.JobLister
 	hpaLister                  autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
 	autoscalePolicyLister      listers.AutoscalePolicyLister
 	servingConfigurationLister knativeservinglisters.ConfigurationLister
@@ -74,6 +76,7 @@ func NewController(
 	kubeClient kubernetes.Interface,
 	meshClient meshclientset.Interface,
 	deploymentInformer appsv1informers.DeploymentInformer,
+	jobInformer batchv1informers.JobInformer,
 	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
 	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
 	servingConfigurationInformer knativeservinginformers.ConfigurationInformer,
@@ -87,6 +90,7 @@ func NewController(
 		kubeClient:                 kubeClient,
 		meshClient:                 meshClient,
 		deploymentLister:           deploymentInformer.Lister(),
+		jobLister:                  jobInformer.Lister(),
 		hpaLister:                  hpaInformer.Lister(),
 		autoscalePolicyLister:      autoscalePolicyInformer.Lister(),
 		servingConfigurationLister: servingConfigurationInformer.Lister(),
@@ -154,6 +158,10 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 			return err
 		}
 		if err := h.handleZeroScaleVirtualService(service); err != nil {
+			return err
+		}
+	} else if service.Spec.Type == v1alpha1.ServiceTypeJob {
+		if err := h.handleJob(service); err != nil {
 			return err
 		}
 	} else {
@@ -297,6 +305,22 @@ func (h *serviceHandler) handleZeroScaleVirtualService(service *v1alpha1.Service
 	} else if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (h *serviceHandler) handleJob(service *v1alpha1.Service) error {
+	job, err := h.jobLister.Jobs(service.Namespace).Get(resources.ServiceJobName(service))
+	if errors.IsNotFound(err) {
+		job, err = h.kubeClient.BatchV1().Jobs(service.Namespace).Create(resources.CreateServiceJob(service))
+		if err != nil {
+			h.logger.Errorf("Failed to create Service Job %v", err)
+			return err
+		}
+		h.logger.Debugw("Job created", resources.ServiceDeploymentName(service), job)
+	} else if err != nil {
+		return err
+	}
+	service.Status.AvailableReplicas = job.Status.Active
 	return nil
 }
 
