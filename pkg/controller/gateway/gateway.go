@@ -312,7 +312,9 @@ func (h *gatewayHandler) handleAutoscalePolicy(gateway *v1alpha1.Gateway) error 
 		if gateway.Spec.Autoscaling != nil {
 			autoscalePolicy = resources.CreateAutoscalePolicy(gateway)
 		} else {
-			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(gateway)
+			// if autoscaling is not defined, no autoscaler will be added by default
+			// autoscalePolicy = resources.CreateDefaultAutoscalePolicy(gateway)
+			return nil
 		}
 		lastAppliedConfig, err := json.Marshal(autoscale.BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy))
 		if err != nil {

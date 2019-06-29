@@ -28,6 +28,7 @@ import (
 )
 
 const scaleTargetDeploymentKind = "Deployment"
+const TRUE = "true"
 
 func CreateAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
 

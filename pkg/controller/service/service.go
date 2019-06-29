@@ -243,7 +243,9 @@ func (h *serviceHandler) handleAutoscalePolicy(service *v1alpha1.Service) error 
 		if service.Spec.Autoscaling != nil {
 			autoscalePolicy = resources.CreateAutoscalePolicy(service)
 		} else {
-			autoscalePolicy = resources.CreateDefaultAutoscalePolicy(service)
+			// if autoscaling is not defined, no autoscaler will be added by default
+			// autoscalePolicy = resources.CreateDefaultAutoscalePolicy(service)
+			return nil
 		}
 		lastAppliedConfig, err := json.Marshal(autoscale.BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy))
 		if err != nil {

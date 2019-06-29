@@ -21,6 +21,7 @@ package autoscale
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"go.uber.org/zap"
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
@@ -34,6 +35,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
@@ -42,21 +44,30 @@ import (
 
 type autoscalePolicyeHandler struct {
 	kubeClient            kubernetes.Interface
+	meshClient            meshclientset.Interface
 	autoscalePolicyLister listers.AutoscalePolicyLister
 	hpaLister             autoscalingV2beta1Lister.HorizontalPodAutoscalerLister
+	serviceLister         listers.ServiceLister
+	gatewayLister         listers.GatewayLister
 	logger                *zap.SugaredLogger
 }
 
 func NewController(
 	kubeClient kubernetes.Interface,
+	meshClient meshclientset.Interface,
 	autoscalePolicyInformer meshinformers.AutoscalePolicyInformer,
 	hpaInformer autoscalingV2beta1Informer.HorizontalPodAutoscalerInformer,
+	serviceInformer meshinformers.ServiceInformer,
+	gatewayInformer meshinformers.GatewayInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &autoscalePolicyeHandler{
 		kubeClient:            kubeClient,
+		meshClient:            meshClient,
 		autoscalePolicyLister: autoscalePolicyInformer.Lister(),
 		hpaLister:             hpaInformer.Lister(),
+		serviceLister:         serviceInformer.Lister(),
+		gatewayLister:         gatewayInformer.Lister(),
 		logger:                logger.Named("autoscale-policy-controller"),
 	}
 	c := controller.New(h, h.logger, "AutoscalePolicy")
@@ -99,6 +110,20 @@ func (h *autoscalePolicyeHandler) Handle(key string) error {
 }
 
 func (h *autoscalePolicyeHandler) handle(autoscalePolicy *v1alpha1.AutoscalePolicy) error {
+	// if the autoscale policy does not have a parent reference, add it
+	if len(autoscalePolicy.OwnerReferences) == 0 {
+		err := buildParentReference(autoscalePolicy, h.serviceLister, h.gatewayLister)
+		if err != nil {
+			h.logger.Errorf("Failed to create owner reference for autoscale policy %s, error: %v", autoscalePolicy.Name, err)
+			return err
+		}
+		autoscalePolicy.Status = "Ready"
+		_, err = h.meshClient.MeshV1alpha1().AutoscalePolicies(autoscalePolicy.Namespace).Update(autoscalePolicy)
+		if err != nil {
+			h.logger.Errorf("Failed to update Autoscale policy %s after owner reference creation %v", autoscalePolicy.Name, err)
+			return err
+		}
+	}
 	hpa, err := h.hpaLister.HorizontalPodAutoscalers(autoscalePolicy.Namespace).Get(resources.HpaName(autoscalePolicy))
 	if errors.IsNotFound(err) {
 		hpa, err = h.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(autoscalePolicy.Namespace).
@@ -153,4 +178,27 @@ func BuildAutoscalePolicyLastAppliedConfig(autoscalePolicy *v1alpha1.AutoscalePo
 		},
 		Spec: autoscalePolicy.Spec,
 	}
+}
+
+func buildParentReference(autoscalePolicy *v1alpha1.AutoscalePolicy, serviceLister listers.ServiceLister, gatewayLister listers.GatewayLister) error {
+	// extract the service name and lookup the service
+	parts := strings.Split(autoscalePolicy.Spec.Policy.ScaleTargetRef.Name, "-deployment")
+	if len(parts) < 2 {
+		return fmt.Errorf("Unable to extract the service name scale target reference of autoscale policy %s", autoscalePolicy.Name)
+	}
+	if csvc, err := serviceLister.Services(autoscalePolicy.Namespace).Get(parts[0]); err == nil {
+		autoscalePolicy.OwnerReferences = []metav1.OwnerReference{*controller.CreateServiceOwnerRef(csvc)}
+	} else {
+		if errors.IsNotFound(err) {
+			// could be a autoscale policy for a gateway
+			if gw, gWerr := gatewayLister.Gateways(autoscalePolicy.Namespace).Get(parts[0]); gWerr == nil {
+				autoscalePolicy.OwnerReferences = []metav1.OwnerReference{*controller.CreateGatewayOwnerRef(gw)}
+			} else {
+				return fmt.Errorf("Unable to retrieve the gateway %s for to create parent reference for autoscale policy %s", parts[0], autoscalePolicy.Name)
+			}
+		} else {
+			return fmt.Errorf("Unable to retrieve the service %s for to create parent reference for autoscale policy %s", parts[0], autoscalePolicy.Name)
+		}
+	}
+	return nil
 }

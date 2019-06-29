@@ -171,8 +171,11 @@ func main() {
 	)
 	autoscaleController := autoscale.NewController(
 		kubeClient,
+		meshClient,
 		autoscalerInformer,
 		hpaInformer,
+		serviceInformer,
+		gatewayInformer,
 		logger,
 	)
 

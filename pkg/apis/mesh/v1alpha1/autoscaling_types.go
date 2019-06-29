@@ -35,7 +35,7 @@ type AutoscalePolicy struct {
 }
 
 type AutoscalePolicySpec struct {
-	Overridable bool   `json:"overridable,omitempty"`
+	Overridable bool   `json:"overridable"`
 	Policy      Policy `json:"policy"`
 }
 
