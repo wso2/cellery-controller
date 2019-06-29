@@ -29,6 +29,11 @@ func CreateService(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplate
 	serviceSpec := serviceTemplate.Spec.DeepCopy()
 	serviceSpec.Container.Name = serviceTemplate.Name
 
+	// Default to Deployment if not specified
+	if len(serviceSpec.Type) == 0 {
+		serviceSpec.Type = v1alpha1.ServiceTypeDeployment
+	}
+
 	return &v1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        ServiceName(cell, serviceTemplate),

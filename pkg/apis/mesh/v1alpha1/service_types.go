@@ -48,6 +48,7 @@ type ServiceSpec struct {
 	Protocol           string               `json:"protocol"`
 	Container          corev1.Container     `json:"container"`
 	Autoscaling        *AutoscalePolicySpec `json:"autoscaling,omitempty"`
+	Type               ServiceType          `json:"type,omitempty"`
 }
 
 type ServiceStatus struct {
@@ -66,6 +67,16 @@ func (s *ServiceSpec) IsZeroScaled() bool {
 	}
 	return false
 }
+
+type ServiceType string
+
+const (
+	// ServiceTypeDeployment is the default type which run as services.
+	ServiceTypeDeployment ServiceType = "Deployment"
+
+	// ServiceTypeJob is a job which run into completion.
+	ServiceTypeJob ServiceType = "Job"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

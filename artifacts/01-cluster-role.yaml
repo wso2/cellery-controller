@@ -59,6 +59,18 @@ rules:
   - patch
   - watch
 - apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
   - networking.k8s.io
   resources:
   - networkpolicies

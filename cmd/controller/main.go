@@ -92,6 +92,7 @@ func main() {
 	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
 	secretInformer := kubeInformerFactory.Core().V1().Secrets()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
+	jobInformer := kubeInformerFactory.Batch().V1().Jobs()
 	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
 	clusterIngressInformer := kubeInformerFactory.Extensions().V1beta1().Ingresses()
@@ -160,6 +161,7 @@ func main() {
 		kubeClient,
 		meshClient,
 		deploymentInformer,
+		jobInformer,
 		hpaInformer,
 		autoscalerInformer,
 		servingConfigurationInformer,
@@ -190,6 +192,7 @@ func main() {
 		// Sync K8s informers
 		k8sServiceInformer.Informer().HasSynced,
 		deploymentInformer.Informer().HasSynced,
+		jobInformer.Informer().HasSynced,
 		configMapInformer.Informer().HasSynced,
 		secretInformer.Informer().HasSynced,
 		networkPolicyInformer.Informer().HasSynced,
