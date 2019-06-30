@@ -32,6 +32,7 @@ func CreateServiceJob(service *v1alpha1.Service) *batchv1.Job {
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 
+	boolTrue := true
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceJobName(service),
@@ -51,7 +52,8 @@ func CreateServiceJob(service *v1alpha1.Service) *batchv1.Job {
 					Containers: []corev1.Container{
 						service.Spec.Container,
 					},
-					RestartPolicy: corev1.RestartPolicyNever,
+					RestartPolicy:         corev1.RestartPolicyNever,
+					ShareProcessNamespace: &boolTrue,
 				},
 			},
 		},
