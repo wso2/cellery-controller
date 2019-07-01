@@ -194,6 +194,10 @@ func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 
+	if err := h.handleRoutingK8sService(gateway); err != nil {
+		return err
+	}
+
 	if gateway.Spec.Type != v1alpha1.GatewayTypeMicroGateway {
 		if err := h.handleIstioVirtualService(gateway); err != nil {
 			return err
@@ -358,6 +362,33 @@ func (h *gatewayHandler) handleK8sService(gateway *v1alpha1.Gateway) error {
 		return err
 	}
 	gateway.Status.HostName = k8sService.Name
+	return nil
+}
+
+func (h *gatewayHandler) handleRoutingK8sService(gateway *v1alpha1.Gateway) error {
+	// This is a workaround for an issue with switching traffic 100% to a new instance, and terminating the old one.
+	// When the old instance is terminated, the associated gateway k8s service will be deleted as well. Since the
+	// Istio Virtual Service uses that particular gateway k8s service name as a hostname, once its deleted the DNS
+	// lookup will fail, which will lead to traffic routing to fail.
+	// To overcome this issue, whenever traffic is switched to 100% to a new instance, the previous instance's gateway
+	// k8s service name is written to an annotation of the new instance gateway. This annotation will be picked up
+	// by this method and that particular service will be re-created if it does not exist.
+
+	originalGwK8sSvcName := gateway.Annotations[mesh.CellOriginalGatewaySvcKey]
+	if originalGwK8sSvcName != "" {
+		k8sService, err := h.k8sServiceLister.Services(gateway.Namespace).Get(originalGwK8sSvcName)
+		if errors.IsNotFound(err) {
+			k8sService, err = h.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateOriginalGatewayK8sService(gateway, originalGwK8sSvcName))
+			if err != nil {
+				h.logger.Errorf("Failed to create K8s service for original gateway %v", err)
+				return err
+			}
+			h.logger.Debugw("K8s service for original gateway created", originalGwK8sSvcName, k8sService)
+		} else if err != nil {
+			return err
+		}
+		//gateway.Status.HostName = k8sService.Name
+	}
 	return nil
 }
 

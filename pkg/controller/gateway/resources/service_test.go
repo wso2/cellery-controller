@@ -261,3 +261,52 @@ func TestCreateGatewayK8sService(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateOriginalGatewayK8sService(t *testing.T) {
+	gateway := &v1alpha1.Gateway{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "foo-namespace",
+			Name:      "foo",
+		},
+		Spec: v1alpha1.GatewaySpec{
+			Type: v1alpha1.GatewayTypeMicroGateway,
+		},
+	}
+
+	expected := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "foo-namespace",
+			Name:      "original-foo-gw-svc",
+			Labels: map[string]string{
+				mesh.CellGatewayLabelKey: "foo",
+				appLabelKey:              "foo",
+			},
+			OwnerReferences: []metav1.OwnerReference{{
+				APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+				Kind:               "Gateway",
+				Name:               "foo",
+				Controller:         &boolTrue,
+				BlockOwnerDeletion: &boolTrue,
+			}},
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       80,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+				},
+			},
+			Selector: map[string]string{
+				mesh.CellGatewayLabelKey: "foo",
+				appLabelKey:              "foo",
+			},
+		},
+	}
+	actual := CreateOriginalGatewayK8sService(gateway, "original-foo-gw-svc")
+
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("CreateGatewayK8sService (-expected, +actual)\n%v", diff)
+	}
+}
