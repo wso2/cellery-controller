@@ -31,6 +31,7 @@ const (
 	// Cellery Annotations
 	CellServicesAnnotationKey     = GroupName + "/cell-services"
 	CellDependenciesAnnotationKey = GroupName + "/cell-dependencies"
+	CellOriginalGatewaySvcKey     = GroupName + "/original-gw-svc"
 
 	// Cellery System
 	SystemNamespace     = "cellery-system"

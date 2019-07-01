@@ -37,6 +37,8 @@ import (
 	networkv1listers "k8s.io/client-go/listers/networking/v1"
 	"k8s.io/client-go/tools/cache"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
@@ -209,7 +211,14 @@ func (h *cellHandler) handleSecret(cell *v1alpha1.Cell) error {
 func (h *cellHandler) handleGateway(cell *v1alpha1.Cell) error {
 	gateway, err := h.gatewayLister.Gateways(cell.Namespace).Get(resources.GatewayName(cell))
 	if errors.IsNotFound(err) {
-		gateway, err = h.meshClient.MeshV1alpha1().Gateways(cell.Namespace).Create(resources.CreateGateway(cell))
+		gateway = resources.CreateGateway(cell)
+		lastAppliedConfig, err := json.Marshal(buildLastAppliedConfig(gateway))
+		if err != nil {
+			h.logger.Errorf("Failed to create Gateway last applied config %v", err)
+			return err
+		}
+		annotate(gateway, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		gateway, err = h.meshClient.MeshV1alpha1().Gateways(cell.Namespace).Create(gateway)
 		if err != nil {
 			h.logger.Errorf("Failed to create Gateway %v", err)
 			return err
@@ -222,6 +231,29 @@ func (h *cellHandler) handleGateway(cell *v1alpha1.Cell) error {
 	cell.Status.GatewayHostname = gateway.Status.HostName
 	cell.Status.GatewayStatus = gateway.Status.Status
 	return nil
+}
+
+func buildLastAppliedConfig(gw *v1alpha1.Gateway) *v1alpha1.Gateway {
+	return &v1alpha1.Gateway{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Gateway",
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      gw.Name,
+			Namespace: gw.Namespace,
+		},
+		Spec: gw.Spec,
+	}
+}
+
+func annotate(gw *v1alpha1.Gateway, name string, value string) {
+	annotations := make(map[string]string, len(gw.ObjectMeta.Annotations)+1)
+	annotations[name] = value
+	for k, v := range gw.ObjectMeta.Annotations {
+		annotations[k] = v
+	}
+	gw.Annotations = annotations
 }
 
 func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {

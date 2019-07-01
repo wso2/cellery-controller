@@ -61,6 +61,30 @@ func createMicroGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 	}
 }
 
+func CreateOriginalGatewayK8sService(gateway *v1alpha1.Gateway, name string) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: gateway.Namespace,
+			Labels:    createGatewayLabels(gateway),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateGatewayOwnerRef(gateway),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       controller.HTTPServiceName,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       gatewayServicePort,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+				},
+			},
+			Selector: createGatewayLabels(gateway),
+		},
+	}
+}
+
 func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 	var servicePorts []corev1.ServicePort
 
