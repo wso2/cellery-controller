@@ -49,6 +49,19 @@ type ServiceSpec struct {
 	Container          corev1.Container     `json:"container"`
 	Autoscaling        *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 	Type               ServiceType          `json:"type,omitempty"`
+	Resources          ResourceRequirements `json:"resources,omitempty"`
+}
+
+// Temp fix to fabric k8s yaml generation
+type ResourceRequirements struct {
+	Limits   ResourceList `json:"limits,omitempty"`
+	Requests ResourceList `json:"requests,omitempty"`
+}
+
+type ResourceList map[string]Quantity
+
+type Quantity struct {
+	Amount string `json:"amount,omitempty"`
 }
 
 type ServiceStatus struct {

@@ -21,6 +21,7 @@ package resources
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -38,6 +39,22 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
+
+	if service.Spec.Resources.Limits != nil {
+		for k, v := range service.Spec.Resources.Limits {
+			service.Spec.Container.Resources.Limits = corev1.ResourceList{
+				corev1.ResourceName(k): resource.MustParse(v.Amount),
+			}
+		}
+	}
+
+	if service.Spec.Resources.Requests != nil {
+		for k, v := range service.Spec.Resources.Requests {
+			service.Spec.Container.Resources.Requests = corev1.ResourceList{
+				corev1.ResourceName(k): resource.MustParse(v.Amount),
+			}
+		}
+	}
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
