@@ -34,22 +34,12 @@ import (
 const instance = "instance"
 
 func CreateCellVirtualService(cell *v1alpha1.Cell, cellLister listers.CellLister) (*v1alpha3.VirtualService, error) {
-	// http
-	httpHostNames, httpRoutes, err := buildInterCellHttpRoutingInfo(cell, cellLister)
+	hostNames, httpRoutes, tcpRoutes, err := buildInterCellRoutingInfo(cell, cellLister)
 	if err != nil {
 		return nil, err
 	}
-	// tcp
-	tcpHostNames, tcpRoutes, err := buildInterCellTcpRoutes(cell, cellLister)
-	if err != nil {
-		return nil, err
-	}
-	if len(httpHostNames) == 0 && len(tcpHostNames) == 0 {
-		// implies no dependencies, hence no need of a virtual service
-		return nil, nil
-	}
-	if len(httpRoutes) == 0 && len(tcpRoutes) == 0 {
-		// implies no dependencies, hence no need of a virtual service
+	if len(hostNames) == 0 || (len(httpRoutes) == 0 && len(tcpRoutes) == 0) {
+		// No virtual service needed
 		return nil, nil
 	}
 	return &v1alpha3.VirtualService{
@@ -62,52 +52,88 @@ func CreateCellVirtualService(cell *v1alpha1.Cell, cellLister listers.CellLister
 			},
 		},
 		Spec: v1alpha3.VirtualServiceSpec{
-			// atm only HTTP is considered
-			// TODO: fix this to work with TCP
-			//Hosts:    append(httpHostNames, tcpHostNames...),
-			Hosts:    httpHostNames,
+			Hosts:    hostNames,
 			Gateways: []string{"mesh"},
 			Http:     httpRoutes,
-			// atm if there are any tcp routes exposed from dependency instance are not used
-			// TODO: fix this to work with TCP
+			// TCP is not supported atm
+			// TODO: support TCP
 			//Tcp:      tcpRoutes,
 		},
 	}, nil
 }
 
-func buildInterCellHttpRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellLister) ([]string, []*v1alpha3.HTTPRoute, error) {
-	var intercellRoutes []*v1alpha3.HTTPRoute
-	var httpHostNames []string
-	// get dependencies from cell annotations
+func buildInterCellRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellLister) ([]string, []*v1alpha3.HTTPRoute, []*v1alpha3.TCPRoute, error) {
+	var intercellHttpRoutes []*v1alpha3.HTTPRoute
+	var intercellTcpRoutes []*v1alpha3.TCPRoute
+	var hostNames []string
+	// get dependencies from cell annotations,
 	dependencies, err := extractDependencies(cell)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	// for each dependency, create a route
 	for _, dependency := range dependencies {
 		dependencyInst := dependency[instance]
 		if dependencyInst == "" {
-			return nil, nil, fmt.Errorf("unable to extract dependency instance from annotations")
+			return nil, nil, nil, fmt.Errorf("unable to extract dependency instance from annotations")
 		}
 		// retrieve the cell using the cell instance name
 		depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		// if there are no HTTP components exposed from gateway, return
-		if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) == 0 {
-			return httpHostNames, intercellRoutes, nil
+		if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) > 0 {
+			hostNames = append(hostNames, buildHostName(dependencyInst))
+			// build http routes
+			intercellHttpRoutes = append(intercellHttpRoutes, buildHttpRoute(depCell, dependencyInst))
 		}
-		// build http host names
-		gwSvcName := GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))
-		httpHostNames = append(httpHostNames, gwSvcName)
+		if len(depCell.Spec.GatewayTemplate.Spec.TCPRoutes) > 0 {
+			// TCP is not supported atm
+			// TODO: support TCP
+			// hostNames = append(hostNames, buildHostName(dependencyInst))
+			// build tcp routes
+			// intercellTcpRoutes = append(intercellTcpRoutes, buildTcpRoutes(depCell, dependencyInst)...)
+		}
+	}
 
-		route := v1alpha3.HTTPRoute{
-			Match: []*v1alpha3.HTTPMatchRequest{
+	return hostNames, intercellHttpRoutes, intercellTcpRoutes, nil
+}
+
+func buildHostName(dependencyInst string) string {
+	return GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))
+}
+
+func buildHttpRoute(cell *v1alpha1.Cell, dependencyInst string) *v1alpha3.HTTPRoute {
+	return &v1alpha3.HTTPRoute{
+		Match: []*v1alpha3.HTTPMatchRequest{
+			{
+				Authority: &v1alpha3.StringMatch{
+					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
+				},
+				SourceLabels: map[string]string{
+					mesh.CellLabelKey:      cell.Name,
+					mesh.ComponentLabelKey: "true",
+				},
+			},
+		},
+		Route: []*v1alpha3.DestinationWeight{
+			{
+				Destination: &v1alpha3.Destination{
+					Host: GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst)),
+				},
+			},
+		},
+	}
+}
+
+func buildTcpRoutes(cell *v1alpha1.Cell, dependencyInst string) []*v1alpha3.TCPRoute {
+	var intercellRoutes []*v1alpha3.TCPRoute
+	for _, cellTcpRoute := range cell.Spec.GatewayTemplate.Spec.TCPRoutes {
+		route := v1alpha3.TCPRoute{
+			Match: []*v1alpha3.L4MatchAttributes{
 				{
-					Authority: &v1alpha3.StringMatch{
-						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
-					},
+					Port: cellTcpRoute.Port,
 					SourceLabels: map[string]string{
 						mesh.CellLabelKey:      cell.Name,
 						mesh.ComponentLabelKey: "true",
@@ -118,69 +144,16 @@ func buildInterCellHttpRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellL
 				{
 					Destination: &v1alpha3.Destination{
 						Host: GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst)),
+						Port: &v1alpha3.PortSelector{
+							Number: cellTcpRoute.Port,
+						},
 					},
 				},
 			},
 		}
 		intercellRoutes = append(intercellRoutes, &route)
 	}
-
-	return httpHostNames, intercellRoutes, nil
-}
-
-func buildInterCellTcpRoutes(cell *v1alpha1.Cell, cellLister listers.CellLister) ([]string, []*v1alpha3.TCPRoute, error) {
-	var intercellRoutes []*v1alpha3.TCPRoute
-	var tcpHostNames []string
-	// get dependencies from cell annotations
-	dependencies, err := extractDependencies(cell)
-	if err != nil {
-		return nil, nil, err
-	}
-	// for each dependency, create a TCP route if the dependency is exposing TCP services from the gateway.
-	for _, dependency := range dependencies {
-		dependencyInst := dependency[instance]
-		if dependencyInst == "" {
-			return nil, nil, fmt.Errorf("unable to extract dependency instance from annotations")
-		}
-		// retrieve the cell using the cell instance name
-		depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
-		if err != nil {
-			return nil, nil, err
-		}
-		gwSvcName := GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))
-		tcpHostNames = append(tcpHostNames, gwSvcName)
-		// for each TCP service, create a rule
-		for _, tcpService := range *getTcpServices(depCell) {
-			route := v1alpha3.TCPRoute{
-				Match: []*v1alpha3.L4MatchAttributes{
-					{
-						Port: tcpService.Port,
-						SourceLabels: map[string]string{
-							mesh.CellLabelKey:      cell.Name,
-							mesh.ComponentLabelKey: "true",
-						},
-					},
-				},
-				Route: []*v1alpha3.DestinationWeight{
-					{
-						Destination: &v1alpha3.Destination{
-							Host: GatewayNameFromInstanceName(dependencyInst),
-							Port: &v1alpha3.PortSelector{
-								Number: tcpService.Port,
-							},
-						},
-					},
-				},
-			}
-			intercellRoutes = append(intercellRoutes, &route)
-		}
-	}
-
-	return tcpHostNames, intercellRoutes, nil
-}
-
-func getTcpServices(cell *v1alpha1.Cell) *[]v1alpha1.TCPRoute {
-	return &cell.Spec.GatewayTemplate.Spec.TCPRoutes
+	return intercellRoutes
 }
 
 func extractDependencies(cell *v1alpha1.Cell) ([]map[string]string, error) {
