@@ -33,6 +33,7 @@ func CreateServiceJob(service *v1alpha1.Service) *batchv1.Job {
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 
 	boolTrue := true
+	var intZero int32 = 0
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceJobName(service),
@@ -43,6 +44,7 @@ func CreateServiceJob(service *v1alpha1.Service) *batchv1.Job {
 			},
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: &intZero,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      createLabelsWithComponentFlag(createLabels(service)),
