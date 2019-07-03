@@ -86,7 +86,7 @@ func buildInterCellRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellListe
 		if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) > 0 {
 			hostNames = append(hostNames, buildHostName(dependencyInst))
 			// build http routes
-			intercellHttpRoutes = append(intercellHttpRoutes, buildHttpRoute(depCell, dependencyInst))
+			intercellHttpRoutes = append(intercellHttpRoutes, buildHttpRoute(cell, dependencyInst))
 		}
 		if len(depCell.Spec.GatewayTemplate.Spec.TCPRoutes) > 0 {
 			// TCP is not supported atm
