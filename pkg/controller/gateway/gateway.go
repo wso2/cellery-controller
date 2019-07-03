@@ -597,7 +597,7 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 	if enableAutoscaling, ok := configMap.Data["enable-autoscaling"]; ok {
 		conf.EnableAutoscaling = isAutoscalingEnabled(enableAutoscaling)
 	} else {
-		conf.EnableAutoscaling = false
+		conf.EnableAutoscaling = true
 	}
 
 	h.gatewayConfig = conf
