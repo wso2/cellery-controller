@@ -164,6 +164,10 @@ func (h *serviceHandler) handle(service *v1alpha1.Service) error {
 		if err := h.handleJob(service); err != nil {
 			return err
 		}
+
+		if err := h.handleK8sService(service); err != nil {
+			return err
+		}
 	} else {
 		if err := h.handleDeployment(service); err != nil {
 			return err

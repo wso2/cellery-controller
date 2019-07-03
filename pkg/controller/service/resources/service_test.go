@@ -64,9 +64,9 @@ func TestCreateServiceK8sService(t *testing.T) {
 				},
 				Spec: corev1.ServiceSpec{
 					Ports: []corev1.ServicePort{{
-						Name:     "http",
-						Protocol: corev1.ProtocolTCP,
-						//Port:       ServicePort,
+						Name:       "http",
+						Protocol:   corev1.ProtocolTCP,
+						Port:       8080,
 						TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
 					}},
 					Selector: map[string]string{
