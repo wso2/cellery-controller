@@ -59,9 +59,14 @@ func CreateServiceK8sService(service *v1alpha1.Service) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
-				Name:       protocol,
-				Protocol:   corev1.ProtocolTCP,
-				Port:       service.Spec.ServicePort,
+				Name:     protocol,
+				Protocol: corev1.ProtocolTCP,
+				Port: func() int32 {
+					if service.Spec.ServicePort > 0 {
+						return service.Spec.ServicePort
+					}
+					return 8080
+				}(),
 				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: containerPort},
 			}},
 			Selector: createLabels(service),
