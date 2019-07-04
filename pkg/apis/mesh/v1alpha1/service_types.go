@@ -19,6 +19,8 @@
 package v1alpha1
 
 import (
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -75,10 +77,12 @@ func (s *ServiceSpec) IsZeroScaled() bool {
 		return false
 	}
 
-	if s.Autoscaling.Policy.MinReplicas != nil && *(s.Autoscaling.Policy.MinReplicas) == 0 {
-		return true
+	i, err := strconv.Atoi(s.Autoscaling.Policy.MinReplicas)
+	if err != nil {
+		return false
 	}
-	return false
+
+	return i == 0
 }
 
 type ServiceType string

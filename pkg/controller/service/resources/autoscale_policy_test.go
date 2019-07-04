@@ -19,6 +19,7 @@
 package resources
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -43,7 +44,7 @@ func TestCreateAutoscalePolicy(t *testing.T) {
 			Autoscaling: &v1alpha1.AutoscalePolicySpec{
 				Overridable: true,
 				Policy: v1alpha1.Policy{
-					MinReplicas: &intOne,
+					MinReplicas: "1",
 					MaxReplicas: 5,
 					Metrics: []autoscalingV2Beta1.MetricSpec{
 						autoscalingV2Beta1.MetricSpec{
@@ -121,7 +122,7 @@ func TestCreateDefaultAutoscalePolicy(t *testing.T) {
 					Name:       ServiceDeploymentName(svc),
 					APIVersion: appsv1.SchemeGroupVersion.String(),
 				},
-				MinReplicas: svc.Spec.Replicas,
+				MinReplicas: fmt.Sprintf("%d", *svc.Spec.Replicas),
 				MaxReplicas: *svc.Spec.Replicas,
 				Metrics:     []autoscalingV2Beta1.MetricSpec{},
 			},
@@ -144,7 +145,7 @@ func TestServiceAutoscalePolicyName(t *testing.T) {
 			Autoscaling: &v1alpha1.AutoscalePolicySpec{
 				Overridable: true,
 				Policy: v1alpha1.Policy{
-					MinReplicas: &intOne,
+					MinReplicas: "1",
 					MaxReplicas: 5,
 					Metrics: []autoscalingV2Beta1.MetricSpec{
 						autoscalingV2Beta1.MetricSpec{

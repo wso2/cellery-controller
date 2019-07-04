@@ -59,8 +59,6 @@ func CreateAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy 
 
 func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
 
-	var onePtr int32 = 1
-
 	return &v1alpha1.AutoscalePolicy{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "AutoscalePolicy",
@@ -82,7 +80,7 @@ func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.Autoscale
 					Name:       GatewayDeploymentName(gateway),
 					APIVersion: appsv1.SchemeGroupVersion.String(),
 				},
-				MinReplicas: &onePtr,
+				MinReplicas: "1",
 				MaxReplicas: 1,
 				Metrics:     []autoscalingV2Beta1.MetricSpec{},
 			},
