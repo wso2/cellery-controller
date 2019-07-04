@@ -28,6 +28,7 @@ import (
 
 func CreateHpa(scalePolicy *v1alpha1.AutoscalePolicy) *autoscalingV2Beta1.HorizontalPodAutoscaler {
 
+	minReplicas := scalePolicy.Spec.MinReplicas()
 	return &autoscalingV2Beta1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HpaName(scalePolicy),
@@ -38,7 +39,7 @@ func CreateHpa(scalePolicy *v1alpha1.AutoscalePolicy) *autoscalingV2Beta1.Horizo
 			},
 		},
 		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec{
-			MinReplicas:    scalePolicy.Spec.Policy.MinReplicas,
+			MinReplicas:    &minReplicas,
 			MaxReplicas:    scalePolicy.Spec.Policy.MaxReplicas,
 			ScaleTargetRef: scalePolicy.Spec.Policy.ScaleTargetRef,
 			Metrics:        scalePolicy.Spec.Policy.Metrics,

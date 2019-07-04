@@ -19,6 +19,8 @@
 package resources
 
 import (
+	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,7 +81,7 @@ func CreateDefaultAutoscalePolicy(service *v1alpha1.Service) *v1alpha1.Autoscale
 					Name:       ServiceDeploymentName(service),
 					APIVersion: appsv1.SchemeGroupVersion.String(),
 				},
-				MinReplicas: service.Spec.Replicas,
+				MinReplicas: fmt.Sprintf("%d", *service.Spec.Replicas),
 				MaxReplicas: *service.Spec.Replicas,
 				Metrics:     []autoscalingV2Beta1.MetricSpec{},
 			},

@@ -37,7 +37,7 @@ func TestCreateHpa(t *testing.T) {
 		Spec: v1alpha1.AutoscalePolicySpec{
 			Overridable: true,
 			Policy: v1alpha1.Policy{
-				MinReplicas: &intOne,
+				MinReplicas: "1",
 				MaxReplicas: 5,
 				Metrics: []autoscalingV2Beta1.MetricSpec{
 					autoscalingV2Beta1.MetricSpec{
@@ -54,6 +54,7 @@ func TestCreateHpa(t *testing.T) {
 
 	hpa := CreateHpa(scalePolicy)
 
+	min := scalePolicy.Spec.MinReplicas()
 	expected := &autoscalingV2Beta1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HpaName(scalePolicy),
@@ -64,7 +65,7 @@ func TestCreateHpa(t *testing.T) {
 			},
 		},
 		Spec: autoscalingV2Beta1.HorizontalPodAutoscalerSpec{
-			MinReplicas:    scalePolicy.Spec.Policy.MinReplicas,
+			MinReplicas:    &min,
 			MaxReplicas:    scalePolicy.Spec.Policy.MaxReplicas,
 			ScaleTargetRef: scalePolicy.Spec.Policy.ScaleTargetRef,
 			Metrics:        scalePolicy.Spec.Policy.Metrics,
@@ -81,7 +82,7 @@ func TestHpaName(t *testing.T) {
 		Spec: v1alpha1.AutoscalePolicySpec{
 			Overridable: true,
 			Policy: v1alpha1.Policy{
-				MinReplicas: &intOne,
+				MinReplicas: "1",
 				MaxReplicas: 5,
 				Metrics: []autoscalingV2Beta1.MetricSpec{
 					autoscalingV2Beta1.MetricSpec{

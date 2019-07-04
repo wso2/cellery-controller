@@ -19,6 +19,8 @@
 package v1alpha1
 
 import (
+	"strconv"
+
 	autoscalingV2beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -41,10 +43,19 @@ type AutoscalePolicySpec struct {
 
 type Policy struct {
 	ScaleTargetRef autoscalingV2beta1.CrossVersionObjectReference `json:"scaleTargetRef,omitempty"`
-	MinReplicas    *int32                                         `json:"minReplicas"`
+	MinReplicas    string                                         `json:"minReplicas"`
 	MaxReplicas    int32                                          `json:"maxReplicas"`
 	Metrics        []autoscalingV2beta1.MetricSpec                `json:"metrics"`
 	Concurrency    int64                                          `json:"concurrency"`
+}
+
+func (s *AutoscalePolicySpec) MinReplicas() int32 {
+	i, err := strconv.Atoi(s.Policy.MinReplicas)
+	if err != nil {
+		return 1
+	}
+
+	return int32(i)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

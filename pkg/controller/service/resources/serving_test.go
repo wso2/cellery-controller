@@ -52,7 +52,7 @@ func TestCreateZeroScaleDeployment(t *testing.T) {
 				Spec: v1alpha1.ServiceSpec{
 					Autoscaling: &v1alpha1.AutoscalePolicySpec{
 						Policy: v1alpha1.Policy{
-							MinReplicas: &zero,
+							MinReplicas: "0",
 							MaxReplicas: 10,
 						},
 					},
@@ -149,7 +149,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 				Spec: v1alpha1.ServiceSpec{
 					Autoscaling: &v1alpha1.AutoscalePolicySpec{
 						Policy: v1alpha1.Policy{
-							MinReplicas: &zero,
+							MinReplicas: "0",
 							MaxReplicas: 10,
 						},
 					},
