@@ -178,53 +178,58 @@ func (h *gatewayHandler) Handle(key string) error {
 
 func (h *gatewayHandler) handle(gateway *v1alpha1.Gateway) error {
 
-	if err := h.handleConfigMap(gateway); err != nil {
-		return err
-	}
+	if gateway.Spec.Empty() {
+		gateway.Status.Status = "Ready"
+		gateway.Status.HostName = "N/A"
+	} else {
 
-	if err := h.handleDeployment(gateway); err != nil {
-		return err
-	}
-
-	if err := h.handleAutoscalePolicy(gateway); err != nil {
-		return err
-	}
-
-	if err := h.handleK8sService(gateway); err != nil {
-		return err
-	}
-
-	if err := h.handleRoutingK8sService(gateway); err != nil {
-		return err
-	}
-
-	if gateway.Spec.Type != v1alpha1.GatewayTypeMicroGateway {
-		if err := h.handleIstioVirtualService(gateway); err != nil {
+		if err := h.handleConfigMap(gateway); err != nil {
 			return err
 		}
 
-		if err := h.handleIstioGateway(gateway); err != nil {
+		if err := h.handleDeployment(gateway); err != nil {
 			return err
 		}
-	}
 
-	if gateway.Spec.OidcConfig != nil {
-		if err := h.handleEnvoyFilter(gateway); err != nil {
+		if err := h.handleAutoscalePolicy(gateway); err != nil {
 			return err
 		}
-	}
 
-	if len(gateway.Spec.Host) > 0 {
-		if len(gateway.Spec.Tls.Key) > 0 && len(gateway.Spec.Tls.Cert) > 0 {
-			if err := h.handleClusterIngressSecret(gateway); err != nil {
+		if err := h.handleK8sService(gateway); err != nil {
+			return err
+		}
+
+		if err := h.handleRoutingK8sService(gateway); err != nil {
+			return err
+		}
+
+		if gateway.Spec.Type != v1alpha1.GatewayTypeMicroGateway {
+			if err := h.handleIstioVirtualService(gateway); err != nil {
+				return err
+			}
+
+			if err := h.handleIstioGateway(gateway); err != nil {
 				return err
 			}
 		}
-		if err := h.handleClusterIngress(gateway); err != nil {
-			return err
+
+		if gateway.Spec.OidcConfig != nil {
+			if err := h.handleEnvoyFilter(gateway); err != nil {
+				return err
+			}
+		}
+
+		if len(gateway.Spec.Host) > 0 {
+			if len(gateway.Spec.Tls.Key) > 0 && len(gateway.Spec.Tls.Cert) > 0 {
+				if err := h.handleClusterIngressSecret(gateway); err != nil {
+					return err
+				}
+			}
+			if err := h.handleClusterIngress(gateway); err != nil {
+				return err
+			}
 		}
 	}
-
 	//if err := h.handleIstioVirtualServicesForIngress(gateway); err != nil {
 	//	return err
 	//}
