@@ -49,6 +49,13 @@ type GatewaySpec struct {
 	Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
 
+func (gw *GatewaySpec) Empty() bool {
+	if len(gw.TCPRoutes) == 0 && len(gw.HTTPRoutes) == 0 {
+		return true
+	}
+	return false
+}
+
 type TlsConfig struct {
 	Secret string `json:"secret,omitempty"`
 	Key    string `json:"key,omitempty"`
