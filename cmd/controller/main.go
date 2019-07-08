@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
@@ -51,6 +52,7 @@ var (
 )
 
 func main() {
+	klog.InitFlags(nil)
 	flag.Parse()
 
 	stopCh := signals.SetupSignalHandler()
