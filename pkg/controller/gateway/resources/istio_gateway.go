@@ -32,6 +32,17 @@ func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
 
 	var gatewayServers []*v1alpha3.Server
 
+	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+		gatewayServers = append(gatewayServers, &v1alpha3.Server{
+			Hosts: []string{"*"},
+			Port: &v1alpha3.Port{
+				Number:   grpcRoute.Port,
+				Protocol: "GRPC",
+				Name:     fmt.Sprintf("grpc-%d", grpcRoute.Port),
+			},
+		})
+	}
+
 	for _, tcpRoute := range gateway.Spec.TCPRoutes {
 		gatewayServers = append(gatewayServers, &v1alpha3.Server{
 			Hosts: []string{"*"},

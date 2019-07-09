@@ -45,12 +45,13 @@ type GatewaySpec struct {
 	Tls         TlsConfig            `json:"tls,omitempty"`
 	OidcConfig  *OidcConfig          `json:"oidc,omitempty"`
 	HTTPRoutes  []HTTPRoute          `json:"http,omitempty"`
+	GRPCRoutes  []GRPCRoute          `json:"grpc,omitempty"`
 	TCPRoutes   []TCPRoute           `json:"tcp,omitempty"`
 	Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
 
 func (gw *GatewaySpec) Empty() bool {
-	if len(gw.TCPRoutes) == 0 && len(gw.HTTPRoutes) == 0 {
+	if len(gw.TCPRoutes) == 0 && len(gw.HTTPRoutes) == 0 && len(gw.GRPCRoutes) == 0 {
 		return true
 	}
 	return false
@@ -88,6 +89,12 @@ type HTTPRoute struct {
 type APIDefinition struct {
 	Path   string `json:"path"`
 	Method string `json:"method"`
+}
+
+type GRPCRoute struct {
+	Port        uint32 `json:"port"`
+	BackendHost string `json:"backendHost"`
+	BackendPort uint32 `json:"backendPort"`
 }
 
 type TCPRoute struct {

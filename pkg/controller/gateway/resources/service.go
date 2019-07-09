@@ -111,6 +111,15 @@ func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 		})
 	}
 
+	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Name:       fmt.Sprintf("grpc-%d", grpcRoute.Port),
+			Protocol:   corev1.ProtocolTCP,
+			Port:       int32(grpcRoute.Port),
+			TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(grpcRoute.Port)},
+		})
+	}
+
 	for _, tcpRoute := range gateway.Spec.TCPRoutes {
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       fmt.Sprintf("tcp-%d", tcpRoute.Port),
