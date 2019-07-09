@@ -95,6 +95,7 @@ type GRPCRoute struct {
 	Port        uint32 `json:"port"`
 	BackendHost string `json:"backendHost"`
 	BackendPort uint32 `json:"backendPort"`
+	ZeroScale   bool   `json:"zeroScale,omitempty"`
 }
 
 type TCPRoute struct {

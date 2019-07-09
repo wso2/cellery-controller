@@ -59,6 +59,9 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 	}
 
 	for i, _ := range gatewaySpec.GRPCRoutes {
+		if zeroScale[gatewaySpec.GRPCRoutes[i].BackendHost] {
+			gatewaySpec.GRPCRoutes[i].ZeroScale = true
+		}
 		gatewaySpec.GRPCRoutes[i].BackendHost = cell.Name + "--" + gatewaySpec.GRPCRoutes[i].BackendHost + "-service"
 	}
 
