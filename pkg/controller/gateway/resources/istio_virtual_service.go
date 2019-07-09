@@ -70,6 +70,41 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 		httpRoutes = append(httpRoutes, r)
 	}
 
+	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+		r := &v1alpha3.HTTPRoute{
+			Match: []*v1alpha3.HTTPMatchRequest{
+				{
+					Port: grpcRoute.Port,
+				},
+			},
+			Route: []*v1alpha3.DestinationWeight{
+				{
+					Destination: &v1alpha3.Destination{
+						Host: func() string {
+							//if grpcRoute.ZeroScale {
+							//	return grpcRoute.BackendHost + "-rev"
+							//}
+							return grpcRoute.BackendHost
+						}(),
+						Port: &v1alpha3.PortSelector{
+							Number: grpcRoute.BackendPort,
+						},
+					},
+				},
+			},
+			//AppendHeaders: func() map[string]string {
+			//	if httpRoute.ZeroScale {
+			//		return map[string]string{
+			//			"knative-serving-namespace": "default",
+			//			"knative-serving-revision":  httpRoute.Backend + "-rev",
+			//		}
+			//	}
+			//	return map[string]string{}
+			//}(),
+		}
+		httpRoutes = append(httpRoutes, r)
+	}
+
 	var tcpRoutes []*v1alpha3.TCPRoute
 
 	for _, tcpRoute := range gateway.Spec.TCPRoutes {

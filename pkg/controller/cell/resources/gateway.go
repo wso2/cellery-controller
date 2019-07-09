@@ -58,6 +58,10 @@ func CreateGateway(cell *v1alpha1.Cell) *v1alpha1.Gateway {
 		gatewaySpec.TCPRoutes[i].BackendHost = cell.Name + "--" + gatewaySpec.TCPRoutes[i].BackendHost + "-service"
 	}
 
+	for i, _ := range gatewaySpec.GRPCRoutes {
+		gatewaySpec.GRPCRoutes[i].BackendHost = cell.Name + "--" + gatewaySpec.GRPCRoutes[i].BackendHost + "-service"
+	}
+
 	return &v1alpha1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GatewayName(cell),
