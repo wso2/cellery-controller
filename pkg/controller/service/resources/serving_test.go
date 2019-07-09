@@ -222,6 +222,9 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 								{
 									Destination: &v1alpha3.Destination{
 										Host: "foo-service-rev",
+										Port: &v1alpha3.PortSelector{
+											Number: 80,
+										},
 									},
 								},
 							},

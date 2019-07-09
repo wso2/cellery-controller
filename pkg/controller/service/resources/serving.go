@@ -21,6 +21,7 @@ package resources
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +37,11 @@ import (
 func CreateZeroScaleService(service *v1alpha1.Service) *servingv1alpha1.Configuration {
 	// Container name is set by the knative controller
 	service.Spec.Container.Name = ""
+	if strings.ToLower(service.Spec.Protocol) == serviceProtocolGRPC && len(service.Spec.Container.Ports) > 0 {
+		// This is how knative serving determines the grpc service
+		service.Spec.Container.Ports[0].Name = "h2c"
+	}
+
 	return &servingv1alpha1.Configuration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceServingConfigurationName(service),
@@ -131,6 +137,15 @@ func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualS
 						{
 							Destination: &v1alpha3.Destination{
 								Host: ServiceServingRevisionName(service),
+								Port: &v1alpha3.PortSelector{
+									Number: func() uint32 {
+										if strings.ToLower(service.Spec.Protocol) == serviceProtocolGRPC {
+											// GRPC service port for knative
+											return 81
+										}
+										return 80
+									}(),
+								},
 							},
 						},
 					},

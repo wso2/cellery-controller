@@ -81,26 +81,32 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 				{
 					Destination: &v1alpha3.Destination{
 						Host: func() string {
-							//if grpcRoute.ZeroScale {
-							//	return grpcRoute.BackendHost + "-rev"
-							//}
+							if grpcRoute.ZeroScale {
+								return grpcRoute.BackendHost + "-rev"
+							}
 							return grpcRoute.BackendHost
 						}(),
 						Port: &v1alpha3.PortSelector{
-							Number: grpcRoute.BackendPort,
+							Number: func() uint32 {
+								if grpcRoute.ZeroScale {
+									// GRPC service port for knative
+									return 81
+								}
+								return grpcRoute.BackendPort
+							}(),
 						},
 					},
 				},
 			},
-			//AppendHeaders: func() map[string]string {
-			//	if httpRoute.ZeroScale {
-			//		return map[string]string{
-			//			"knative-serving-namespace": "default",
-			//			"knative-serving-revision":  httpRoute.Backend + "-rev",
-			//		}
-			//	}
-			//	return map[string]string{}
-			//}(),
+			AppendHeaders: func() map[string]string {
+				if grpcRoute.ZeroScale {
+					return map[string]string{
+						"knative-serving-namespace": "default",
+						"knative-serving-revision":  grpcRoute.BackendHost + "-rev",
+					}
+				}
+				return map[string]string{}
+			}(),
 		}
 		httpRoutes = append(httpRoutes, r)
 	}
