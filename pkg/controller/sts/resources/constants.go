@@ -55,8 +55,12 @@ const (
 	envCellNameKey = "CELL_NAME"
 
 	// Envoy filter
-	filterInsertPositionFirst = "FIRST"
-	filterInsertPositionLast  = "LAST"
+	filterInsertPositionFirst  = "FIRST"
+	filterInsertPositionLast   = "LAST"
+	filterInsertPositionBefore = "BEFORE"
+	filterInsertPositionAfter  = "AFTER"
+
+	filterMixer = "mixer"
 
 	filterListenerTypeInbound  = "SIDECAR_INBOUND"
 	filterListenerTypeOutbound = "SIDECAR_OUTBOUND"

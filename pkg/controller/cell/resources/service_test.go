@@ -60,7 +60,8 @@ func TestCreateService(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--bar-service",
 					Labels: map[string]string{
-						mesh.CellLabelKey: "foo",
+						mesh.CellLabelKey:       "foo",
+						mesh.CellLabelKeySource: "foo",
 					},
 					Annotations: map[string]string{},
 					OwnerReferences: []metav1.OwnerReference{{
@@ -139,7 +140,8 @@ func TestCreateService(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--bar-service",
 					Labels: map[string]string{
-						mesh.CellLabelKey: "foo",
+						mesh.CellLabelKey:       "foo",
+						mesh.CellLabelKeySource: "foo",
 					},
 					Annotations: map[string]string{},
 					OwnerReferences: []metav1.OwnerReference{{

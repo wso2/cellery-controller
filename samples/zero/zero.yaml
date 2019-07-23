@@ -21,7 +21,7 @@ spec:
     spec:
       autoscaling:
         policy:
-          minReplicas: 0
+          minReplicas: "0"
       container:
         env:
         - name: TARGET
@@ -33,7 +33,7 @@ spec:
     spec:
       autoscaling:
         policy:
-          minReplicas: 0
+          minReplicas: "0"
           concurrency: 5
       container:
         # hey -z 30s -c 50 "http://zero-cell--gateway-service/scale?sleep=100&prime=10000&bloat=5"

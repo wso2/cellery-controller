@@ -56,7 +56,8 @@ func TestCreateTokenService(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--sts",
 					Labels: map[string]string{
-						mesh.CellLabelKey: "foo",
+						mesh.CellLabelKey:       "foo",
+						mesh.CellLabelKeySource: "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),

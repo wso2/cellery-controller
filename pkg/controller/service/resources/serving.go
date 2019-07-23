@@ -113,7 +113,7 @@ func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualS
 								Regex: fmt.Sprintf("^%s(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
 							SourceLabels: map[string]string{
-								mesh.CellLabelKey: service.Labels[mesh.CellLabelKey],
+								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
 							},
 						},
 						{
@@ -121,7 +121,7 @@ func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualS
 								Regex: fmt.Sprintf("^%s\\.default(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
 							SourceLabels: map[string]string{
-								mesh.CellLabelKey: service.Labels[mesh.CellLabelKey],
+								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
 							},
 						},
 						{
@@ -129,7 +129,7 @@ func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualS
 								Regex: fmt.Sprintf("^%s\\.default\\.svc\\.cluster\\.local(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
 							SourceLabels: map[string]string{
-								mesh.CellLabelKey: service.Labels[mesh.CellLabelKey],
+								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
 							},
 						},
 					},

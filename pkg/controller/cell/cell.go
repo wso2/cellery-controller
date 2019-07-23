@@ -271,21 +271,6 @@ func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {
 	return nil
 }
 
-func (h *cellHandler) handleEnvoyFilter(cell *v1alpha1.Cell) error {
-	envoyFilter, err := h.envoyFilterLister.EnvoyFilters(cell.Namespace).Get(resources.EnvoyFilterName(cell))
-	if errors.IsNotFound(err) {
-		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(cell.Namespace).Create(resources.CreateEnvoyFilter(cell))
-		if err != nil {
-			h.logger.Errorf("Failed to create EnvoyFilter %v", err)
-			return err
-		}
-		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(cell), envoyFilter)
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
 	servicesSpecs := cell.Spec.ServiceTemplates
 	cell.Status.ServiceCount = 0

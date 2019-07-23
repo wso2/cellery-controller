@@ -35,6 +35,17 @@ spec:
         - name: stock_api_url
           value: http://stock-options--gateway-service/stock
       servicePort: 80
+      resources:
+        limits:
+          cpu:
+            amount: 200m
+          memory:
+            amount: 1024Mi
+        requests:
+          cpu:
+            amount: 100m
+          memory:
+            amount: 128Mi
   - metadata:
       name: debug
     spec:

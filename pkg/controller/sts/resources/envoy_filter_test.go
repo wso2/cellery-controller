@@ -79,7 +79,8 @@ func TestCreateEnvoyFilter(t *testing.T) {
 					Filters: []v1alpha3.Filter{
 						{
 							InsertPosition: v1alpha3.InsertPosition{
-								Index: "FIRST",
+								Index:      "BEFORE",
+								RelativeTo: "mixer",
 							},
 							ListenerMatch: v1alpha3.ListenerMatch{
 								ListenerType:     "SIDECAR_INBOUND",
@@ -99,7 +100,8 @@ func TestCreateEnvoyFilter(t *testing.T) {
 						},
 						{
 							InsertPosition: v1alpha3.InsertPosition{
-								Index: "LAST",
+								Index:      "AFTER",
+								RelativeTo: "mixer",
 							},
 							ListenerMatch: v1alpha3.ListenerMatch{
 								ListenerType:     "SIDECAR_OUTBOUND",
@@ -165,7 +167,8 @@ func TestCreateEnvoyFilter(t *testing.T) {
 					Filters: []v1alpha3.Filter{
 						{
 							InsertPosition: v1alpha3.InsertPosition{
-								Index: "LAST",
+								Index:      "AFTER",
+								RelativeTo: "mixer",
 							},
 							ListenerMatch: v1alpha3.ListenerMatch{
 								ListenerType:     "SIDECAR_OUTBOUND",
