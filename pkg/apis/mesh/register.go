@@ -28,6 +28,10 @@ const (
 	CellServiceLabelKey      = GroupName + "/service"
 	ComponentLabelKey        = GroupName + "/component"
 
+	// tem fix for avoid pilot validation https://github.com/istio/istio/issues/14797
+	CellLabelKeySource      = GroupName + ".cell"
+	ComponentLabelKeySource = GroupName + ".component"
+
 	// Cellery Annotations
 	CellServicesAnnotationKey     = GroupName + "/cell-services"
 	CellDependenciesAnnotationKey = GroupName + "/cell-dependencies"

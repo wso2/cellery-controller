@@ -112,8 +112,8 @@ func buildHttpRoute(cell *v1alpha1.Cell, dependencyInst string) *v1alpha3.HTTPRo
 					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 				},
 				SourceLabels: map[string]string{
-					mesh.CellLabelKey:      cell.Name,
-					mesh.ComponentLabelKey: "true",
+					mesh.CellLabelKeySource:      cell.Name,
+					mesh.ComponentLabelKeySource: "true",
 				},
 			},
 		},

@@ -58,7 +58,8 @@ func TestCreateNetworkPolicy(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--network",
 					Labels: map[string]string{
-						mesh.CellLabelKey: "foo",
+						mesh.CellLabelKey:       "foo",
+						mesh.CellLabelKeySource: "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -203,7 +204,8 @@ func TestCreateNetworkPolicy(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--network",
 					Labels: map[string]string{
-						mesh.CellLabelKey: "foo",
+						mesh.CellLabelKey:       "foo",
+						mesh.CellLabelKeySource: "foo",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),

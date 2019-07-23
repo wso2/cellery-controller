@@ -39,8 +39,9 @@ func createLabels(service *v1alpha1.Service) map[string]string {
 }
 
 func createLabelsWithComponentFlag(labels map[string]string) map[string]string {
-	newLabels := make(map[string]string, len(labels)+1)
+	newLabels := make(map[string]string, len(labels)+2)
 	newLabels[mesh.ComponentLabelKey] = "true"
+	newLabels[mesh.ComponentLabelKeySource] = "true"
 	for k, v := range labels {
 		newLabels[k] = v
 	}

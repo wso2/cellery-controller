@@ -177,11 +177,20 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 
 	containers = append(containers, corev1.Container{
 		Name:  "cell-gateway",
-		Image: "gcr.io/istio-release/proxyv2:1.0.2",
+		Image: "docker.io/istio/proxyv2:1.2.2",
 		Env: []corev1.EnvVar{
 			{
 				Name:  "CELL_NAME",
 				Value: cellName,
+			},
+			{
+				Name: "NODE_NAME",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "spec.nodeName",
+					},
+				},
 			},
 			{
 				Name: "POD_NAME",
@@ -211,6 +220,15 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 				},
 			},
 			{
+				Name: "HOST_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "status.hostIP",
+					},
+				},
+			},
+			{
 				Name: "ISTIO_META_POD_NAME",
 				ValueFrom: &corev1.EnvVarSource{
 					FieldRef: &corev1.ObjectFieldSelector{
@@ -219,14 +237,21 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 					},
 				},
 			},
+			{
+				Name: "ISTIO_META_CONFIG_NAMESPACE",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						APIVersion: "v1",
+						FieldPath:  "metadata.namespace",
+					},
+				},
+			},
 		},
 		Args: []string{
 			"proxy",
 			"router",
-			"-v",
-			"2",
-			"--discoveryRefreshDelay",
-			"1s",
+			"--domain",
+			"$(POD_NAMESPACE).svc.cluster.local",
 			"--drainDuration",
 			"45s",
 			"--parentShutdownDuration",
@@ -236,15 +261,15 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			"--serviceCluster",
 			gateway.Name,
 			"--zipkinAddress",
-			"wso2sp-worker.cellery-system:9411",
-			"--statsdUdpAddress",
-			"istio-statsd-prom-bridge.istio-system:9125",
+			"zipkin.istio-system:9411",
 			"--proxyAdminPort",
 			"15000",
+			"--statusPort",
+			"15020",
 			"--controlPlaneAuthPolicy",
 			"NONE",
 			"--discoveryAddress",
-			"istio-pilot.istio-system:8080",
+			"istio-pilot.istio-system:15010",
 		},
 		Ports: []corev1.ContainerPort{
 			{

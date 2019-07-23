@@ -93,9 +93,10 @@ func TestCreateZeroScaleDeployment(t *testing.T) {
 								"autoscaling.knative.dev/maxScale": "10",
 							},
 							Labels: map[string]string{
-								"app":                     "foo",
-								"mesh.cellery.io/service": "foo",
-								mesh.ComponentLabelKey:    "true",
+								"app":                        "foo",
+								"mesh.cellery.io/service":    "foo",
+								mesh.ComponentLabelKey:       "true",
+								mesh.ComponentLabelKeySource: "true",
 							},
 						},
 						Spec: servingv1alpha1.RevisionSpec{
@@ -144,6 +145,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 					Name:      "foo",
 					Labels: map[string]string{
 						"mesh.cellery.io/cell": "foo-cell",
+						"mesh.cellery.io.cell": "foo-cell",
 					},
 				},
 				Spec: v1alpha1.ServiceSpec{
@@ -174,6 +176,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 						"app":                     "foo",
 						"mesh.cellery.io/service": "foo",
 						"mesh.cellery.io/cell":    "foo-cell",
+						"mesh.cellery.io.cell":    "foo-cell",
 					},
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         v1alpha1.SchemeGroupVersion.String(),
@@ -198,7 +201,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 										Regex: fmt.Sprintf("^%s(?::\\d{1,5})?$", "foo-service-rev"),
 									},
 									SourceLabels: map[string]string{
-										"mesh.cellery.io/cell": "foo-cell",
+										"mesh.cellery.io.cell": "foo-cell",
 									},
 								},
 								{
@@ -206,7 +209,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 										Regex: fmt.Sprintf("^%s\\.default(?::\\d{1,5})?$", "foo-service-rev"),
 									},
 									SourceLabels: map[string]string{
-										"mesh.cellery.io/cell": "foo-cell",
+										"mesh.cellery.io.cell": "foo-cell",
 									},
 								},
 								{
@@ -214,7 +217,7 @@ func TestCreateZeroScaleVirtualService(t *testing.T) {
 										Regex: fmt.Sprintf("^%s\\.default\\.svc\\.cluster\\.local(?::\\d{1,5})?$", "foo-service-rev"),
 									},
 									SourceLabels: map[string]string{
-										"mesh.cellery.io/cell": "foo-cell",
+										"mesh.cellery.io.cell": "foo-cell",
 									},
 								},
 							},

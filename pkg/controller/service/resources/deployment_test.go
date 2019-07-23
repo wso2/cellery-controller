@@ -75,9 +75,10 @@ func TestCreateServiceDeployment(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
-								appLabelKey:              "foo",
-								mesh.CellServiceLabelKey: "foo",
-								mesh.ComponentLabelKey:   "true",
+								appLabelKey:                  "foo",
+								mesh.CellServiceLabelKey:     "foo",
+								mesh.ComponentLabelKey:       "true",
+								mesh.ComponentLabelKeySource: "true",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "true",
@@ -154,9 +155,10 @@ func TestCreateServiceDeployment(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
-								appLabelKey:              "foo",
-								mesh.CellServiceLabelKey: "foo",
-								mesh.ComponentLabelKey:   "true",
+								appLabelKey:                  "foo",
+								mesh.CellServiceLabelKey:     "foo",
+								mesh.ComponentLabelKey:       "true",
+								mesh.ComponentLabelKeySource: "true",
 							},
 							Annotations: map[string]string{
 								controller.IstioSidecarInjectAnnotation: "true",

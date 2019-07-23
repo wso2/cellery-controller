@@ -67,7 +67,8 @@ func CreateEnvoyFilter(tokenService *v1alpha1.TokenService) *v1alpha3.EnvoyFilte
 func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 	return v1alpha3.Filter{
 		InsertPosition: v1alpha3.InsertPosition{
-			Index: filterInsertPositionFirst,
+			Index:      filterInsertPositionBefore,
+			RelativeTo: filterMixer,
 		},
 		ListenerMatch: v1alpha3.ListenerMatch{
 			ListenerType:     filterListenerTypeInbound,
@@ -90,7 +91,8 @@ func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 func buildOutboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 	return v1alpha3.Filter{
 		InsertPosition: v1alpha3.InsertPosition{
-			Index: filterInsertPositionLast,
+			Index:      filterInsertPositionAfter,
+			RelativeTo: filterMixer,
 		},
 		ListenerMatch: v1alpha3.ListenerMatch{
 			ListenerType:     filterListenerTypeOutbound,
