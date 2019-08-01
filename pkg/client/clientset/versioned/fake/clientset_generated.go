@@ -86,28 +86,13 @@ func (c *Clientset) AuthenticationV1alpha1() authenticationv1alpha1.Authenticati
 	return &fakeauthenticationv1alpha1.FakeAuthenticationV1alpha1{Fake: &c.Fake}
 }
 
-// Authentication retrieves the AuthenticationV1alpha1Client
-func (c *Clientset) Authentication() authenticationv1alpha1.AuthenticationV1alpha1Interface {
-	return &fakeauthenticationv1alpha1.FakeAuthenticationV1alpha1{Fake: &c.Fake}
-}
-
 // MeshV1alpha1 retrieves the MeshV1alpha1Client
 func (c *Clientset) MeshV1alpha1() meshv1alpha1.MeshV1alpha1Interface {
 	return &fakemeshv1alpha1.FakeMeshV1alpha1{Fake: &c.Fake}
 }
 
-// Mesh retrieves the MeshV1alpha1Client
-func (c *Clientset) Mesh() meshv1alpha1.MeshV1alpha1Interface {
-	return &fakemeshv1alpha1.FakeMeshV1alpha1{Fake: &c.Fake}
-}
-
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
 func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
-	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
-}
-
-// Networking retrieves the NetworkingV1alpha3Client
-func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
 	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
 }
 
@@ -118,10 +103,5 @@ func (c *Clientset) ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface {
 
 // ServingV1beta1 retrieves the ServingV1beta1Client
 func (c *Clientset) ServingV1beta1() servingv1beta1.ServingV1beta1Interface {
-	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
-}
-
-// Serving retrieves the ServingV1beta1Client
-func (c *Clientset) Serving() servingv1beta1.ServingV1beta1Interface {
 	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
 }

@@ -24,6 +24,8 @@ type AutoscalePolicyExpansion interface{}
 
 type CellExpansion interface{}
 
+type CompositeExpansion interface{}
+
 type GatewayExpansion interface{}
 
 type ServiceExpansion interface{}

@@ -31,6 +31,7 @@ type MeshV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AutoscalePoliciesGetter
 	CellsGetter
+	CompositesGetter
 	GatewaysGetter
 	ServicesGetter
 	TokenServicesGetter
@@ -47,6 +48,10 @@ func (c *MeshV1alpha1Client) AutoscalePolicies(namespace string) AutoscalePolicy
 
 func (c *MeshV1alpha1Client) Cells(namespace string) CellInterface {
 	return newCells(c, namespace)
+}
+
+func (c *MeshV1alpha1Client) Composites(namespace string) CompositeInterface {
+	return newComposites(c, namespace)
 }
 
 func (c *MeshV1alpha1Client) Gateways(namespace string) GatewayInterface {

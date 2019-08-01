@@ -67,6 +67,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1alpha1().AutoscalePolicies().Informer()}, nil
 	case meshv1alpha1.SchemeGroupVersion.WithResource("cells"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1alpha1().Cells().Informer()}, nil
+	case meshv1alpha1.SchemeGroupVersion.WithResource("composites"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1alpha1().Composites().Informer()}, nil
 	case meshv1alpha1.SchemeGroupVersion.WithResource("gateways"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1alpha1().Gateways().Informer()}, nil
 	case meshv1alpha1.SchemeGroupVersion.WithResource("services"):

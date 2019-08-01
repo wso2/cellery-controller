@@ -34,18 +34,10 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AuthenticationV1alpha1() authenticationv1alpha1.AuthenticationV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Authentication() authenticationv1alpha1.AuthenticationV1alpha1Interface
 	MeshV1alpha1() meshv1alpha1.MeshV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Mesh() meshv1alpha1.MeshV1alpha1Interface
 	NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Networking() networkingv1alpha3.NetworkingV1alpha3Interface
 	ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface
 	ServingV1beta1() servingv1beta1.ServingV1beta1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Serving() servingv1beta1.ServingV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -64,31 +56,13 @@ func (c *Clientset) AuthenticationV1alpha1() authenticationv1alpha1.Authenticati
 	return c.authenticationV1alpha1
 }
 
-// Deprecated: Authentication retrieves the default version of AuthenticationClient.
-// Please explicitly pick a version.
-func (c *Clientset) Authentication() authenticationv1alpha1.AuthenticationV1alpha1Interface {
-	return c.authenticationV1alpha1
-}
-
 // MeshV1alpha1 retrieves the MeshV1alpha1Client
 func (c *Clientset) MeshV1alpha1() meshv1alpha1.MeshV1alpha1Interface {
 	return c.meshV1alpha1
 }
 
-// Deprecated: Mesh retrieves the default version of MeshClient.
-// Please explicitly pick a version.
-func (c *Clientset) Mesh() meshv1alpha1.MeshV1alpha1Interface {
-	return c.meshV1alpha1
-}
-
 // NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
 func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
-	return c.networkingV1alpha3
-}
-
-// Deprecated: Networking retrieves the default version of NetworkingClient.
-// Please explicitly pick a version.
-func (c *Clientset) Networking() networkingv1alpha3.NetworkingV1alpha3Interface {
 	return c.networkingV1alpha3
 }
 
@@ -99,12 +73,6 @@ func (c *Clientset) ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface {
 
 // ServingV1beta1 retrieves the ServingV1beta1Client
 func (c *Clientset) ServingV1beta1() servingv1beta1.ServingV1beta1Interface {
-	return c.servingV1beta1
-}
-
-// Deprecated: Serving retrieves the default version of ServingClient.
-// Please explicitly pick a version.
-func (c *Clientset) Serving() servingv1beta1.ServingV1beta1Interface {
 	return c.servingV1beta1
 }
 

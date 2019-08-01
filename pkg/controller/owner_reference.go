@@ -33,6 +33,14 @@ func CreateCellOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	})
 }
 
+func CreateCompositeOwnerRef(obj metav1.Object) *metav1.OwnerReference {
+	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
+		Group:   v1alpha1.SchemeGroupVersion.Group,
+		Version: v1alpha1.SchemeGroupVersion.Version,
+		Kind:    "Composite",
+	})
+}
+
 func CreateGatewayOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
 		Group:   v1alpha1.SchemeGroupVersion.Group,

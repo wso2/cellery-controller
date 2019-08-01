@@ -29,14 +29,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
   name = "github.com/golang/protobuf"
   packages = [
@@ -577,7 +569,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5249c83f0fb9e277b2d28c19eca814feac7ef05dc762e4deaf0a2e4b1a7c5df3"
+  digest = "1:39912eb5f8eaf46486faae0839586c27c93423e552f76875defa048f52c15c15"
   name = "k8s.io/gengo"
   packages = [
     "args",
@@ -590,7 +582,7 @@
     "types",
   ]
   pruneopts = "UT"
-  revision = "4242d8e6c5dba56827bb7bcf14ad11cda38f3991"
+  revision = "e17681d19d3ac4837a019ece36c2a0ec31ffe985"
 
 [[projects]]
   digest = "1:c283ca5951eb7d723d3300762f96ff94c2ea11eaceb788279e2b7327f92e4f2a"
@@ -637,10 +629,12 @@
     "go.uber.org/zap/zapcore",
     "k8s.io/api/apps/v1",
     "k8s.io/api/autoscaling/v2beta1",
+    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/networking/v1",
     "k8s.io/apimachinery/pkg/api/errors",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
@@ -656,12 +650,14 @@
     "k8s.io/client-go/informers",
     "k8s.io/client-go/informers/apps/v1",
     "k8s.io/client-go/informers/autoscaling/v2beta1",
+    "k8s.io/client-go/informers/batch/v1",
     "k8s.io/client-go/informers/core/v1",
     "k8s.io/client-go/informers/extensions/v1beta1",
     "k8s.io/client-go/informers/networking/v1",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/listers/apps/v1",
     "k8s.io/client-go/listers/autoscaling/v2beta1",
+    "k8s.io/client-go/listers/batch/v1",
     "k8s.io/client-go/listers/core/v1",
     "k8s.io/client-go/listers/extensions/v1beta1",
     "k8s.io/client-go/listers/networking/v1",
@@ -676,6 +672,7 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "k8s.io/klog",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -133,7 +133,7 @@ func (c *FakeTokenServices) DeleteCollection(options *v1.DeleteOptions, listOpti
 // Patch applies the patch and returns the patched tokenService.
 func (c *FakeTokenServices) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.TokenService, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(tokenservicesResource, c.ns, name, data, subresources...), &v1alpha1.TokenService{})
+		Invokes(testing.NewPatchSubresourceAction(tokenservicesResource, c.ns, name, pt, data, subresources...), &v1alpha1.TokenService{})
 
 	if obj == nil {
 		return nil, err
