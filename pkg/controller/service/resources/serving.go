@@ -89,6 +89,14 @@ func CreateZeroScaleService(service *v1alpha1.Service) *servingv1alpha1.Configur
 func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualService {
 	// Container name is set by the knative controller
 	service.Spec.Container.Name = ""
+
+	var sourceLabels map[string]string
+
+	if v, ok := service.Labels[mesh.CellLabelKeySource]; ok {
+		sourceLabels = make(map[string]string)
+		sourceLabels[mesh.CellLabelKeySource] = v
+	}
+
 	return &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceServingVirtualServiceName(service),
@@ -112,25 +120,19 @@ func CreateZeroScaleVirtualService(service *v1alpha1.Service) *v1alpha3.VirtualS
 							Authority: &v1alpha3.StringMatch{
 								Regex: fmt.Sprintf("^%s(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
-							SourceLabels: map[string]string{
-								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
-							},
+							SourceLabels: sourceLabels,
 						},
 						{
 							Authority: &v1alpha3.StringMatch{
 								Regex: fmt.Sprintf("^%s\\.default(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
-							SourceLabels: map[string]string{
-								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
-							},
+							SourceLabels: sourceLabels,
 						},
 						{
 							Authority: &v1alpha3.StringMatch{
 								Regex: fmt.Sprintf("^%s\\.default\\.svc\\.cluster\\.local(?::\\d{1,5})?$", ServiceServingRevisionName(service)),
 							},
-							SourceLabels: map[string]string{
-								mesh.CellLabelKeySource: service.Labels[mesh.CellLabelKeySource],
-							},
+							SourceLabels: sourceLabels,
 						},
 					},
 					Route: []*v1alpha3.DestinationWeight{

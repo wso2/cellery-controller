@@ -24,7 +24,7 @@ import (
 )
 
 func createLabels(cell *v1alpha1.Cell) map[string]string {
-	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+1)
+	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+2)
 	labels[mesh.CellLabelKey] = cell.Name
 	labels[mesh.CellLabelKeySource] = cell.Name
 

@@ -36,6 +36,14 @@ type CellListerExpansion interface{}
 // CellNamespaceLister.
 type CellNamespaceListerExpansion interface{}
 
+// CompositeListerExpansion allows custom methods to be added to
+// CompositeLister.
+type CompositeListerExpansion interface{}
+
+// CompositeNamespaceListerExpansion allows custom methods to be added to
+// CompositeNamespaceLister.
+type CompositeNamespaceListerExpansion interface{}
+
 // GatewayListerExpansion allows custom methods to be added to
 // GatewayLister.
 type GatewayListerExpansion interface{}

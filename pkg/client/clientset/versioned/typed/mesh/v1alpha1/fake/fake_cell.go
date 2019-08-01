@@ -133,7 +133,7 @@ func (c *FakeCells) DeleteCollection(options *v1.DeleteOptions, listOptions v1.L
 // Patch applies the patch and returns the patched cell.
 func (c *FakeCells) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Cell, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(cellsResource, c.ns, name, data, subresources...), &v1alpha1.Cell{})
+		Invokes(testing.NewPatchSubresourceAction(cellsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Cell{})
 
 	if obj == nil {
 		return nil, err

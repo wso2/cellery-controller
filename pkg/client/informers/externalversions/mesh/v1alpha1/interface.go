@@ -30,6 +30,8 @@ type Interface interface {
 	AutoscalePolicies() AutoscalePolicyInformer
 	// Cells returns a CellInformer.
 	Cells() CellInformer
+	// Composites returns a CompositeInformer.
+	Composites() CompositeInformer
 	// Gateways returns a GatewayInformer.
 	Gateways() GatewayInformer
 	// Services returns a ServiceInformer.
@@ -57,6 +59,11 @@ func (v *version) AutoscalePolicies() AutoscalePolicyInformer {
 // Cells returns a CellInformer.
 func (v *version) Cells() CellInformer {
 	return &cellInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Composites returns a CompositeInformer.
+func (v *version) Composites() CompositeInformer {
+	return &compositeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Gateways returns a GatewayInformer.

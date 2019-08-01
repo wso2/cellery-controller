@@ -38,6 +38,10 @@ func (c *FakeMeshV1alpha1) Cells(namespace string) v1alpha1.CellInterface {
 	return &FakeCells{c, namespace}
 }
 
+func (c *FakeMeshV1alpha1) Composites(namespace string) v1alpha1.CompositeInterface {
+	return &FakeComposites{c, namespace}
+}
+
 func (c *FakeMeshV1alpha1) Gateways(namespace string) v1alpha1.GatewayInterface {
 	return &FakeGateways{c, namespace}
 }

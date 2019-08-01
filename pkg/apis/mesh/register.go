@@ -23,6 +23,7 @@ const (
 
 	// Cellery Labels
 	CellLabelKey             = GroupName + "/cell"
+	CompositeLabelKey        = GroupName + "/composite"
 	CellGatewayLabelKey      = GroupName + "/gateway"
 	CellTokenServiceLabelKey = GroupName + "/sts"
 	CellServiceLabelKey      = GroupName + "/service"
@@ -30,6 +31,7 @@ const (
 
 	// tem fix for avoid pilot validation https://github.com/istio/istio/issues/14797
 	CellLabelKeySource      = GroupName + ".cell"
+	CompositeLabelKeySource = GroupName + ".composite"
 	ComponentLabelKeySource = GroupName + ".component"
 
 	// Cellery Annotations

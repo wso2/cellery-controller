@@ -34,6 +34,7 @@ import (
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions"
 	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell"
+	"github.com/cellery-io/mesh-controller/pkg/controller/composite"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
 	"github.com/cellery-io/mesh-controller/pkg/controller/service"
 	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
@@ -101,6 +102,7 @@ func main() {
 
 	// Create Mesh informers
 	cellInformer := meshInformerFactory.Mesh().V1alpha1().Cells()
+	compositeInformer := meshInformerFactory.Mesh().V1alpha1().Composites()
 	gatewayInformer := meshInformerFactory.Mesh().V1alpha1().Gateways()
 	tokenServiceInformer := meshInformerFactory.Mesh().V1alpha1().TokenServices()
 	serviceInformer := meshInformerFactory.Mesh().V1alpha1().Services()
@@ -128,6 +130,13 @@ func main() {
 		envoyFilterInformer,
 		systemSecretInformer,
 		istioVSInformer,
+		logger,
+	)
+	compositeController := composite.NewController(
+		kubeClient,
+		meshClient,
+		compositeInformer,
+		serviceInformer,
 		logger,
 	)
 	gatewayController := gateway.NewController(
@@ -203,6 +212,7 @@ func main() {
 		clusterIngressInformer.Informer().HasSynced,
 		// Sync mesh informers
 		cellInformer.Informer().HasSynced,
+		compositeInformer.Informer().HasSynced,
 		gatewayInformer.Informer().HasSynced,
 		tokenServiceInformer.Informer().HasSynced,
 		serviceInformer.Informer().HasSynced,
@@ -217,6 +227,7 @@ func main() {
 
 	//Start controllers
 	go cellController.Run(threadsPerController, stopCh)
+	go compositeController.Run(threadsPerController, stopCh)
 	go gatewayController.Run(threadsPerController, stopCh)
 	go tokenServiceController.Run(threadsPerController, stopCh)
 	go serviceController.Run(threadsPerController, stopCh)
