@@ -42,7 +42,7 @@ func TestCreateAutoscalePolicy(t *testing.T) {
 			Autoscaling: &v1alpha1.AutoscalePolicySpec{
 				Overridable: true,
 				Policy: v1alpha1.Policy{
-					MinReplicas: "1",
+					MinReplicas: &intOne,
 					MaxReplicas: 5,
 					Metrics: []autoscalingV2Beta1.MetricSpec{
 						autoscalingV2Beta1.MetricSpec{
@@ -118,7 +118,7 @@ func TestCreateDefaultAutoscalePolicy(t *testing.T) {
 					Name:       GatewayDeploymentName(gw),
 					APIVersion: appsv1.SchemeGroupVersion.String(),
 				},
-				MinReplicas: "1",
+				MinReplicas: &intOne,
 				MaxReplicas: 1,
 				Metrics:     []autoscalingV2Beta1.MetricSpec{},
 			},
@@ -140,7 +140,7 @@ func TestGatewayAutoscalePolicyName(t *testing.T) {
 			Autoscaling: &v1alpha1.AutoscalePolicySpec{
 				Overridable: true,
 				Policy: v1alpha1.Policy{
-					MinReplicas: "1",
+					MinReplicas: &intOne,
 					MaxReplicas: 5,
 					Metrics: []autoscalingV2Beta1.MetricSpec{
 						autoscalingV2Beta1.MetricSpec{

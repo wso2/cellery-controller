@@ -21,7 +21,6 @@ package resources
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -39,22 +38,6 @@ func CreateServiceDeployment(service *v1alpha1.Service) *appsv1.Deployment {
 	podTemplateAnnotations := map[string]string{}
 	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "true"
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
-
-	if service.Spec.Resources.Limits != nil {
-		m := make(map[corev1.ResourceName]resource.Quantity)
-		for k, v := range service.Spec.Resources.Limits {
-			m[corev1.ResourceName(k)] = resource.MustParse(v.Amount)
-		}
-		service.Spec.Container.Resources.Limits = m
-	}
-
-	if service.Spec.Resources.Requests != nil {
-		m := make(map[corev1.ResourceName]resource.Quantity)
-		for k, v := range service.Spec.Resources.Requests {
-			m[corev1.ResourceName(k)] = resource.MustParse(v.Amount)
-		}
-		service.Spec.Container.Resources.Requests = m
-	}
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -129,22 +112,6 @@ func buildContainerWithReadinessProbe(service *v1alpha1.Service) corev1.Containe
 	}
 
 	service.Spec.Container.ReadinessProbe = readinessProbe
-
-	if service.Spec.Resources.Limits != nil {
-		m := make(map[corev1.ResourceName]resource.Quantity)
-		for k, v := range service.Spec.Resources.Limits {
-			m[corev1.ResourceName(k)] = resource.MustParse(v.Amount)
-		}
-		service.Spec.Container.Resources.Limits = m
-	}
-
-	if service.Spec.Resources.Requests != nil {
-		m := make(map[corev1.ResourceName]resource.Quantity)
-		for k, v := range service.Spec.Resources.Requests {
-			m[corev1.ResourceName(k)] = resource.MustParse(v.Amount)
-		}
-		service.Spec.Container.Resources.Requests = m
-	}
 
 	return service.Spec.Container
 }

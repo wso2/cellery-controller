@@ -173,7 +173,7 @@ func TestCreateGateway(t *testing.T) {
 							Spec: v1alpha1.ServiceSpec{
 								Autoscaling: &v1alpha1.AutoscalePolicySpec{
 									Policy: v1alpha1.Policy{
-										MinReplicas: "0",
+										MinReplicas: &zero,
 									},
 								},
 							},
