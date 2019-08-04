@@ -13,7 +13,7 @@ spec:
     spec:
       autoscaling:
         policy:
-          minReplicas: "0"
+          minReplicas: 0
           concurrency: 5
       container:
         image: docker.io/celleryio/sampleapp-employee
@@ -28,7 +28,7 @@ spec:
     spec:
       autoscaling:
         policy:
-          minReplicas: "0"
+          minReplicas: 0
       container:
         image: docker.io/celleryio/sampleapp-salary
         ports:

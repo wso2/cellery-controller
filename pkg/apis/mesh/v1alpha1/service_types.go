@@ -19,8 +19,6 @@
 package v1alpha1
 
 import (
-	"strconv"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -51,19 +49,6 @@ type ServiceSpec struct {
 	Container          corev1.Container     `json:"container"`
 	Autoscaling        *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 	Type               ServiceType          `json:"type,omitempty"`
-	Resources          ResourceRequirements `json:"resources,omitempty"`
-}
-
-// Temp fix to fabric k8s yaml generation
-type ResourceRequirements struct {
-	Limits   ResourceList `json:"limits,omitempty"`
-	Requests ResourceList `json:"requests,omitempty"`
-}
-
-type ResourceList map[string]Quantity
-
-type Quantity struct {
-	Amount string `json:"amount,omitempty"`
 }
 
 type ServiceStatus struct {
@@ -76,13 +61,8 @@ func (s *ServiceSpec) IsZeroScaled() bool {
 	if s.Autoscaling == nil {
 		return false
 	}
-
-	i, err := strconv.Atoi(s.Autoscaling.Policy.MinReplicas)
-	if err != nil {
-		return false
-	}
-
-	return i == 0
+	min := s.Autoscaling.Policy.MinReplicas
+	return *min == 0
 }
 
 type ServiceType string
