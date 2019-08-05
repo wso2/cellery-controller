@@ -98,6 +98,7 @@ rules:
   - mesh.cellery.io
   resources:
   - cells
+  - composites
   - services
   - gateways
   - tokenservices
