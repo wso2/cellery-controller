@@ -72,6 +72,7 @@ data:
   oidc-filter-image: wso2cellery/envoy-oidc-filter
   skip-tls-verification: "true"
   enable-autoscaling: "true"
+  zipkin-address: zipkin.istio-system:9411
   cell-sts-config: |
     {
         "endpoint": "https://gateway.cellery-system:9443/api/identity/cellery-auth/v1.0/sts/token",

@@ -175,6 +175,11 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 
 	var containers []corev1.Container
 
+	zipkinAddress := "zipkin.istio-system:9411"
+	if len(gatewayConfig.ZipkinAddress) > 0 {
+		zipkinAddress = gatewayConfig.ZipkinAddress
+	}
+
 	containers = append(containers, corev1.Container{
 		Name:  "cell-gateway",
 		Image: "docker.io/istio/proxyv2:1.2.2",
@@ -261,7 +266,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			"--serviceCluster",
 			gateway.Name,
 			"--zipkinAddress",
-			"zipkin.istio-system:9411",
+			zipkinAddress,
 			"--proxyAdminPort",
 			"15000",
 			"--statusPort",
