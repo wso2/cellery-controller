@@ -28,6 +28,7 @@ type Gateway struct {
 	OidcFilterImage   string
 	SkipTlsVerify     string
 	EnableAutoscaling bool
+	ZipkinAddress     string
 }
 
 type Secret struct {

@@ -605,6 +605,10 @@ func (h *gatewayHandler) updateConfig(obj interface{}) {
 		conf.EnableAutoscaling = true
 	}
 
+	if zipkinAddress, ok := configMap.Data["zipkin-address"]; ok {
+		conf.ZipkinAddress = zipkinAddress
+	}
+
 	h.gatewayConfig = conf
 }
 
