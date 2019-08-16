@@ -32,6 +32,7 @@ import (
 )
 
 const instance = "instance"
+const instanceId = "x-instance-id"
 
 func CreateCellVirtualService(cell *v1alpha1.Cell, cellLister listers.CellLister) (*v1alpha3.VirtualService, error) {
 	hostNames, httpRoutes, tcpRoutes, err := buildInterCellRoutingInfo(cell, cellLister)
@@ -86,7 +87,7 @@ func buildInterCellRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellListe
 		if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) > 0 {
 			hostNames = append(hostNames, buildHostName(dependencyInst))
 			// build http routes
-			intercellHttpRoutes = append(intercellHttpRoutes, buildHttpRoute(cell, dependencyInst))
+			intercellHttpRoutes = append(intercellHttpRoutes, buildHttpRoutes(cell, dependencyInst)...)
 		}
 		if len(depCell.Spec.GatewayTemplate.Spec.TCPRoutes) > 0 {
 			// TCP is not supported atm
@@ -104,8 +105,58 @@ func buildHostName(dependencyInst string) string {
 	return GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))
 }
 
-func buildHttpRoute(cell *v1alpha1.Cell, dependencyInst string) *v1alpha3.HTTPRoute {
-	return &v1alpha3.HTTPRoute{
+func buildHttpRoutes(cell *v1alpha1.Cell, dependencyInst string) []*v1alpha3.HTTPRoute {
+	instanceIdMatch1Rule := &v1alpha3.HTTPRoute{
+		Match: []*v1alpha3.HTTPMatchRequest{
+			{
+				Authority: &v1alpha3.StringMatch{
+					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
+				},
+				Headers: map[string]*v1alpha3.StringMatch{
+					instanceId: {
+						Exact: "1",
+					},
+				},
+				SourceLabels: map[string]string{
+					mesh.CellLabelKeySource:      cell.Name,
+					mesh.ComponentLabelKeySource: "true",
+				},
+			},
+		},
+		Route: []*v1alpha3.DestinationWeight{
+			{
+				Destination: &v1alpha3.Destination{
+					Host: GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst)),
+				},
+			},
+		},
+	}
+	instanceIdMatch2Rule := &v1alpha3.HTTPRoute{
+		Match: []*v1alpha3.HTTPMatchRequest{
+			{
+				Authority: &v1alpha3.StringMatch{
+					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
+				},
+				Headers: map[string]*v1alpha3.StringMatch{
+					instanceId: {
+						Exact: "2",
+					},
+				},
+				SourceLabels: map[string]string{
+					mesh.CellLabelKeySource:      cell.Name,
+					mesh.ComponentLabelKeySource: "true",
+				},
+			},
+		},
+		Route: []*v1alpha3.DestinationWeight{
+			{
+				Destination: &v1alpha3.Destination{
+					Host: GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst)),
+				},
+			},
+		},
+	}
+	percentageBasedRule := &v1alpha3.HTTPRoute{
 		Match: []*v1alpha3.HTTPMatchRequest{
 			{
 				Authority: &v1alpha3.StringMatch{
@@ -125,6 +176,7 @@ func buildHttpRoute(cell *v1alpha1.Cell, dependencyInst string) *v1alpha3.HTTPRo
 			},
 		},
 	}
+	return []*v1alpha3.HTTPRoute{instanceIdMatch1Rule, instanceIdMatch2Rule, percentageBasedRule}
 }
 
 func buildTcpRoutes(cell *v1alpha1.Cell, dependencyInst string) []*v1alpha3.TCPRoute {
