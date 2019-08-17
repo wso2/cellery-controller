@@ -286,7 +286,7 @@
   version = "v2.2.1"
 
 [[projects]]
-  digest = "1:86ad5797d1189de342ed6988fbb76b92dc0429a4d677ad69888d6137efa5712e"
+  digest = "1:b2e959d92a38ffc25142da8e8bf4fefe0e5e687ecb871fabaac58db0497304df"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1beta1",
@@ -327,11 +327,11 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "af9c91bd2759f97bddda2451d5175c758938f12b"
-  version = "kubernetes-1.14.3"
+  revision = "fdd30b57c827abbc506646ecfd579f6ccb3b80ab"
+  version = "kubernetes-1.15.2"
 
 [[projects]]
-  digest = "1:d0bf8fddebd2921f5eae2b4a15ac648e5e1f1897d1e683aeb97533f2d240cb3b"
+  digest = "1:19f25947275fdb24f57a6b9884dc8520d8b5051b0f2894dcd775c5555e22d85f"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -378,11 +378,11 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "6a84e37a896db9780c75367af8d2ed2bb944022e"
-  version = "kubernetes-1.14.3"
+  revision = "1799e75a07195de9460b8ef7300883499f12127b"
+  version = "kubernetes-1.15.2"
 
 [[projects]]
-  digest = "1:e7ef3e01f0ff1c14d126b4561eff486484684b675569daa5a9574f0102f1a1fe"
+  digest = "1:64c3351f3c22dfdc170a4068e33e7be097c0e60c8b7818fea4f01c3ab089d6de"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -535,11 +535,11 @@
     "util/workqueue",
   ]
   pruneopts = "UT"
-  revision = "6ee68ca5fd8355d024d02f9db0b3b667e8357a0f"
-  version = "v11.0.0"
+  revision = "78d2af792babf2dd937ba2e2a8d99c753a5eda89"
+  version = "v12.0.0"
 
 [[projects]]
-  digest = "1:2d821667dbd520a7ef31bdc923543f197ba30021b4317fd8871618ada52f23b0"
+  digest = "1:f41480fd8c5f54b13326ee0f2ee398d5734789b790dbc4db57f9b08a0d63139a"
   name = "k8s.io/code-generator"
   packages = [
     "cmd/client-gen",
@@ -564,8 +564,8 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "50b561225d70b3eb79a1faafd3dfe7b1a62cbe73"
-  version = "kubernetes-1.14.3"
+  revision = "18da4a14b22b17d2fa761e50037fabfbacec225b"
+  version = "kubernetes-1.15.2"
 
 [[projects]]
   branch = "master"
@@ -634,7 +634,6 @@
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/networking/v1",
     "k8s.io/apimachinery/pkg/api/errors",
-    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",

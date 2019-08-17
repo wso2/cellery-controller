@@ -74,7 +74,7 @@ func (in *AutoscalePolicy) DeepCopyObject() runtime.Object {
 func (in *AutoscalePolicyList) DeepCopyInto(out *AutoscalePolicyList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AutoscalePolicy, len(*in))
@@ -168,7 +168,7 @@ func (in *CellCondition) DeepCopy() *CellCondition {
 func (in *CellList) DeepCopyInto(out *CellList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Cell, len(*in))
@@ -291,7 +291,7 @@ func (in *CompositeCondition) DeepCopy() *CompositeCondition {
 func (in *CompositeList) DeepCopyInto(out *CompositeList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Composite, len(*in))
@@ -412,7 +412,7 @@ func (in *Gateway) DeepCopyObject() runtime.Object {
 func (in *GatewayList) DeepCopyInto(out *GatewayList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Gateway, len(*in))
@@ -643,7 +643,7 @@ func (in *Service) DeepCopyObject() runtime.Object {
 func (in *ServiceList) DeepCopyInto(out *ServiceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Service, len(*in))
@@ -797,7 +797,7 @@ func (in *TokenService) DeepCopyObject() runtime.Object {
 func (in *TokenServiceList) DeepCopyInto(out *TokenServiceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]TokenService, len(*in))
