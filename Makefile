@@ -108,5 +108,13 @@ tools: tools.goimports
 tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "goimports not found. Running 'go get golang.org/x/tools/cmd/goimports'"; \
-		go get golang.org/x/tools/cmd/goimports; \
+		GO111MODULE=off go get golang.org/x/tools/cmd/goimports; \
 	fi
+
+.PHONY: vendor
+vendor:
+	go mod vendor -v
+
+.PHONY: verify-codegen
+verify-codegen: vendor
+	$(PROJECT_ROOT)/hack/verify-codegen.sh
