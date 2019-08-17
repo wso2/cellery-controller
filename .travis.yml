@@ -3,12 +3,15 @@ sudo: false
 language: go
 
 go:
-- 1.11.x
+- 1.12.x
 
 addons:
   apt:
     packages:
     - docker-ce
+
+env:
+- GO111MODULE=on
 
 # Put the source code into correct GOPATH in order to allow forked repos to build properly in travis
 before_install:
@@ -17,17 +20,16 @@ before_install:
 - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/cellery-io/mesh-controller
 - cd $HOME/gopath/src/github.com/cellery-io/mesh-controller
 
-# Only use the code in vendor/
-install: true
-
 before_script:
 - make tools
 
 script:
 - test -z "$(make code.format-check| tee /dev/stderr)"
+- make verify-codegen
 - make build.controller
 - make docker.controller
 - make test.controller
+- git diff --exit-code
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
