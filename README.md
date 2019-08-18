@@ -26,9 +26,10 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
 
 ### Building and Running
 
-1. Clone this repository to your $GOPATH
+1. Clone this repository to your $GOPATH and enable go module support by setting GO111MODULE=on. Cloning into $GOPATH is only required if you want to use code-generator.
    
     ```bash
+    export GO111MODULE=on
     cd $GOPATH/src/github.com/cellery-io/
     git clone https://github.com/cellery-io/mesh-controller.git
     cd mesh-controller
