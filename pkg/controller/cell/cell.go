@@ -49,6 +49,7 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
+	controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
 )
 
 type cellHandler struct {
@@ -320,12 +321,12 @@ func (h *cellHandler) handleVirtualService(cell *v1alpha1.Cell) error {
 			h.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
 			return nil
 		}
-		lastAppliedConfig, err := json.Marshal(resources.BuildVirtualServiceiedConfig(cellVs))
+		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
 		if err != nil {
 			h.logger.Errorf("Failed to create Cell VS %v for instance %s", err, cell.Name)
 			return err
 		}
-		resources.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
 		cellVs, err = h.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(cellVs)
 		if err != nil {
 			h.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, cell.Name)

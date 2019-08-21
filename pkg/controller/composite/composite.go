@@ -19,6 +19,7 @@
 package composite
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -32,17 +33,22 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
 	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
+	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
 	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
 )
 
 type compositeHandler struct {
-	kubeClient      kubernetes.Interface
-	meshClient      meshclientset.Interface
-	compositeLister listers.CompositeLister
-	serviceLister   listers.ServiceLister
-	logger          *zap.SugaredLogger
+	kubeClient       kubernetes.Interface
+	meshClient       meshclientset.Interface
+	compositeLister  listers.CompositeLister
+	serviceLister    listers.ServiceLister
+	virtualSvcLister istiov1alpha1listers.VirtualServiceLister
+	cellLister       listers.CellLister
+	logger           *zap.SugaredLogger
 }
 
 func NewController(
@@ -50,14 +56,18 @@ func NewController(
 	meshClient meshclientset.Interface,
 	compositeInformer meshinformers.CompositeInformer,
 	serviceInformer meshinformers.ServiceInformer,
+	virtualSvcInformer istioinformers.VirtualServiceInformer,
+	cellInformer meshinformers.CellInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &compositeHandler{
-		kubeClient:      kubeClient,
-		meshClient:      meshClient,
-		compositeLister: compositeInformer.Lister(),
-		serviceLister:   serviceInformer.Lister(),
-		logger:          logger.Named("composite-controller"),
+		kubeClient:       kubeClient,
+		meshClient:       meshClient,
+		compositeLister:  compositeInformer.Lister(),
+		serviceLister:    serviceInformer.Lister(),
+		virtualSvcLister: virtualSvcInformer.Lister(),
+		cellLister:       cellInformer.Lister(),
+		logger:           logger.Named("composite-controller"),
 	}
 	c := controller.New(h, h.logger, "Composite")
 
@@ -108,7 +118,41 @@ func (h *compositeHandler) handle(composite *v1alpha1.Composite) error {
 		return err
 	}
 
+	if err := h.handleVirtualService(composite); err != nil {
+		return err
+	}
+
 	h.updateCellStatus(composite)
+	return nil
+}
+
+func (h *compositeHandler) handleVirtualService(composite *v1alpha1.Composite) error {
+	cellVs, err := h.virtualSvcLister.VirtualServices(composite.Namespace).Get(controller_commons.VirtualServiceName(composite.Name))
+	if errors.IsNotFound(err) {
+		cellVs, err = resources.CreateCellVirtualService(composite, h.compositeLister, h.cellLister)
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, composite.Name)
+			return err
+		}
+		if cellVs == nil {
+			h.logger.Debugf("No VirtualService created for composite instance %s", composite.Name)
+			return nil
+		}
+		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VS %v for instance %s", err, composite.Name)
+			return err
+		}
+		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		cellVs, err = h.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Create(cellVs)
+		if err != nil {
+			h.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, composite.Name)
+			return err
+		}
+		h.logger.Debugw("Cell VirtualService created", controller_commons.VirtualServiceName(composite.Name), cellVs)
+	} else if err != nil {
+		return err
+	}
 	return nil
 }
 
