@@ -137,6 +137,8 @@ func main() {
 		meshClient,
 		compositeInformer,
 		serviceInformer,
+		istioVSInformer,
+		cellInformer,
 		logger,
 	)
 	gatewayController := gateway.NewController(

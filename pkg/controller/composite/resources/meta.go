@@ -55,10 +55,6 @@ func GatewayNameFromInstanceName(instance string) string {
 	return instance + "--gateway"
 }
 
-func GatewayK8sServiceName(gwName string) string {
-	return gwName + "-service"
-}
-
 func TokenServiceName(cell *v1alpha1.Cell) string {
 	return cell.Name + "--sts"
 }
@@ -73,8 +69,4 @@ func ServiceName(composite *v1alpha1.Composite, serviceTemplate v1alpha1.Service
 
 func SecretName(cell *v1alpha1.Cell) string {
 	return cell.Name + "--secret"
-}
-
-func CellVirtualServiceName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--vs"
 }
