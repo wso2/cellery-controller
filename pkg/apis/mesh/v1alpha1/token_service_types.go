@@ -41,6 +41,7 @@ type TokenServiceTemplateSpec struct {
 
 type TokenServiceSpec struct {
 	InterceptMode  InterceptMode `json:"interceptMode,omitempty"`
+	Composite      bool          `json:"composite,omitempty"`
 	OpaPolicies    []OpaPolicy   `json:"opa,omitempty"`
 	UnsecuredPaths []string      `json:"unsecuredPaths,omitempty"`
 }

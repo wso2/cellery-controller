@@ -30,9 +30,10 @@ const (
 	ComponentLabelKey        = GroupName + "/component"
 
 	// tem fix for avoid pilot validation https://github.com/istio/istio/issues/14797
-	CellLabelKeySource      = GroupName + ".cell"
-	CompositeLabelKeySource = GroupName + ".composite"
-	ComponentLabelKeySource = GroupName + ".component"
+	CellLabelKeySource            = GroupName + ".cell"
+	CompositeLabelKeySource       = GroupName + ".composite"
+	ComponentLabelKeySource       = GroupName + ".component"
+	CompositeTokenServiceLabelKey = GroupName + "/composite-sts"
 
 	// Cellery Annotations
 	CellServicesAnnotationKey     = GroupName + "/cell-services"

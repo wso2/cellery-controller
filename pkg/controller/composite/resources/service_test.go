@@ -60,8 +60,9 @@ func TestCreateService(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--bar-service",
 					Labels: map[string]string{
-						mesh.CompositeLabelKey:       "foo",
-						mesh.CompositeLabelKeySource: "foo",
+						mesh.CompositeLabelKey:          "foo",
+						mesh.CompositeLabelKeySource:    "foo",
+						"mesh.cellery.io/composite-sts": "true",
 					},
 					Annotations: map[string]string{},
 					OwnerReferences: []metav1.OwnerReference{{
@@ -140,8 +141,9 @@ func TestCreateService(t *testing.T) {
 					Namespace: "foo-namespace",
 					Name:      "foo--bar-service",
 					Labels: map[string]string{
-						mesh.CompositeLabelKey:       "foo",
-						mesh.CompositeLabelKeySource: "foo",
+						mesh.CompositeLabelKey:          "foo",
+						mesh.CompositeLabelKeySource:    "foo",
+						"mesh.cellery.io/composite-sts": "true",
 					},
 					Annotations: map[string]string{},
 					OwnerReferences: []metav1.OwnerReference{{
