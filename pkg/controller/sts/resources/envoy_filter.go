@@ -56,9 +56,16 @@ func CreateEnvoyFilter(tokenService *v1alpha1.TokenService) *v1alpha3.EnvoyFilte
 			},
 		},
 		Spec: v1alpha3.EnvoyFilterSpec{
-			WorkloadLabels: map[string]string{
-				mesh.CellLabelKey: cellName,
-			},
+			WorkloadLabels: func() map[string]string {
+				if tokenService.Spec.Composite {
+					return map[string]string{
+						mesh.CompositeTokenServiceLabelKey: "true",
+					}
+				}
+				return map[string]string{
+					mesh.CellLabelKey: cellName,
+				}
+			}(),
 			Filters: filters,
 		},
 	}

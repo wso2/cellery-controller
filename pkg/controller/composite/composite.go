@@ -19,7 +19,10 @@
 package composite
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"reflect"
 
@@ -27,9 +30,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
@@ -38,17 +44,21 @@ import (
 	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
+	"github.com/cellery-io/mesh-controller/pkg/controller/composite/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
 )
 
 type compositeHandler struct {
-	kubeClient       kubernetes.Interface
-	meshClient       meshclientset.Interface
-	compositeLister  listers.CompositeLister
-	serviceLister    listers.ServiceLister
-	virtualSvcLister istiov1alpha1listers.VirtualServiceLister
-	cellLister       listers.CellLister
-	logger           *zap.SugaredLogger
+	kubeClient         kubernetes.Interface
+	meshClient         meshclientset.Interface
+	compositeLister    listers.CompositeLister
+	serviceLister      listers.ServiceLister
+	secretLister       corev1listers.SecretLister
+	tokenServiceLister listers.TokenServiceLister
+	cellerySecret      config.Secret
+	virtualSvcLister   istiov1alpha1listers.VirtualServiceLister
+	cellLister         listers.CellLister
+	logger             *zap.SugaredLogger
 }
 
 func NewController(
@@ -56,18 +66,23 @@ func NewController(
 	meshClient meshclientset.Interface,
 	compositeInformer meshinformers.CompositeInformer,
 	serviceInformer meshinformers.ServiceInformer,
+	tokenServiceInformer meshinformers.TokenServiceInformer,
+	secretInformer corev1informers.SecretInformer,
+	systemSecretInformer corev1informers.SecretInformer,
 	virtualSvcInformer istioinformers.VirtualServiceInformer,
 	cellInformer meshinformers.CellInformer,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	h := &compositeHandler{
-		kubeClient:       kubeClient,
-		meshClient:       meshClient,
-		compositeLister:  compositeInformer.Lister(),
-		serviceLister:    serviceInformer.Lister(),
-		virtualSvcLister: virtualSvcInformer.Lister(),
-		cellLister:       cellInformer.Lister(),
-		logger:           logger.Named("composite-controller"),
+		kubeClient:         kubeClient,
+		meshClient:         meshClient,
+		compositeLister:    compositeInformer.Lister(),
+		serviceLister:      serviceInformer.Lister(),
+		tokenServiceLister: tokenServiceInformer.Lister(),
+		secretLister:       secretInformer.Lister(),
+		virtualSvcLister:   virtualSvcInformer.Lister(),
+		cellLister:         cellInformer.Lister(),
+		logger:             logger.Named("composite-controller"),
 	}
 	c := controller.New(h, h.logger, "Composite")
 
@@ -79,6 +94,13 @@ func NewController(
 			c.Enqueue(new)
 		},
 		DeleteFunc: c.Enqueue,
+	})
+
+	systemSecretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: h.updateSecret,
+		UpdateFunc: func(old, new interface{}) {
+			h.updateSecret(new)
+		},
 	})
 
 	return c
@@ -115,6 +137,14 @@ func (h *compositeHandler) Handle(key string) error {
 func (h *compositeHandler) handle(composite *v1alpha1.Composite) error {
 
 	if err := h.handleServices(composite); err != nil {
+		return err
+	}
+
+	if err := h.handleSecret(composite); err != nil {
+		return err
+	}
+
+	if err := h.handleTokenService(composite); err != nil {
 		return err
 	}
 
@@ -193,6 +223,41 @@ func (h *compositeHandler) handleServices(composite *v1alpha1.Composite) error {
 	return nil
 }
 
+func (h *compositeHandler) handleTokenService(composite *v1alpha1.Composite) error {
+	tokenService, err := h.tokenServiceLister.TokenServices(composite.Namespace).Get(resources.TokenServiceName(composite))
+	if errors.IsNotFound(err) {
+		tokenService, err = h.meshClient.MeshV1alpha1().TokenServices(composite.Namespace).Create(resources.CreateTokenService(composite))
+		if err != nil {
+			h.logger.Errorf("Failed to create Composite TokenService %v", err)
+			return err
+		}
+		h.logger.Debugw("Composite TokenService created", resources.TokenServiceName(composite), tokenService)
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *compositeHandler) handleSecret(composite *v1alpha1.Composite) error {
+	secret, err := h.secretLister.Secrets(composite.Namespace).Get(resources.SecretName(composite))
+	if errors.IsNotFound(err) {
+		desiredSecret, err := resources.CreateKeyPairSecret(composite, h.cellerySecret)
+		if err != nil {
+			h.logger.Errorf("Cannot build the Composite Secret %v", err)
+			return err
+		}
+		secret, err = h.kubeClient.CoreV1().Secrets(composite.Namespace).Create(desiredSecret)
+		if err != nil {
+			h.logger.Errorf("Failed to create Composite Secret %v", err)
+			return err
+		}
+		h.logger.Debugw("Secret created", resources.SecretName(composite), secret)
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
 func isEqual(oldService *v1alpha1.Service, newService *v1alpha1.Service) bool {
 	// we only consider equality of the spec
 	return reflect.DeepEqual(oldService.Spec, newService.Spec)
@@ -231,4 +296,54 @@ func (h *compositeHandler) updateCellStatus(composite *v1alpha1.Composite) {
 		}
 		composite.Status.Conditions = c
 	}
+}
+
+func (h *compositeHandler) updateSecret(obj interface{}) {
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		return
+	}
+
+	if secret.Name != mesh.SystemSecretName {
+		return
+	}
+
+	s := config.Secret{}
+
+	if keyBytes, ok := secret.Data["tls.key"]; ok {
+		block, _ := pem.Decode(keyBytes)
+		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			h.logger.Errorf("error while parsing cellery-secret tls.key: %v", err)
+			s.PrivateKey = nil
+		}
+		key, ok := parsedKey.(*rsa.PrivateKey)
+		if !ok {
+			h.logger.Errorf("error while parsing cellery-secret tls.key: non rsa private key")
+			s.PrivateKey = nil
+		}
+		s.PrivateKey = key
+	} else {
+		h.logger.Errorf("Missing tls.key in the cellery secret.")
+	}
+
+	if certBytes, ok := secret.Data["tls.crt"]; ok {
+		block, _ := pem.Decode(certBytes)
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			h.logger.Errorf("error while parsing cellery-secret tls.crt: %v", err)
+			s.PrivateKey = nil
+		}
+		s.Certificate = cert
+	} else {
+		h.logger.Errorf("Missing tls.cert in the cellery secret.")
+	}
+
+	if certBundle, ok := secret.Data["cert-bundle.pem"]; ok {
+		s.CertBundle = certBundle
+	} else {
+		h.logger.Errorf("Missing cert-bundle.pem in the cellery secret.")
+	}
+
+	h.cellerySecret = s
 }

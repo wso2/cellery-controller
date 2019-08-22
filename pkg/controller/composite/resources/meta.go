@@ -34,6 +34,15 @@ func createLabels(composite *v1alpha1.Composite) map[string]string {
 	return labels
 }
 
+func addTokenServiceLabels(labels map[string]string) map[string]string {
+	newLabels := make(map[string]string, len(labels)+1)
+	labels[mesh.CompositeTokenServiceLabelKey] = "true"
+	for k, v := range labels {
+		newLabels[k] = v
+	}
+	return newLabels
+}
+
 func createServiceAnnotations(composite *v1alpha1.Composite) map[string]string {
 	annotations := make(map[string]string, len(composite.ObjectMeta.Annotations))
 
@@ -55,8 +64,8 @@ func GatewayNameFromInstanceName(instance string) string {
 	return instance + "--gateway"
 }
 
-func TokenServiceName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--sts"
+func TokenServiceName(composite *v1alpha1.Composite) string {
+	return "composite-sts"
 }
 
 func EnvoyFilterName(cell *v1alpha1.Cell) string {
@@ -67,6 +76,6 @@ func ServiceName(composite *v1alpha1.Composite, serviceTemplate v1alpha1.Service
 	return composite.Name + "--" + serviceTemplate.Name
 }
 
-func SecretName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--secret"
+func SecretName(composite *v1alpha1.Composite) string {
+	return "composite-sts-secret"
 }

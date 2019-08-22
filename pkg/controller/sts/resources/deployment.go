@@ -37,6 +37,9 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 	one := int32(1)
 	cellName := tokenService.Labels[mesh.CellLabelKey]
+	if tokenService.Spec.Composite {
+		cellName = "composite"
+	}
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceDeploymentName(tokenService),
@@ -207,7 +210,12 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							Name: keyPairVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: cellName + "--secret",
+									SecretName: func() string {
+										if tokenService.Spec.Composite {
+											return "composite-sts-secret"
+										}
+										return cellName + "--secret"
+									}(),
 									Items: []corev1.KeyToPath{
 										{
 											Key:  "key.pem",
@@ -225,7 +233,12 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							Name: caCertsVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: cellName + "--secret",
+									SecretName: func() string {
+										if tokenService.Spec.Composite {
+											return "composite-sts-secret"
+										}
+										return cellName + "--secret"
+									}(),
 									Items: []corev1.KeyToPath{
 										{
 											Key:  "cellery-cert.pem",

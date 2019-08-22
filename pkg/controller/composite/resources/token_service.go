@@ -22,28 +22,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateService(composite *v1alpha1.Composite, serviceTemplate v1alpha1.ServiceTemplateSpec) *v1alpha1.Service {
-	serviceSpec := serviceTemplate.Spec.DeepCopy()
-	serviceSpec.Container.Name = serviceTemplate.Name
-
-	// Default to Deployment if not specified
-	if len(serviceSpec.Type) == 0 {
-		serviceSpec.Type = v1alpha1.ServiceTypeDeployment
-	}
-
-	return &v1alpha1.Service{
+func CreateTokenService(composite *v1alpha1.Composite) *v1alpha1.TokenService {
+	return &v1alpha1.TokenService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ServiceName(composite, serviceTemplate),
-			Namespace:   composite.Namespace,
-			Labels:      addTokenServiceLabels(createLabels(composite)),
-			Annotations: createServiceAnnotations(composite),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateCompositeOwnerRef(composite),
-			},
+			Name:      TokenServiceName(composite),
+			Namespace: composite.Namespace,
+			Labels:    createLabels(composite),
 		},
-		Spec: *serviceSpec,
+		Spec: v1alpha1.TokenServiceSpec{
+			InterceptMode: v1alpha1.InterceptModeAny,
+			Composite:     true,
+		},
 	}
 }
