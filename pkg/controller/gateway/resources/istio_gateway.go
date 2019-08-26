@@ -24,15 +24,26 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
+func MakeIstioGateway(gateway *v1alpha2.Gateway) *v1alpha3.Gateway {
 
 	var gatewayServers []*v1alpha3.Server
 
-	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+	for _, httpRoute := range gateway.Spec.Ingress.HTTPRoutes {
+		gatewayServers = append(gatewayServers, &v1alpha3.Server{
+			Hosts: []string{"*"},
+			Port: &v1alpha3.Port{
+				Number:   httpRoute.Port,
+				Protocol: "HTTP",
+				Name:     fmt.Sprintf("tcp-%d", httpRoute.Port),
+			},
+		})
+	}
+
+	for _, grpcRoute := range gateway.Spec.Ingress.GRPCRoutes {
 		gatewayServers = append(gatewayServers, &v1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &v1alpha3.Port{
@@ -43,7 +54,7 @@ func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
 		})
 	}
 
-	for _, tcpRoute := range gateway.Spec.TCPRoutes {
+	for _, tcpRoute := range gateway.Spec.Ingress.TCPRoutes {
 		gatewayServers = append(gatewayServers, &v1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &v1alpha3.Port{
@@ -53,27 +64,46 @@ func CreateIstioGateway(gateway *v1alpha1.Gateway) *v1alpha3.Gateway {
 			},
 		})
 	}
-	gatewayServers = append(gatewayServers, &v1alpha3.Server{
-		Hosts: []string{"*"},
-		Port: &v1alpha3.Port{
-			Number:   80,
-			Protocol: "HTTP",
-			Name:     fmt.Sprintf("http-%d", 80),
-		},
-	})
+	// gatewayServers = append(gatewayServers, &v1alpha3.Server{
+	// 	Hosts: []string{"*"},
+	// 	Port: &v1alpha3.Port{
+	// 		Number:   80,
+	// 		Protocol: "HTTP",
+	// 		Name:     fmt.Sprintf("http-%d", 80),
+	// 	},
+	// })
 
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioGatewayName(gateway),
 			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
+			Labels:    makeLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
 		},
 		Spec: v1alpha3.GatewaySpec{
 			Servers:  gatewayServers,
-			Selector: createGatewayLabels(gateway),
+			Selector: makeLabels(gateway),
 		},
 	}
+}
+
+func RequireIstioGateway(gateway *v1alpha2.Gateway) bool {
+	return gateway.Spec.Ingress.HasRoutes()
+}
+
+func RequireIstioGatewayUpdate(gateway *v1alpha2.Gateway, istioGateway *v1alpha3.Gateway) bool {
+	return gateway.Generation != gateway.Status.ObservedGeneration ||
+		istioGateway.Generation != gateway.Status.IstioGatewayGeneration
+}
+
+func CopyIstioGateway(source, destination *v1alpha3.Gateway) {
+	destination.Spec = source.Spec
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromIstioGateway(gateway *v1alpha2.Gateway, istioGateway *v1alpha3.Gateway) {
+	gateway.Status.IstioGatewayGeneration = istioGateway.Generation
 }

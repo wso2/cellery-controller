@@ -19,33 +19,53 @@
 package resources
 
 import (
-	"fmt"
-
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func createLabels(composite *v1alpha1.Composite) map[string]string {
-	labels := make(map[string]string, len(composite.ObjectMeta.Labels)+2)
-	labels[mesh.CompositeLabelKey] = composite.Name
-	labels[mesh.CompositeLabelKeySource] = composite.Name
+//func createLabels(composite *v1alpha2.Composite) map[string]string {
+//	labels := make(map[string]string, len(composite.ObjectMeta.Labels)+2)
+//	labels[mesh.CompositeLabelKey] = composite.Name
+//	labels[mesh.CompositeLabelKeySource] = composite.Name
+//
+//	for k, v := range composite.ObjectMeta.Labels {
+//		labels[k] = v
+//	}
+//	return labels
+//}
+//
+//func addTokenServiceLabels(labels map[string]string) map[string]string {
+//	newLabels := make(map[string]string, len(labels)+1)
+//	labels[mesh.CompositeTokenServiceLabelKey] = "true"
+//	for k, v := range labels {
+//		newLabels[k] = v
+//	}
+//	return newLabels
+//}
 
-	for k, v := range composite.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
+func makeLabels(composite *v1alpha2.Composite) map[string]string {
+	return UnionMaps(
+		composite.Labels,
+		map[string]string{
+			CompositeLabelKey:                 composite.Name,
+			CompositeLabelKeySource:           composite.Name,
+			CompositeTokenServiceLabelKey:     "true",
+			ObservabilityInstanceKindLabelKey: "Composite",
+			ObservabilityInstanceLabelKey:     composite.Name,
+		},
+	)
 }
 
-func addTokenServiceLabels(labels map[string]string) map[string]string {
-	newLabels := make(map[string]string, len(labels)+1)
-	labels[mesh.CompositeTokenServiceLabelKey] = "true"
-	for k, v := range labels {
-		newLabels[k] = v
-	}
-	return newLabels
+func makeAnnotations(composite *v1alpha2.Composite) map[string]string {
+	return UnionMaps(
+		map[string]string{
+			IstioSidecarInjectAnnotationKey: "false",
+		},
+		composite.Annotations,
+	)
 }
 
-func createServiceAnnotations(composite *v1alpha1.Composite) map[string]string {
+func createServiceAnnotations(composite *v1alpha2.Composite) map[string]string {
 	annotations := make(map[string]string, len(composite.ObjectMeta.Annotations))
 
 	for k, v := range composite.ObjectMeta.Annotations {
@@ -54,34 +74,18 @@ func createServiceAnnotations(composite *v1alpha1.Composite) map[string]string {
 	return annotations
 }
 
-func NetworkPolicyName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--network"
-}
-
-func GatewayName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--gateway"
-}
-
 func GatewayNameFromInstanceName(instance string) string {
 	return instance + "--gateway"
 }
 
-func TokenServiceName(composite *v1alpha1.Composite) string {
+func TokenServiceName(composite *v1alpha2.Composite) string {
 	return "composite--sts"
 }
 
-func EnvoyFilterName(cell *v1alpha1.Cell) string {
-	return cell.Name + "--envoyfilter"
+func ComponentName(composite *v1alpha2.Composite, component *v1alpha2.Component) string {
+	return composite.Name + "--" + component.Name
 }
 
-func ServiceName(composite *v1alpha1.Composite, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
-	return composite.Name + "--" + serviceTemplate.Name
-}
-
-func SecretName(composite *v1alpha1.Composite) string {
+func SecretName(composite *v1alpha2.Composite) string {
 	return "composite-sts-secret"
-}
-
-func K8sServiceName(name string) string {
-	return fmt.Sprintf("%s-service", name)
 }

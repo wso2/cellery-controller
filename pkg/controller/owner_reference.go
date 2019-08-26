@@ -22,53 +22,45 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 )
 
 func CreateCellOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
+		Group:   v1alpha2.SchemeGroupVersion.Group,
+		Version: v1alpha2.SchemeGroupVersion.Version,
 		Kind:    "Cell",
 	})
 }
 
 func CreateCompositeOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
+		Group:   v1alpha2.SchemeGroupVersion.Group,
+		Version: v1alpha2.SchemeGroupVersion.Version,
 		Kind:    "Composite",
 	})
 }
 
 func CreateGatewayOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
+		Group:   v1alpha2.SchemeGroupVersion.Group,
+		Version: v1alpha2.SchemeGroupVersion.Version,
 		Kind:    "Gateway",
 	})
 }
 
 func CreateTokenServiceOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
+		Group:   v1alpha2.SchemeGroupVersion.Group,
+		Version: v1alpha2.SchemeGroupVersion.Version,
 		Kind:    "TokenService",
 	})
 }
 
-func CreateServiceOwnerRef(obj metav1.Object) *metav1.OwnerReference {
+func CreateComponentOwnerRef(obj metav1.Object) *metav1.OwnerReference {
 	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
-		Kind:    "Service",
-	})
-}
-
-func CreateAutoscalerOwnerRef(obj metav1.Object) *metav1.OwnerReference {
-	return metav1.NewControllerRef(obj, schema.GroupVersionKind{
-		Group:   v1alpha1.SchemeGroupVersion.Group,
-		Version: v1alpha1.SchemeGroupVersion.Version,
-		Kind:    "Autoscaler",
+		Group:   v1alpha2.SchemeGroupVersion.Group,
+		Version: v1alpha2.SchemeGroupVersion.Version,
+		Kind:    "Component",
 	})
 }

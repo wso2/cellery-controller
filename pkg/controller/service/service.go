@@ -43,17 +43,17 @@ import (
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
-	knativeservinginformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/serving/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
-	knativeservinglisters "github.com/cellery-io/mesh-controller/pkg/client/listers/serving/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
 	"github.com/cellery-io/mesh-controller/pkg/controller/service/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/service/resources"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	meshinformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/mesh/v1alpha1"
+	istioinformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/networking/v1alpha3"
+	knativeservinginformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
+	listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha1"
+	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	knativeservinglisters "github.com/cellery-io/mesh-controller/pkg/generated/listers/serving/v1alpha1"
 )
 
 type serviceHandler struct {

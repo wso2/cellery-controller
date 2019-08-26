@@ -4,24 +4,31 @@ metadata:
   name: cells.mesh.cellery.io
 spec:
   group: mesh.cellery.io
-  version: v1alpha1
+  version: v1alpha2
   scope: Namespaced
   names:
     kind: Cell
     plural: cells
     singular: cell
+  subresources:
+    status: {}
   additionalPrinterColumns:
   - name: Status
     type: string
+    description: Status of this cell
     JSONPath: .status.status
   - name: Gateway
     type: string
-    description: Host name of the gateway
-    JSONPath: .status.gatewayHostname
-  - name: Services
+    description: Gateway service name of this cell
+    JSONPath: .status.gatewayServiceName
+  - name: Total-Components
     type: integer
-    description: Number of services in this cell
-    JSONPath: .status.serviceCount
+    description: Number of components in this cell
+    JSONPath: .status.componentCount
+  - name: Active-Components
+    type: integer
+    description: Number of active components in this cell
+    JSONPath: .status.activeComponentCount
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

@@ -24,17 +24,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
+func MakeVirtualService(gateway *v1alpha2.Gateway) *v1alpha3.VirtualService {
 
 	var httpRoutes []*v1alpha3.HTTPRoute
 
-	for _, httpRoute := range gateway.Spec.HTTPRoutes {
+	for _, httpRoute := range gateway.Spec.Ingress.HTTPRoutes {
 		r := &v1alpha3.HTTPRoute{
 			Match: []*v1alpha3.HTTPMatchRequest{
+				{
+					Uri: &v1alpha3.StringMatch{
+						// https://github.com/istio/istio/issues/8076
+						Prefix: fmt.Sprintf("%s/", httpRoute.Context),
+					},
+				},
 				{
 					Uri: &v1alpha3.StringMatch{
 						//Regex: fmt.Sprintf("\\/%s(\\?.*|\\/.*|\\#.*|\\s*)", apiRoute.Context),
@@ -45,12 +51,10 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 			Route: []*v1alpha3.DestinationWeight{
 				{
 					Destination: &v1alpha3.Destination{
-						Host: func() string {
-							if httpRoute.ZeroScale {
-								return httpRoute.Backend + "-rev"
-							}
-							return httpRoute.Backend
-						}(),
+						Host: httpRoute.Destination.Host,
+						Port: &v1alpha3.PortSelector{
+							Number: httpRoute.Destination.Port,
+						},
 					},
 				},
 			},
@@ -61,7 +65,7 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 				if httpRoute.ZeroScale {
 					return map[string]string{
 						"knative-serving-namespace": "default",
-						"knative-serving-revision":  httpRoute.Backend + "-rev",
+						"knative-serving-revision":  httpRoute.Destination.Host,
 					}
 				}
 				return map[string]string{}
@@ -70,50 +74,50 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 		httpRoutes = append(httpRoutes, r)
 	}
 
-	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
-		r := &v1alpha3.HTTPRoute{
-			Match: []*v1alpha3.HTTPMatchRequest{
-				{
-					Port: grpcRoute.Port,
-				},
-			},
-			Route: []*v1alpha3.DestinationWeight{
-				{
-					Destination: &v1alpha3.Destination{
-						Host: func() string {
-							if grpcRoute.ZeroScale {
-								return grpcRoute.BackendHost + "-rev"
-							}
-							return grpcRoute.BackendHost
-						}(),
-						Port: &v1alpha3.PortSelector{
-							Number: func() uint32 {
-								if grpcRoute.ZeroScale {
-									// GRPC service port for knative
-									return 81
-								}
-								return grpcRoute.BackendPort
-							}(),
-						},
-					},
-				},
-			},
-			AppendHeaders: func() map[string]string {
-				if grpcRoute.ZeroScale {
-					return map[string]string{
-						"knative-serving-namespace": "default",
-						"knative-serving-revision":  grpcRoute.BackendHost + "-rev",
-					}
-				}
-				return map[string]string{}
-			}(),
-		}
-		httpRoutes = append(httpRoutes, r)
-	}
+	// for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+	// 	r := &v1alpha3.HTTPRoute{
+	// 		Match: []*v1alpha3.HTTPMatchRequest{
+	// 			{
+	// 				Port: grpcRoute.Port,
+	// 			},
+	// 		},
+	// 		Route: []*v1alpha3.DestinationWeight{
+	// 			{
+	// 				Destination: &v1alpha3.Destination{
+	// 					Host: func() string {
+	// 						if grpcRoute.ZeroScale {
+	// 							return grpcRoute.BackendHost + "-rev"
+	// 						}
+	// 						return grpcRoute.BackendHost
+	// 					}(),
+	// 					Port: &v1alpha3.PortSelector{
+	// 						Number: func() uint32 {
+	// 							if grpcRoute.ZeroScale {
+	// 								// GRPC service port for knative
+	// 								return 81
+	// 							}
+	// 							return grpcRoute.BackendPort
+	// 						}(),
+	// 					},
+	// 				},
+	// 			},
+	// 		},
+	// 		AppendHeaders: func() map[string]string {
+	// 			if grpcRoute.ZeroScale {
+	// 				return map[string]string{
+	// 					"knative-serving-namespace": "default",
+	// 					"knative-serving-revision":  grpcRoute.BackendHost + "-rev",
+	// 				}
+	// 			}
+	// 			return map[string]string{}
+	// 		}(),
+	// 	}
+	// 	httpRoutes = append(httpRoutes, r)
+	// }
 
 	var tcpRoutes []*v1alpha3.TCPRoute
 
-	for _, tcpRoute := range gateway.Spec.TCPRoutes {
+	for _, tcpRoute := range gateway.Spec.Ingress.TCPRoutes {
 		tcpRoutes = append(tcpRoutes, &v1alpha3.TCPRoute{
 			Match: []*v1alpha3.L4MatchAttributes{
 				{
@@ -123,9 +127,9 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 			Route: []*v1alpha3.DestinationWeight{
 				{
 					Destination: &v1alpha3.Destination{
-						Host: tcpRoute.BackendHost,
+						Host: tcpRoute.Destination.Host,
 						Port: &v1alpha3.PortSelector{
-							Number: tcpRoute.BackendPort,
+							Number: tcpRoute.Destination.Port,
 						},
 					},
 				},
@@ -135,9 +139,9 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 
 	return &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioVSName(gateway),
+			Name:      IstioVirtualServiceName(gateway),
 			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
+			Labels:    makeLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
@@ -151,44 +155,63 @@ func CreateIstioVirtualService(gateway *v1alpha1.Gateway) *v1alpha3.VirtualServi
 	}
 }
 
-func CreateIstioVirtualServiceForIngress(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
-
-	var routes []*v1alpha3.HTTPRoute
-
-	for _, apiRoute := range gateway.Spec.HTTPRoutes {
-		if apiRoute.Global == true {
-			routes = append(routes, &v1alpha3.HTTPRoute{
-				Match: []*v1alpha3.HTTPMatchRequest{
-					{
-						Uri: &v1alpha3.StringMatch{
-							Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
-						},
-					},
-				},
-				Route: []*v1alpha3.DestinationWeight{
-					{
-						Destination: &v1alpha3.Destination{
-							Host: gateway.Status.HostName,
-						},
-					},
-				},
-			})
-		}
-	}
-
-	return &v1alpha3.VirtualService{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioIngressVirtualServiceName(gateway),
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
-			},
-		},
-		Spec: v1alpha3.VirtualServiceSpec{
-			Hosts:    []string{"*"},
-			Gateways: []string{"ingress-gateway"},
-			Http:     routes,
-		},
-	}
+func RequireVirtualService(gateway *v1alpha2.Gateway) bool {
+	return gateway.Spec.Ingress.HasRoutes()
 }
+
+func RequireVirtualServiceUpdate(gateway *v1alpha2.Gateway, virtualService *v1alpha3.VirtualService) bool {
+	return gateway.Generation != gateway.Status.ObservedGeneration ||
+		virtualService.Generation != gateway.Status.VirtualServiceGeneration
+}
+
+func CopyVirtualService(source, destination *v1alpha3.VirtualService) {
+	destination.Spec = source.Spec
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromVirtualService(gateway *v1alpha2.Gateway, virtualService *v1alpha3.VirtualService) {
+	gateway.Status.VirtualServiceGeneration = virtualService.Generation
+}
+
+// func CreateIstioVirtualServiceForIngress(gateway *v1alpha1.Gateway) *v1alpha3.VirtualService {
+
+// 	var routes []*v1alpha3.HTTPRoute
+
+// 	for _, apiRoute := range gateway.Spec.HTTPRoutes {
+// 		if apiRoute.Global == true {
+// 			routes = append(routes, &v1alpha3.HTTPRoute{
+// 				Match: []*v1alpha3.HTTPMatchRequest{
+// 					{
+// 						Uri: &v1alpha3.StringMatch{
+// 							Prefix: fmt.Sprintf("/%s/", apiRoute.Context),
+// 						},
+// 					},
+// 				},
+// 				Route: []*v1alpha3.DestinationWeight{
+// 					{
+// 						Destination: &v1alpha3.Destination{
+// 							Host: gateway.Status.HostName,
+// 						},
+// 					},
+// 				},
+// 			})
+// 		}
+// 	}
+
+// 	return &v1alpha3.VirtualService{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      IstioIngressVirtualServiceName(gateway),
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateGatewayOwnerRef(gateway),
+// 			},
+// 		},
+// 		Spec: v1alpha3.VirtualServiceSpec{
+// 			Hosts:    []string{"*"},
+// 			Gateways: []string{"ingress-gateway"},
+// 			Http:     routes,
+// 		},
+// 	}
+// }

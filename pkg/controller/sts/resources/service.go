@@ -23,22 +23,28 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateTokenServiceK8sService(tokenService *v1alpha1.TokenService) *corev1.Service {
+func MakeService(tokenService *v1alpha2.TokenService) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      TokenServiceK8sServiceName(tokenService),
+			Name:      ServiceName(tokenService),
 			Namespace: tokenService.Namespace,
-			Labels:    createTokenServiceLabels(tokenService),
+			Labels:    makeLabels(tokenService),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateTokenServiceOwnerRef(tokenService),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
+				{
+					Name:       tokenServiceServicePortGatewayName,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       tokenServiceServiceGatewayPort,
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: tokenServiceContainerGatewayPort},
+				},
 				{
 					Name:       tokenServiceServicePortInboundName,
 					Protocol:   corev1.ProtocolTCP,
@@ -58,7 +64,23 @@ func CreateTokenServiceK8sService(tokenService *v1alpha1.TokenService) *corev1.S
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: tokenServiceContainerJWKSPort},
 				},
 			},
-			Selector: createTokenServiceLabels(tokenService),
+			Selector: makeLabels(tokenService),
 		},
 	}
+}
+
+func RequireServiceUpdate(tokenService *v1alpha2.TokenService, service *corev1.Service) bool {
+	return tokenService.Generation != tokenService.Status.ObservedGeneration ||
+		service.Generation != tokenService.Status.ServiceGeneration
+}
+
+func CopyService(source, destination *corev1.Service) {
+	destination.Spec.Ports = source.Spec.Ports
+	destination.Spec.Selector = source.Spec.Selector
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromService(tokenService *v1alpha2.TokenService, service *corev1.Service) {
+	tokenService.Status.ServiceGeneration = service.Generation
 }

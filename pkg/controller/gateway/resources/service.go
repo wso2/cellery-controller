@@ -25,84 +25,84 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
-	if gateway.Spec.Type == v1alpha1.GatewayTypeMicroGateway {
-		return createMicroGatewayK8sService(gateway)
-	} else {
-		return createEnvoyGatewayK8sService(gateway)
-	}
+func MakeService(gateway *v1alpha2.Gateway) *corev1.Service {
+	// if gateway.Spec.Type == v1alpha1.GatewayTypeMicroGateway {
+	// 	return createMicroGatewayK8sService(gateway)
+	// } else {
+	return createEnvoyGatewayK8sService(gateway)
+	// }
 }
 
-func createMicroGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      GatewayK8sServiceName(gateway),
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       controller.HTTPServiceName,
-					Protocol:   corev1.ProtocolTCP,
-					Port:       gatewayServicePort,
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
-				},
-			},
-			Selector: createGatewayLabels(gateway),
-		},
-	}
-}
+// func createMicroGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
+// 	return &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      GatewayK8sServiceName(gateway),
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateGatewayOwnerRef(gateway),
+// 			},
+// 		},
+// 		Spec: corev1.ServiceSpec{
+// 			Ports: []corev1.ServicePort{
+// 				{
+// 					Name:       controller.HTTPServiceName,
+// 					Protocol:   corev1.ProtocolTCP,
+// 					Port:       gatewayServicePort,
+// 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+// 				},
+// 			},
+// 			Selector: createGatewayLabels(gateway),
+// 		},
+// 	}
+// }
 
-func CreateOriginalGatewayK8sService(gateway *v1alpha1.Gateway, name string) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       controller.HTTPServiceName,
-					Protocol:   corev1.ProtocolTCP,
-					Port:       gatewayServicePort,
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
-				},
-			},
-			Selector: createGatewayLabels(gateway),
-		},
-	}
-}
+// func CreateOriginalGatewayK8sService(gateway *v1alpha1.Gateway, name string) *corev1.Service {
+// 	return &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      name,
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateGatewayOwnerRef(gateway),
+// 			},
+// 		},
+// 		Spec: corev1.ServiceSpec{
+// 			Ports: []corev1.ServicePort{
+// 				{
+// 					Name:       controller.HTTPServiceName,
+// 					Protocol:   corev1.ProtocolTCP,
+// 					Port:       gatewayServicePort,
+// 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: gatewayContainerPort},
+// 				},
+// 			},
+// 			Selector: createGatewayLabels(gateway),
+// 		},
+// 	}
+// }
 
-func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
+func createEnvoyGatewayK8sService(gateway *v1alpha2.Gateway) *corev1.Service {
 	var servicePorts []corev1.ServicePort
 
-	servicePorts = append(servicePorts, corev1.ServicePort{
-		Name:       "http2",
-		Protocol:   corev1.ProtocolTCP,
-		Port:       80,
-		TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
-	})
+	// servicePorts = append(servicePorts, corev1.ServicePort{
+	// 	Name:       "http2",
+	// 	Protocol:   corev1.ProtocolTCP,
+	// 	Port:       80,
+	// 	TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
+	// })
 
-	servicePorts = append(servicePorts, corev1.ServicePort{
-		Name:       "https",
-		Protocol:   corev1.ProtocolTCP,
-		Port:       443,
-		TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
-	})
+	// servicePorts = append(servicePorts, corev1.ServicePort{
+	// 	Name:       "https",
+	// 	Protocol:   corev1.ProtocolTCP,
+	// 	Port:       443,
+	// 	TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: 443},
+	// })
 
-	if gateway.Spec.OidcConfig != nil {
+	if gateway.Spec.Ingress.IngressExtensions.HasOidc() {
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       "http-oidc-callback",
 			Protocol:   corev1.ProtocolTCP,
@@ -111,7 +111,17 @@ func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 		})
 	}
 
-	for _, grpcRoute := range gateway.Spec.GRPCRoutes {
+	// FIXME: add multiple mapping for same port
+	for _, httpRoute := range gateway.Spec.Ingress.HTTPRoutes {
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Name:       fmt.Sprintf("http2-%d", httpRoute.Port),
+			Protocol:   corev1.ProtocolTCP,
+			Port:       int32(httpRoute.Port),
+			TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(httpRoute.Port)},
+		})
+	}
+
+	for _, grpcRoute := range gateway.Spec.Ingress.GRPCRoutes {
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       fmt.Sprintf("grpc-%d", grpcRoute.Port),
 			Protocol:   corev1.ProtocolTCP,
@@ -120,7 +130,7 @@ func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 		})
 	}
 
-	for _, tcpRoute := range gateway.Spec.TCPRoutes {
+	for _, tcpRoute := range gateway.Spec.Ingress.TCPRoutes {
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       fmt.Sprintf("tcp-%d", tcpRoute.Port),
 			Protocol:   corev1.ProtocolTCP,
@@ -131,16 +141,37 @@ func createEnvoyGatewayK8sService(gateway *v1alpha1.Gateway) *corev1.Service {
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GatewayK8sServiceName(gateway),
+			Name:      ServiceName(gateway),
 			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
+			Labels:    makeLabels(gateway),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateGatewayOwnerRef(gateway),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,
-			Selector: createGatewayLabels(gateway),
+			Selector: makeLabels(gateway),
 		},
 	}
+}
+
+func RequireService(gateway *v1alpha2.Gateway) bool {
+	return gateway.Spec.Ingress.HasRoutes()
+}
+
+func RequireServiceUpdate(gateway *v1alpha2.Gateway, service *corev1.Service) bool {
+	return gateway.Generation != gateway.Status.ObservedGeneration ||
+		service.Generation != gateway.Status.ServiceGeneration
+}
+
+func CopyService(source, destination *corev1.Service) {
+	destination.Spec.Ports = source.Spec.Ports
+	destination.Spec.Selector = source.Spec.Selector
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromService(gateway *v1alpha2.Gateway, service *corev1.Service) {
+	gateway.Status.ServiceName = service.Name
+	gateway.Status.ServiceGeneration = service.Generation
 }

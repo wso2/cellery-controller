@@ -18,77 +18,77 @@
 
 package resources
 
-import (
-	appsv1 "k8s.io/api/apps/v1"
-	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+// import (
+// 	appsv1 "k8s.io/api/apps/v1"
+// 	autoscalingV2Beta1 "k8s.io/api/autoscaling/v2beta1"
+// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-)
+// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+// 	"github.com/cellery-io/mesh-controller/pkg/controller"
+// )
 
-const scaleTargetDeploymentKind = "Deployment"
-const TRUE = "true"
+// const scaleTargetDeploymentKind = "Deployment"
+// const TRUE = "true"
 
-func CreateAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
+// func CreateAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
 
-	return &v1alpha1.AutoscalePolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      GatewayAutoscalePolicyName(gateway),
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
-			},
-		},
-		Spec: v1alpha1.AutoscalePolicySpec{
-			Overridable: gateway.Spec.Autoscaling.Overridable,
-			Policy: v1alpha1.Policy{
-				ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
-					Kind:       scaleTargetDeploymentKind,
-					Name:       GatewayDeploymentName(gateway),
-					APIVersion: appsv1.SchemeGroupVersion.String(),
-				},
-				MinReplicas: gateway.Spec.Autoscaling.Policy.MinReplicas,
-				MaxReplicas: gateway.Spec.Autoscaling.Policy.MaxReplicas,
-				Metrics:     gateway.Spec.Autoscaling.Policy.Metrics,
-			},
-		},
-	}
-}
+// 	return &v1alpha1.AutoscalePolicy{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      GatewayAutoscalePolicyName(gateway),
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateGatewayOwnerRef(gateway),
+// 			},
+// 		},
+// 		Spec: v1alpha1.AutoscalePolicySpec{
+// 			Overridable: gateway.Spec.Autoscaling.Overridable,
+// 			Policy: v1alpha1.Policy{
+// 				ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
+// 					Kind:       scaleTargetDeploymentKind,
+// 					Name:       GatewayDeploymentName(gateway),
+// 					APIVersion: appsv1.SchemeGroupVersion.String(),
+// 				},
+// 				MinReplicas: gateway.Spec.Autoscaling.Policy.MinReplicas,
+// 				MaxReplicas: gateway.Spec.Autoscaling.Policy.MaxReplicas,
+// 				Metrics:     gateway.Spec.Autoscaling.Policy.Metrics,
+// 			},
+// 		},
+// 	}
+// }
 
-func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
+// func CreateDefaultAutoscalePolicy(gateway *v1alpha1.Gateway) *v1alpha1.AutoscalePolicy {
 
-	var one int32 = 1
-	return &v1alpha1.AutoscalePolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AutoscalePolicy",
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      GatewayAutoscalePolicyName(gateway),
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateGatewayOwnerRef(gateway),
-			},
-		},
-		Spec: v1alpha1.AutoscalePolicySpec{
-			Overridable: true,
-			Policy: v1alpha1.Policy{
-				ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
-					Kind:       scaleTargetDeploymentKind,
-					Name:       GatewayDeploymentName(gateway),
-					APIVersion: appsv1.SchemeGroupVersion.String(),
-				},
-				MinReplicas: &one,
-				MaxReplicas: 1,
-				Metrics:     []autoscalingV2Beta1.MetricSpec{},
-			},
-		},
-	}
-}
+// 	var one int32 = 1
+// 	return &v1alpha1.AutoscalePolicy{
+// 		TypeMeta: metav1.TypeMeta{
+// 			Kind:       "AutoscalePolicy",
+// 			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+// 		},
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      GatewayAutoscalePolicyName(gateway),
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateGatewayOwnerRef(gateway),
+// 			},
+// 		},
+// 		Spec: v1alpha1.AutoscalePolicySpec{
+// 			Overridable: true,
+// 			Policy: v1alpha1.Policy{
+// 				ScaleTargetRef: autoscalingV2Beta1.CrossVersionObjectReference{
+// 					Kind:       scaleTargetDeploymentKind,
+// 					Name:       GatewayDeploymentName(gateway),
+// 					APIVersion: appsv1.SchemeGroupVersion.String(),
+// 				},
+// 				MinReplicas: &one,
+// 				MaxReplicas: 1,
+// 				Metrics:     []autoscalingV2Beta1.MetricSpec{},
+// 			},
+// 		},
+// 	}
+// }
 
-func GatewayAutoscalePolicyName(gateway *v1alpha1.Gateway) string {
-	return gateway.Name + "-autoscalepolicy"
-}
+// func GatewayAutoscalePolicyName(gateway *v1alpha1.Gateway) string {
+// 	return gateway.Name + "-autoscalepolicy"
+// }

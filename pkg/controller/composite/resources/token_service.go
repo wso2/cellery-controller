@@ -21,19 +21,28 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func CreateTokenService(composite *v1alpha1.Composite) *v1alpha1.TokenService {
-	return &v1alpha1.TokenService{
+func MakeTokenService(composite *v1alpha2.Composite) *v1alpha2.TokenService {
+	return &v1alpha2.TokenService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceName(composite),
 			Namespace: composite.Namespace,
-			Labels:    createLabels(composite),
+			Labels:    makeLabels(composite),
 		},
-		Spec: v1alpha1.TokenServiceSpec{
-			InterceptMode: v1alpha1.InterceptModeAny,
-			Composite:     true,
+		Spec: v1alpha2.TokenServiceSpec{
+			InterceptMode: v1alpha2.InterceptModeAny,
+			SecretName:    SecretName(composite),
+			InstanceName:  "composite",
+			Selector: map[string]string{
+				CompositeTokenServiceLabelKey: "true",
+			},
 		},
 	}
+}
+
+func StatusFromTokenService(composite *v1alpha2.Composite, tokenService *v1alpha2.TokenService) {
+	composite.Status.TokenServiceGeneration = tokenService.Generation
 }
