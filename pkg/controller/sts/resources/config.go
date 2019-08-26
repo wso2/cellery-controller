@@ -25,12 +25,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts/config"
 )
 
-func CreateTokenServiceConfigMap(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *corev1.ConfigMap {
+func MakeConfigMap(tokenService *v1alpha2.TokenService, cfg config.Interface) *corev1.ConfigMap {
 
 	unsecuredPathsStr := "[]"
 	if len(tokenService.Spec.UnsecuredPaths) > 0 {
@@ -40,24 +40,39 @@ func CreateTokenServiceConfigMap(tokenService *v1alpha1.TokenService, tokenServi
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      TokenServiceConfigMapName(tokenService),
+			Name:      ConfigMapName(tokenService),
 			Namespace: tokenService.Namespace,
-			Labels:    createTokenServiceLabels(tokenService),
+			Labels:    makeLabels(tokenService),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateTokenServiceOwnerRef(tokenService),
 			},
 		},
 		Data: map[string]string{
-			tokenServiceConfigKey:   tokenServiceConfig.Config,
+			tokenServiceConfigKey:   cfg.StringValue(config.ConfigMapKeyTokenServiceConfig),
 			unsecuredPathsConfigKey: unsecuredPathsStr,
 		},
 	}
 }
 
-func CreateTokenServiceOPAConfigMap(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *corev1.ConfigMap {
+func RequireConfigMapUpdate(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) bool {
+	return tokenService.Generation != tokenService.Status.ObservedGeneration ||
+		configMap.Generation != tokenService.Status.ConfigMapGeneration
+}
+
+func CopyConfigMap(source, destination *corev1.ConfigMap) {
+	destination.Data = source.Data
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromConfigMap(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) {
+	tokenService.Status.ConfigMapGeneration = configMap.Generation
+}
+
+func MakeOpaConfigMap(tokenService *v1alpha2.TokenService, cfg config.Interface) *corev1.ConfigMap {
 
 	m := make(map[string]string)
-	m["default.rego"] = tokenServiceConfig.Policy
+	m["default.rego"] = cfg.StringValue(config.ConfigMapKeyTokenServiceDefaultOpaPolicy)
 
 	for _, v := range tokenService.Spec.OpaPolicies {
 		m[fmt.Sprintf("%s.rego", v.Key)] = v.Policy
@@ -65,13 +80,28 @@ func CreateTokenServiceOPAConfigMap(tokenService *v1alpha1.TokenService, tokenSe
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      TokenServicePolicyConfigMapName(tokenService),
+			Name:      OpaPolicyConfigMapName(tokenService),
 			Namespace: tokenService.Namespace,
-			Labels:    createTokenServiceLabels(tokenService),
+			Labels:    makeLabels(tokenService),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateTokenServiceOwnerRef(tokenService),
 			},
 		},
 		Data: m,
 	}
+}
+
+func RequireOpaConfigMapUpdate(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) bool {
+	return tokenService.Generation != tokenService.Status.ObservedGeneration ||
+		configMap.Generation != tokenService.Status.OpaConfigMapGeneration
+}
+
+func CopyOpaConfigMap(source, destination *corev1.ConfigMap) {
+	destination.Data = source.Data
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromOpaConfigMap(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) {
+	tokenService.Status.OpaConfigMapGeneration = configMap.Generation
 }

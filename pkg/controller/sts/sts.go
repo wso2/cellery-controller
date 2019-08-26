@@ -20,270 +20,356 @@ package sts
 
 import (
 	"fmt"
+	"reflect"
 
 	"go.uber.org/zap"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/runtime"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
+	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/clients"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/sts/resources"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	"github.com/cellery-io/mesh-controller/pkg/informers"
 
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
 	//corev1informers "k8s.io/client-go/informers/core/v1"
 	corev1 "k8s.io/api/core/v1"
-	appsv1informers "k8s.io/client-go/informers/apps/v1"
-	corev1informers "k8s.io/client-go/informers/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/tools/record"
 
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-
-	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
-	istionetworklisters "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
+	mesh1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
+	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
 )
 
-type tokenServiceHandler struct {
-	kubeClient         kubernetes.Interface
-	meshClient         meshclientset.Interface
-	deploymentLister   appsv1listers.DeploymentLister
-	k8sServiceLister   corev1listers.ServiceLister
-	envoyFilterLister  istionetworklisters.EnvoyFilterLister
-	configMapLister    corev1listers.ConfigMapLister
-	tokenServiceLister listers.TokenServiceLister
-	tokenServiceConfig config.TokenService
-	logger             *zap.SugaredLogger
+type reconciler struct {
+	kubeClient             kubernetes.Interface
+	meshClient             meshclientset.Interface
+	deploymentLister       appsv1listers.DeploymentLister
+	serviceLister          corev1listers.ServiceLister
+	istioEnvoyFilterLister istionetwork1alpha3listers.EnvoyFilterLister
+	configMapLister        corev1listers.ConfigMapLister
+	tokenServiceLister     mesh1alpha2listers.TokenServiceLister
+	cfg                    config.Interface
+	logger                 *zap.SugaredLogger
+	recorder               record.EventRecorder
 }
 
 func NewController(
-	kubeClient kubernetes.Interface,
-	meshClient meshclientset.Interface,
-	systemConfigMapInformer corev1informers.ConfigMapInformer,
-	deploymentInformer appsv1informers.DeploymentInformer,
-	k8sServiceInformer corev1informers.ServiceInformer,
-	envoyFilterInformer istioinformers.EnvoyFilterInformer,
-	configMapInformer corev1informers.ConfigMapInformer,
-	tokenServiceInformer meshinformers.TokenServiceInformer,
+	clientset clients.Interface,
+	informerset informers.Interface,
+	cfg config.Interface,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 
-	h := &tokenServiceHandler{
-		kubeClient:         kubeClient,
-		meshClient:         meshClient,
-		deploymentLister:   deploymentInformer.Lister(),
-		k8sServiceLister:   k8sServiceInformer.Lister(),
-		envoyFilterLister:  envoyFilterInformer.Lister(),
-		configMapLister:    configMapInformer.Lister(),
-		tokenServiceLister: tokenServiceInformer.Lister(),
-		logger:             logger.Named("tokenservice-controller"),
+	r := &reconciler{
+		kubeClient:             clientset.Kubernetes(),
+		meshClient:             clientset.Mesh(),
+		deploymentLister:       informerset.Deployments().Lister(),
+		serviceLister:          informerset.Services().Lister(),
+		istioEnvoyFilterLister: informerset.IstioEnvoyFilters().Lister(),
+		configMapLister:        informerset.ConfigMaps().Lister(),
+		tokenServiceLister:     informerset.TokenServices().Lister(),
+		cfg:                    cfg,
+		logger:                 logger.Named("tokenservice-controller"),
 	}
-	c := controller.New(h, h.logger, "TokenService")
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(r.logger.Named("events").Infof)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: r.kubeClient.CoreV1().Events("")})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "tokenservice-controller"})
+	r.recorder = recorder
+	c := controller.New(r, r.logger, "TokenService")
 
-	h.logger.Info("Setting up event handlers")
-	tokenServiceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: c.Enqueue,
-		UpdateFunc: func(old, new interface{}) {
-			h.logger.Debugw("Informer update", "old", old, "new", new)
-			c.Enqueue(new)
-		},
-		DeleteFunc: c.Enqueue,
+	r.logger.Info("Setting up event handlers")
+	informerset.TokenServices().Informer().AddEventHandler(informers.HandleAll(c.Enqueue))
+
+	informerset.Services().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("TokenService")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
 
-	systemConfigMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: h.updateConfig,
-		UpdateFunc: func(old, new interface{}) {
-			h.updateConfig(new)
-		},
+	informerset.Deployments().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("TokenService")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.ConfigMaps().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("TokenService")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.IstioEnvoyFilters().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("TokenService")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
 
 	return c
 }
 
-func (h *tokenServiceHandler) Handle(key string) error {
-	h.logger.Infof("Handle called with %s", key)
+func (r *reconciler) Reconcile(key string) error {
+	r.logger.Infof("Reconcile called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		h.logger.Errorf("invalid resource key: %s", key)
+		r.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
-	tokenServiceOriginal, err := h.tokenServiceLister.TokenServices(namespace).Get(name)
+	original, err := r.tokenServiceLister.TokenServices(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			runtime.HandleError(fmt.Errorf("tokenService '%s' in work queue no longer exists", key))
+			r.logger.Errorf("tokenService '%s' in work queue no longer exists", key)
 			return nil
 		}
 		return err
 	}
-	h.logger.Debugw("lister instance", key, tokenServiceOriginal)
-	tokenService := tokenServiceOriginal.DeepCopy()
 
-	if err = h.handle(tokenService); err != nil {
+	tokenService := original.DeepCopy()
+
+	if err = r.reconcile(tokenService); err != nil {
+		r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "InternalError", "Failed to update cluster: %v", err)
 		return err
 	}
-	return nil
-}
 
-func (h *tokenServiceHandler) handle(tokenService *v1alpha1.TokenService) error {
-
-	if tokenService.Spec.InterceptMode == v1alpha1.InterceptModeNone {
+	if equality.Semantic.DeepEqual(original.Status, tokenService.Status) {
 		return nil
 	}
-	if err := h.handleConfigMap(tokenService); err != nil {
+
+	if _, err = r.updateStatus(tokenService); err != nil {
+		r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "UpdateFailed", "Failed to update status: %v", err)
 		return err
 	}
-
-	if err := h.handleOpaConfigMap(tokenService); err != nil {
-		return err
-	}
-
-	if err := h.handleDeployment(tokenService); err != nil {
-		return err
-	}
-
-	if err := h.handleK8sService(tokenService); err != nil {
-		return err
-	}
-
-	if err := h.handleEnvoyFilter(tokenService); err != nil {
-		return err
-	}
-
+	r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Updated", "Updated TokenService status %q", tokenService.GetName())
 	return nil
 }
 
-func (h *tokenServiceHandler) handleConfigMap(tokenService *v1alpha1.TokenService) error {
+func (r *reconciler) reconcile(tokenService *v1alpha2.TokenService) error {
+	tokenService.SetDefaults()
+	rErrs := &controller.ReconcileErrors{}
+	rErrs.Add(r.reconcileService(tokenService))
+	rErrs.Add(r.reconcileConfigMap(tokenService))
+	rErrs.Add(r.reconcileOpaConfigMap(tokenService))
+	rErrs.Add(r.reconcileDeployment(tokenService))
+	rErrs.Add(r.reconcileEnvoyFilter(tokenService))
 
-	configMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.TokenServiceConfigMapName(tokenService))
+	if !rErrs.Empty() {
+		return rErrs
+	}
+
+	tokenService.Status.ObservedGeneration = tokenService.Generation
+	return nil
+}
+
+func (r *reconciler) reconcileService(tokenService *v1alpha2.TokenService) error {
+	serviceName := resources.ServiceName(tokenService)
+	service, err := r.serviceLister.Services(tokenService.Namespace).Get(serviceName)
 	if errors.IsNotFound(err) {
-		configMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceConfigMap(tokenService, h.tokenServiceConfig))
+		service, err = r.kubeClient.CoreV1().Services(tokenService.Namespace).Create(resources.MakeService(tokenService))
 		if err != nil {
-			h.logger.Errorf("Failed to create TokenService ConfigMap %v", err)
+			r.logger.Errorf("Failed to create Service %q: %v", serviceName, err)
+			r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "CreationFailed", "Failed to create Service %q: %v", serviceName, err)
 			return err
 		}
-		h.logger.Debugw("Config map created", resources.TokenServiceConfigMapName(tokenService), configMap)
+		r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Created", "Created Service %q", serviceName)
 	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Service %q: %v", serviceName, err)
 		return err
-	}
-
-	return nil
-}
-
-func (h *tokenServiceHandler) handleOpaConfigMap(tokenService *v1alpha1.TokenService) error {
-
-	policyConfigMap, err := h.configMapLister.ConfigMaps(tokenService.Namespace).Get(resources.
-		TokenServicePolicyConfigMapName(tokenService))
-	if errors.IsNotFound(err) {
-		policyConfigMap, err = h.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.CreateTokenServiceOPAConfigMap(tokenService, h.tokenServiceConfig))
+	} else if !metav1.IsControlledBy(service, tokenService) {
+		return fmt.Errorf("tokenService: %q does not own the Service: %q", tokenService.Name, serviceName)
+	} else {
+		service, err = func(tokenService *v1alpha2.TokenService, service *corev1.Service) (*corev1.Service, error) {
+			if !resources.RequireServiceUpdate(tokenService, service) {
+				return service, nil
+			}
+			desiredService := resources.MakeService(tokenService)
+			existingService := service.DeepCopy()
+			resources.CopyService(desiredService, existingService)
+			return r.kubeClient.CoreV1().Services(tokenService.Namespace).Update(existingService)
+		}(tokenService, service)
 		if err != nil {
-			h.logger.Errorf("Failed to create TokenService OPA policy config map %v", err)
+			r.logger.Errorf("Failed to update Service %q: %v", serviceName, err)
 			return err
 		}
-		h.logger.Debugw("OPA policy config map created", resources.TokenServicePolicyConfigMapName(tokenService), policyConfigMap)
-	} else if err != nil {
-		return err
 	}
-
+	resources.StatusFromService(tokenService, service)
 	return nil
 }
 
-func (h *tokenServiceHandler) handleDeployment(tokenService *v1alpha1.TokenService) error {
-
-	deployment, err := h.deploymentLister.Deployments(tokenService.Namespace).Get(resources.TokenServiceDeploymentName(tokenService))
+func (r *reconciler) reconcileConfigMap(tokenService *v1alpha2.TokenService) error {
+	configMapName := resources.ConfigMapName(tokenService)
+	configMap, err := r.configMapLister.ConfigMaps(tokenService.Namespace).Get(configMapName)
 	if errors.IsNotFound(err) {
-		deployment, err = h.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.CreateTokenServiceDeployment(tokenService, h.tokenServiceConfig))
+		configMap, err = r.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.MakeConfigMap(tokenService, r.cfg))
 		if err != nil {
-			h.logger.Errorf("Failed to create TokenService Deployment %v", err)
+			r.logger.Errorf("Failed to create ConfigMap %q: %v", configMapName, err)
+			r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "CreationFailed", "Failed to create ConfigMap %q: %v", configMapName, err)
 			return err
 		}
-		h.logger.Debugw("Deployment created", resources.TokenServiceDeploymentName(tokenService), deployment)
+		r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Created", "Created ConfigMap %q", configMapName)
 	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve ConfigMap %q: %v", configMapName, err)
 		return err
-	}
-
-	return nil
-}
-
-func (h *tokenServiceHandler) handleK8sService(tokenService *v1alpha1.TokenService) error {
-
-	k8sService, err := h.k8sServiceLister.Services(tokenService.Namespace).Get(resources.TokenServiceK8sServiceName(tokenService))
-	if errors.IsNotFound(err) {
-		k8sService, err = h.kubeClient.CoreV1().Services(tokenService.Namespace).Create(resources.CreateTokenServiceK8sService(tokenService))
+	} else if !metav1.IsControlledBy(configMap, tokenService) {
+		return fmt.Errorf("tokenService: %q does not own the ConfigMap: %q", tokenService.Name, configMapName)
+	} else {
+		configMap, err = func(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+			if !resources.RequireConfigMapUpdate(tokenService, configMap) {
+				return configMap, nil
+			}
+			desiredConfigMap := resources.MakeConfigMap(tokenService, r.cfg)
+			existingConfigMap := configMap.DeepCopy()
+			resources.CopyConfigMap(desiredConfigMap, existingConfigMap)
+			return r.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Update(existingConfigMap)
+		}(tokenService, configMap)
 		if err != nil {
-			h.logger.Errorf("Failed to create TokenService service %v", err)
+			r.logger.Errorf("Failed to update ConfigMap %q: %v", configMapName, err)
 			return err
 		}
-		h.logger.Debugw("Service created", resources.TokenServiceK8sServiceName(tokenService), k8sService)
-	} else if err != nil {
-		return err
 	}
+	resources.StatusFromConfigMap(tokenService, configMap)
 	return nil
 }
 
-func (h *tokenServiceHandler) handleEnvoyFilter(tokenService *v1alpha1.TokenService) error {
-	envoyFilter, err := h.envoyFilterLister.EnvoyFilters(tokenService.Namespace).Get(resources.EnvoyFilterName(tokenService))
+func (r *reconciler) reconcileOpaConfigMap(tokenService *v1alpha2.TokenService) error {
+	configMapName := resources.OpaPolicyConfigMapName(tokenService)
+	configMap, err := r.configMapLister.ConfigMaps(tokenService.Namespace).Get(configMapName)
 	if errors.IsNotFound(err) {
-		envoyFilter, err = h.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Create(resources.CreateEnvoyFilter(tokenService))
+		configMap, err = r.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Create(resources.MakeOpaConfigMap(tokenService, r.cfg))
 		if err != nil {
-			h.logger.Errorf("Failed to create EnvoyFilter %v", err)
+			r.logger.Errorf("Failed to create OPA ConfigMap %q: %v", configMapName, err)
+			r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "CreationFailed", "Failed to create OPA ConfigMap %q: %v", configMapName, err)
 			return err
 		}
-		h.logger.Debugw("EnvoyFilter created", resources.EnvoyFilterName(tokenService), envoyFilter)
+		r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Created", "Created OPA ConfigMap %q", configMapName)
 	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve OPA ConfigMap %q: %v", configMapName, err)
 		return err
+	} else if !metav1.IsControlledBy(configMap, tokenService) {
+		return fmt.Errorf("tokenService: %q does not own the OPA ConfigMap: %q", tokenService.Name, configMapName)
+	} else {
+		configMap, err = func(tokenService *v1alpha2.TokenService, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+			if !resources.RequireOpaConfigMapUpdate(tokenService, configMap) {
+				return configMap, nil
+			}
+			desiredConfigMap := resources.MakeOpaConfigMap(tokenService, r.cfg)
+			existingConfigMap := configMap.DeepCopy()
+			resources.CopyOpaConfigMap(desiredConfigMap, existingConfigMap)
+			return r.kubeClient.CoreV1().ConfigMaps(tokenService.Namespace).Update(existingConfigMap)
+		}(tokenService, configMap)
+		if err != nil {
+			r.logger.Errorf("Failed to update OPA ConfigMap %q: %v", configMapName, err)
+			return err
+		}
 	}
+	resources.StatusFromOpaConfigMap(tokenService, configMap)
 	return nil
 }
 
-func (h *tokenServiceHandler) updateConfig(obj interface{}) {
-	configMap, ok := obj.(*corev1.ConfigMap)
-	if !ok {
-		return
-	}
-
-	if configMap.Name != mesh.SystemConfigMapName {
-		return
-	}
-
-	conf := config.TokenService{}
-
-	if tokenServiceConfig, ok := configMap.Data["cell-sts-config"]; ok {
-		conf.Config = tokenServiceConfig
+func (r *reconciler) reconcileDeployment(tokenService *v1alpha2.TokenService) error {
+	deploymentName := resources.DeploymentName(tokenService)
+	deployment, err := r.deploymentLister.Deployments(tokenService.Namespace).Get(deploymentName)
+	if errors.IsNotFound(err) {
+		deployment, err = r.kubeClient.AppsV1().Deployments(tokenService.Namespace).Create(resources.MakeDeployment(tokenService, r.cfg))
+		if err != nil {
+			r.logger.Errorf("Failed to create Deployment %q: %v", deploymentName, err)
+			r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "CreationFailed", "Failed to create Deployment %q: %v", deploymentName, err)
+			return err
+		}
+		r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Created", "Created Deployment %q", deploymentName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Deployment %q: %v", deploymentName, err)
+		return err
+	} else if !metav1.IsControlledBy(deployment, tokenService) {
+		return fmt.Errorf("tokenService: %q does not own the Deployment: %q", tokenService.Name, deploymentName)
 	} else {
-		h.logger.Errorf("Cell sts config is missing.")
+		deployment, err = func(tokenService *v1alpha2.TokenService, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+			if !resources.RequireDeploymentUpdate(tokenService, deployment) {
+				return deployment, nil
+			}
+			desiredDeployment := resources.MakeDeployment(tokenService, r.cfg)
+			existingDeployment := deployment.DeepCopy()
+			resources.CopyDeployment(desiredDeployment, existingDeployment)
+			return r.kubeClient.AppsV1().Deployments(tokenService.Namespace).Update(existingDeployment)
+		}(tokenService, deployment)
+		if err != nil {
+			r.logger.Errorf("Failed to update Deployment %q: %v", deploymentName, err)
+			return err
+		}
+	}
+	resources.StatusFromDeployment(tokenService, deployment)
+	return nil
+}
+
+func (r *reconciler) reconcileEnvoyFilter(tokenService *v1alpha2.TokenService) error {
+	envoyFilterName := resources.EnvoyFilterName(tokenService)
+	envoyFilter, err := r.istioEnvoyFilterLister.EnvoyFilters(tokenService.Namespace).Get(envoyFilterName)
+	if !resources.RequireEnvoyFilter(tokenService) {
+		if err == nil && metav1.IsControlledBy(envoyFilter, tokenService) {
+			err = r.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Delete(envoyFilterName, &metav1.DeleteOptions{})
+			if err != nil {
+				r.logger.Errorf("Failed to delete EnvoyFilter %q: %v", envoyFilterName, err)
+				return err
+			}
+		}
+		return nil
 	}
 
-	if tokenServiceImage, ok := configMap.Data["cell-sts-image"]; ok {
-		conf.Image = tokenServiceImage
+	if errors.IsNotFound(err) {
+		envoyFilter, err = r.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Create(resources.MakeEnvoyFilter(tokenService))
+		if err != nil {
+			r.logger.Errorf("Failed to create EnvoyFilter %q: %v", envoyFilterName, err)
+			r.recorder.Eventf(tokenService, corev1.EventTypeWarning, "CreationFailed", "Failed to create EnvoyFilter %q: %v", envoyFilterName, err)
+			return err
+		}
+		r.recorder.Eventf(tokenService, corev1.EventTypeNormal, "Created", "Created EnvoyFilter %q", envoyFilterName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve EnvoyFilter %q: %v", envoyFilterName, err)
+		return err
+	} else if !metav1.IsControlledBy(envoyFilter, tokenService) {
+		return fmt.Errorf("tokenService: %q does not own the EnvoyFilter: %q", tokenService.Name, envoyFilterName)
 	} else {
-		h.logger.Errorf("Cell sts image missing.")
+		envoyFilter, err = func(tokenService *v1alpha2.TokenService, envoyFilter *istionetworkingv1alpha3.EnvoyFilter) (*istionetworkingv1alpha3.EnvoyFilter, error) {
+			if !resources.RequireEnvoyFilterUpdate(tokenService, envoyFilter) {
+				return envoyFilter, nil
+			}
+			desiredEnvoyFilter := resources.MakeEnvoyFilter(tokenService)
+			if err != nil {
+				return nil, err
+			}
+			existingEnvoyFilter := envoyFilter.DeepCopy()
+			resources.CopyEnvoyFilter(desiredEnvoyFilter, existingEnvoyFilter)
+			return r.meshClient.NetworkingV1alpha3().EnvoyFilters(tokenService.Namespace).Update(existingEnvoyFilter)
+		}(tokenService, envoyFilter)
+		if err != nil {
+			r.logger.Errorf("Failed to update EnvoyFilter %q: %v", envoyFilterName, err)
+			return err
+		}
 	}
+	resources.StatusFromEnvoyFilter(tokenService, envoyFilter)
+	return nil
+}
 
-	if opaImage, ok := configMap.Data["cell-sts-opa-image"]; ok {
-		conf.OpaImage = opaImage
-	} else {
-		h.logger.Errorf("Cell sts OPA image missing.")
+func (r *reconciler) updateStatus(desired *v1alpha2.TokenService) (*v1alpha2.TokenService, error) {
+	gateway, err := r.tokenServiceLister.TokenServices(desired.Namespace).Get(desired.Name)
+	if err != nil {
+		return nil, err
 	}
-
-	if jwksImage, ok := configMap.Data["cell-sts-jwks-image"]; ok {
-		conf.JwksImage = jwksImage
-	} else {
-		h.logger.Errorf("Cell sts jwks image missing.")
+	if !reflect.DeepEqual(gateway.Status, desired.Status) {
+		latest := gateway.DeepCopy()
+		latest.Status = desired.Status
+		return r.meshClient.MeshV1alpha2().TokenServices(desired.Namespace).UpdateStatus(latest)
 	}
-
-	if opaPolicy, ok := configMap.Data["opa-default-policy"]; ok {
-		conf.Policy = opaPolicy
-	} else {
-		h.logger.Errorf("opa default polciy is missing")
-	}
-
-	h.tokenServiceConfig = conf
+	return desired, nil
 }

@@ -23,28 +23,24 @@ import (
 	"log"
 	"time"
 
-	kubeinformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions"
-	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale"
+	"github.com/cellery-io/mesh-controller/pkg/clients"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell"
+	"github.com/cellery-io/mesh-controller/pkg/controller/component"
 	"github.com/cellery-io/mesh-controller/pkg/controller/composite"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
-	"github.com/cellery-io/mesh-controller/pkg/controller/service"
 	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
+	"github.com/cellery-io/mesh-controller/pkg/informers"
 	"github.com/cellery-io/mesh-controller/pkg/logging"
 	"github.com/cellery-io/mesh-controller/pkg/signals"
 	"github.com/cellery-io/mesh-controller/pkg/version"
 )
 
 const (
-	threadsPerController = 2
+	threadsPerController = 1
 )
 
 var (
@@ -71,173 +67,72 @@ func main() {
 		logger.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
+	clientset, err := clients.NewFromConfig(cfg)
+
 	if err != nil {
-		logger.Fatalf("Error building kubernetes clientset: %s", err.Error())
+		logger.Fatalf("Error building clients: %v", err)
 	}
 
-	meshClient, err := meshclientset.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalf("Error building mesh clientset: %s", err.Error())
-	}
+	// Create required informers
+	informerset := informers.New(clientset, time.Second*60)
 
-	// Create informer factories
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
-	meshInformerFactory := meshinformers.NewSharedInformerFactory(meshClient, time.Second*30)
-	meshSystemInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(
-		kubeClient,
-		time.Second*30,
-		kubeinformers.WithNamespace(mesh.SystemNamespace),
-	)
-
-	// Create K8s informers
-	k8sServiceInformer := kubeInformerFactory.Core().V1().Services()
-	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
-	secretInformer := kubeInformerFactory.Core().V1().Secrets()
-	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
-	jobInformer := kubeInformerFactory.Batch().V1().Jobs()
-	hpaInformer := kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
-	networkPolicyInformer := kubeInformerFactory.Networking().V1().NetworkPolicies()
-	clusterIngressInformer := kubeInformerFactory.Extensions().V1beta1().Ingresses()
-
-	// Create Mesh informers
-	cellInformer := meshInformerFactory.Mesh().V1alpha1().Cells()
-	compositeInformer := meshInformerFactory.Mesh().V1alpha1().Composites()
-	gatewayInformer := meshInformerFactory.Mesh().V1alpha1().Gateways()
-	tokenServiceInformer := meshInformerFactory.Mesh().V1alpha1().TokenServices()
-	serviceInformer := meshInformerFactory.Mesh().V1alpha1().Services()
-	envoyFilterInformer := meshInformerFactory.Networking().V1alpha3().EnvoyFilters()
-	istioGatewayInformer := meshInformerFactory.Networking().V1alpha3().Gateways()
-	istioDRInformer := meshInformerFactory.Networking().V1alpha3().DestinationRules()
-	istioVSInformer := meshInformerFactory.Networking().V1alpha3().VirtualServices()
-	autoscalerInformer := meshInformerFactory.Mesh().V1alpha1().AutoscalePolicies()
-	servingConfigurationInformer := meshInformerFactory.Serving().V1alpha1().Configurations()
-
-	// Create Mesh system informers
-	systemConfigMapInformer := meshSystemInformerFactory.Core().V1().ConfigMaps()
-	systemSecretInformer := meshSystemInformerFactory.Core().V1().Secrets()
+	// Create config watcher
+	cw := config.NewWatcher(informerset, "cellery-config", "cellery-secret", "cellery-system", logger)
 
 	// Create crd controllers
-	cellController := cell.NewController(
-		kubeClient,
-		meshClient,
-		cellInformer,
-		gatewayInformer,
-		tokenServiceInformer,
-		serviceInformer,
-		networkPolicyInformer,
-		secretInformer,
-		envoyFilterInformer,
-		systemSecretInformer,
-		istioVSInformer,
-		logger,
-	)
-	compositeController := composite.NewController(
-		kubeClient,
-		meshClient,
-		compositeInformer,
-		serviceInformer,
-		k8sServiceInformer,
-		tokenServiceInformer,
-		secretInformer,
-		systemSecretInformer,
-		istioVSInformer,
-		cellInformer,
-		logger,
-	)
 	gatewayController := gateway.NewController(
-		kubeClient,
-		meshClient,
-		systemConfigMapInformer,
-		systemSecretInformer,
-		deploymentInformer,
-		k8sServiceInformer,
-		clusterIngressInformer,
-		secretInformer,
-		istioGatewayInformer,
-		istioDRInformer,
-		istioVSInformer,
-		envoyFilterInformer,
-		configMapInformer,
-		gatewayInformer,
-		autoscalerInformer,
+		clientset,
+		informerset,
+		cw,
 		logger,
 	)
+
+	componentController := component.NewController(
+		clientset,
+		informerset,
+		cw,
+		logger,
+	)
+
 	tokenServiceController := sts.NewController(
-		kubeClient,
-		meshClient,
-		systemConfigMapInformer,
-		deploymentInformer,
-		k8sServiceInformer,
-		envoyFilterInformer,
-		configMapInformer,
-		tokenServiceInformer,
-		logger,
-	)
-	serviceController := service.NewController(
-		kubeClient,
-		meshClient,
-		deploymentInformer,
-		jobInformer,
-		hpaInformer,
-		autoscalerInformer,
-		servingConfigurationInformer,
-		istioVSInformer,
-		k8sServiceInformer,
-		serviceInformer,
-		configMapInformer,
-		logger,
-	)
-	autoscaleController := autoscale.NewController(
-		kubeClient,
-		meshClient,
-		autoscalerInformer,
-		hpaInformer,
-		serviceInformer,
-		gatewayInformer,
+		clientset,
+		informerset,
+		cw,
 		logger,
 	)
 
-	// Start informers
-	go kubeInformerFactory.Start(stopCh)
-	go meshInformerFactory.Start(stopCh)
-	go meshSystemInformerFactory.Start(stopCh)
+	cellController := cell.NewController(
+		clientset,
+		informerset,
+		cw,
+		logger,
+	)
 
-	// Wait for cache sync
-	logger.Info("Waiting for informer caches to sync")
-	if ok := cache.WaitForCacheSync(stopCh,
-		// Sync K8s informers
-		k8sServiceInformer.Informer().HasSynced,
-		deploymentInformer.Informer().HasSynced,
-		jobInformer.Informer().HasSynced,
-		configMapInformer.Informer().HasSynced,
-		secretInformer.Informer().HasSynced,
-		networkPolicyInformer.Informer().HasSynced,
-		systemConfigMapInformer.Informer().HasSynced,
-		systemSecretInformer.Informer().HasSynced,
-		clusterIngressInformer.Informer().HasSynced,
-		// Sync mesh informers
-		cellInformer.Informer().HasSynced,
-		compositeInformer.Informer().HasSynced,
-		gatewayInformer.Informer().HasSynced,
-		tokenServiceInformer.Informer().HasSynced,
-		serviceInformer.Informer().HasSynced,
-		envoyFilterInformer.Informer().HasSynced,
-		istioGatewayInformer.Informer().HasSynced,
-		istioDRInformer.Informer().HasSynced,
-		istioVSInformer.Informer().HasSynced,
-		servingConfigurationInformer.Informer().HasSynced,
-	); !ok {
-		logger.Fatal("failed to wait for caches to sync")
+	compositeController := composite.NewController(
+		clientset,
+		informerset,
+		cw,
+		logger,
+	)
+	// Start informers and wait for caches to sync
+	logger.Info("Starting informers...")
+	err = informerset.Start(stopCh)
+	if err != nil {
+		logger.Fatalf("Error waiting for cache sync: %v", err)
+	}
+
+	err = cw.CheckResources()
+	if err != nil {
+		logger.Fatalf("Error checking config resources: %v", err)
 	}
 
 	//Start controllers
+	logger.Info("Starting controllers...")
+	go gatewayController.Run(threadsPerController, stopCh)
+	go componentController.Run(threadsPerController, stopCh)
+	go tokenServiceController.Run(threadsPerController, stopCh)
 	go cellController.Run(threadsPerController, stopCh)
 	go compositeController.Run(threadsPerController, stopCh)
-	go gatewayController.Run(threadsPerController, stopCh)
-	go tokenServiceController.Run(threadsPerController, stopCh)
-	go serviceController.Run(threadsPerController, stopCh)
-	go autoscaleController.Run(threadsPerController, stopCh)
 
 	// Prevent exiting the main process
 	<-stopCh

@@ -1,0 +1,15 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Component
+metadata:
+  name: component1
+spec:
+  template:
+    containers:
+        - name: nginx
+          image: nginx:1.7.9
+  ports:
+  - name: api
+    protocol: HTTP
+    port: 80
+    targetContainer: nginx
+    targetPort: 80

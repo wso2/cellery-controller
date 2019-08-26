@@ -1,0 +1,99 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Cell
+metadata:
+  name: pet-backend
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: pet-backend
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  gateway:
+    spec:
+      ingress:
+        http:
+        - context: /controller
+          definitions:
+          - method: GET
+            path: /catalog
+          - method: GET
+            path: /orders
+          port: 80
+          destination:
+            host: controller
+            port: 80
+  components:
+  - metadata:
+      name: controller
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: wso2cellery/samples-pet-store-controller
+          name: pet-store-controller
+          env:
+          - name: CATALOG_PORT
+            value: '80'
+          - name: ORDER_PORT
+            value: '80'
+          - name: ORDER_HOST
+            value: pet-backend--orders-service
+          - name: CUSTOMER_PORT
+            value: '80'
+          - name: CATALOG_HOST
+            value: pet-backend--catalog-service
+          - name: CUSTOMER_HOST
+            value: pet-backend--customers-service
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 80
+  - metadata:
+      name: catalog
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: wso2cellery/samples-pet-store-catalog
+          name: catalog
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 80
+  - metadata:
+      name: orders
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: wso2cellery/samples-pet-store-orders
+          name: orders
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 80
+  - metadata:
+      name: customers
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: wso2cellery/samples-pet-store-customers
+          name: customers
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 80
+  - metadata:
+      name: debug
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - name: debug
+          image: docker.io/mirage20/k8s-debug-tools
+

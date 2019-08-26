@@ -21,13 +21,16 @@ package resources
 const (
 	tokenServiceServiceInboundPort  = 8080
 	tokenServiceServiceOutboundPort = 8081
+	tokenServiceServiceGatewayPort  = 8082
 
 	tokenServiceServicePortInboundName  = "grpc-inbound"
+	tokenServiceServicePortGatewayName  = "grpc-gateway"
 	tokenServiceServicePortOutboundName = "grpc-outbound"
 	tokenServiceServicePortJWKSName     = "http-jwks"
 
 	tokenServiceContainerInboundPort  = 8080
 	tokenServiceContainerOutboundPort = 8081
+	tokenServiceContainerGatewayPort  = 8082
 	tokenServiceContainerJWKSPort     = 8090
 	opaServicePort                    = 8181
 
@@ -62,6 +65,7 @@ const (
 
 	filterMixer = "mixer"
 
+	filterListenerTypeGateway  = "GATEWAY"
 	filterListenerTypeInbound  = "SIDECAR_INBOUND"
 	filterListenerTypeOutbound = "SIDECAR_OUTBOUND"
 

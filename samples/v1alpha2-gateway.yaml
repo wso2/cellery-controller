@@ -1,0 +1,12 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Gateway
+metadata:
+  name: gw1
+spec:
+  ingress:
+    http:
+    - context: /foo
+      port: 8080
+      destination:
+        host: google.com
+        port: 80

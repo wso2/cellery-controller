@@ -32,11 +32,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller/composite/config"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 )
 
-func CreateKeyPairSecret(composite *v1alpha1.Composite, cellerySecret config.Secret) (*corev1.Secret, error) {
+func MakeSecret(composite *v1alpha2.Composite, cfg config.Interface) (*corev1.Secret, error) {
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
@@ -62,12 +62,17 @@ func CreateKeyPairSecret(composite *v1alpha1.Composite, cellerySecret config.Sec
 		BasicConstraintsValid: true,
 	}
 
-	err = cellerySecret.Validate()
+	keySystem, err := cfg.PrivateKey()
+
 	if err != nil {
-		return nil, fmt.Errorf("cellery system secret validation failed: %v", err)
+		return nil, err
+	}
+	certSystem, err := cfg.Certificate()
+	if err != nil {
+		return nil, err
 	}
 
-	certBytes, err := x509.CreateCertificate(rand.Reader, &template, cellerySecret.Certificate, privateKey.Public(), cellerySecret.PrivateKey)
+	certBytes, err := x509.CreateCertificate(rand.Reader, &template, certSystem, privateKey.Public(), keySystem)
 
 	if err != nil {
 		return nil, fmt.Errorf("fail to sign cell certificate: %v", err)
@@ -77,14 +82,18 @@ func CreateKeyPairSecret(composite *v1alpha1.Composite, cellerySecret config.Sec
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      SecretName(composite),
 			Namespace: composite.Namespace,
-			Labels:    createLabels(composite),
+			Labels:    makeLabels(composite),
 		},
 		Type: mesh.GroupName + "/key-and-cert",
 		Data: map[string][]byte{
 			"key.pem":          pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}),
 			"cert.pem":         pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes}),
-			"cellery-cert.pem": pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cellerySecret.Certificate.Raw}),
-			"cert-bundle.pem":  cellerySecret.CertBundle,
+			"cellery-cert.pem": pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certSystem.Raw}),
+			"cert-bundle.pem":  cfg.CertificateBundle(),
 		},
 	}, nil
+}
+
+func StatusFromSecret(composite *v1alpha2.Composite, secret *corev1.Secret) {
+	composite.Status.SecretGeneration = secret.Generation
 }

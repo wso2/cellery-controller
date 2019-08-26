@@ -4,7 +4,7 @@ metadata:
   name: tokenservices.mesh.cellery.io
 spec:
   group: mesh.cellery.io
-  version: v1alpha1
+  version: v1alpha2
   scope: Namespaced
   names:
     kind: TokenService
@@ -13,3 +13,5 @@ spec:
     shortNames:
     - ctokenservice
     - cts
+  subresources:
+    status: {}

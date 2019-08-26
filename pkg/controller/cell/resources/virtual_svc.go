@@ -18,108 +18,108 @@
 
 package resources
 
-import (
-	"fmt"
+// import (
+// 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	controllercommons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
-)
+// 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+// 	listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha1"
+// 	"github.com/cellery-io/mesh-controller/pkg/controller"
+// 	controllercommons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
+// )
 
-func CreateCellVirtualService(cell *v1alpha1.Cell, cellLister listers.CellLister) (*v1alpha3.VirtualService, error) {
-	hostNames, httpRoutes, tcpRoutes, err := buildInterCellRoutingInfo(cell, cellLister)
-	if err != nil {
-		return nil, err
-	}
-	if len(hostNames) == 0 || (len(httpRoutes) == 0 && len(tcpRoutes) == 0) {
-		// No virtual service needed
-		return nil, nil
-	}
-	return &v1alpha3.VirtualService{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      CellVirtualServiceName(cell),
-			Namespace: cell.Namespace,
-			Labels:    createLabels(cell),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateCellOwnerRef(cell),
-			},
-		},
-		Spec: v1alpha3.VirtualServiceSpec{
-			Hosts:    hostNames,
-			Gateways: []string{"mesh"},
-			Http:     httpRoutes,
-			// TCP is not supported atm
-			// TODO: support TCP
-			//Tcp:      tcpRoutes,
-		},
-	}, nil
-}
+// func CreateCellVirtualService(cell *v1alpha1.Cell, cellLister listers.CellLister) (*v1alpha3.VirtualService, error) {
+// 	hostNames, httpRoutes, tcpRoutes, err := buildInterCellRoutingInfo(cell, cellLister)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if len(hostNames) == 0 || (len(httpRoutes) == 0 && len(tcpRoutes) == 0) {
+// 		// No virtual service needed
+// 		return nil, nil
+// 	}
+// 	return &v1alpha3.VirtualService{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      CellVirtualServiceName(cell),
+// 			Namespace: cell.Namespace,
+// 			Labels:    createLabels(cell),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateCellOwnerRef(cell),
+// 			},
+// 		},
+// 		Spec: v1alpha3.VirtualServiceSpec{
+// 			Hosts:    hostNames,
+// 			Gateways: []string{"mesh"},
+// 			Http:     httpRoutes,
+// 			// TCP is not supported atm
+// 			// TODO: support TCP
+// 			//Tcp:      tcpRoutes,
+// 		},
+// 	}, nil
+// }
 
-func buildInterCellRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellLister) ([]string, []*v1alpha3.HTTPRoute, []*v1alpha3.TCPRoute, error) {
-	var intercellHttpRoutes []*v1alpha3.HTTPRoute
-	var intercellTcpRoutes []*v1alpha3.TCPRoute
-	var hostNames []string
-	// get dependencies from cell annotations,
-	dependencies, err := controllercommons.ExtractDependencies(cell.Annotations)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	// if the source cell is a web cell, we need to create a few additional routing rules
-	isWebCell := cell.Spec.GatewayTemplate.Spec.Host != ""
-	// for each dependency, create a route
-	for _, dependency := range dependencies {
-		dependencyInst := dependency[controllercommons.Instance]
-		if dependencyInst == "" {
-			return nil, nil, nil, fmt.Errorf("unable to extract dependency instance from annotations")
-		}
-		dependencyKind := dependency[controllercommons.Kind]
-		if dependencyKind == "" {
-			return nil, nil, nil, fmt.Errorf("unable to extract dependency kind from annotations")
-		}
-		// retrieve the cell using the cell instance name
-		depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		if dependencyKind == controllercommons.CellKind {
-			depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) > 0 {
-				hostNames = append(hostNames, controllercommons.BuildHostNameForCellDependency(dependencyInst))
-				// build http routes
-				intercellHttpRoutes = append(intercellHttpRoutes, controllercommons.BuildHttpRoutesForCellDependency(cell.Name, dependencyInst, isWebCell)...)
-			}
-		} else if dependencyKind == controllercommons.CompositeKind {
-			// retrieve the cell using the cell instance name
-			depComposite, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			if len(depComposite.Spec.ServiceTemplates) > 0 {
-				hostNames = append(hostNames, controllercommons.BuildHostNamesForCompositeDependency(dependencyInst, depComposite.Spec.ServiceTemplates)...)
-				intercellHttpRoutes = append(intercellHttpRoutes, controllercommons.BuildHttpRoutesForCompositeDependency(cell.Name, dependencyInst, depComposite.Spec.ServiceTemplates, isWebCell)...)
-			}
-		} else {
-			// unknown dependency kind
-			return nil, nil, nil, fmt.Errorf("unknown dependency kind '%s'", dependencyKind)
-		}
-		if len(depCell.Spec.GatewayTemplate.Spec.TCPRoutes) > 0 {
-			// TCP is not supported atm
-			// TODO: support TCP
-			// hostNames = append(hostNames, buildHostName(dependencyInst))
-			// build tcp routes
-			// intercellTcpRoutes = append(intercellTcpRoutes, buildTcpRoutes(depCell, dependencyInst)...)
-		}
-	}
+// func buildInterCellRoutingInfo(cell *v1alpha1.Cell, cellLister listers.CellLister) ([]string, []*v1alpha3.HTTPRoute, []*v1alpha3.TCPRoute, error) {
+// 	var intercellHttpRoutes []*v1alpha3.HTTPRoute
+// 	var intercellTcpRoutes []*v1alpha3.TCPRoute
+// 	var hostNames []string
+// 	// get dependencies from cell annotations,
+// 	dependencies, err := controllercommons.ExtractDependencies(cell.Annotations)
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
+// 	// if the source cell is a web cell, we need to create a few additional routing rules
+// 	isWebCell := cell.Spec.GatewayTemplate.Spec.Host != ""
+// 	// for each dependency, create a route
+// 	for _, dependency := range dependencies {
+// 		dependencyInst := dependency[controllercommons.Instance]
+// 		if dependencyInst == "" {
+// 			return nil, nil, nil, fmt.Errorf("unable to extract dependency instance from annotations")
+// 		}
+// 		dependencyKind := dependency[controllercommons.Kind]
+// 		if dependencyKind == "" {
+// 			return nil, nil, nil, fmt.Errorf("unable to extract dependency kind from annotations")
+// 		}
+// 		// retrieve the cell using the cell instance name
+// 		depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
+// 		if err != nil {
+// 			return nil, nil, nil, err
+// 		}
+// 		if dependencyKind == controllercommons.CellKind {
+// 			depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
+// 			if err != nil {
+// 				return nil, nil, nil, err
+// 			}
+// 			if len(depCell.Spec.GatewayTemplate.Spec.HTTPRoutes) > 0 {
+// 				hostNames = append(hostNames, controllercommons.BuildHostNameForCellDependency(dependencyInst))
+// 				// build http routes
+// 				intercellHttpRoutes = append(intercellHttpRoutes, controllercommons.BuildHttpRoutesForCellDependency(cell.Name, dependencyInst, isWebCell)...)
+// 			}
+// 		} else if dependencyKind == controllercommons.CompositeKind {
+// 			// retrieve the cell using the cell instance name
+// 			depComposite, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
+// 			if err != nil {
+// 				return nil, nil, nil, err
+// 			}
+// 			if len(depComposite.Spec.ServiceTemplates) > 0 {
+// 				hostNames = append(hostNames, controllercommons.BuildHostNamesForCompositeDependency(dependencyInst, depComposite.Spec.ServiceTemplates)...)
+// 				intercellHttpRoutes = append(intercellHttpRoutes, controllercommons.BuildHttpRoutesForCompositeDependency(cell.Name, dependencyInst, depComposite.Spec.ServiceTemplates, isWebCell)...)
+// 			}
+// 		} else {
+// 			// unknown dependency kind
+// 			return nil, nil, nil, fmt.Errorf("unknown dependency kind '%s'", dependencyKind)
+// 		}
+// 		if len(depCell.Spec.GatewayTemplate.Spec.TCPRoutes) > 0 {
+// 			// TCP is not supported atm
+// 			// TODO: support TCP
+// 			// hostNames = append(hostNames, buildHostName(dependencyInst))
+// 			// build tcp routes
+// 			// intercellTcpRoutes = append(intercellTcpRoutes, buildTcpRoutes(depCell, dependencyInst)...)
+// 		}
+// 	}
 
-	return hostNames, intercellHttpRoutes, intercellTcpRoutes, nil
-}
+// 	return hostNames, intercellHttpRoutes, intercellTcpRoutes, nil
+// }
 
 //func buildHostName(dependencyInst string) string {
 //	return GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))

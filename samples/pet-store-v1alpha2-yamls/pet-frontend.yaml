@@ -1,0 +1,65 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Cell
+metadata:
+  name: pet-frontend
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: pet-frontend
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  gateway:
+    spec:
+      ingress:
+        extensions:
+          clusterIngress:
+            host: pet-store.com
+          oidc:
+            providerUrl: https://accounts.google.com
+            clientId: :)
+            clientSecret: :)
+            redirectUrl: http://pet-store.com/_auth/callback
+            baseUrl: http://pet-store.com/
+            subjectClaim: given_name
+            nonSecurePaths:
+            - "/"
+            - "/app/*"
+        http:
+        - context: /
+          definitions:
+          - path: /*
+            method: GET
+          port: 80
+          destination:
+            host: pet-store-portal
+            port: 80
+  components:
+  - metadata:
+      name: pet-store-portal
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: wso2cellery/samples-pet-store-portal
+          name: portal
+          env:
+          - name: PET_STORE_CELL_URL
+            value: http://pet-backend--gateway-service/controller
+          - name: PORTAL_PORT
+            value: "80"
+          - name: BASE_PATH
+            value: "."
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 80
+  - metadata:
+      name: debug
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - name: debug
+          image: docker.io/mirage20/k8s-debug-tools
+

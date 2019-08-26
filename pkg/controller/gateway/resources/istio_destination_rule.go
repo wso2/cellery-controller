@@ -18,43 +18,43 @@
 
 package resources
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+// import (
+// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-)
+// 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+// 	"github.com/cellery-io/mesh-controller/pkg/controller"
+// )
 
-func CreateIstioDestinationRule(gateway *v1alpha1.Gateway) *v1alpha3.DestinationRule {
+// func CreateIstioDestinationRule(gateway *v1alpha1.Gateway) *v1alpha3.DestinationRule {
 
-	return &v1alpha3.DestinationRule{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      IstioDestinationRuleName(gateway),
-			Namespace: gateway.Namespace,
-			Labels:    createGatewayLabels(gateway),
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.CreateServiceOwnerRef(gateway),
-			},
-		},
+// 	return &v1alpha3.DestinationRule{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      IstioDestinationRuleName(gateway),
+// 			Namespace: gateway.Namespace,
+// 			Labels:    createGatewayLabels(gateway),
+// 			OwnerReferences: []metav1.OwnerReference{
+// 				*controller.CreateServiceOwnerRef(gateway),
+// 			},
+// 		},
 
-		Spec: v1alpha3.DestinationRuleSpec{
-			Host: GatewayK8sServiceName(gateway),
-			TrafficPolicy: &v1alpha3.TrafficPolicy{
-				LoadBalancer: &v1alpha3.LoadBalancerSettings{
-					Simple: "ROUND_ROBIN",
-				},
-				PortLevelSettings: []*v1alpha3.TrafficPolicy_PortTrafficPolicy{
-					{
-						Port: &v1alpha3.PortSelector{
-							Number: 443,
-						},
-						Tls: &v1alpha3.TLSSettings{
-							Mode: "ISTIO_MUTUAL",
-						},
-					},
-				},
-			},
-		},
-	}
-}
+// 		Spec: v1alpha3.DestinationRuleSpec{
+// 			Host: GatewayK8sServiceName(gateway),
+// 			TrafficPolicy: &v1alpha3.TrafficPolicy{
+// 				LoadBalancer: &v1alpha3.LoadBalancerSettings{
+// 					Simple: "ROUND_ROBIN",
+// 				},
+// 				PortLevelSettings: []*v1alpha3.TrafficPolicy_PortTrafficPolicy{
+// 					{
+// 						Port: &v1alpha3.PortSelector{
+// 							Number: 443,
+// 						},
+// 						Tls: &v1alpha3.TLSSettings{
+// 							Mode: "ISTIO_MUTUAL",
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+// }

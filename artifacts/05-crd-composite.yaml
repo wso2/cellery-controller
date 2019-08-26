@@ -4,20 +4,27 @@ metadata:
   name: composites.mesh.cellery.io
 spec:
   group: mesh.cellery.io
-  version: v1alpha1
+  version: v1alpha2
   scope: Namespaced
   names:
     kind: Composite
     plural: composites
     singular: composite
+  subresources:
+    status: {}
   additionalPrinterColumns:
   - name: Status
     type: string
+    description: Status of this composite
     JSONPath: .status.status
-  - name: Services
+  - name: Total-Components
     type: integer
-    description: Number of services in this cell
-    JSONPath: .status.serviceCount
+    description: Number of components in this composite
+    JSONPath: .status.componentCount
+  - name: Active-Components
+    type: integer
+    description: Number of active components in this composite
+    JSONPath: .status.activeComponentCount
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

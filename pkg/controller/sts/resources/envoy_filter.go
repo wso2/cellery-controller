@@ -22,56 +22,81 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func CreateEnvoyFilter(tokenService *v1alpha1.TokenService) *v1alpha3.EnvoyFilter {
+func MakeEnvoyFilter(tokenService *v1alpha2.TokenService) *v1alpha3.EnvoyFilter {
 
-	var cellName string
-	cellName, ok := tokenService.Labels[mesh.CellLabelKey]
-	if !ok {
-		cellName = tokenService.Name
-	}
+	// var cellName string
+	// cellName, ok := tokenService.Labels[mesh.CellLabelKey]
+	// if !ok {
+	// 	cellName = tokenService.Name
+	// }
 
 	var filters []v1alpha3.Filter
 	switch tokenService.Spec.InterceptMode {
-	case v1alpha1.InterceptModeInbound:
-		filters = append(filters, buildInboundFilter(tokenService))
-	case v1alpha1.InterceptModeOutbound:
-		filters = append(filters, buildOutboundFilter(tokenService))
-	case v1alpha1.InterceptModeAny:
-		filters = append(filters, buildInboundFilter(tokenService))
-		filters = append(filters, buildOutboundFilter(tokenService))
+	case v1alpha2.InterceptModeInbound:
+		filters = append(filters, makeInboundFilter(tokenService))
+	case v1alpha2.InterceptModeOutbound:
+		filters = append(filters, makeOutboundFilter(tokenService))
+	case v1alpha2.InterceptModeAny:
+		filters = append(filters, makeInboundFilter(tokenService))
+		filters = append(filters, makeOutboundFilter(tokenService))
+		filters = append(filters, makeGatewayFilter(tokenService))
 	}
 
 	return &v1alpha3.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      EnvoyFilterName(tokenService),
 			Namespace: tokenService.Namespace,
-			Labels:    createTokenServiceLabels(tokenService),
+			Labels:    makeLabels(tokenService),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateTokenServiceOwnerRef(tokenService),
 			},
 		},
 		Spec: v1alpha3.EnvoyFilterSpec{
-			WorkloadLabels: func() map[string]string {
-				if tokenService.Spec.Composite {
-					return map[string]string{
-						mesh.CompositeTokenServiceLabelKey: "true",
-					}
-				}
-				return map[string]string{
-					mesh.CellLabelKey: cellName,
-				}
-			}(),
+			WorkloadLabels: tokenService.Spec.Selector,
+			// WorkloadLabels: func() map[string]string {
+			// 	if tokenService.Spec.Composite {
+			// 		return map[string]string{
+			// 			mesh.CompositeTokenServiceLabelKey: "true",
+			// 		}
+			// 	}
+			// 	return map[string]string{
+			// 		mesh.CellLabelKey: cellName,
+			// 	}
+			// }(),
 			Filters: filters,
 		},
 	}
 }
 
-func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
+func makeGatewayFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
+	return v1alpha3.Filter{
+		InsertPosition: v1alpha3.InsertPosition{
+			Index:      filterInsertPositionBefore,
+			RelativeTo: filterMixer,
+		},
+		ListenerMatch: v1alpha3.ListenerMatch{
+			ListenerType:     filterListenerTypeGateway,
+			ListenerProtocol: HTTPProtocol,
+		},
+		FilterName: baseFilterName,
+		FilterType: HTTPProtocol,
+		FilterConfig: v1alpha3.FilterConfig{
+			GRPCService: v1alpha3.GRPCService{
+				GoogleGRPC: v1alpha3.GoogleGRPC{
+					TargetUri:  ServiceName(tokenService) + ":8082",
+					StatPrefix: statPrefix,
+				},
+				Timeout: filterTimeout,
+			},
+		},
+	}
+}
+
+func makeInboundFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
 	return v1alpha3.Filter{
 		InsertPosition: v1alpha3.InsertPosition{
 			Index:      filterInsertPositionBefore,
@@ -86,7 +111,7 @@ func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 		FilterConfig: v1alpha3.FilterConfig{
 			GRPCService: v1alpha3.GRPCService{
 				GoogleGRPC: v1alpha3.GoogleGRPC{
-					TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8080",
+					TargetUri:  ServiceName(tokenService) + ":8080",
 					StatPrefix: statPrefix,
 				},
 				Timeout: filterTimeout,
@@ -95,7 +120,7 @@ func buildInboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 	}
 }
 
-func buildOutboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
+func makeOutboundFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
 	return v1alpha3.Filter{
 		InsertPosition: v1alpha3.InsertPosition{
 			Index:      filterInsertPositionAfter,
@@ -110,11 +135,30 @@ func buildOutboundFilter(tokenService *v1alpha1.TokenService) v1alpha3.Filter {
 		FilterConfig: v1alpha3.FilterConfig{
 			GRPCService: v1alpha3.GRPCService{
 				GoogleGRPC: v1alpha3.GoogleGRPC{
-					TargetUri:  TokenServiceK8sServiceName(tokenService) + ":8081",
+					TargetUri:  ServiceName(tokenService) + ":8081",
 					StatPrefix: statPrefix,
 				},
 				Timeout: filterTimeout,
 			},
 		},
 	}
+}
+
+func RequireEnvoyFilter(tokenService *v1alpha2.TokenService) bool {
+	return tokenService.Spec.InterceptMode != v1alpha2.InterceptModeNone
+}
+
+func RequireEnvoyFilterUpdate(tokenService *v1alpha2.TokenService, envoyFilter *v1alpha3.EnvoyFilter) bool {
+	return tokenService.Generation != tokenService.Status.ObservedGeneration ||
+		envoyFilter.Generation != tokenService.Status.EnvoyFilterGeneration
+}
+
+func CopyEnvoyFilter(source, destination *v1alpha3.EnvoyFilter) {
+	destination.Spec = source.Spec
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromEnvoyFilter(tokenService *v1alpha2.TokenService, envoyFilter *v1alpha3.EnvoyFilter) {
+	tokenService.Status.EnvoyFilterGeneration = envoyFilter.Generation
 }

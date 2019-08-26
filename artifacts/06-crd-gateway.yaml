@@ -4,7 +4,7 @@ metadata:
   name: gateways.mesh.cellery.io
 spec:
   group: mesh.cellery.io
-  version: v1alpha1
+  version: v1alpha2
   scope: Namespaced
   names:
     kind: Gateway
@@ -13,18 +13,20 @@ spec:
     shortNames:
     - cgateways
     - cgw
+  subresources:
+    status: {}
   additionalPrinterColumns:
   - name: Status
     type: string
     JSONPath: .status.status
-  - name: Hostname
+  - name: Service-Name
     type: string
-    description: Host name of the gateway
-    JSONPath: .status.hostname
-  - name: Cell
-    type: string
-    description: Owner cell of this gateway
-    JSONPath: .status.ownerCell
+    description: Service name of this gateway
+    JSONPath: .status.serviceName
+  - name: Ready-Replicas
+    type: integer
+    description: Number of replicas available for this gateway
+    JSONPath: .status.availableReplicas
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

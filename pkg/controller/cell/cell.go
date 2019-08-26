@@ -19,412 +19,493 @@
 package cell
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"reflect"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	networkv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	corev1informers "k8s.io/client-go/informers/core/v1"
-	networkv1informers "k8s.io/client-go/informers/networking/v1"
-	"k8s.io/client-go/kubernetes"
-	corev1listers "k8s.io/client-go/listers/core/v1"
-	networkv1listers "k8s.io/client-go/listers/networking/v1"
-	"k8s.io/client-go/tools/cache"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	corev1listers "k8s.io/client-go/listers/core/v1"
+	networkingv1listers "k8s.io/client-go/listers/networking/v1"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/client/clientset/versioned"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/mesh/v1alpha1"
-	istioinformers "github.com/cellery-io/mesh-controller/pkg/client/informers/externalversions/networking/v1alpha3"
-	listers "github.com/cellery-io/mesh-controller/pkg/client/listers/mesh/v1alpha1"
-	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/client/listers/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/clients"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/cell/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
-	controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
+	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	v1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
+	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/informers"
 )
 
-type cellHandler struct {
-	kubeClient          kubernetes.Interface
-	meshClient          meshclientset.Interface
-	networkPilicyLister networkv1listers.NetworkPolicyLister
-	secretLister        corev1listers.SecretLister
-	cellLister          listers.CellLister
-	gatewayLister       listers.GatewayLister
-	tokenServiceLister  listers.TokenServiceLister
-	serviceLister       listers.ServiceLister
-	envoyFilterLister   istiov1alpha1listers.EnvoyFilterLister
-	cellerySecret       config.Secret
-	virtualSvcLister    istiov1alpha1listers.VirtualServiceLister
-	logger              *zap.SugaredLogger
+type reconciler struct {
+	kubeClient                kubernetes.Interface
+	meshClient                meshclientset.Interface
+	secretLister              corev1listers.SecretLister
+	networkPolicyLister       networkingv1listers.NetworkPolicyLister
+	istioVirtualServiceLister istiov1alpha1listers.VirtualServiceLister
+	istioEnvoyFilterLister    istiov1alpha1listers.EnvoyFilterLister
+	cellLister                v1alpha2listers.CellLister
+	gatewayLister             v1alpha2listers.GatewayLister
+	tokenServiceLister        v1alpha2listers.TokenServiceLister
+	componentLister           v1alpha2listers.ComponentLister
+	cfg                       config.Interface
+	logger                    *zap.SugaredLogger
+	recorder                  record.EventRecorder
 }
 
 func NewController(
-	kubeClient kubernetes.Interface,
-	meshClient meshclientset.Interface,
-	cellInformer meshinformers.CellInformer,
-	gatewayInformer meshinformers.GatewayInformer,
-	tokenServiceInformer meshinformers.TokenServiceInformer,
-	serviceInformer meshinformers.ServiceInformer,
-	networkPolicyInformer networkv1informers.NetworkPolicyInformer,
-	secretInformer corev1informers.SecretInformer,
-	envoyFilterInformer istioinformers.EnvoyFilterInformer,
-	systemSecretInformer corev1informers.SecretInformer,
-	virtualSvcInformer istioinformers.VirtualServiceInformer,
+	clientset clients.Interface,
+	informerset informers.Interface,
+	cfg config.Interface,
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
-	h := &cellHandler{
-		kubeClient:          kubeClient,
-		meshClient:          meshClient,
-		cellLister:          cellInformer.Lister(),
-		serviceLister:       serviceInformer.Lister(),
-		gatewayLister:       gatewayInformer.Lister(),
-		tokenServiceLister:  tokenServiceInformer.Lister(),
-		networkPilicyLister: networkPolicyInformer.Lister(),
-		secretLister:        secretInformer.Lister(),
-		envoyFilterLister:   envoyFilterInformer.Lister(),
-		virtualSvcLister:    virtualSvcInformer.Lister(),
-		logger:              logger.Named("cell-controller"),
+	r := &reconciler{
+		kubeClient:                clientset.Kubernetes(),
+		meshClient:                clientset.Mesh(),
+		cellLister:                informerset.Cells().Lister(),
+		componentLister:           informerset.Components().Lister(),
+		gatewayLister:             informerset.Gateways().Lister(),
+		tokenServiceLister:        informerset.TokenServices().Lister(),
+		networkPolicyLister:       informerset.NetworkPolicies().Lister(),
+		secretLister:              informerset.Secrets().Lister(),
+		istioEnvoyFilterLister:    informerset.IstioEnvoyFilters().Lister(),
+		istioVirtualServiceLister: informerset.IstioVirtualServices().Lister(),
+		cfg:                       cfg,
+		logger:                    logger.Named("cell-controller"),
 	}
-	c := controller.New(h, h.logger, "Cell")
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(r.logger.Named("events").Infof)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: r.kubeClient.CoreV1().Events("")})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "cell-controller"})
+	r.recorder = recorder
+	c := controller.New(r, r.logger, "Cell")
 
-	h.logger.Info("Setting up event handlers")
-	cellInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: c.Enqueue,
-		UpdateFunc: func(old, new interface{}) {
-			h.logger.Debugw("Informer update", "old", old, "new", new)
-			c.Enqueue(new)
-		},
-		DeleteFunc: c.Enqueue,
+	r.logger.Info("Setting up event handlers")
+	informerset.Cells().Informer().AddEventHandler(informers.HandleAll(c.Enqueue))
+
+	informerset.Components().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Cell")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
 
-	systemSecretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: h.updateSecret,
-		UpdateFunc: func(old, new interface{}) {
-			h.updateSecret(new)
-		},
+	informerset.Gateways().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Cell")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.TokenServices().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Cell")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.NetworkPolicies().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Cell")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.Secrets().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Cell")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
 
 	return c
 }
 
-func (h *cellHandler) Handle(key string) error {
-	h.logger.Infof("Handle called with %s", key)
+func (r *reconciler) Reconcile(key string) error {
+	r.logger.Infof("Reconcile called with %s", key)
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		h.logger.Errorf("invalid resource key: %s", key)
+		r.logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
-	cellOriginal, err := h.cellLister.Cells(namespace).Get(name)
+	original, err := r.cellLister.Cells(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			runtime.HandleError(fmt.Errorf("cell '%s' in work queue no longer exists", key))
+			r.logger.Errorf("cell '%s' in work queue no longer exists", key)
 			return nil
 		}
 		return err
 	}
-	h.logger.Debugw("lister instance", key, cellOriginal)
-	cell := cellOriginal.DeepCopy()
 
-	if err = h.handle(cell); err != nil {
+	cell := original.DeepCopy()
+
+	if err = r.reconcile(cell); err != nil {
+		r.recorder.Eventf(cell, corev1.EventTypeWarning, "InternalError", "Failed to update cluster: %v", err)
 		return err
 	}
 
-	if _, err = h.updateStatus(cell); err != nil {
+	if equality.Semantic.DeepEqual(original.Status, cell.Status) {
+		return nil
+	}
+
+	if _, err = r.updateStatus(cell); err != nil {
+		r.recorder.Eventf(cell, corev1.EventTypeWarning, "UpdateFailed", "Failed to update status: %v", err)
 		return err
 	}
+	r.recorder.Eventf(cell, corev1.EventTypeNormal, "Updated", "Updated Cell status %q", cell.GetName())
 	return nil
 }
 
-func (h *cellHandler) handle(cell *v1alpha1.Cell) error {
+func (r *reconciler) reconcile(cell *v1alpha2.Cell) error {
+	cell.SetDefaults()
+	rErrs := &controller.ReconcileErrors{}
 
-	if err := h.handleNetworkPolicy(cell); err != nil {
-		return err
+	rErrs.Add(r.reconcileNetworkPolicy(cell))
+	rErrs.Add(r.reconcileSecret(cell))
+	rErrs.Add(r.reconcileGateway(cell))
+	rErrs.Add(r.reconcileTokenService(cell))
+
+	for i, _ := range cell.Spec.Components {
+		rErrs.Add(r.reconcileComponent(cell, &cell.Spec.Components[i]))
 	}
 
-	if err := h.handleSecret(cell); err != nil {
-		return err
+	// if err := r.reconcileVirtualService(cell); err != nil {
+	// 	return err
+	// }
+	if !rErrs.Empty() {
+		return rErrs
 	}
 
-	if err := h.handleGateway(cell); err != nil {
-		return err
-	}
-
-	if err := h.handleTokenService(cell); err != nil {
-		return err
-	}
-
-	if err := h.handleServices(cell); err != nil {
-		return err
-	}
-
-	if err := h.handleVirtualService(cell); err != nil {
-		return err
-	}
-
-	h.updateCellStatus(cell)
-	return nil
-}
-
-func (h *cellHandler) handleNetworkPolicy(cell *v1alpha1.Cell) error {
-	networkPolicy, err := h.networkPilicyLister.NetworkPolicies(cell.Namespace).Get(resources.NetworkPolicyName(cell))
-	if errors.IsNotFound(err) {
-		networkPolicy, err = h.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.CreateNetworkPolicy(cell))
-		if err != nil {
-			h.logger.Errorf("Failed to create NetworkPolicy %v", err)
-			return err
-		}
-		h.logger.Debugw("NetworkPolicy created", resources.NetworkPolicyName(cell), networkPolicy)
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (h *cellHandler) handleSecret(cell *v1alpha1.Cell) error {
-	secret, err := h.secretLister.Secrets(cell.Namespace).Get(resources.SecretName(cell))
-	if errors.IsNotFound(err) {
-		desiredSecret, err := resources.CreateKeyPairSecret(cell, h.cellerySecret)
-		if err != nil {
-			h.logger.Errorf("Cannot build the Cell Secret %v", err)
-			return err
-		}
-		secret, err = h.kubeClient.CoreV1().Secrets(cell.Namespace).Create(desiredSecret)
-		if err != nil {
-			h.logger.Errorf("Failed to create cell Secret %v", err)
-			return err
-		}
-		h.logger.Debugw("Secret created", resources.SecretName(cell), secret)
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (h *cellHandler) handleGateway(cell *v1alpha1.Cell) error {
-	gateway, err := h.gatewayLister.Gateways(cell.Namespace).Get(resources.GatewayName(cell))
-	if errors.IsNotFound(err) {
-		gateway = resources.CreateGateway(cell)
-		lastAppliedConfig, err := json.Marshal(buildLastAppliedConfig(gateway))
-		if err != nil {
-			h.logger.Errorf("Failed to create Gateway last applied config %v", err)
-			return err
-		}
-		annotate(gateway, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
-		gateway, err = h.meshClient.MeshV1alpha1().Gateways(cell.Namespace).Create(gateway)
-		if err != nil {
-			h.logger.Errorf("Failed to create Gateway %v", err)
-			return err
-		}
-		h.logger.Debugw("Gateway created", resources.GatewayName(cell), gateway)
-	} else if err != nil {
-		return err
-	}
-
-	cell.Status.GatewayHostname = gateway.Status.HostName
-	cell.Status.GatewayStatus = gateway.Status.Status
-	return nil
-}
-
-func buildLastAppliedConfig(gw *v1alpha1.Gateway) *v1alpha1.Gateway {
-	return &v1alpha1.Gateway{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Gateway",
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      gw.Name,
-			Namespace: gw.Namespace,
-		},
-		Spec: gw.Spec,
-	}
-}
-
-func annotate(gw *v1alpha1.Gateway, name string, value string) {
-	annotations := make(map[string]string, len(gw.ObjectMeta.Annotations)+1)
-	annotations[name] = value
-	for k, v := range gw.ObjectMeta.Annotations {
-		annotations[k] = v
-	}
-	gw.Annotations = annotations
-}
-
-func (h *cellHandler) handleTokenService(cell *v1alpha1.Cell) error {
-	tokenService, err := h.tokenServiceLister.TokenServices(cell.Namespace).Get(resources.TokenServiceName(cell))
-	if errors.IsNotFound(err) {
-		tokenService, err = h.meshClient.MeshV1alpha1().TokenServices(cell.Namespace).Create(resources.CreateTokenService(cell))
-		if err != nil {
-			h.logger.Errorf("Failed to create TokenService %v", err)
-			return err
-		}
-		h.logger.Debugw("TokenService created", resources.TokenServiceName(cell), tokenService)
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (h *cellHandler) handleServices(cell *v1alpha1.Cell) error {
-	servicesSpecs := cell.Spec.ServiceTemplates
-	cell.Status.ServiceCount = 0
-	for _, serviceSpec := range servicesSpecs {
-		service, err := h.serviceLister.Services(cell.Namespace).Get(resources.ServiceName(cell, serviceSpec))
-		if errors.IsNotFound(err) {
-			service, err = h.meshClient.MeshV1alpha1().Services(cell.Namespace).Create(resources.CreateService(cell, serviceSpec))
-			if err != nil {
-				h.logger.Errorf("Failed to create Service: %s : %v", serviceSpec.Name, err)
-				return err
-			}
-			h.logger.Debugw("Service created", resources.ServiceName(cell, serviceSpec), service)
-		} else if err != nil {
-			return err
-		}
-		if service != nil {
-			// service exists. if the new obj is not equal to old one, perform an update.
-			newService := resources.CreateService(cell, serviceSpec)
-			// set the previous service's `ResourceVersion` to the newService
-			// Else the issue `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update` will occur.
-			newService.ResourceVersion = service.ResourceVersion
-			if !isEqual(service, newService) {
-				service, err = h.meshClient.MeshV1alpha1().Services(cell.Namespace).Update(newService)
-				if err != nil {
-					h.logger.Errorf("Failed to update Service: %s : %v", service.Name, err)
-					return err
-				}
-				h.logger.Debugw("Service updated", resources.ServiceName(cell, serviceSpec), service)
-			}
-		}
-		if service.Status.AvailableReplicas > 0 || service.Spec.IsZeroScaled() || service.Spec.Type == v1alpha1.ServiceTypeJob {
-			cell.Status.ServiceCount++
+	activeCount := 0
+	for _, v := range cell.Status.ComponentStatuses {
+		if v == v1alpha2.ComponentCurrentStatusReady {
+			activeCount++
 		}
 	}
-	return nil
-}
 
-func (h *cellHandler) handleVirtualService(cell *v1alpha1.Cell) error {
-	cellVs, err := h.virtualSvcLister.VirtualServices(cell.Namespace).Get(resources.CellVirtualServiceName(cell))
-	if errors.IsNotFound(err) {
-		cellVs, err = resources.CreateCellVirtualService(cell, h.cellLister)
-		if err != nil {
-			h.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, cell.Name)
-			return err
-		}
-		if cellVs == nil {
-			h.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
-			return nil
-		}
-		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
-		if err != nil {
-			h.logger.Errorf("Failed to create Cell VS %v for instance %s", err, cell.Name)
-			return err
-		}
-		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
-		cellVs, err = h.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(cellVs)
-		if err != nil {
-			h.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, cell.Name)
-			return err
-		}
-		h.logger.Debugw("Cell VirtualService created", resources.CellVirtualServiceName(cell), cellVs)
-	} else if err != nil {
-		return err
-	}
-	return nil
-}
-
-func isEqual(oldService *v1alpha1.Service, newService *v1alpha1.Service) bool {
-	// we only consider equality of the spec
-	return reflect.DeepEqual(oldService.Spec, newService.Spec)
-}
-
-func (h *cellHandler) updateStatus(cell *v1alpha1.Cell) (*v1alpha1.Cell, error) {
-	latestCell, err := h.cellLister.Cells(cell.Namespace).Get(cell.Name)
-	if err != nil {
-		return nil, err
-	}
-	if !reflect.DeepEqual(latestCell.Status, cell.Status) {
-		latestCell.Status = cell.Status
-
-		return h.meshClient.MeshV1alpha1().Cells(cell.Namespace).Update(latestCell)
-	}
-	return cell, nil
-}
-
-func (h *cellHandler) updateCellStatus(cell *v1alpha1.Cell) {
-	if cell.Status.GatewayStatus == "Ready" && int(cell.Status.ServiceCount) == len(cell.Spec.ServiceTemplates) {
-		cell.Status.Status = "Ready"
-		c := []v1alpha1.CellCondition{
+	cell.Status.ActiveComponentCount = activeCount
+	cell.Status.ComponentCount = len(cell.Spec.Components)
+	if cell.Status.GatewayStatus == v1alpha2.GatewayCurrentStatusReady &&
+		cell.Status.ActiveComponentCount == cell.Status.ComponentCount {
+		cell.Status.Status = v1alpha2.CellCurrentStatusReady
+		c := []v1alpha2.CellCondition{
 			{
-				Type:   v1alpha1.CellReady,
+				Type:   v1alpha2.CellReady,
 				Status: corev1.ConditionTrue,
 			},
 		}
 		cell.Status.Conditions = c
 	} else {
-		cell.Status.Status = "NotReady"
-		c := []v1alpha1.CellCondition{
+		cell.Status.Status = v1alpha2.CellCurrentStatusNotReady
+		c := []v1alpha2.CellCondition{
 			{
-				Type:   v1alpha1.CellReady,
+				Type:   v1alpha2.CellReady,
 				Status: corev1.ConditionFalse,
 			},
 		}
 		cell.Status.Conditions = c
 	}
+	cell.Status.ObservedGeneration = cell.Generation
+
+	return nil
 }
 
-func (h *cellHandler) updateSecret(obj interface{}) {
-	secret, ok := obj.(*corev1.Secret)
-	if !ok {
-		return
-	}
-
-	if secret.Name != mesh.SystemSecretName {
-		return
-	}
-
-	s := config.Secret{}
-
-	if keyBytes, ok := secret.Data["tls.key"]; ok {
-		block, _ := pem.Decode(keyBytes)
-		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+func (r *reconciler) reconcileNetworkPolicy(cell *v1alpha2.Cell) error {
+	networkPolicyName := resources.NetworkPolicyName(cell)
+	networkPolicy, err := r.networkPolicyLister.NetworkPolicies(cell.Namespace).Get(networkPolicyName)
+	if errors.IsNotFound(err) {
+		networkPolicy, err = r.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Create(resources.MakeNetworkPolicy(cell))
 		if err != nil {
-			h.logger.Errorf("error while parsing cellery-secret tls.key: %v", err)
-			s.PrivateKey = nil
+			r.logger.Errorf("Failed to create NetworkPolicy %q: %v", networkPolicyName, err)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create NetworkPolicy %q: %v", networkPolicyName, err)
+			return err
 		}
-		key, ok := parsedKey.(*rsa.PrivateKey)
-		if !ok {
-			h.logger.Errorf("error while parsing cellery-secret tls.key: non rsa private key")
-			s.PrivateKey = nil
-		}
-		s.PrivateKey = key
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created NetworkPolicy %q", networkPolicyName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve NetworkPolicy %q: %v", networkPolicyName, err)
+		return err
+	} else if !metav1.IsControlledBy(networkPolicy, cell) {
+		return fmt.Errorf("cell: %q does not own the NetworkPolicy: %q", cell.Name, networkPolicyName)
 	} else {
-		h.logger.Errorf("Missing tls.key in the cellery secret.")
-	}
-
-	if certBytes, ok := secret.Data["tls.crt"]; ok {
-		block, _ := pem.Decode(certBytes)
-		cert, err := x509.ParseCertificate(block.Bytes)
+		networkPolicy, err = func(cell *v1alpha2.Cell, networkPolicy *networkv1.NetworkPolicy) (*networkv1.NetworkPolicy, error) {
+			if !resources.RequireNetworkPolicyUpdate(cell, networkPolicy) {
+				return networkPolicy, nil
+			}
+			desiredNetworkPolicy := resources.MakeNetworkPolicy(cell)
+			existingNetworkPolicy := networkPolicy.DeepCopy()
+			resources.CopyNetworkPolicy(desiredNetworkPolicy, existingNetworkPolicy)
+			return r.kubeClient.NetworkingV1().NetworkPolicies(cell.Namespace).Update(existingNetworkPolicy)
+		}(cell, networkPolicy)
 		if err != nil {
-			h.logger.Errorf("error while parsing cellery-secret tls.crt: %v", err)
-			s.PrivateKey = nil
+			r.logger.Errorf("Failed to update NetworkPolicy %q: %v", networkPolicyName, err)
+			return err
 		}
-		s.Certificate = cert
-	} else {
-		h.logger.Errorf("Missing tls.cert in the cellery secret.")
 	}
+	resources.StatusFromNetworkPolicy(cell, networkPolicy)
+	return nil
+}
 
-	if certBundle, ok := secret.Data["cert-bundle.pem"]; ok {
-		s.CertBundle = certBundle
-	} else {
-		h.logger.Errorf("Missing cert-bundle.pem in the cellery secret.")
+func (r *reconciler) reconcileSecret(cell *v1alpha2.Cell) error {
+	secretName := resources.SecretName(cell)
+	secret, err := r.secretLister.Secrets(cell.Namespace).Get(resources.SecretName(cell))
+
+	if errors.IsNotFound(err) {
+		secret, err = func(cell *v1alpha2.Cell) (*corev1.Secret, error) {
+			desiredSecret, err := resources.MakeSecret(cell, r.cfg)
+			if err != nil {
+				return nil, err
+			}
+			return r.kubeClient.CoreV1().Secrets(cell.Namespace).Create(desiredSecret)
+		}(cell)
+		if err != nil {
+			r.logger.Errorf("Failed to create Secret %q: %v", secretName, err)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Secret %q: %v", secretName, err)
+			return err
+		}
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created Secret %q", secretName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Secret %q: %v", secretName, err)
+		return err
+	} else if !metav1.IsControlledBy(secret, cell) {
+		return fmt.Errorf("cell: %q does not own the Secret: %q", cell.Name, secretName)
 	}
+	resources.StatusFromSecret(cell, secret)
+	return nil
+}
 
-	h.cellerySecret = s
+func (r *reconciler) reconcileGateway(cell *v1alpha2.Cell) error {
+	gatewayName := resources.GatewayName(cell)
+	gateway, err := r.gatewayLister.Gateways(cell.Namespace).Get(gatewayName)
+	if errors.IsNotFound(err) {
+		gateway, err = r.meshClient.MeshV1alpha2().Gateways(cell.Namespace).Create(resources.MakeGateway(cell))
+		if err != nil {
+			r.logger.Errorf("Failed to create Gateway %q: %v", gatewayName, err)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Gateway %q: %v", gatewayName, err)
+			return err
+		}
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created Gateway %q", gatewayName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Gateway %q: %v", gatewayName, err)
+		return err
+	} else if !metav1.IsControlledBy(gateway, cell) {
+		return fmt.Errorf("cell: %q does not own the Gateway: %q", cell.Name, gatewayName)
+	} else {
+		gateway, err = func(cell *v1alpha2.Cell, gateway *v1alpha2.Gateway) (*v1alpha2.Gateway, error) {
+			if !resources.RequireGatewayUpdate(cell, gateway) {
+				return gateway, nil
+			}
+			desiredGateway := resources.MakeGateway(cell)
+			existingGateway := gateway.DeepCopy()
+			resources.CopyGateway(desiredGateway, existingGateway)
+			return r.meshClient.MeshV1alpha2().Gateways(cell.Namespace).Update(existingGateway)
+		}(cell, gateway)
+		if err != nil {
+			r.logger.Errorf("Failed to update Gateway %q: %v", gatewayName, err)
+			return err
+		}
+	}
+	resources.StatusFromGateway(cell, gateway)
+	return nil
+}
+
+// func (r *reconciler) reconcileGateway(cell *v1alpha2.Cell) error {
+// 	gateway, err := r.gatewayLister.Gateways(cell.Namespace).Get(resources.GatewayName(cell))
+// 	if errors.IsNotFound(err) {
+// 		gateway = resources.MakeGateway(cell)
+// 		lastAppliedConfig, err := json.Marshal(buildLastAppliedConfig(gateway))
+// 		if err != nil {
+// 			r.logger.Errorf("Failed to create Gateway last applied config %v", err)
+// 			return err
+// 		}
+// 		annotate(gateway, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+// 		gateway, err = r.meshClient.MeshV1alpha2().Gateways(cell.Namespace).Create(gateway)
+// 		if err != nil {
+// 			r.logger.Errorf("Failed to create Gateway %v", err)
+// 			return err
+// 		}
+// 		r.logger.Debugw("Gateway created", resources.GatewayName(cell), gateway)
+// 	} else if err != nil {
+// 		return err
+// 	}
+
+// 	cell.Status.GatewayHostname = gateway.Status.ServiceName
+// 	cell.Status.GatewayStatus = string(gateway.Status.Status)
+// 	return nil
+// }
+
+// func buildLastAppliedConfig(gw *v1alpha2.Gateway) *v1alpha2.Gateway {
+// 	return &v1alpha2.Gateway{
+// 		TypeMeta: metav1.TypeMeta{
+// 			Kind:       "Gateway",
+// 			APIVersion: v1alpha2.SchemeGroupVersion.String(),
+// 		},
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      gw.Name,
+// 			Namespace: gw.Namespace,
+// 		},
+// 		Spec: gw.Spec,
+// 	}
+// }
+
+// func annotate(gw *v1alpha2.Gateway, name string, value string) {
+// 	annotations := make(map[string]string, len(gw.ObjectMeta.Annotations)+1)
+// 	annotations[name] = value
+// 	for k, v := range gw.ObjectMeta.Annotations {
+// 		annotations[k] = v
+// 	}
+// 	gw.Annotations = annotations
+// }
+
+func (r *reconciler) reconcileTokenService(cell *v1alpha2.Cell) error {
+	tokenServiceName := resources.TokenServiceName(cell)
+	tokenService, err := r.tokenServiceLister.TokenServices(cell.Namespace).Get(tokenServiceName)
+	if errors.IsNotFound(err) {
+		tokenService, err = r.meshClient.MeshV1alpha2().TokenServices(cell.Namespace).Create(resources.MakeTokenService(cell))
+		if err != nil {
+			r.logger.Errorf("Failed to create TokenService %q: %v", tokenServiceName, err)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create TokenService %q: %v", tokenServiceName, err)
+			return err
+		}
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created TokenService %q", tokenServiceName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve TokenService %q: %v", tokenServiceName, err)
+		return err
+	} else if !metav1.IsControlledBy(tokenService, cell) {
+		return fmt.Errorf("cell: %q does not own the TokenService: %q", cell.Name, tokenServiceName)
+	} else {
+		tokenService, err = func(cell *v1alpha2.Cell, tokenService *v1alpha2.TokenService) (*v1alpha2.TokenService, error) {
+			if !resources.RequireTokenServiceUpdate(cell, tokenService) {
+				return tokenService, nil
+			}
+			desiredTokenService := resources.MakeTokenService(cell)
+			existingTokenService := tokenService.DeepCopy()
+			resources.CopyTokenService(desiredTokenService, existingTokenService)
+			return r.meshClient.MeshV1alpha2().TokenServices(cell.Namespace).Update(existingTokenService)
+		}(cell, tokenService)
+		if err != nil {
+			r.logger.Errorf("Failed to update TokenService %q: %v", tokenServiceName, err)
+			return err
+		}
+	}
+	resources.StatusFromTokenService(cell, tokenService)
+	return nil
+}
+
+func (r *reconciler) reconcileComponent(cell *v1alpha2.Cell, componentTemplate *v1alpha2.Component) error {
+	componentName := resources.ComponentName(cell, componentTemplate)
+	component, err := r.componentLister.Components(cell.Namespace).Get(componentName)
+	if errors.IsNotFound(err) {
+		component, err = r.meshClient.MeshV1alpha2().Components(cell.Namespace).Create(resources.MakeComponent(cell, componentTemplate))
+		if err != nil {
+			r.logger.Errorf("Failed to create Component %q: %v", componentName, err)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Component %q: %v", componentName, err)
+			return err
+		}
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created Component %q", componentName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Component %q: %v", componentName, err)
+		return err
+	} else if !metav1.IsControlledBy(component, cell) {
+		return fmt.Errorf("cell: %q does not own the Component: %q", cell.Name, componentName)
+	} else {
+		component, err = func(cell *v1alpha2.Cell, component *v1alpha2.Component) (*v1alpha2.Component, error) {
+			if !resources.RequireComponentUpdate(cell, component) {
+				return component, nil
+			}
+			desiredComponent := resources.MakeComponent(cell, componentTemplate)
+			existingComponent := component.DeepCopy()
+			resources.CopyComponent(desiredComponent, existingComponent)
+			return r.meshClient.MeshV1alpha2().Components(cell.Namespace).Update(existingComponent)
+		}(cell, component)
+		if err != nil {
+			r.logger.Errorf("Failed to update Component %q: %v", componentName, err)
+			return err
+		}
+	}
+	resources.StatusFromComponent(cell, component)
+	return nil
+}
+
+// func (r *reconciler) reconcileComponents(cell *v1alpha2.Cell) error {
+// 	cell.Status.ServiceCount = 0
+// 	for _, desiredComponent := range cell.Spec.Components {
+// 		component, err := r.componentLister.Components(cell.Namespace).Get(resources.ComponentName(cell, desiredComponent))
+// 		if errors.IsNotFound(err) {
+// 			component, err = r.meshClient.MeshV1alpha2().Components(cell.Namespace).Create(resources.MakeComponent(cell, desiredComponent))
+// 			if err != nil {
+// 				r.logger.Errorf("Failed to create Service: %s : %v", desiredComponent.Name, err)
+// 				return err
+// 			}
+// 			r.logger.Debugw("Service created", resources.ComponentName(cell, desiredComponent), component)
+// 		} else if err != nil {
+// 			return err
+// 		}
+// 		if component != nil {
+// 			// service exists. if the new obj is not equal to old one, perform an update.
+// 			newComponent := resources.MakeComponent(cell, desiredComponent)
+// 			// set the previous service's `ResourceVersion` to the newService
+// 			// Else the issue `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update` will occur.
+// 			newComponent.ResourceVersion = component.ResourceVersion
+// 			if !isEqual(component, newComponent) {
+// 				component, err = r.meshClient.MeshV1alpha2().Components(cell.Namespace).Update(newComponent)
+// 				if err != nil {
+// 					r.logger.Errorf("Failed to update Service: %s : %v", component.Name, err)
+// 					return err
+// 				}
+// 				r.logger.Debugw("Service updated", resources.ComponentName(cell, desiredComponent), component)
+// 			}
+// 		}
+// 		if component.Status.AvailableReplicas > 0 || component.Spec.ScalingPolicy.IsKpa() || component.Spec.Type == v1alpha2.ComponentTypeJob {
+// 			cell.Status.ServiceCount++
+// 		}
+// 	}
+// 	return nil
+// }
+
+// func (r *reconciler) reconcileVirtualService(cell *v1alpha2.Cell) error {
+// 	cellVs, err := r.istioVirtualServiceLister.VirtualServices(cell.Namespace).Get(resources.CellVirtualServiceName(cell))
+// 	if errors.IsNotFound(err) {
+// 		cellVs, err = resources.CreateCellVirtualService(cell, r.cellLister)
+// 		if err != nil {
+// 			r.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, cell.Name)
+// 			return err
+// 		}
+// 		if cellVs == nil {
+// 			r.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
+// 			return nil
+// 		}
+// 		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
+// 		if err != nil {
+// 			r.logger.Errorf("Failed to create Cell VS %v for instance %s", err, cell.Name)
+// 			return err
+// 		}
+// 		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+// 		cellVs, err = r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(cellVs)
+// 		if err != nil {
+// 			r.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, cell.Name)
+// 			return err
+// 		}
+// 		r.logger.Debugw("Cell VirtualService created", resources.CellVirtualServiceName(cell), cellVs)
+// 	} else if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func isEqual(oldService *v1alpha2.Component, newService *v1alpha2.Component) bool {
+	// we only consider equality of the spec
+	return reflect.DeepEqual(oldService.Spec, newService.Spec)
+}
+
+func (r *reconciler) updateStatus(desired *v1alpha2.Cell) (*v1alpha2.Cell, error) {
+	cell, err := r.cellLister.Cells(desired.Namespace).Get(desired.Name)
+	if err != nil {
+		return nil, err
+	}
+	if !reflect.DeepEqual(cell.Status, desired.Status) {
+		latest := cell.DeepCopy()
+		latest.Status = desired.Status
+		return r.meshClient.MeshV1alpha2().Cells(desired.Namespace).UpdateStatus(latest)
+	}
+	return desired, nil
 }

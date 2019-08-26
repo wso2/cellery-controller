@@ -1,0 +1,44 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Composite
+metadata:
+  name: hr
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: hr
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  components:
+  - metadata:
+      name: hr
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: docker.io/celleryio/sampleapp-hr
+          name: hr
+          env:
+          - name: employee_api_url
+            value: http://employee--employee-service
+          - name: stock_api_url
+            value: http://stock-options--stock-service
+          resources:
+            limits:
+              cpu: 200m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 8080
+  - metadata:
+      name: debug
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - name: debug
+          image: docker.io/mirage20/k8s-debug-tools
