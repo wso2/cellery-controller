@@ -21,65 +21,79 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func createGatewayLabels(gateway *v1alpha1.Gateway) map[string]string {
-	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+2)
-	labels[mesh.CellGatewayLabelKey] = gateway.Name
-	labels[appLabelKey] = gateway.Name
+// func createGatewayLabels(gateway *v1alpha2.Gateway) map[string]string {
+// 	labels := make(map[string]string, len(gateway.ObjectMeta.Labels)+2)
+// 	labels[mesh.CellGatewayLabelKey] = gateway.Name
+// 	labels[appLabelKey] = gateway.Name
 
-	for k, v := range gateway.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
+// 	for k, v := range gateway.ObjectMeta.Labels {
+// 		labels[k] = v
+// 	}
+// 	return labels
+// }
+
+func makeLabels(gateway *v1alpha2.Gateway) map[string]string {
+	return UnionMaps(
+		map[string]string{
+			AppLabelKey:                  gateway.Name,
+			VersionLabelKey:              "v1.0.0",
+			ObservabilityGatewayLabelKey: gateway.Name,
+		},
+		gateway.Labels,
+		map[string]string{
+			GatewayLabelKey: gateway.Name,
+		},
+	)
 }
 
-func createGatewaySelector(gateway *v1alpha1.Gateway) *metav1.LabelSelector {
-	return &metav1.LabelSelector{MatchLabels: createGatewayLabels(gateway)}
+func makeSelector(gateway *v1alpha2.Gateway) *metav1.LabelSelector {
+	return &metav1.LabelSelector{MatchLabels: makeLabels(gateway)}
 }
 
-func GatewayConfigMapName(gateway *v1alpha1.Gateway) string {
-	return gateway.Name + "-config"
+func makePodAnnotations(gateway *v1alpha2.Gateway) map[string]string {
+	return UnionMaps(
+		map[string]string{
+			IstioSidecarInjectAnnotationKey: "false",
+		},
+		gateway.Annotations,
+	)
 }
 
-func GatewayDeploymentName(gateway *v1alpha1.Gateway) string {
+func ServiceName(gateway *v1alpha2.Gateway) string {
+	return gateway.Name + "-service"
+}
+func DeploymentName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-deployment"
 }
 
-func GatewayK8sServiceName(gateway *v1alpha1.Gateway) string {
-	return gateway.Name + "-service"
+// func createGatewaySelector(gateway *v1alpha2.Gateway) *metav1.LabelSelector {
+// 	return &metav1.LabelSelector{MatchLabels: createGatewayLabels(gateway)}
+// }
+
+func GatewayConfigMapName(gateway *v1alpha2.Gateway) string {
+	return gateway.Name + "-config"
 }
 
-func IstioGatewayName(gateway *v1alpha1.Gateway) string {
+func IstioGatewayName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name
 }
 
-func IstioVSName(gateway *v1alpha1.Gateway) string {
+func IstioVirtualServiceName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name
 }
 
-func IstioIngressVirtualServiceName(gateway *v1alpha1.Gateway) string {
+func IstioIngressVirtualServiceName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-ingress-virtual-service"
 }
 
-func GatewayFullK8sServiceName(gateway *v1alpha1.Gateway) string {
-	return GatewayK8sServiceName(gateway) + "." + gateway.Namespace
+func GatewayFullK8sServiceName(gateway *v1alpha2.Gateway) string {
+	return ServiceName(gateway) + "." + gateway.Namespace
 }
 
-func IstioDestinationRuleName(gateway *v1alpha1.Gateway) string {
+func IstioDestinationRuleName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-destination-rule"
-}
-
-func EnvoyFilterName(gateway *v1alpha1.Gateway) string {
-	return gateway.Name + "-oidc"
-}
-
-func ClusterIngressName(gateway *v1alpha1.Gateway) string {
-	return gateway.Name + "-ingress"
-}
-
-func ClusterIngressSecretName(gateway *v1alpha1.Gateway) string {
-	return ClusterIngressName(gateway) + "-secret"
 }

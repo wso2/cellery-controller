@@ -1,0 +1,5 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: TokenService
+metadata:
+  name: ts1
+spec:

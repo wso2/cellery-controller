@@ -20,32 +20,38 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	meshscheme "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/scheme"
 )
 
-type Handler interface {
-	Handle(key string) error
+type Reconciler interface {
+	Reconcile(key string) error
 }
 
 type Controller struct {
-	handler   Handler
-	name      string
-	workqueue workqueue.RateLimitingInterface
-	logger    *zap.SugaredLogger
+	reconciler Reconciler
+	name       string
+	workqueue  workqueue.RateLimitingInterface
+	logger     *zap.SugaredLogger
 }
 
-func New(h Handler, logger *zap.SugaredLogger, workQueueName string) *Controller {
+func New(r Reconciler, logger *zap.SugaredLogger, workQueueName string) *Controller {
 	return &Controller{
-		handler:   h,
-		name:      workQueueName,
-		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), workQueueName),
-		logger:    logger,
+		reconciler: r,
+		name:       workQueueName,
+		workqueue:  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), workQueueName),
+		logger:     logger,
 	}
 }
 
@@ -68,10 +74,36 @@ func (c *Controller) Enqueue(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
-		runtime.HandleError(err)
+		c.logger.Error(err)
 		return
 	}
+	c.EnqueueKey(key)
+}
+
+func (c *Controller) EnqueueControllerOf(obj interface{}) {
+	var object metav1.Object
+	var ok bool
+	if object, ok = obj.(metav1.Object); !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			c.logger.Errorf("error decoding object, invalid type")
+			return
+		}
+		object, ok = tombstone.Obj.(metav1.Object)
+		if !ok {
+			c.logger.Errorf("error decoding object tombstone, invalid type")
+			return
+		}
+		c.logger.Infof("Recovered deleted object '%s' from tombstone", object.GetName())
+	}
+	if owner := metav1.GetControllerOf(object); owner != nil {
+		c.EnqueueKey(object.GetNamespace() + "/" + owner.Name)
+	}
+}
+
+func (c *Controller) EnqueueKey(key string) {
 	c.workqueue.AddRateLimited(key)
+	c.logger.Debugf("Adding key %q to queue (depth: %d)", key, c.workqueue.Len())
 }
 
 func (c *Controller) runWorker() {
@@ -85,6 +117,7 @@ func (c *Controller) processNextWorkItem() bool {
 	if shutdown {
 		return false
 	}
+	c.logger.Debugf("Processing %q from queue (depth: %d)", obj, c.workqueue.Len())
 
 	// We wrap this block in a func so we can defer c.workqueue.Done.
 	err := func(obj interface{}) error {
@@ -107,26 +140,60 @@ func (c *Controller) processNextWorkItem() bool {
 			// Forget here else we'd go into a loop of attempting to
 			// process a work item that is invalid.
 			c.workqueue.Forget(obj)
-			runtime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
+			c.logger.Errorf("expected string in workqueue but got %#v", obj)
 			return nil
 		}
 		t := time.Now()
-		// Run the handler, passing it the namespace/name string of the resource.
-		if err := c.handler.Handle(key); err != nil {
-			c.logger.Infow("Sync failed", "key", key, "time", time.Since(t))
-			return fmt.Errorf("error syncing '%s': %s", key, err.Error())
+		// Run the reconciler, passing it the namespace/name string of the resource.
+		if err := c.reconciler.Reconcile(key); err != nil {
+			c.logger.Infow("Reconcile failed", "key", key, "time", time.Since(t))
+			return fmt.Errorf("error reconciling '%s': %s", key, err.Error())
 		}
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workqueue.Forget(obj)
-		c.logger.Infow("Successfully synced", "key", key, "time", time.Since(t))
+		c.logger.Infow("Reconcile succeeded", "key", key, "time", time.Since(t))
 		return nil
 	}(obj)
 
 	if err != nil {
-		runtime.HandleError(err)
+		c.logger.Error(err)
 		return true
 	}
 
 	return true
+}
+
+type ReconcileErrors struct {
+	errors []error
+}
+
+func (re *ReconcileErrors) Add(err error) {
+	if err != nil {
+		re.errors = append(re.errors, err)
+	}
+}
+
+func (re *ReconcileErrors) Empty() bool {
+	return len(re.errors) == 0
+}
+
+func (re *ReconcileErrors) Error() string {
+	errLen := len(re.errors)
+	if errLen == 0 {
+		return ""
+	} else if errLen == 1 {
+		return re.errors[0].Error()
+	}
+	var errStrings []string
+	for i, _ := range re.errors {
+		errStrings = append(errStrings, fmt.Sprintf("\t- %s", re.errors[i].Error()))
+	}
+	return fmt.Sprintf("multiple errors:\n%s", strings.Join(errStrings, "\n"))
+}
+
+func init() {
+	// Add custom resource types to the default Kubernetes Scheme
+	// so Events can be logged.
+	utilruntime.Must(meshscheme.AddToScheme(scheme.Scheme))
 }

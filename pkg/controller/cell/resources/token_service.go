@@ -21,31 +21,53 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func CreateTokenService(cell *v1alpha1.Cell) *v1alpha1.TokenService {
+func MakeTokenService(cell *v1alpha2.Cell) *v1alpha2.TokenService {
 
-	tSpec := cell.Spec.TokenServiceTemplate.Spec
+	tSpec := cell.Spec.TokenService.Spec
 
-	if tSpec.InterceptMode != v1alpha1.InterceptModeNone {
-		if cell.Spec.GatewayTemplate.Spec.Type == v1alpha1.GatewayTypeEnvoy {
-			tSpec.InterceptMode = v1alpha1.InterceptModeOutbound
-		} else {
-			tSpec.InterceptMode = v1alpha1.InterceptModeAny
-		}
+	// if tSpec.InterceptMode != v1alpha2.InterceptModeNone {
+	if cell.Spec.Gateway.Spec.Ingress.IngressExtensions.HasClusterIngress() {
+		tSpec.InterceptMode = v1alpha2.InterceptModeOutbound
+	}
+	// else {
+	// 		tSpec.InterceptMode = v1alpha1.InterceptModeAny
+	// 	}
+	// }
+	tSpec.SecretName = SecretName(cell)
+	tSpec.InstanceName = cell.Name
+	tSpec.Selector = map[string]string{
+		CellLabelKey: cell.Name,
 	}
 
-	return &v1alpha1.TokenService{
+	return &v1alpha2.TokenService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceName(cell),
 			Namespace: cell.Namespace,
-			Labels:    createLabels(cell),
+			Labels:    makeLabels(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},
 		},
 		Spec: tSpec,
 	}
+}
+
+func RequireTokenServiceUpdate(cell *v1alpha2.Cell, tokenService *v1alpha2.TokenService) bool {
+	return cell.Generation != cell.Status.ObservedGeneration ||
+		tokenService.Generation != cell.Status.TokenServiceGeneration
+}
+
+func CopyTokenService(source, destination *v1alpha2.TokenService) {
+	destination.Spec = source.Spec
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromTokenService(cell *v1alpha2.Cell, tokenService *v1alpha2.TokenService) {
+	cell.Status.TokenServiceGeneration = tokenService.Generation
 }

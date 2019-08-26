@@ -1,0 +1,48 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Composite
+metadata:
+  name: employee
+  annotations:
+    mesh.cellery.io/cell-image-org: cellery-samples
+    mesh.cellery.io/cell-image-name: employee
+    mesh.cellery.io/cell-image-version: 1.0.0
+spec:
+  components:
+  - metadata:
+      name: employee
+    spec:
+      scalingPolicy:
+        kpa: {}
+      template:
+        containers:
+        - image: docker.io/celleryio/sampleapp-employee
+          name: employee
+          env:
+          - name: SALARY
+            value: 'employee--salary-service'
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 8080
+  - metadata:
+      name: salary
+    spec:
+      scalingPolicy:
+        kpa: {}
+      template:
+        containers:
+        - image: docker.io/celleryio/sampleapp-salary
+          name: salary
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 8080
+  - metadata:
+      name: debug
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - name: debug
+          image: docker.io/mirage20/k8s-debug-tools

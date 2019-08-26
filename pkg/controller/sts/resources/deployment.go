@@ -25,155 +25,39 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts/config"
+	"github.com/cellery-io/mesh-controller/pkg/ptr"
 )
 
-func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServiceConfig config.TokenService) *appsv1.Deployment {
-	podTemplateAnnotations := map[string]string{}
-	podTemplateAnnotations[controller.IstioSidecarInjectAnnotation] = "false"
-	//https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
-	one := int32(1)
-	cellName := tokenService.Labels[mesh.CellLabelKey]
-	if tokenService.Spec.Composite {
-		cellName = "composite"
-	}
+func MakeDeployment(tokenService *v1alpha2.TokenService, cfg config.Interface) *appsv1.Deployment {
+	// cellName := tokenService.Labels[mesh.CellLabelKey]
+	// if tokenService.Spec.Composite {
+	// 	cellName = "composite"
+	// }
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      TokenServiceDeploymentName(tokenService),
+			Name:      DeploymentName(tokenService),
 			Namespace: tokenService.Namespace,
-			Labels:    createTokenServiceLabels(tokenService),
+			Labels:    makeLabels(tokenService),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateTokenServiceOwnerRef(tokenService),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &one,
-			Selector: createTokenServiceSelector(tokenService),
+			Replicas: ptr.Int32(1),
+			Selector: makeSelector(tokenService),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      createTokenServiceLabels(tokenService),
-					Annotations: podTemplateAnnotations,
+					Labels:      makeLabels(tokenService),
+					Annotations: makePodAnnotations(tokenService),
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{
-							Name:  "cell-sts",
-							Image: tokenServiceConfig.Image,
-							Ports: []corev1.ContainerPort{
-								{
-									ContainerPort: tokenServiceContainerInboundPort,
-								},
-								{
-									ContainerPort: tokenServiceContainerOutboundPort,
-								},
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name:  envCellNameKey,
-									Value: cellName,
-								},
-								{
-									Name:  "VALIDATE_SERVER_CERT",
-									Value: "true",
-								},
-								{
-									Name:  "ENABLE_HOSTNAME_VERIFICATION",
-									Value: "true",
-								},
-								{
-									Name:  "CELL_IMAGE_NAME",
-									Value: tokenService.Annotations["mesh.cellery.io/cell-image-name"],
-								},
-								{
-									Name:  "CELL_IMAGE_VERSION",
-									Value: tokenService.Annotations["mesh.cellery.io/cell-image-version"],
-								},
-								{
-									Name:  "CELL_INSTANCE_NAME",
-									Value: cellName,
-								},
-								{
-									Name:  "CELL_ORG_NAME",
-									Value: tokenService.Annotations["mesh.cellery.io/cell-image-org"],
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      configVolumeName,
-									MountPath: configMountPath,
-									ReadOnly:  true,
-								},
-								{
-									Name:      policyVolumeName,
-									MountPath: pocliyConfigMountPath,
-									ReadOnly:  true,
-								},
-								{
-									Name:      keyPairVolumeName,
-									MountPath: keyPairMountPath,
-									ReadOnly:  true,
-								},
-								{
-									Name:      caCertsVolumeName,
-									MountPath: caCertsMountPath,
-									ReadOnly:  true,
-								},
-							},
-						},
-						{
-							Name:  "opa",
-							Image: tokenServiceConfig.OpaImage,
-							Ports: []corev1.ContainerPort{
-								{
-									ContainerPort: opaServicePort,
-									Name:          "http",
-								},
-							},
-							Args: []string{
-								"run",
-								"--ignore=.*",
-								"--server",
-								"--watch",
-								"/policies",
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      policyVolumeName,
-									MountPath: pocliyConfigMountPath,
-									ReadOnly:  true,
-								},
-							},
-						},
-						{
-							Name:  "jwks-server",
-							Image: tokenServiceConfig.JwksImage,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "jwksPort",
-									Value: strconv.Itoa(tokenServiceContainerJWKSPort),
-								},
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									ContainerPort: tokenServiceContainerJWKSPort,
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      keyPairVolumeName,
-									MountPath: keyPairMountPath,
-									ReadOnly:  true,
-								},
-								{
-									Name:      caCertsVolumeName,
-									MountPath: caCertsMountPath,
-									ReadOnly:  true,
-								},
-							},
-						},
+						*makeTokenServiceContainer(tokenService, cfg),
+						*makeOpaContainer(tokenService, cfg),
+						*makeJwksContainer(tokenService, cfg),
 					},
 					Volumes: []corev1.Volume{
 						{
@@ -181,7 +65,7 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
 									LocalObjectReference: corev1.LocalObjectReference{
-										Name: TokenServiceConfigMapName(tokenService),
+										Name: ConfigMapName(tokenService),
 									},
 									Items: []corev1.KeyToPath{
 										{
@@ -201,7 +85,7 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
 									LocalObjectReference: corev1.LocalObjectReference{
-										Name: TokenServicePolicyConfigMapName(tokenService),
+										Name: OpaPolicyConfigMapName(tokenService),
 									},
 								},
 							},
@@ -210,12 +94,13 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							Name: keyPairVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: func() string {
-										if tokenService.Spec.Composite {
-											return "composite-sts-secret"
-										}
-										return cellName + "--secret"
-									}(),
+									// SecretName: func() string {
+									// 	if tokenService.Spec.Composite {
+									// 		return "composite-sts-secret"
+									// 	}
+									// 	return cellName + "--secret"
+									// }(),
+									SecretName: tokenService.Spec.SecretName,
 									Items: []corev1.KeyToPath{
 										{
 											Key:  "key.pem",
@@ -233,12 +118,13 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 							Name: caCertsVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: func() string {
-										if tokenService.Spec.Composite {
-											return "composite-sts-secret"
-										}
-										return cellName + "--secret"
-									}(),
+									// SecretName: func() string {
+									// 	if tokenService.Spec.Composite {
+									// 		return "composite-sts-secret"
+									// 	}
+									// 	return cellName + "--secret"
+									// }(),
+									SecretName: tokenService.Spec.SecretName,
 									Items: []corev1.KeyToPath{
 										{
 											Key:  "cellery-cert.pem",
@@ -257,4 +143,146 @@ func CreateTokenServiceDeployment(tokenService *v1alpha1.TokenService, tokenServ
 			},
 		},
 	}
+}
+
+func makeTokenServiceContainer(tokenService *v1alpha2.TokenService, cfg config.Interface) *corev1.Container {
+
+	return &corev1.Container{
+		Name:  "sts",
+		Image: cfg.StringValue(config.ConfigMapKeyTokenServiceImage),
+		// Ports: []corev1.ContainerPort{
+		// 	{
+		// 		ContainerPort: tokenServiceContainerInboundPort,
+		// 	},
+		// 	{
+		// 		ContainerPort: tokenServiceContainerOutboundPort,
+		// 	},
+		// },
+		Env: []corev1.EnvVar{
+			{
+				Name:  "CELL_NAME",
+				Value: tokenService.Spec.InstanceName,
+			},
+			{
+				Name:  "VALIDATE_SERVER_CERT",
+				Value: "true",
+			},
+			{
+				Name:  "ENABLE_HOSTNAME_VERIFICATION",
+				Value: "true",
+			},
+			{
+				Name:  "CELL_IMAGE_NAME",
+				Value: tokenService.Annotations["mesh.cellery.io/cell-image-name"],
+			},
+			{
+				Name:  "CELL_IMAGE_VERSION",
+				Value: tokenService.Annotations["mesh.cellery.io/cell-image-version"],
+			},
+			{
+				Name:  "CELL_INSTANCE_NAME",
+				Value: tokenService.Spec.InstanceName,
+			},
+			{
+				Name:  "CELL_ORG_NAME",
+				Value: tokenService.Annotations["mesh.cellery.io/cell-image-org"],
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      configVolumeName,
+				MountPath: configMountPath,
+				ReadOnly:  true,
+			},
+			{
+				Name:      policyVolumeName,
+				MountPath: pocliyConfigMountPath,
+				ReadOnly:  true,
+			},
+			{
+				Name:      keyPairVolumeName,
+				MountPath: keyPairMountPath,
+				ReadOnly:  true,
+			},
+			{
+				Name:      caCertsVolumeName,
+				MountPath: caCertsMountPath,
+				ReadOnly:  true,
+			},
+		},
+	}
+}
+
+func makeOpaContainer(tokenService *v1alpha2.TokenService, cfg config.Interface) *corev1.Container {
+	return &corev1.Container{
+		Name:  "opa",
+		Image: cfg.StringValue(config.ConfigMapKeyTokenServiceOpaImage),
+		Ports: []corev1.ContainerPort{
+			{
+				ContainerPort: opaServicePort,
+				Name:          "http",
+			},
+		},
+		Args: []string{
+			"run",
+			"--ignore=.*",
+			"--server",
+			"--watch",
+			"/policies",
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      policyVolumeName,
+				MountPath: pocliyConfigMountPath,
+				ReadOnly:  true,
+			},
+		},
+	}
+}
+
+func makeJwksContainer(tokenService *v1alpha2.TokenService, cfg config.Interface) *corev1.Container {
+	return &corev1.Container{
+		Name:  "jwks-server",
+		Image: cfg.StringValue(config.ConfigMapKeyTokenServiceJwksImage),
+		Env: []corev1.EnvVar{
+			{
+				Name:  "jwksPort",
+				Value: strconv.Itoa(tokenServiceContainerJWKSPort),
+			},
+		},
+		// Ports: []corev1.ContainerPort{
+		// 	{
+		// 		ContainerPort: tokenServiceContainerJWKSPort,
+		// 	},
+		// },
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      keyPairVolumeName,
+				MountPath: keyPairMountPath,
+				ReadOnly:  true,
+			},
+			{
+				Name:      caCertsVolumeName,
+				MountPath: caCertsMountPath,
+				ReadOnly:  true,
+			},
+		},
+	}
+}
+
+func RequireDeploymentUpdate(tokenService *v1alpha2.TokenService, deployment *appsv1.Deployment) bool {
+	return tokenService.Generation != tokenService.Status.ObservedGeneration ||
+		deployment.Generation != tokenService.Status.DeploymentGeneration
+}
+
+func CopyDeployment(source, destination *appsv1.Deployment) {
+	destination.Spec.Template = source.Spec.Template
+	destination.Spec.Selector = source.Spec.Selector
+	destination.Spec.Replicas = source.Spec.Replicas
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromDeployment(tokenService *v1alpha2.TokenService, deployment *appsv1.Deployment) {
+	tokenService.Status.DeploymentGeneration = deployment.Generation
 }

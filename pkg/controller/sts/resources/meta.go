@@ -21,40 +21,48 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func createTokenServiceLabels(tokenService *v1alpha1.TokenService) map[string]string {
-	labels := make(map[string]string, len(tokenService.ObjectMeta.Labels)+1)
-	labels[mesh.CellTokenServiceLabelKey] = tokenService.Name
-
-	for k, v := range tokenService.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
+func makeLabels(tokenService *v1alpha2.TokenService) map[string]string {
+	return UnionMaps(
+		tokenService.Labels,
+		map[string]string{
+			TokenServiceLabelKey: tokenService.Name,
+		},
+	)
 }
 
-func createTokenServiceSelector(tokenService *v1alpha1.TokenService) *metav1.LabelSelector {
-	return &metav1.LabelSelector{MatchLabels: createTokenServiceLabels(tokenService)}
+func makeSelector(tokenService *v1alpha2.TokenService) *metav1.LabelSelector {
+	return &metav1.LabelSelector{MatchLabels: makeLabels(tokenService)}
 }
 
-func TokenServiceConfigMapName(tokenService *v1alpha1.TokenService) string {
-	return tokenService.Name + "-config"
+func makePodAnnotations(tokenService *v1alpha2.TokenService) map[string]string {
+	return UnionMaps(
+		map[string]string{
+			IstioSidecarInjectAnnotationKey: "false",
+		},
+		tokenService.Labels,
+	)
 }
 
-func TokenServicePolicyConfigMapName(tokenService *v1alpha1.TokenService) string {
-	return tokenService.Name + "-policy"
-}
-
-func TokenServiceDeploymentName(tokenService *v1alpha1.TokenService) string {
-	return tokenService.Name + "-deployment"
-}
-
-func TokenServiceK8sServiceName(tokenService *v1alpha1.TokenService) string {
+func ServiceName(tokenService *v1alpha2.TokenService) string {
 	return tokenService.Name + "-service"
 }
 
-func EnvoyFilterName(tokenService *v1alpha1.TokenService) string {
+func DeploymentName(tokenService *v1alpha2.TokenService) string {
+	return tokenService.Name + "-deployment"
+}
+
+func ConfigMapName(tokenService *v1alpha2.TokenService) string {
+	return tokenService.Name + "-config"
+}
+
+func OpaPolicyConfigMapName(tokenService *v1alpha2.TokenService) string {
+	return tokenService.Name + "-policy"
+}
+
+func EnvoyFilterName(tokenService *v1alpha2.TokenService) string {
 	return tokenService.Name + "-envoyfilter"
 }

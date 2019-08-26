@@ -19,35 +19,56 @@
 package resources
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func createLabels(cell *v1alpha1.Cell) map[string]string {
-	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+2)
-	labels[mesh.CellLabelKey] = cell.Name
-	labels[mesh.CellLabelKeySource] = cell.Name
+// func createLabels(cell *v1alpha2.Cell) map[string]string {
+// 	labels := make(map[string]string, len(cell.ObjectMeta.Labels)+2)
+// 	labels[mesh.CellLabelKey] = cell.Name
+// 	labels[mesh.CellLabelKeySource] = cell.Name
 
-	for k, v := range cell.ObjectMeta.Labels {
-		labels[k] = v
-	}
-	return labels
+// 	for k, v := range cell.ObjectMeta.Labels {
+// 		labels[k] = v
+// 	}
+// 	return labels
+// }
+
+// func createServiceAnnotations(cell *v1alpha2.Cell) map[string]string {
+// 	annotations := make(map[string]string, len(cell.ObjectMeta.Annotations))
+
+// 	for k, v := range cell.ObjectMeta.Annotations {
+// 		annotations[k] = v
+// 	}
+// 	return annotations
+// }
+
+func makeLabels(cell *v1alpha2.Cell) map[string]string {
+	return UnionMaps(
+		cell.Labels,
+		map[string]string{
+			CellLabelKey:                      cell.Name,
+			CellLabelKeySource:                cell.Name,
+			ObservabilityInstanceKindLabelKey: "Cell",
+			ObservabilityInstanceLabelKey:     cell.Name,
+		},
+	)
 }
 
-func createServiceAnnotations(cell *v1alpha1.Cell) map[string]string {
-	annotations := make(map[string]string, len(cell.ObjectMeta.Annotations))
-
-	for k, v := range cell.ObjectMeta.Annotations {
-		annotations[k] = v
-	}
-	return annotations
+func makeAnnotations(cell *v1alpha2.Cell) map[string]string {
+	return UnionMaps(
+		map[string]string{
+			IstioSidecarInjectAnnotationKey: "false",
+		},
+		cell.Annotations,
+	)
 }
 
-func NetworkPolicyName(cell *v1alpha1.Cell) string {
+func NetworkPolicyName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--network"
 }
 
-func GatewayName(cell *v1alpha1.Cell) string {
+func GatewayName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--gateway"
 }
 
@@ -59,22 +80,22 @@ func GatewayK8sServiceName(gwName string) string {
 	return gwName + "-service"
 }
 
-func TokenServiceName(cell *v1alpha1.Cell) string {
+func TokenServiceName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--sts"
 }
 
-func EnvoyFilterName(cell *v1alpha1.Cell) string {
+func EnvoyFilterName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--envoyfilter"
 }
 
-func ServiceName(cell *v1alpha1.Cell, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
-	return cell.Name + "--" + serviceTemplate.Name
+func ComponentName(cell *v1alpha2.Cell, component *v1alpha2.Component) string {
+	return cell.Name + "--" + component.Name
 }
 
-func SecretName(cell *v1alpha1.Cell) string {
+func SecretName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--secret"
 }
 
-func CellVirtualServiceName(cell *v1alpha1.Cell) string {
+func CellVirtualServiceName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--vs"
 }

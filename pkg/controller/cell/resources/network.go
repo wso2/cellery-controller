@@ -22,27 +22,26 @@ import (
 	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
+func MakeNetworkPolicy(cell *v1alpha2.Cell) *networkv1.NetworkPolicy {
 
 	cellName := cell.Name
 	gatewayName := GatewayName(cell)
-	var serviceNames []string
+	var componentNames []string
 
-	serviceTemplates := cell.Spec.ServiceTemplates
-	for _, serviceTemplate := range serviceTemplates {
-		serviceNames = append(serviceNames, ServiceName(cell, serviceTemplate))
+	for _, component := range cell.Spec.Components {
+		componentNames = append(componentNames, ComponentName(cell, &component))
 	}
 
 	return &networkv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      NetworkPolicyName(cell),
 			Namespace: cell.Namespace,
-			Labels:    createLabels(cell),
+			Labels:    makeLabels(cell),
 			OwnerReferences: []metav1.OwnerReference{
 				*controller.CreateCellOwnerRef(cell),
 			},
@@ -50,13 +49,13 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 		Spec: networkv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					mesh.CellLabelKey: cellName,
+					CellLabelKey: cellName,
 				},
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      mesh.CellServiceLabelKey,
+						Key:      ComponentLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
-						Values:   serviceNames,
+						Values:   componentNames,
 					},
 				},
 			},
@@ -69,21 +68,21 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									mesh.CellLabelKey:        cellName,
-									mesh.CellGatewayLabelKey: gatewayName,
+									CellLabelKey:    cellName,
+									GatewayLabelKey: gatewayName,
 								},
 							},
 						},
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									mesh.CellLabelKey: cellName,
+									CellLabelKey: cellName,
 								},
 								MatchExpressions: []metav1.LabelSelectorRequirement{
 									{
-										Key:      mesh.CellServiceLabelKey,
+										Key:      ComponentLabelKey,
 										Operator: metav1.LabelSelectorOpIn,
-										Values:   serviceNames,
+										Values:   componentNames,
 									},
 								},
 							},
@@ -100,4 +99,19 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 			},
 		},
 	}
+}
+
+func RequireNetworkPolicyUpdate(cell *v1alpha2.Cell, networkPolicy *networkv1.NetworkPolicy) bool {
+	return cell.Generation != cell.Status.ObservedGeneration ||
+		networkPolicy.Generation != cell.Status.NetworkPolicyGeneration
+}
+
+func CopyNetworkPolicy(source, destination *networkv1.NetworkPolicy) {
+	destination.Spec = source.Spec
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
+func StatusFromNetworkPolicy(cell *v1alpha2.Cell, networkPolicy *networkv1.NetworkPolicy) {
+	cell.Status.NetworkPolicyGeneration = networkPolicy.Generation
 }
