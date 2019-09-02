@@ -65,7 +65,7 @@ func GatewayNameFromInstanceName(instance string) string {
 }
 
 func TokenServiceName(composite *v1alpha1.Composite) string {
-	return "composite-sts"
+	return "composite--sts"
 }
 
 func EnvoyFilterName(cell *v1alpha1.Cell) string {

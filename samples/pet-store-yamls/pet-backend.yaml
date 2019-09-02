@@ -16,6 +16,8 @@ spec:
         definitions:
         - method: GET
           path: /catalog
+        - method: POST
+          path: /orders
         - method: GET
           path: /orders
   servicesTemplates:
