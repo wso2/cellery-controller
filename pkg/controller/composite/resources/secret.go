@@ -54,7 +54,7 @@ func CreateKeyPairSecret(composite *v1alpha1.Composite, cellerySecret config.Sec
 			OrganizationalUnit: []string{"WSO2"},
 			Province:           []string{"West"},
 		},
-		DNSNames:              []string{fmt.Sprintf("%s-sts-service", "composite"), "composite"},
+		DNSNames:              []string{fmt.Sprintf("%s--sts-service", "composite"), "composite"},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 180),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
