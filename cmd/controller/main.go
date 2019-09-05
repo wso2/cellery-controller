@@ -137,6 +137,7 @@ func main() {
 		meshClient,
 		compositeInformer,
 		serviceInformer,
+		k8sServiceInformer,
 		tokenServiceInformer,
 		secretInformer,
 		systemSecretInformer,

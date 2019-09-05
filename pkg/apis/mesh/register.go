@@ -36,9 +36,10 @@ const (
 	CompositeTokenServiceLabelKey = GroupName + "/composite-sts"
 
 	// Cellery Annotations
-	CellServicesAnnotationKey     = GroupName + "/cell-services"
-	CellDependenciesAnnotationKey = GroupName + "/cell-dependencies"
-	CellOriginalGatewaySvcKey     = GroupName + "/original-gw-svc"
+	CellServicesAnnotationKey        = GroupName + "/cell-services"
+	CellDependenciesAnnotationKey    = GroupName + "/cell-dependencies"
+	CellOriginalGatewaySvcKey        = GroupName + "/original-gw-svc"
+	CompositeOriginalComponentSvcKey = GroupName + "/original-component-svcs"
 
 	// Cellery System
 	SystemNamespace     = "cellery-system"

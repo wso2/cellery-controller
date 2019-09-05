@@ -48,11 +48,17 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
 )
 
+type origComponentData struct {
+	ComponentName  string `json:"componentName"`
+	ContainerPorts []int  `json:"containerPorts"`
+}
+
 type compositeHandler struct {
 	kubeClient         kubernetes.Interface
 	meshClient         meshclientset.Interface
 	compositeLister    listers.CompositeLister
 	serviceLister      listers.ServiceLister
+	ks8ServiceLister   corev1listers.ServiceLister
 	secretLister       corev1listers.SecretLister
 	tokenServiceLister listers.TokenServiceLister
 	cellerySecret      config.Secret
@@ -66,6 +72,7 @@ func NewController(
 	meshClient meshclientset.Interface,
 	compositeInformer meshinformers.CompositeInformer,
 	serviceInformer meshinformers.ServiceInformer,
+	ks8SvcInformer corev1informers.ServiceInformer,
 	tokenServiceInformer meshinformers.TokenServiceInformer,
 	secretInformer corev1informers.SecretInformer,
 	systemSecretInformer corev1informers.SecretInformer,
@@ -78,6 +85,7 @@ func NewController(
 		meshClient:         meshClient,
 		compositeLister:    compositeInformer.Lister(),
 		serviceLister:      serviceInformer.Lister(),
+		ks8ServiceLister:   ks8SvcInformer.Lister(),
 		tokenServiceLister: tokenServiceInformer.Lister(),
 		secretLister:       secretInformer.Lister(),
 		virtualSvcLister:   virtualSvcInformer.Lister(),
@@ -152,7 +160,45 @@ func (h *compositeHandler) handle(composite *v1alpha1.Composite) error {
 		return err
 	}
 
+	if err := h.handleRoutingK8sServices(composite); err != nil {
+		return err
+	}
+
 	h.updateCellStatus(composite)
+	return nil
+}
+
+func (h *compositeHandler) handleRoutingK8sServices(composite *v1alpha1.Composite) error {
+	// This is a workaround for an issue with switching traffic 100% to a new instance, and terminating the old one.
+	// When the old composite instance is terminated, the associated k8s service will be deleted as well. Since the
+	// Istio Virtual Service uses that particular gateway k8s service name as a hostname, once its deleted the DNS
+	// lookup will fail, which will lead to traffic routing to fail.
+	// To overcome this issue, whenever traffic is switched to 100% to a new instance, the previous instance's components'
+	// k8s service names are written to an annotation of the new composite instance. This annotation will be picked up
+	// by this method and that particular service will be re-created if it does not exist.
+
+	originalComponentSvcKey := composite.Annotations[mesh.CompositeOriginalComponentSvcKey]
+	if originalComponentSvcKey != "" {
+		var origCompData []origComponentData
+		err := json.Unmarshal([]byte(originalComponentSvcKey), &origCompData)
+		if err != nil {
+			return err
+		}
+		for _, data := range origCompData {
+			k8sService, err := h.ks8ServiceLister.Services(composite.Namespace).Get(resources.K8sServiceName(data.ComponentName))
+			if errors.IsNotFound(err) {
+				k8sService, err = h.kubeClient.CoreV1().Services(composite.Namespace).Create(
+					resources.CreateOriginalComponentK8sService(composite, data.ComponentName, data.ContainerPorts))
+				if err != nil {
+					h.logger.Errorf("Failed to create K8s service for component %v", err)
+					return err
+				}
+				h.logger.Debugw("K8s service for component created", data.ComponentName, k8sService)
+			} else if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
