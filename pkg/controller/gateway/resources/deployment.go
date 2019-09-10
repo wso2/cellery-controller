@@ -264,7 +264,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha1.Gateway, gatewayConfig confi
 			"--connectTimeout",
 			"10s",
 			"--serviceCluster",
-			gateway.Name,
+			gateway.Name + ".$(POD_NAMESPACE)",
 			"--zipkinAddress",
 			zipkinAddress,
 			"--proxyAdminPort",
