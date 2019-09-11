@@ -89,6 +89,13 @@ func CreateNetworkPolicy(cell *v1alpha1.Cell) *networkv1.NetworkPolicy {
 							},
 						},
 						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									mesh.TelepresenceLabelKey: "telepresence",
+								},
+							},
+						},
+						{
 							NamespaceSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"name": "knative-serving",
