@@ -111,6 +111,13 @@ func TestCreateNetworkPolicy(t *testing.T) {
 									},
 								},
 								{
+									PodSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											mesh.TelepresenceLabelKey: "telepresence",
+										},
+									},
+								},
+								{
 									NamespaceSelector: &metav1.LabelSelector{
 										MatchLabels: map[string]string{
 											"name": "knative-serving",
@@ -253,6 +260,13 @@ func TestCreateNetworkPolicy(t *testing.T) {
 												Operator: metav1.LabelSelectorOpIn,
 												Values:   []string{"foo--bar-service", "foo--baz-service"},
 											},
+										},
+									},
+								},
+								{
+									PodSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											mesh.TelepresenceLabelKey: "telepresence",
 										},
 									},
 								},

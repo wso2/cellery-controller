@@ -25,6 +25,7 @@ const (
 	CellLabelKey             = GroupName + "/cell"
 	CompositeLabelKey        = GroupName + "/composite"
 	CellGatewayLabelKey      = GroupName + "/gateway"
+	TelepresenceLabelKey     = GroupName + "/telepresence"
 	CellTokenServiceLabelKey = GroupName + "/sts"
 	CellServiceLabelKey      = GroupName + "/service"
 	ComponentLabelKey        = GroupName + "/component"
