@@ -71,7 +71,9 @@ func (ie *IngressExtensions) HasOidc() bool {
 
 type ApiPublisherConfig struct {
 	Authenticate bool   `json:"authenticate"`
-	Backend      string `json:"version"`
+	Backend      string `json:"backend"`
+	Context      string `json:"context"`
+	Version      string `json:"version"`
 }
 
 type ClusterIngressConfig struct {
@@ -117,6 +119,7 @@ type Destination struct {
 
 type HTTPRoute struct {
 	Context     string          `json:"context"`
+	Version     string          `json:"version"`
 	Definitions []APIDefinition `json:"definitions"`
 	Port        uint32          `json:"port"`
 	Destination Destination     `json:"destination,omitempty"`
