@@ -24,5 +24,6 @@ const (
 	// https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml
 	IstioSidecarInjectAnnotationKey = "sidecar.istio.io/inject"
 
-	LastAppliedHashAnnotationKey = mesh.GroupName + "/last-applied-hash"
+	LastAppliedHashAnnotationKey  = mesh.GroupName + "/last-applied-hash"
+	CellDependenciesAnnotationKey = mesh.GroupName + "/cell-dependencies"
 )
