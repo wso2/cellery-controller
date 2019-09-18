@@ -25,11 +25,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
-const instanceId = "x-instance-id"
+const InstanceId = "x-instance-id"
 const Instance = "instance"
 const Kind = "kind"
 const CompositeKind = "Composite"
@@ -39,10 +39,10 @@ func BuildHostNameForCellDependency(dependencyInst string) string {
 	return GatewayK8sServiceName(GatewayNameFromInstanceName(dependencyInst))
 }
 
-func BuildHostNamesForCompositeDependency(dependencyInst string, svcTemplates []v1alpha1.ServiceTemplateSpec) []string {
+func BuildHostNamesForCompositeDependency(dependencyInst string, components []v1alpha2.Component) []string {
 	var svcNames []string
-	for _, svcTemplate := range svcTemplates {
-		svcNames = append(svcNames, CompositeK8sServiceNameFromInstance(dependencyInst, svcTemplate))
+	for _, component := range components {
+		svcNames = append(svcNames, CompositeK8sServiceNameFromInstance(dependencyInst, component))
 	}
 	return svcNames
 }
@@ -57,13 +57,13 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "1",
 						},
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      name,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      name,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
@@ -82,13 +82,13 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "2",
 						},
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      name,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      name,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
@@ -108,8 +108,8 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 				},
 				SourceLabels: map[string]string{
-					mesh.CellLabelKeySource:      name,
-					mesh.ComponentLabelKeySource: "true",
+					meta.CellLabelKeySource:      name,
+					meta.ComponentLabelKeySource: "true",
 				},
 			},
 		},
@@ -124,33 +124,33 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 	return routes
 }
 
-func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, svcTemplates []v1alpha1.ServiceTemplateSpec, isInstanceIdBasedRulesRequired bool) []*v1alpha3.HTTPRoute {
+func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, components []v1alpha2.Component, isInstanceIdBasedRulesRequired bool) []*v1alpha3.HTTPRoute {
 	// three virtual services for each
 	// TODO: create upon request from SDK side?
 	var routes []*v1alpha3.HTTPRoute
-	for _, svcTemplate := range svcTemplates {
+	for _, component := range components {
 		if isInstanceIdBasedRulesRequired {
 			routes = append(routes, &v1alpha3.HTTPRoute{
 				Match: []*v1alpha3.HTTPMatchRequest{
 					{
 						Authority: &v1alpha3.StringMatch{
-							Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
+							Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, component.Name),
 						},
 						Headers: map[string]*v1alpha3.StringMatch{
-							instanceId: {
+							InstanceId: {
 								Exact: "1",
 							},
 						},
 						SourceLabels: map[string]string{
-							mesh.CellLabelKeySource:      name,
-							mesh.ComponentLabelKeySource: "true",
+							meta.CellLabelKeySource:      name,
+							meta.ComponentLabelKeySource: "true",
 						},
 					},
 				},
 				Route: []*v1alpha3.DestinationWeight{
 					{
 						Destination: &v1alpha3.Destination{
-							Host: CompositeK8sServiceNameFromInstance(dependencyInst, svcTemplate),
+							Host: CompositeK8sServiceNameFromInstance(dependencyInst, component),
 						},
 					},
 				},
@@ -159,23 +159,23 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, s
 				Match: []*v1alpha3.HTTPMatchRequest{
 					{
 						Authority: &v1alpha3.StringMatch{
-							Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
+							Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, component.Name),
 						},
 						Headers: map[string]*v1alpha3.StringMatch{
-							instanceId: {
+							InstanceId: {
 								Exact: "2",
 							},
 						},
 						SourceLabels: map[string]string{
-							mesh.CellLabelKeySource:      name,
-							mesh.ComponentLabelKeySource: "true",
+							meta.CellLabelKeySource:      name,
+							meta.ComponentLabelKeySource: "true",
 						},
 					},
 				},
 				Route: []*v1alpha3.DestinationWeight{
 					{
 						Destination: &v1alpha3.Destination{
-							Host: CompositeK8sServiceNameFromInstance(dependencyInst, svcTemplate),
+							Host: CompositeK8sServiceNameFromInstance(dependencyInst, component),
 						},
 					},
 				},
@@ -185,18 +185,18 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, s
 			Match: []*v1alpha3.HTTPMatchRequest{
 				{
 					Authority: &v1alpha3.StringMatch{
-						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
+						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, component.Name),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      name,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      name,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
 				{
 					Destination: &v1alpha3.Destination{
-						Host: CompositeK8sServiceNameFromInstance(dependencyInst, svcTemplate),
+						Host: CompositeK8sServiceNameFromInstance(dependencyInst, component),
 					},
 				},
 			},
@@ -206,7 +206,7 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, s
 }
 
 func ExtractDependencies(annotations map[string]string) ([]map[string]string, error) {
-	dependencies := annotations[mesh.CellDependenciesAnnotationKey]
+	dependencies := annotations[meta.CellDependenciesAnnotationKey]
 	var dependencyMap []map[string]string
 	if dependencies == "" {
 		// no dependencies
@@ -246,8 +246,8 @@ func VirtualServiceName(name string) string {
 	return name + "--vs"
 }
 
-func CompositeK8sServiceNameFromInstance(instance string, serviceTemplate v1alpha1.ServiceTemplateSpec) string {
-	return instance + "--" + serviceTemplate.Name + "-service"
+func CompositeK8sServiceNameFromInstance(instance string, component v1alpha2.Component) string {
+	return instance + "--" + component.Name + "-service"
 }
 
 func GatewayK8sServiceName(gwName string) string {

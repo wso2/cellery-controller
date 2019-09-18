@@ -96,6 +96,6 @@ func SecretName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--secret"
 }
 
-func CellVirtualServiceName(cell *v1alpha2.Cell) string {
+func RoutingVirtualServiceName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--vs"
 }

@@ -53,6 +53,7 @@ type CellStatus struct {
 	SecretGeneration        int64            `json:"secretGeneration,omitempty"`
 	GatewayGeneration       int64            `json:"gatewayGeneration,omitempty"`
 	TokenServiceGeneration  int64            `json:"tokenServiceGeneration,omitempty"`
+	RoutingVsGeneration     int64            `json:"routingVsGeneration,omitempty"`
 	ComponentGenerations    map[string]int64 `json:"componentGenerations,omitempty"`
 	// Current conditions of the cell.
 	// +patchMergeKey=type
