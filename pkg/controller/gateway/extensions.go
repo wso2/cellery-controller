@@ -20,22 +20,75 @@ package gateway
 
 import (
 	"fmt"
-
+	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"log"
 
-	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
 )
 
 func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) error {
+	configMapName := resources.ApiPublisherConfigMap(gateway)
+	configMap, err := r.configMapLister.ConfigMaps(gateway.Namespace).Get(configMapName)
+	// garbage collection
+	// -------------------------
+
+	if errors.IsNotFound(err) {
+		desiredConfigMap, err := resources.CreateGatewayConfigMap(gateway, r.cfg)
+		configMap, err = r.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Create(desiredConfigMap)
+		if err != nil {
+			r.logger.Errorf("Failed to create ApiPublisher ConfigMap %q: %v", configMapName, err)
+			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create ConfigMap %q: %v", configMapName, err)
+			return err
+		}
+		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created ConfigMap %q",
+			configMapName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve ConfigMap %q: %v", configMapName, err)
+		return err
+	} else if !metav1.IsControlledBy(configMap, gateway) {
+		return fmt.Errorf("gateway: %q does not own the ConfigMap: %q", gateway.Name, configMapName)
+	}
+	// write update
+	resources.StatusFromConfigMap(gateway, configMap)
 	return nil
 }
 
 func (r *reconciler) reconcileApiPublisherJob(gateway *v1alpha2.Gateway) error {
+	jobName := resources.JobName(gateway)
+	job, err := r.jobLister.Jobs(gateway.Namespace).Get(jobName)
+	if !resources.RequireJob(gateway) {
+		if err == nil && metav1.IsControlledBy(job, gateway) {
+			err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Delete(jobName, meta.DeleteWithPropagationBackground())
+			if err != nil {
+				r.logger.Errorf("Failed to delete Job %q: %v", jobName, err)
+				return err
+			}
+		}
+		log.Println("Existing without creating a job")
+		return nil
+	}
+
+	if errors.IsNotFound(err) {
+		job, err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Create(resources.MakeJob(gateway, r.cfg))
+		if err != nil {
+			r.logger.Errorf("Failed to create Job %q: %v", jobName, err)
+			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create Job %q: %v", jobName, err)
+			return err
+		}
+		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created Job %q", jobName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Job %q: %v", jobName, err)
+		return err
+	} else if !metav1.IsControlledBy(job, gateway) {
+		return fmt.Errorf("component: %q does not own the Job: %q", gateway.Name, jobName)
+	}
+	resources.StatusFromJob(gateway, job)
 	return nil
 }
 

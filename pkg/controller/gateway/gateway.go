@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
+	batchv1listers "k8s.io/client-go/listers/batch/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	extensionsv1beta1listers "k8s.io/client-go/listers/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
@@ -57,6 +58,7 @@ type reconciler struct {
 	meshClient                 meshclientset.Interface
 	deploymentLister           appsv1listers.DeploymentLister
 	serviceLister              corev1listers.ServiceLister
+	jobLister                  batchv1listers.JobLister
 	clusterIngressLister       extensionsv1beta1listers.IngressLister
 	secretLister               corev1listers.SecretLister
 	istioGatewayLister         istionetwork1alpha3listers.GatewayLister
@@ -83,6 +85,7 @@ func NewController(
 		meshClient:                 clientset.Mesh(),
 		deploymentLister:           informerset.Deployments().Lister(),
 		serviceLister:              informerset.Services().Lister(),
+		jobLister:                  informerset.Jobs().Lister(),
 		clusterIngressLister:       informerset.Ingresses().Lister(),
 		secretLister:               informerset.Secrets().Lister(),
 		istioGatewayLister:         informerset.IstioGateways().Lister(),
@@ -459,7 +462,7 @@ func (r *reconciler) reconcileIstioVirtualService(gateway *v1alpha2.Gateway) err
 }
 
 // func (r *reconciler) reconcileConfigMap(gateway *v1alpha2.Gateway) error {
-// 	configMap, err := r.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.GatewayConfigMapName(gateway))
+// 	configMap, err := r.configMapLister.ConfigMaps(gateway.Namespace).Get(resources.ApiPublisherConfigMap(gateway))
 // 	if errors.IsNotFound(err) {
 // 		gatewayConfigMap, err := resources.CreateGatewayConfigMap(gateway, r.gatewayConfig)
 // 		if err != nil {
@@ -470,7 +473,7 @@ func (r *reconciler) reconcileIstioVirtualService(gateway *v1alpha2.Gateway) err
 // 			r.logger.Errorf("Failed to create Gateway ConfigMap %v", err)
 // 			return err
 // 		}
-// 		r.logger.Debugw("Config map created", resources.GatewayConfigMapName(gateway), configMap)
+// 		r.logger.Debugw("Config map created", resources.ApiPublisherConfigMap(gateway), configMap)
 // 	} else if err != nil {
 // 		return err
 // 	}

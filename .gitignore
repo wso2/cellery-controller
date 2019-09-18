@@ -9,3 +9,6 @@ build/
 
 coverage.txt
 vendor/
+
+# OS
+.DS_Store

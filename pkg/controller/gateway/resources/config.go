@@ -18,69 +18,63 @@
 
 package resources
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
 
-// 	corev1 "k8s.io/api/core/v1"
-// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-// 	"github.com/cellery-io/mesh-controller/pkg/controller"
-// 	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/config"
-// )
+	"github.com/cellery-io/mesh-controller/pkg/config"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
+)
 
-// type apiConfig struct {
-// 	Cell       string               `json:"cell"`
-// 	Version    string               `json:"version"`
-// 	Hostname   string               `json:"hostname"`
-// 	HTTPRoutes []v1alpha1.HTTPRoute `json:"apis"`
-// }
+type apiConfig struct {
+	Cell          string               `json:"cell"`
+	Version       string               `json:"version"`
+	Hostname      string               `json:"hostname"`
+	HTTPRoutes    []v1alpha2.HTTPRoute `json:"apis"`
+	GlobalContext string               `json:"globalContext"`
+}
 
-// func CreateGatewayConfigMap(gateway *v1alpha1.Gateway, gatewayConfig config.Gateway) (*corev1.ConfigMap, error) {
-// 	var cellName string
-// 	cellName, ok := gateway.Labels[mesh.CellLabelKey]
-// 	if !ok {
-// 		cellName = gateway.Name
-// 	}
+func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*corev1.ConfigMap, error) {
+	var cellName string
+	cellName, ok := gateway.Labels[meta.CellLabelKey]
+	if !ok {
+		cellName = gateway.Name
+	}
 
-// 	api := &apiConfig{
-// 		Cell:     cellName,
-// 		Version:  "1.0.0",
-// 		Hostname: GatewayFullK8sServiceName(gateway),
-// 		HTTPRoutes: func() []v1alpha1.HTTPRoute {
-// 			var routes []v1alpha1.HTTPRoute
-// 			for _, v := range gateway.Spec.HTTPRoutes {
-// 				if v.ZeroScale {
-// 					v.Backend = v.Backend + "-rev"
-// 					// temp fix for gateway init crashloop
-// 					v.ZeroScale = false
-// 				}
-// 				routes = append(routes, v)
-// 			}
-// 			return routes
-// 		}(),
-// 	}
-// 	apiConfigJsonBytes, err := json.Marshal(api)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("cannot create apiConfig json for the ConfigMap %q: %v",
-// 			GatewayConfigMapName(gateway), err)
-// 	}
-// 	apiConfigJson := string(apiConfigJsonBytes)
-// 	return &corev1.ConfigMap{
-// 		ObjectMeta: metav1.ObjectMeta{
-// 			Name:      GatewayConfigMapName(gateway),
-// 			Namespace: gateway.Namespace,
-// 			Labels:    createGatewayLabels(gateway),
-// 			OwnerReferences: []metav1.OwnerReference{
-// 				*controller.CreateGatewayOwnerRef(gateway),
-// 			},
-// 		},
-// 		Data: map[string]string{
-// 			apiConfigKey:          apiConfigJson,
-// 			gatewayConfigKey:      gatewayConfig.InitConfig,
-// 			gatewaySetupConfigKey: gatewayConfig.SetupConfig,
-// 		},
-// 	}, nil
-// }
+	api := &apiConfig{
+		Cell:          cellName,
+		Version:       gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Version,
+		Hostname:      GatewayFullK8sServiceName(gateway),
+		HTTPRoutes:    gateway.Spec.Ingress.HTTPRoutes,
+		GlobalContext: gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Context,
+	}
+	apiConfigJsonBytes, err := json.Marshal(api)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create apiConfig json for the ConfigMap %q: %v",
+			ApiPublisherConfigMap(gateway), err)
+	}
+	apiConfigJson := string(apiConfigJsonBytes)
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ApiPublisherConfigMap(gateway),
+			Namespace: gateway.Namespace,
+			Labels:    makeLabels(gateway),
+			OwnerReferences: []metav1.OwnerReference{
+				*controller.CreateGatewayOwnerRef(gateway),
+			},
+		},
+		Data: map[string]string{
+			apiConfigKey:     apiConfigJson,
+			gatewayConfigKey: cfg.StringValue(config.ConfigMapKeyApiPublisherConfig),
+		},
+	}, nil
+}
+
+func StatusFromConfigMap(gateway *v1alpha2.Gateway, configMap *corev1.ConfigMap) {
+	gateway.Status.ConfigMapGeneration = configMap.Generation
+}

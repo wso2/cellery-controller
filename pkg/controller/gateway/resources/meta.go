@@ -66,15 +66,20 @@ func makePodAnnotations(gateway *v1alpha2.Gateway) map[string]string {
 func ServiceName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-service"
 }
+
 func DeploymentName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-deployment"
+}
+
+func JobName(gateway *v1alpha2.Gateway) string {
+	return gateway.Name + "-job"
 }
 
 // func createGatewaySelector(gateway *v1alpha2.Gateway) *metav1.LabelSelector {
 // 	return &metav1.LabelSelector{MatchLabels: createGatewayLabels(gateway)}
 // }
 
-func GatewayConfigMapName(gateway *v1alpha2.Gateway) string {
+func ApiPublisherConfigMap(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-config"
 }
 

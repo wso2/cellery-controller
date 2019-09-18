@@ -120,7 +120,7 @@ func MakeDeployment(gateway *v1alpha2.Gateway, cfg config.Interface) (*appsv1.De
 // 							VolumeSource: corev1.VolumeSource{
 // 								ConfigMap: &corev1.ConfigMapVolumeSource{
 // 									LocalObjectReference: corev1.LocalObjectReference{
-// 										Name: GatewayConfigMapName(gateway),
+// 										Name: ApiPublisherConfigMap(gateway),
 // 									},
 // 									Items: []corev1.KeyToPath{
 // 										{
@@ -140,7 +140,7 @@ func MakeDeployment(gateway *v1alpha2.Gateway, cfg config.Interface) (*appsv1.De
 // 							VolumeSource: corev1.VolumeSource{
 // 								ConfigMap: &corev1.ConfigMapVolumeSource{
 // 									LocalObjectReference: corev1.LocalObjectReference{
-// 										Name: GatewayConfigMapName(gateway),
+// 										Name: ApiPublisherConfigMap(gateway),
 // 									},
 // 									Items: []corev1.KeyToPath{
 // 										{
@@ -398,7 +398,7 @@ func makeIstioProxyContainer(gateway *v1alpha2.Gateway, cfg config.Interface) *c
 		"--connectTimeout",
 		"10s",
 		"--serviceCluster",
-		gateway.Name + ".$(POD_NAMESPACE)",
+		gateway.Name,
 		"--zipkinAddress",
 		cfg.StringValue(config.ConfigMapKeyZipkinAddress),
 		"--proxyAdminPort",
