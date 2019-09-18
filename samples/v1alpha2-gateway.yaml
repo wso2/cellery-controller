@@ -5,8 +5,19 @@ metadata:
 spec:
   ingress:
     http:
-    - context: /foo
-      port: 8080
-      destination:
-        host: google.com
-        port: 80
+      - context: /foo
+        global: true
+        authenticate: true
+        port: 8080
+        definitions:
+          - path: /
+            method: GET
+        destination:
+          host: google.com
+          port: 80
+    extensions:
+      apiPublisher:
+        authenticate: true
+        context: /global
+        version: 2.0.0
+

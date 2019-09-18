@@ -19,6 +19,7 @@
 package v1alpha2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,8 +35,11 @@ type Gateway struct {
 }
 
 type GatewaySpec struct {
-	Ingress Ingress `json:"ingress,omitempty"`
-	//Type    GatewayType `json:"type,omitempty"`
+	Configurations []corev1.ConfigMap `json:"configurations,omitempty"`
+	Ingress        Ingress            `json:"ingress,omitempty"`
+	Ports          []PortMapping      `json:"ports,omitempty"`
+	Type           GatewayType        `json:"type,omitempty"`
+	Template       corev1.PodSpec     `json:"template,omitempty"`
 
 	//Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
@@ -118,12 +122,14 @@ type Destination struct {
 }
 
 type HTTPRoute struct {
-	Context     string          `json:"context"`
-	Version     string          `json:"version"`
-	Definitions []APIDefinition `json:"definitions"`
-	Port        uint32          `json:"port"`
-	Destination Destination     `json:"destination,omitempty"`
-	ZeroScale   bool            `json:"zeroScale,omitempty"`
+	Context      string          `json:"context"`
+	Version      string          `json:"version"`
+	Definitions  []APIDefinition `json:"definitions"`
+	Global       bool            `json:"global"`
+	Authenticate bool            `json:"authenticate"`
+	Port         uint32          `json:"port"`
+	Destination  Destination     `json:"destination,omitempty"`
+	ZeroScale    bool            `json:"zeroScale,omitempty"`
 }
 
 type APIDefinition struct {
@@ -143,17 +149,20 @@ type TCPRoute struct {
 }
 
 type GatewayStatus struct {
+	Type                           GatewayType          `json:"gatewayType"`
 	ServiceName                    string               `json:"serviceName"`
 	Status                         GatewayCurrentStatus `json:"status"`
 	AvailableReplicas              int32                `json:"availableReplicas"`
 	ObservedGeneration             int64                `json:"observedGeneration,omitempty"`
 	DeploymentGeneration           int64                `json:"deploymentGeneration,omitempty"`
+	JobGeneration                  int64                `json:"jobGeneration,omitempty"`
 	ServiceGeneration              int64                `json:"serviceGeneration,omitempty"`
 	VirtualServiceGeneration       int64                `json:"virtualServiceGeneration,omitempty"`
 	IstioGatewayGeneration         int64                `json:"istioGatewayGeneration,omitempty"`
 	ClusterIngressGeneration       int64                `json:"clusterIngressGeneration,omitempty"`
 	ClusterIngressSecretGeneration int64                `json:"clusterIngressSecretGeneration,omitempty"`
 	OidcEnvoyFilterGeneration      int64                `json:"oidcEnvoyFilterGeneration,omitempty"`
+	ConfigMapGeneration            int64                `json:"configMapGeneration,omitempty"`
 }
 
 func (gs *GatewayStatus) ResetServiceName() {

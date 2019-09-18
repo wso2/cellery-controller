@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   istio-version: "1.2.2"
-  cell-gateway-config: |
+  api-publisher-config: |
     {
         "username": "admin",
         "password": "admin",
