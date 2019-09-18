@@ -95,7 +95,3 @@ func ComponentName(cell *v1alpha2.Cell, component *v1alpha2.Component) string {
 func SecretName(cell *v1alpha2.Cell) string {
 	return cell.Name + "--secret"
 }
-
-func RoutingVirtualServiceName(cell *v1alpha2.Cell) string {
-	return cell.Name + "--vs"
-}

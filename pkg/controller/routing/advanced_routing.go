@@ -242,8 +242,8 @@ func Annotate(vs *v1alpha3.VirtualService, name string, value string) {
 	vs.Annotations = annotations
 }
 
-func VirtualServiceName(name string) string {
-	return name + "--vs"
+func RoutingVirtualServiceName(instanceName string) string {
+	return instanceName + "--vs"
 }
 
 func CompositeK8sServiceNameFromInstance(instance string, component v1alpha2.Component) string {
