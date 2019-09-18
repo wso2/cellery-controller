@@ -47,6 +47,7 @@ type CompositeStatus struct {
 	SecretGeneration       int64                             `json:"secretGeneration,omitempty"`
 	TokenServiceGeneration int64                             `json:"tokenServiceGeneration,omitempty"`
 	ComponentGenerations   map[string]int64                  `json:"componentGenerations,omitempty"`
+	RoutingVsGeneration    int64                             `json:"routingVsGeneration,omitempty"`
 	// Current conditions of the composite.
 	// +patchMergeKey=type
 	// +patchStrategy=merge
