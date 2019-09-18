@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
+
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
 )
 
 func TestBuildHostNameForCellDependency(t *testing.T) {
@@ -41,7 +42,7 @@ func TestBuildHostNameForCellDependency(t *testing.T) {
 
 func TestBuildHostNamesForCompositeDependency(t *testing.T) {
 	dependencyInst := "mydep"
-	svcTemplates := []v1alpha1.ServiceTemplateSpec{
+	components := []v1alpha2.Component{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "mycomponent1",
@@ -57,7 +58,7 @@ func TestBuildHostNamesForCompositeDependency(t *testing.T) {
 		"mydep--mycomponent1-service",
 		"mydep--mycomponent2-service",
 	}
-	actual := BuildHostNamesForCompositeDependency(dependencyInst, svcTemplates)
+	actual := BuildHostNamesForCompositeDependency(dependencyInst, components)
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHostNamesForCompositeDependency (-expected, +actual)\n%v", diff)
 	}
@@ -74,8 +75,8 @@ func TestBuildHttpRoutesForCellDependency(t *testing.T) {
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
@@ -105,11 +106,11 @@ func TestBuildHttpRoutesForCellDependencyWithInstanceIdBasedRules(t *testing.T) 
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "1",
 						},
 					},
@@ -130,11 +131,11 @@ func TestBuildHttpRoutesForCellDependencyWithInstanceIdBasedRules(t *testing.T) 
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "2",
 						},
 					},
@@ -155,8 +156,8 @@ func TestBuildHttpRoutesForCellDependencyWithInstanceIdBasedRules(t *testing.T) 
 						Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
@@ -178,7 +179,7 @@ func TestBuildHttpRoutesForCellDependencyWithInstanceIdBasedRules(t *testing.T) 
 func TestBuildHttpRoutesForCompositeDependency(t *testing.T) {
 	dependencyInst := "mydep"
 	instName := "myinst"
-	svcTemplate := v1alpha1.ServiceTemplateSpec{
+	component := v1alpha2.Component{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "mycomponent1",
 		},
@@ -188,24 +189,24 @@ func TestBuildHttpRoutesForCompositeDependency(t *testing.T) {
 			Match: []*v1alpha3.HTTPMatchRequest{
 				{
 					Authority: &v1alpha3.StringMatch{
-						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
+						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, component.Name),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
 				{
 					Destination: &v1alpha3.Destination{
-						Host: CompositeK8sServiceNameFromInstance(dependencyInst, svcTemplate),
+						Host: CompositeK8sServiceNameFromInstance(dependencyInst, component),
 					},
 				},
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha1.ServiceTemplateSpec{svcTemplate}, false)
+	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{component}, false)
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCompositeDependency (-expected, +actual)\n%v", diff)
 	}
@@ -214,7 +215,7 @@ func TestBuildHttpRoutesForCompositeDependency(t *testing.T) {
 func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.T) {
 	dependencyInst := "mydep"
 	instName := "myinst"
-	svcTemplate := v1alpha1.ServiceTemplateSpec{
+	svcTemplate := v1alpha2.Component{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "mycomponent1",
 		},
@@ -227,11 +228,11 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "1",
 						},
 					},
@@ -252,11 +253,11 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 					Headers: map[string]*v1alpha3.StringMatch{
-						instanceId: {
+						InstanceId: {
 							Exact: "2",
 						},
 					},
@@ -277,8 +278,8 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, svcTemplate.Name),
 					},
 					SourceLabels: map[string]string{
-						mesh.CellLabelKeySource:      instName,
-						mesh.ComponentLabelKeySource: "true",
+						meta.CellLabelKeySource:      instName,
+						meta.ComponentLabelKeySource: "true",
 					},
 				},
 			},
@@ -291,7 +292,7 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha1.ServiceTemplateSpec{svcTemplate}, true)
+	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{svcTemplate}, true)
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCompositeDependency (-expected, +actual)\n%v", diff)
 	}
@@ -299,7 +300,7 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 
 func TestExtractDependencies(t *testing.T) {
 	annotations := map[string]string{
-		mesh.CellDependenciesAnnotationKey: "[{\"org\":\"izza\",\"name\":\"emp-comp\",\"version\":\"0.0.4\",\"instance\":\"emp-comp-0-0-4-a1471a5b\",\"kind\":\"Composite\"},{\"org\":\"izza\",\"name\":\"stock-comp\",\"version\":\"0.0.4\",\"instance\":\"stock-comp-0-0-4-7af583f3\",\"kind\":\"Cell\"}]",
+		meta.CellDependenciesAnnotationKey: "[{\"org\":\"izza\",\"name\":\"emp-comp\",\"version\":\"0.0.4\",\"instance\":\"emp-comp-0-0-4-a1471a5b\",\"kind\":\"Composite\"},{\"org\":\"izza\",\"name\":\"stock-comp\",\"version\":\"0.0.4\",\"instance\":\"stock-comp-0-0-4-7af583f3\",\"kind\":\"Cell\"}]",
 	}
 	expected := []map[string]string{
 		{
@@ -409,12 +410,12 @@ func TestGatewayNameFromInstanceName(t *testing.T) {
 }
 
 func TestCompositeK8sServiceNameFromInstance(t *testing.T) {
-	svcTemplate := v1alpha1.ServiceTemplateSpec{
+	component := v1alpha2.Component{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "mycomponent1",
 		},
 	}
-	actual := CompositeK8sServiceNameFromInstance("inst1", svcTemplate)
+	actual := CompositeK8sServiceNameFromInstance("inst1", component)
 	expected := "inst1--mycomponent1-service"
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("CompositeK8sServiceNameFromInstance (-expected, +actual)\n%v", diff)
