@@ -45,7 +45,7 @@ func MakeRoutingVirtualService(cell *v1alpha2.Cell, cellLister listers.CellListe
 	}
 	return &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      RoutingVirtualServiceName(cell),
+			Name:      routing.RoutingVirtualServiceName(cell.Name),
 			Namespace: cell.Namespace,
 			Labels:    makeLabels(cell),
 			OwnerReferences: []metav1.OwnerReference{

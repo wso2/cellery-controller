@@ -19,8 +19,11 @@
 package composite
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 
 	"github.com/cellery-io/mesh-controller/pkg/clients"
 	"github.com/cellery-io/mesh-controller/pkg/informers"
@@ -43,6 +46,7 @@ import (
 
 	//controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
 	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
+	routing "github.com/cellery-io/mesh-controller/pkg/controller/routing"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
 	v1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
 	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
@@ -144,9 +148,7 @@ func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
 		rErrs.Add(r.reconcileComponent(composite, &composite.Spec.Components[i]))
 	}
 
-	//if err := r.reconcileVirtualService(composite); err != nil {
-	//	return err
-	//}
+	rErrs.Add(r.reconcileVirtualService(composite))
 
 	if !rErrs.Empty() {
 		return rErrs
@@ -265,35 +267,62 @@ func (r *reconciler) reconcileComponent(composite *v1alpha2.Composite, component
 	return nil
 }
 
-//func (r *reconciler) reconcileVirtualService(composite *v1alpha2.Composite) error {
-//	cellVs, err := r.istioVirtualServiceLister.VirtualServices(composite.Namespace).Get(controller_commons.VirtualServiceName(composite.Name))
-//	if errors.IsNotFound(err) {
-//		cellVs, err = resources.CreateCellVirtualService(composite, r.compositeLister, r.cellLister)
-//		if err != nil {
-//			r.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, composite.Name)
-//			return err
-//		}
-//		if cellVs == nil {
-//			r.logger.Debugf("No VirtualService created for composite instance %s", composite.Name)
-//			return nil
-//		}
-//		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
-//		if err != nil {
-//			r.logger.Errorf("Failed to create Cell VS %v for instance %s", err, composite.Name)
-//			return err
-//		}
-//		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
-//		cellVs, err = r.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Create(cellVs)
-//		if err != nil {
-//			r.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, composite.Name)
-//			return err
-//		}
-//		r.logger.Debugw("Cell VirtualService created", controller_commons.VirtualServiceName(composite.Name), cellVs)
-//	} else if err != nil {
-//		return err
-//	}
-//	return nil
-//}
+func (r *reconciler) reconcileVirtualService(composite *v1alpha2.Composite) error {
+	name := routing.RoutingVirtualServiceName(composite.Name)
+	routingVs, err := r.istioVirtualServiceLister.VirtualServices(composite.Namespace).Get(name)
+	if errors.IsNotFound(err) {
+		routingVs, err = resources.MakeRoutingVirtualService(composite, r.compositeLister, r.cellLister)
+		if err != nil {
+			r.logger.Errorf("Failed to create Composite VS object %v for instance %s", err, composite.Name)
+			r.recorder.Eventf(composite, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		if routingVs == nil {
+			r.logger.Debugf("No VirtualService created for composite instance %s", composite.Name)
+			return nil
+		}
+		lastAppliedConfig, err := json.Marshal(routing.BuildVirtualServiceLastAppliedConfig(routingVs))
+		if err != nil {
+			r.logger.Errorf("Failed to create routing VS %v for instance %s", err, composite.Name)
+			r.recorder.Eventf(composite, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		routing.Annotate(routingVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		routingVs, err = r.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Create(routingVs)
+		if err != nil {
+			r.logger.Errorf("Failed to create routing VS %v for instance %s", err, composite.Name)
+			r.recorder.Eventf(composite, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		r.logger.Debugw("Routing VirtualService created", name, routingVs)
+		r.recorder.Eventf(composite, corev1.EventTypeNormal, "Created", "Created Virtual Service %q", name)
+	} else if err != nil {
+		return err
+	} else if !metav1.IsControlledBy(routingVs, composite) {
+		return fmt.Errorf("Composite: %q does not own the VS: %q", composite.Name, routingVs)
+	} else {
+		routingVs, err = func(composite *v1alpha2.Composite, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
+			if !resources.RequireRoutingVsUpdate(composite, routingVs) {
+				return routingVs, nil
+			}
+			desiredVs, err := resources.MakeRoutingVirtualService(composite, r.compositeLister, r.cellLister)
+			if err != nil {
+				r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
+				return nil, err
+			}
+			existingVs := routingVs.DeepCopy()
+			resources.CopyRoutingVs(desiredVs, existingVs)
+			return r.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Update(existingVs)
+		}(composite, routingVs)
+		if err != nil {
+			r.logger.Errorf("Failed to update VS %q: %v", name, err)
+			return err
+		}
+	}
+
+	resources.StatusFromRoutingVs(composite, routingVs)
+	return nil
+}
 
 func isEqual(oldService *v1alpha2.Component, newService *v1alpha2.Component) bool {
 	// we only consider equality of the spec

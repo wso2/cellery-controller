@@ -386,10 +386,10 @@ func TestAnnotate(t *testing.T) {
 }
 
 func TestVirtualServiceName(t *testing.T) {
-	actual := VirtualServiceName("inst1")
+	actual := RoutingVirtualServiceName("inst1")
 	expected := "inst1--vs"
 	if diff := cmp.Diff(expected, actual); diff != "" {
-		t.Errorf("VirtualServiceName (-expected, +actual)\n%v", diff)
+		t.Errorf("RoutingVirtualServiceName (-expected, +actual)\n%v", diff)
 	}
 }
 
