@@ -19,8 +19,11 @@
 package cell
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -41,6 +44,7 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/cell/resources"
+	routing "github.com/cellery-io/mesh-controller/pkg/controller/routing"
 	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
 	v1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
 	istiov1alpha1listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
@@ -55,6 +59,7 @@ type reconciler struct {
 	istioVirtualServiceLister istiov1alpha1listers.VirtualServiceLister
 	istioEnvoyFilterLister    istiov1alpha1listers.EnvoyFilterLister
 	cellLister                v1alpha2listers.CellLister
+	compositeLister           v1alpha2listers.CompositeLister
 	gatewayLister             v1alpha2listers.GatewayLister
 	tokenServiceLister        v1alpha2listers.TokenServiceLister
 	componentLister           v1alpha2listers.ComponentLister
@@ -73,6 +78,7 @@ func NewController(
 		kubeClient:                clientset.Kubernetes(),
 		meshClient:                clientset.Mesh(),
 		cellLister:                informerset.Cells().Lister(),
+		compositeLister:           informerset.Composites().Lister(),
 		componentLister:           informerset.Components().Lister(),
 		gatewayLister:             informerset.Gateways().Lister(),
 		tokenServiceLister:        informerset.TokenServices().Lister(),
@@ -169,9 +175,8 @@ func (r *reconciler) reconcile(cell *v1alpha2.Cell) error {
 		rErrs.Add(r.reconcileComponent(cell, &cell.Spec.Components[i]))
 	}
 
-	// if err := r.reconcileVirtualService(cell); err != nil {
-	// 	return err
-	// }
+	rErrs.Add(r.reconcileRoutingVirtualService(cell))
+
 	if !rErrs.Empty() {
 		return rErrs
 	}
@@ -333,28 +338,28 @@ func (r *reconciler) reconcileGateway(cell *v1alpha2.Cell) error {
 // 	return nil
 // }
 
-// func buildLastAppliedConfig(gw *v1alpha2.Gateway) *v1alpha2.Gateway {
-// 	return &v1alpha2.Gateway{
-// 		TypeMeta: metav1.TypeMeta{
-// 			Kind:       "Gateway",
-// 			APIVersion: v1alpha2.SchemeGroupVersion.String(),
-// 		},
-// 		ObjectMeta: metav1.ObjectMeta{
-// 			Name:      gw.Name,
-// 			Namespace: gw.Namespace,
-// 		},
-// 		Spec: gw.Spec,
-// 	}
-// }
+func buildLastAppliedConfig(gw *v1alpha2.Gateway) *v1alpha2.Gateway {
+	return &v1alpha2.Gateway{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Gateway",
+			APIVersion: v1alpha2.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      gw.Name,
+			Namespace: gw.Namespace,
+		},
+		Spec: gw.Spec,
+	}
+}
 
-// func annotate(gw *v1alpha2.Gateway, name string, value string) {
-// 	annotations := make(map[string]string, len(gw.ObjectMeta.Annotations)+1)
-// 	annotations[name] = value
-// 	for k, v := range gw.ObjectMeta.Annotations {
-// 		annotations[k] = v
-// 	}
-// 	gw.Annotations = annotations
-// }
+func annotate(gw *v1alpha2.Gateway, name string, value string) {
+	annotations := make(map[string]string, len(gw.ObjectMeta.Annotations)+1)
+	annotations[name] = value
+	for k, v := range gw.ObjectMeta.Annotations {
+		annotations[k] = v
+	}
+	gw.Annotations = annotations
+}
 
 func (r *reconciler) reconcileTokenService(cell *v1alpha2.Cell) error {
 	tokenServiceName := resources.TokenServiceName(cell)
@@ -462,35 +467,61 @@ func (r *reconciler) reconcileComponent(cell *v1alpha2.Cell, componentTemplate *
 // 	return nil
 // }
 
-// func (r *reconciler) reconcileVirtualService(cell *v1alpha2.Cell) error {
-// 	cellVs, err := r.istioVirtualServiceLister.VirtualServices(cell.Namespace).Get(resources.CellVirtualServiceName(cell))
-// 	if errors.IsNotFound(err) {
-// 		cellVs, err = resources.CreateCellVirtualService(cell, r.cellLister)
-// 		if err != nil {
-// 			r.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, cell.Name)
-// 			return err
-// 		}
-// 		if cellVs == nil {
-// 			r.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
-// 			return nil
-// 		}
-// 		lastAppliedConfig, err := json.Marshal(controller_commons.BuildVirtualServiceLastAppliedConfig(cellVs))
-// 		if err != nil {
-// 			r.logger.Errorf("Failed to create Cell VS %v for instance %s", err, cell.Name)
-// 			return err
-// 		}
-// 		controller_commons.Annotate(cellVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
-// 		cellVs, err = r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(cellVs)
-// 		if err != nil {
-// 			r.logger.Errorf("Failed to create Cell VirtualService %v for instance %s", err, cell.Name)
-// 			return err
-// 		}
-// 		r.logger.Debugw("Cell VirtualService created", resources.CellVirtualServiceName(cell), cellVs)
-// 	} else if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (r *reconciler) reconcileRoutingVirtualService(cell *v1alpha2.Cell) error {
+	name := resources.RoutingVirtualServiceName(cell)
+	routingVs, err := r.istioVirtualServiceLister.VirtualServices(cell.Namespace).Get(name)
+	if errors.IsNotFound(err) {
+		routingVs, err = resources.MakeRoutingVirtualService(cell, r.cellLister, r.compositeLister)
+		if err != nil {
+			r.logger.Errorf("Failed to create Cell VS object %v for instance %s", err, cell.Name)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		if routingVs == nil {
+			r.logger.Debugf("No VirtualService created for cell instance %s", cell.Name)
+			return nil
+		}
+		lastAppliedConfig, err := json.Marshal(routing.BuildVirtualServiceLastAppliedConfig(routingVs))
+		if err != nil {
+			r.logger.Errorf("Failed to create routing VS %v for instance %s", err, cell.Name)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		routing.Annotate(routingVs, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		routingVs, err = r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Create(routingVs)
+		if err != nil {
+			r.logger.Errorf("Failed to create routing VS %v for instance %s", err, cell.Name)
+			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Virtual Service %q: %v", name, err)
+			return err
+		}
+		r.logger.Debugw("Cell VirtualService created", name, routingVs)
+		r.recorder.Eventf(cell, corev1.EventTypeNormal, "Created", "Created Virtual Service %q", name)
+	} else if err != nil {
+		return err
+	} else if !metav1.IsControlledBy(routingVs, cell) {
+		return fmt.Errorf("cell: %q does not own the VS: %q", cell.Name, routingVs)
+	} else {
+		routingVs, err = func(cell *v1alpha2.Cell, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
+			if !resources.RequireRoutingVsUpdate(cell, routingVs) {
+				return routingVs, nil
+			}
+			desiredVs, err := resources.MakeRoutingVirtualService(cell, r.cellLister, r.compositeLister)
+			if err != nil {
+				r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
+				return nil, err
+			}
+			existingVs := routingVs.DeepCopy()
+			resources.CopyRoutingVs(desiredVs, existingVs)
+			return r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Update(existingVs)
+		}(cell, routingVs)
+		if err != nil {
+			r.logger.Errorf("Failed to update VS %q: %v", name, err)
+			return err
+		}
+	}
+	resources.StatusFromRoutingVs(cell, routingVs)
+	return nil
+}
 
 func isEqual(oldService *v1alpha2.Component, newService *v1alpha2.Component) bool {
 	// we only consider equality of the spec
