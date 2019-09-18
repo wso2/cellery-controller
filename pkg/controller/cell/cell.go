@@ -468,7 +468,7 @@ func (r *reconciler) reconcileComponent(cell *v1alpha2.Cell, componentTemplate *
 // }
 
 func (r *reconciler) reconcileRoutingVirtualService(cell *v1alpha2.Cell) error {
-	name := resources.RoutingVirtualServiceName(cell)
+	name := routing.RoutingVirtualServiceName(cell.Name)
 	routingVs, err := r.istioVirtualServiceLister.VirtualServices(cell.Namespace).Get(name)
 	if errors.IsNotFound(err) {
 		routingVs, err = resources.MakeRoutingVirtualService(cell, r.cellLister, r.compositeLister)
