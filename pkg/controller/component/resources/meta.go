@@ -20,6 +20,7 @@ package resources
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	. "github.com/cellery-io/mesh-controller/pkg/meta"
@@ -51,6 +52,13 @@ func makePodAnnotations(component *v1alpha2.Component) map[string]string {
 		},
 		component.Labels,
 	)
+}
+
+func makeServingDeploymentSelector(component *v1alpha2.Component) labels.Selector {
+	return labels.SelectorFromSet(map[string]string{
+		"serving.knative.dev/configuration": ServingConfigurationName(component),
+		"serving.knative.dev/revision":      ServingRevisionName(component),
+	})
 }
 
 func ServiceName(component *v1alpha2.Component) string {

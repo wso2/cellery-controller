@@ -183,7 +183,7 @@ func (r *reconciler) reconcile(cell *v1alpha2.Cell) error {
 
 	activeCount := 0
 	for _, v := range cell.Status.ComponentStatuses {
-		if v == v1alpha2.ComponentCurrentStatusReady {
+		if v == v1alpha2.ComponentCurrentStatusReady || v == v1alpha2.ComponentCurrentStatusIdle {
 			activeCount++
 		}
 	}
