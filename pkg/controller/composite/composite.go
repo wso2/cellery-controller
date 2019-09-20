@@ -156,7 +156,7 @@ func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
 
 	activeCount := 0
 	for _, v := range composite.Status.ComponentStatuses {
-		if v == v1alpha2.ComponentCurrentStatusReady {
+		if v == v1alpha2.ComponentCurrentStatusReady || v == v1alpha2.ComponentCurrentStatusIdle {
 			activeCount++
 		}
 	}

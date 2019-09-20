@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"strconv"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
@@ -179,10 +181,24 @@ func RequireServingConfigurationUpdate(component *v1alpha2.Component, configurat
 		configuration.Generation != component.Status.ServingConfigurationGeneration
 }
 
-func StatusFromServingConfiguration(component *v1alpha2.Component, configuration *servingv1alpha1.Configuration) {
+func StatusFromServingConfiguration(component *v1alpha2.Component, configuration *servingv1alpha1.Configuration,
+	listerFn func(selector labels.Selector) ([]*appsv1.Deployment, error)) {
 	component.Status.Type = v1alpha2.ComponentTypeDeployment
-
 	component.Status.ServingConfigurationGeneration = configuration.Generation
+	// manually check the status of the deployment created by this configuration revision
+	deployments, err := listerFn(makeServingDeploymentSelector(component))
+	if err != nil || len(deployments) == 0 {
+		component.Status.AvailableReplicas = 0
+		component.Status.Status = v1alpha2.ComponentCurrentStatusNotReady
+		return
+	}
+	servingDeployment := deployments[0]
+	component.Status.AvailableReplicas = servingDeployment.Status.AvailableReplicas
+	if servingDeployment.Status.AvailableReplicas > 0 {
+		component.Status.Status = v1alpha2.ComponentCurrentStatusReady
+	} else {
+		component.Status.Status = v1alpha2.ComponentCurrentStatusIdle
+	}
 }
 
 func RequireServingVirtualServiceUpdate(component *v1alpha2.Component, virtualService *v1alpha3.VirtualService) bool {
