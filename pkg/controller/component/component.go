@@ -454,7 +454,7 @@ func (r *reconciler) reconcileServingConfiguration(component *v1alpha2.Component
 			}
 		}
 	}
-	resources.StatusFromServingConfiguration(component, configuration)
+	resources.StatusFromServingConfiguration(component, configuration, r.deploymentLister.List)
 
 	component.Status.ServiceName = configuration.Name
 	return nil
