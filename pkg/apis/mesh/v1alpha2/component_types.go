@@ -102,18 +102,21 @@ type VolumeClaim struct {
 }
 
 type ComponentStatus struct {
-	Type                            ComponentType          `json:"componentType"`
-	Status                          ComponentCurrentStatus `json:"status"`
-	ServiceName                     string                 `json:"serviceName"`
-	AvailableReplicas               int32                  `json:"availableReplicas"`
-	ObservedGeneration              int64                  `json:"observedGeneration,omitempty"`
-	DeploymentGeneration            int64                  `json:"deploymentGeneration,omitempty"`
-	StatefulSetGeneration           int64                  `json:"statefulSetGeneration,omitempty"`
-	JobGeneration                   int64                  `json:"jobGeneration,omitempty"`
-	ServiceGeneration               int64                  `json:"serviceGeneration,omitempty"`
-	HpaGeneration                   int64                  `json:"hpaGeneration,omitempty"`
-	ServingConfigurationGeneration  int64                  `json:"servingConfigurationGeneration,omitempty"`
-	ServingVirtualServiceGeneration int64                  `json:"servingVirtualServiceGeneration,omitempty"`
+	Type                             ComponentType          `json:"componentType"`
+	Status                           ComponentCurrentStatus `json:"status"`
+	ServiceName                      string                 `json:"serviceName"`
+	AvailableReplicas                int32                  `json:"availableReplicas"`
+	ObservedGeneration               int64                  `json:"observedGeneration,omitempty"`
+	DeploymentGeneration             int64                  `json:"deploymentGeneration,omitempty"`
+	StatefulSetGeneration            int64                  `json:"statefulSetGeneration,omitempty"`
+	JobGeneration                    int64                  `json:"jobGeneration,omitempty"`
+	ServiceGeneration                int64                  `json:"serviceGeneration,omitempty"`
+	HpaGeneration                    int64                  `json:"hpaGeneration,omitempty"`
+	ServingConfigurationGeneration   int64                  `json:"servingConfigurationGeneration,omitempty"`
+	ServingVirtualServiceGeneration  int64                  `json:"servingVirtualServiceGeneration,omitempty"`
+	PersistantVolumeClaimGenerations map[string]int64       `json:"persistantVolumeClaimGenerations,omitempty"`
+	ConfigMapGenerations             map[string]int64       `json:"configMapGenerations,omitempty"`
+	SecretGenerations                map[string]int64       `json:"secretGenerations,omitempty"`
 }
 
 func (cstat *ComponentStatus) SetType(t ComponentType) {

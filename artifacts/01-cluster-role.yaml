@@ -14,6 +14,7 @@ rules:
   - services
   - events
   - serviceaccounts
+  - persistentvolumeclaims
   verbs:
   - get
   - list

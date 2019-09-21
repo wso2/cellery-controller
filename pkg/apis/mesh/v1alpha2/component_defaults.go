@@ -65,4 +65,13 @@ func (cstat *ComponentStatus) SetDefaults() {
 	if cstat.Status == "" {
 		cstat.Status = ComponentCurrentStatusUnknown
 	}
+	if cstat.PersistantVolumeClaimGenerations == nil {
+		cstat.PersistantVolumeClaimGenerations = make(map[string]int64)
+	}
+	if cstat.ConfigMapGenerations == nil {
+		cstat.ConfigMapGenerations = make(map[string]int64)
+	}
+	if cstat.SecretGenerations == nil {
+		cstat.SecretGenerations = make(map[string]int64)
+	}
 }

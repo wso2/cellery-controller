@@ -13,3 +13,36 @@ spec:
     port: 80
     targetContainer: nginx
     targetPort: 80
+  volumeClaims:
+  - template:
+      metadata:
+        name: pvc1
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  - template:
+      metadata:
+        name: pvc2
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  configurations:
+  - metadata:
+      name: conf1
+    data:
+      key1: val1
+  - metadata:
+      name: conf2
+  secrets:
+  - metadata:
+      name: sec1
+  - metadata:
+      name: sec2
+
+        

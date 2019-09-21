@@ -73,12 +73,12 @@ func addPersistentVolumeClaimVolumes(component *v1alpha2.Component) podSpecOptio
 				Name: vc.Template.Name,
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-						ClaimName: vc.Template.Name,
+						ClaimName: PersistentVolumeClaimName(component, &vc),
 					},
 				},
 			})
 		}
-		podSpec.Volumes = volumes
+		podSpec.Volumes = append(podSpec.Volumes, volumes...)
 	}
 }
 
@@ -91,13 +91,13 @@ func addConfigMapVolumes(component *v1alpha2.Component) podSpecOption {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: c.Name,
+							Name: ConfigMapName(component, &c),
 						},
 					},
 				},
 			})
 		}
-		podSpec.Volumes = volumes
+		podSpec.Volumes = append(podSpec.Volumes, volumes...)
 	}
 }
 
@@ -109,12 +109,12 @@ func addSecretVolumes(component *v1alpha2.Component) podSpecOption {
 				Name: s.Name,
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
-						SecretName: s.Name,
+						SecretName: SecretName(component, &s),
 					},
 				},
 			})
 		}
-		podSpec.Volumes = volumes
+		podSpec.Volumes = append(podSpec.Volumes, volumes...)
 	}
 }
 
