@@ -31,6 +31,8 @@ const (
 	GatewayLabelKey      = mesh.GroupName + "/gateway"
 	TokenServiceLabelKey = mesh.GroupName + "/token-service"
 
+	VolumeLabelKey = mesh.GroupName + "/volume"
+
 	// Cellery observability labels
 	ObservabilityGroupPrefix          = "observability."
 	ObservabilityInstanceLabelKey     = ObservabilityGroupPrefix + mesh.GroupName + "/instance"
