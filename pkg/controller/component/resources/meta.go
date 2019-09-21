@@ -19,6 +19,7 @@
 package resources
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -75,6 +76,18 @@ func JobName(component *v1alpha2.Component) string {
 
 func StatefulSetName(component *v1alpha2.Component) string {
 	return component.Name + "-statefulset"
+}
+
+func PersistentVolumeClaimName(component *v1alpha2.Component, volumeClaim *v1alpha2.VolumeClaim) string {
+	return component.Name + "-" + volumeClaim.Template.Name + "-pvc"
+}
+
+func ConfigMapName(component *v1alpha2.Component, configMap *corev1.ConfigMap) string {
+	return component.Name + "-" + configMap.Name + "-config"
+}
+
+func SecretName(component *v1alpha2.Component, secret *corev1.Secret) string {
+	return component.Name + "-" + secret.Name + "-secret"
 }
 
 func HpaName(component *v1alpha2.Component) string {

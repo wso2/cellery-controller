@@ -45,6 +45,7 @@ type Interface interface {
 	HorizontalPodAutoscalers() autoscalingv2beta2.HorizontalPodAutoscalerInformer
 	Jobs() batchv1.JobInformer
 	NetworkPolicies() networkingv1.NetworkPolicyInformer
+	PersistentVolumeClaims() corev1.PersistentVolumeClaimInformer
 	Secrets() corev1.SecretInformer
 	Services() corev1.ServiceInformer
 	StatefulSets() appsv1.StatefulSetInformer
@@ -112,6 +113,10 @@ func (i *informers) Jobs() batchv1.JobInformer {
 
 func (i *informers) NetworkPolicies() networkingv1.NetworkPolicyInformer {
 	return i.kubeInformerFactory.Networking().V1().NetworkPolicies()
+}
+
+func (i *informers) PersistentVolumeClaims() corev1.PersistentVolumeClaimInformer {
+	return i.kubeInformerFactory.Core().V1().PersistentVolumeClaims()
 }
 
 func (i *informers) Secrets() corev1.SecretInformer {

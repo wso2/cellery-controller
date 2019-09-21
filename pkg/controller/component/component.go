@@ -54,18 +54,22 @@ import (
 )
 
 type reconciler struct {
-	kubeClient                 kubeclient.Interface
-	meshClient                 meshclient.Interface
-	componentLister            v1alpha2listers.ComponentLister
-	serviceLister              corev1listers.ServiceLister
-	deploymentLister           appsv1listers.DeploymentLister
-	statefulSetLister          appsv1listers.StatefulSetLister
-	jobLister                  batchv1listers.JobLister
-	hpaLister                  autoscalingv2beta2lister.HorizontalPodAutoscalerLister
-	istioVirtualServiceLister  istionetwork1alpha3listers.VirtualServiceLister
-	servingConfigurationLister kservingv1alpha1listers.ConfigurationLister
-	logger                     *zap.SugaredLogger
-	recorder                   record.EventRecorder
+	kubeClient                  kubeclient.Interface
+	meshClient                  meshclient.Interface
+	componentLister             v1alpha2listers.ComponentLister
+	serviceLister               corev1listers.ServiceLister
+	deploymentLister            appsv1listers.DeploymentLister
+	statefulSetLister           appsv1listers.StatefulSetLister
+	persistentVolumeClaimLister corev1listers.PersistentVolumeClaimLister
+	configMapLister             corev1listers.ConfigMapLister
+	secretLister                corev1listers.SecretLister
+	jobLister                   batchv1listers.JobLister
+	hpaLister                   autoscalingv2beta2lister.HorizontalPodAutoscalerLister
+	istioVirtualServiceLister   istionetwork1alpha3listers.VirtualServiceLister
+	servingConfigurationLister  kservingv1alpha1listers.ConfigurationLister
+	cfg                         config.Interface
+	logger                      *zap.SugaredLogger
+	recorder                    record.EventRecorder
 }
 
 func NewController(
@@ -75,17 +79,21 @@ func NewController(
 	logger *zap.SugaredLogger,
 ) *controller.Controller {
 	r := &reconciler{
-		kubeClient:                 clientset.Kubernetes(),
-		meshClient:                 clientset.Mesh(),
-		componentLister:            informerset.Components().Lister(),
-		serviceLister:              informerset.Services().Lister(),
-		deploymentLister:           informerset.Deployments().Lister(),
-		statefulSetLister:          informerset.StatefulSets().Lister(),
-		jobLister:                  informerset.Jobs().Lister(),
-		hpaLister:                  informerset.HorizontalPodAutoscalers().Lister(),
-		istioVirtualServiceLister:  informerset.IstioVirtualServices().Lister(),
-		servingConfigurationLister: informerset.KnativeServingConfigurations().Lister(),
-		logger:                     logger.Named("component-controller"),
+		kubeClient:                  clientset.Kubernetes(),
+		meshClient:                  clientset.Mesh(),
+		componentLister:             informerset.Components().Lister(),
+		serviceLister:               informerset.Services().Lister(),
+		deploymentLister:            informerset.Deployments().Lister(),
+		statefulSetLister:           informerset.StatefulSets().Lister(),
+		persistentVolumeClaimLister: informerset.PersistentVolumeClaims().Lister(),
+		configMapLister:             informerset.ConfigMaps().Lister(),
+		secretLister:                informerset.Secrets().Lister(),
+		jobLister:                   informerset.Jobs().Lister(),
+		hpaLister:                   informerset.HorizontalPodAutoscalers().Lister(),
+		istioVirtualServiceLister:   informerset.IstioVirtualServices().Lister(),
+		servingConfigurationLister:  informerset.KnativeServingConfigurations().Lister(),
+		cfg:                         cfg,
+		logger:                      logger.Named("component-controller"),
 	}
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(r.logger.Named("events").Infof)
@@ -98,6 +106,21 @@ func NewController(
 	informerset.Components().Informer().AddEventHandler(informers.HandleAll(c.Enqueue))
 
 	informerset.Services().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.ConfigMaps().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.Secrets().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
+	informerset.PersistentVolumeClaims().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
 		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
@@ -181,6 +204,18 @@ func (r *reconciler) reconcile(component *v1alpha2.Component) error {
 	rErrs.Add(r.reconcileHpa(component))
 	rErrs.Add(r.reconcileServingConfiguration(component))
 	rErrs.Add(r.reconcileServingVirtualService(component))
+
+	for i, _ := range component.Spec.VolumeClaims {
+		rErrs.Add(r.reconcilePersistentVolumeClaim(component, &component.Spec.VolumeClaims[i]))
+	}
+
+	for i, _ := range component.Spec.Configurations {
+		rErrs.Add(r.reconcileConfiguration(component, &component.Spec.Configurations[i]))
+	}
+
+	for i, _ := range component.Spec.Secrets {
+		rErrs.Add(r.reconcileSecret(component, &component.Spec.Secrets[i]))
+	}
 
 	if !rErrs.Empty() {
 		return rErrs
@@ -503,6 +538,95 @@ func (r *reconciler) reconcileServingVirtualService(component *v1alpha2.Componen
 		}
 	}
 	resources.StatusFromServingVirtualService(component, virtualService)
+	return nil
+}
+
+func (r *reconciler) reconcilePersistentVolumeClaim(component *v1alpha2.Component, volumeClaim *v1alpha2.VolumeClaim) error {
+	persistentVolumeClaimName := resources.PersistentVolumeClaimName(component, volumeClaim)
+	persistentVolumeClaim, err := r.persistentVolumeClaimLister.PersistentVolumeClaims(component.Namespace).Get(persistentVolumeClaimName)
+	if errors.IsNotFound(err) {
+		persistentVolumeClaim, err = r.kubeClient.CoreV1().PersistentVolumeClaims(component.Namespace).Create(resources.MakePersistentVolumeClaim(component, volumeClaim))
+		if err != nil {
+			r.logger.Errorf("Failed to create PersistentVolumeClaim %q: %v", persistentVolumeClaimName, err)
+			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create PersistentVolumeClaim %q: %v", persistentVolumeClaimName, err)
+			return err
+		}
+		r.recorder.Eventf(component, corev1.EventTypeNormal, "Created", "Created PersistentVolumeClaim %q", persistentVolumeClaimName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve PersistentVolumeClaim %q: %v", persistentVolumeClaimName, err)
+		return err
+	}
+	resources.StatusFromPersistentVolumeClaim(component, persistentVolumeClaim)
+	return nil
+}
+
+func (r *reconciler) reconcileConfiguration(component *v1alpha2.Component, configMapTemplate *corev1.ConfigMap) error {
+	configMapName := resources.ConfigMapName(component, configMapTemplate)
+	configMap, err := r.configMapLister.ConfigMaps(component.Namespace).Get(configMapName)
+	if errors.IsNotFound(err) {
+		configMap, err = r.kubeClient.CoreV1().ConfigMaps(component.Namespace).Create(resources.MakeConfigMap(component, configMapTemplate))
+		if err != nil {
+			r.logger.Errorf("Failed to create ConfigMap %q: %v", configMapName, err)
+			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create ConfigMap %q: %v", configMapName, err)
+			return err
+		}
+		r.recorder.Eventf(component, corev1.EventTypeNormal, "Created", "Created ConfigMap %q", configMapName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve ConfigMap %q: %v", configMapName, err)
+		return err
+	} else if !metav1.IsControlledBy(configMap, component) {
+		return fmt.Errorf("component: %q does not own the ConfigMap: %q", component.Name, configMapName)
+	} else {
+		configMap, err = func(component *v1alpha2.Component, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+			if !resources.RequireConfigMapUpdate(component, configMap) {
+				return configMap, nil
+			}
+			desiredConfigMap := resources.MakeConfigMap(component, configMapTemplate)
+			existingConfigMap := configMap.DeepCopy()
+			resources.CopyConfigMap(desiredConfigMap, existingConfigMap)
+			return r.kubeClient.CoreV1().ConfigMaps(component.Namespace).Update(existingConfigMap)
+		}(component, configMap)
+		if err != nil {
+			r.logger.Errorf("Failed to update ConfigMap %q: %v", configMapName, err)
+			return err
+		}
+	}
+	resources.StatusFromConfigMap(component, configMap)
+	return nil
+}
+
+func (r *reconciler) reconcileSecret(component *v1alpha2.Component, secretTemplate *corev1.Secret) error {
+	secretName := resources.SecretName(component, secretTemplate)
+	secret, err := r.secretLister.Secrets(component.Namespace).Get(secretName)
+	if errors.IsNotFound(err) {
+		secret, err = r.kubeClient.CoreV1().Secrets(component.Namespace).Create(resources.MakeSecret(component, secretTemplate, r.cfg))
+		if err != nil {
+			r.logger.Errorf("Failed to create Secret %q: %v", secretName, err)
+			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create Secret %q: %v", secretName, err)
+			return err
+		}
+		r.recorder.Eventf(component, corev1.EventTypeNormal, "Created", "Created ConfigMap %q", secretName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Secret %q: %v", secretName, err)
+		return err
+	} else if !metav1.IsControlledBy(secret, component) {
+		return fmt.Errorf("component: %q does not own the Secret: %q", component.Name, secretName)
+	} else {
+		secret, err = func(component *v1alpha2.Component, secret *corev1.Secret) (*corev1.Secret, error) {
+			if !resources.RequireSecretUpdate(component, secret) {
+				return secret, nil
+			}
+			desiredSecret := resources.MakeSecret(component, secretTemplate, r.cfg)
+			existingSecret := secret.DeepCopy()
+			resources.CopySecret(desiredSecret, existingSecret)
+			return r.kubeClient.CoreV1().Secrets(component.Namespace).Update(existingSecret)
+		}(component, secret)
+		if err != nil {
+			r.logger.Errorf("Failed to update Secret %q: %v", secretName, err)
+			return err
+		}
+	}
+	resources.StatusFromSecret(component, secret)
 	return nil
 }
 
