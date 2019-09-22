@@ -26,4 +26,8 @@ const (
 
 	LastAppliedHashAnnotationKey  = mesh.GroupName + "/last-applied-hash"
 	CellDependenciesAnnotationKey = mesh.GroupName + "/cell-dependencies"
+
+	// Original GW service for advanced routing
+	CellOriginalGatewaySvcKey        = mesh.GroupName + "/original-gw-svc"
+	CompositeOriginalComponentSvcKey = mesh.GroupName + "/original-component-svcs"
 )
