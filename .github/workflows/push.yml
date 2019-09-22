@@ -1,0 +1,39 @@
+name: Go
+on: [push]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+      
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Get Go tools
+      run: make tools
+
+    - name: Build
+      env:
+        GO111MODULE: on
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        export GOPATH=$(go env GOPATH)
+        test -z "$(make code.format-check| tee /dev/stderr)"
+        make verify-codegen
+        make build.controller
+        make docker.controller
+        make test.controller
+        git diff --exit-code
+
+    - name: Get Code Coverage
+      run: bash <(curl -s https://codecov.io/bash)
+        
+    - name: Deploy
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} && make docker-push.controller
