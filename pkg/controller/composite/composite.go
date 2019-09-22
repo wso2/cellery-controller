@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
 
 	"github.com/cellery-io/mesh-controller/pkg/clients"
 	"github.com/cellery-io/mesh-controller/pkg/informers"
@@ -57,6 +57,7 @@ type reconciler struct {
 	meshClient                meshclientset.Interface
 	compositeLister           v1alpha2listers.CompositeLister
 	componentLister           v1alpha2listers.ComponentLister
+	serviceLister             corev1listers.ServiceLister
 	secretLister              corev1listers.SecretLister
 	tokenServiceLister        v1alpha2listers.TokenServiceLister
 	istioVirtualServiceLister istionetwork1alpha3listers.VirtualServiceLister
@@ -77,6 +78,7 @@ func NewController(
 		meshClient:                clientset.Mesh(),
 		compositeLister:           informerset.Composites().Lister(),
 		componentLister:           informerset.Components().Lister(),
+		serviceLister:             informerset.Services().Lister(),
 		tokenServiceLister:        informerset.TokenServices().Lister(),
 		secretLister:              informerset.Secrets().Lister(),
 		istioVirtualServiceLister: informerset.IstioVirtualServices().Lister(),
@@ -149,6 +151,8 @@ func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
 	}
 
 	rErrs.Add(r.reconcileVirtualService(composite))
+
+	rErrs.Add(r.reconcileRoutingK8sService(composite))
 
 	if !rErrs.Empty() {
 		return rErrs
@@ -301,23 +305,24 @@ func (r *reconciler) reconcileVirtualService(composite *v1alpha2.Composite) erro
 	} else if !metav1.IsControlledBy(routingVs, composite) {
 		return fmt.Errorf("Composite: %q does not own the VS: %q", composite.Name, routingVs)
 	} else {
-		routingVs, err = func(composite *v1alpha2.Composite, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
-			if !resources.RequireRoutingVsUpdate(composite, routingVs) {
-				return routingVs, nil
-			}
-			desiredVs, err := resources.MakeRoutingVirtualService(composite, r.compositeLister, r.cellLister)
-			if err != nil {
-				r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
-				return nil, err
-			}
-			existingVs := routingVs.DeepCopy()
-			resources.CopyRoutingVs(desiredVs, existingVs)
-			return r.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Update(existingVs)
-		}(composite, routingVs)
-		if err != nil {
-			r.logger.Errorf("Failed to update VS %q: %v", name, err)
-			return err
-		}
+		// TODO: find a better solution
+		//routingVs, err = func(composite *v1alpha2.Composite, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
+		//	if !resources.RequireRoutingVsUpdate(composite, routingVs) {
+		//		return routingVs, nil
+		//	}
+		//	desiredVs, err := resources.MakeRoutingVirtualService(composite, r.compositeLister, r.cellLister)
+		//	if err != nil {
+		//		r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
+		//		return nil, err
+		//	}
+		//	existingVs := routingVs.DeepCopy()
+		//	resources.CopyRoutingVs(desiredVs, existingVs)
+		//	return r.meshClient.NetworkingV1alpha3().VirtualServices(composite.Namespace).Update(existingVs)
+		//}(composite, routingVs)
+		//if err != nil {
+		//	r.logger.Errorf("Failed to update VS %q: %v", name, err)
+		//	return err
+		//}
 	}
 
 	resources.StatusFromRoutingVs(composite, routingVs)
@@ -340,4 +345,43 @@ func (r *reconciler) updateStatus(desired *v1alpha2.Composite) (*v1alpha2.Compos
 		return r.meshClient.MeshV1alpha2().Composites(desired.Namespace).UpdateStatus(latest)
 	}
 	return desired, nil
+}
+
+type origComponentData struct {
+	ComponentName  string `json:"componentName"`
+	ContainerPorts []int  `json:"containerPorts"`
+}
+
+func (r *reconciler) reconcileRoutingK8sService(composite *v1alpha2.Composite) error {
+	// This is a workaround for an issue with switching traffic 100% to a new instance, and terminating the old one.
+	// When the old composite instance is terminated, the associated k8s service will be deleted as well. Since the
+	// Istio Virtual Service uses that particular gateway k8s service name as a hostname, once its deleted the DNS
+	// lookup will fail, which will lead to traffic routing to fail.
+	// To overcome this issue, whenever traffic is switched to 100% to a new instance, the previous instance's components'
+	// k8s service names are written to an annotation of the new composite instance. This annotation will be picked up
+	// by this method and that particular service will be re-created if it does not exist.
+
+	originalComponentSvcKey := composite.Annotations[meta.CompositeOriginalComponentSvcKey]
+	if originalComponentSvcKey != "" {
+		var origCompData []origComponentData
+		err := json.Unmarshal([]byte(originalComponentSvcKey), &origCompData)
+		if err != nil {
+			return err
+		}
+		for _, data := range origCompData {
+			k8sService, err := r.serviceLister.Services(composite.Namespace).Get(resources.K8sServiceName(data.ComponentName))
+			if errors.IsNotFound(err) {
+				k8sService, err = r.kubeClient.CoreV1().Services(composite.Namespace).Create(
+					resources.MakeOriginalComponentK8sService(composite, data.ComponentName, data.ContainerPorts))
+				if err != nil {
+					r.logger.Errorf("Failed to create K8s service for component %v", err)
+					return err
+				}
+				r.logger.Debugw("K8s service for component created", data.ComponentName, k8sService)
+			} else if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

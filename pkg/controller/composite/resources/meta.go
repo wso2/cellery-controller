@@ -19,6 +19,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
@@ -88,4 +90,8 @@ func ComponentName(composite *v1alpha2.Composite, component *v1alpha2.Component)
 
 func SecretName(composite *v1alpha2.Composite) string {
 	return "composite-sts-secret"
+}
+
+func K8sServiceName(name string) string {
+	return fmt.Sprintf("%s-service", name)
 }

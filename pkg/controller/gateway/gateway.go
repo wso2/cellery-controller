@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/cellery-io/mesh-controller/pkg/meta"
+
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -197,6 +199,8 @@ func (r *reconciler) reconcile(gateway *v1alpha2.Gateway) error {
 	rErrs.Add(r.reconcileClusterIngress(gateway))
 
 	rErrs.Add(r.reconcileOidcEnvoyFilter(gateway))
+
+	rErrs.Add(r.reconcileRoutingK8sService(gateway))
 	// if gateway.Spec.Empty() {
 	// 	gateway.Status.Status = "Ready"
 	// 	gateway.Status.HostName = "N/A"
@@ -215,10 +219,6 @@ func (r *reconciler) reconcile(gateway *v1alpha2.Gateway) error {
 	// 	}
 
 	// 	if err := r.reconcileK8sService(gateway); err != nil {
-	// 		return err
-	// 	}
-
-	// 	if err := r.reconcileRoutingK8sService(gateway); err != nil {
 	// 		return err
 	// 	}
 
@@ -551,21 +551,21 @@ func (r *reconciler) reconcileRoutingK8sService(gateway *v1alpha2.Gateway) error
 	// k8s service name is written to an annotation of the new instance gateway. This annotation will be picked up
 	// by this method and that particular service will be re-created if it does not exist.
 
-	// originalGwK8sSvcName := gateway.Annotations[mesh.CellOriginalGatewaySvcKey]
-	// if originalGwK8sSvcName != "" {
-	// 	k8sService, err := r.serviceLister.Services(gateway.Namespace).Get(originalGwK8sSvcName)
-	// 	if errors.IsNotFound(err) {
-	// 		k8sService, err = r.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.CreateOriginalGatewayK8sService(gateway, originalGwK8sSvcName))
-	// 		if err != nil {
-	// 			r.logger.Errorf("Failed to create K8s service for original gateway %v", err)
-	// 			return err
-	// 		}
-	// 		r.logger.Debugw("K8s service for original gateway created", originalGwK8sSvcName, k8sService)
-	// 	} else if err != nil {
-	// 		return err
-	// 	}
-	// 	//gateway.Status.HostName = k8sService.Name
-	// }
+	originalGwK8sSvcName := gateway.Annotations[meta.CellOriginalGatewaySvcKey]
+	if originalGwK8sSvcName != "" {
+		k8sService, err := r.serviceLister.Services(gateway.Namespace).Get(originalGwK8sSvcName)
+		if errors.IsNotFound(err) {
+			k8sService, err = r.kubeClient.CoreV1().Services(gateway.Namespace).Create(resources.MakeOriginalGatewayK8sService(gateway, originalGwK8sSvcName))
+			if err != nil {
+				r.logger.Errorf("Failed to create K8s service for original gateway %v", err)
+				return err
+			}
+			r.logger.Debugw("K8s service for original gateway created", originalGwK8sSvcName, k8sService)
+		} else if err != nil {
+			return err
+		}
+		//gateway.Status.HostName = k8sService.Name
+	}
 	return nil
 }
 
