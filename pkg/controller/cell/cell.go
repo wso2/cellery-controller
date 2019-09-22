@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	networkv1 "k8s.io/api/networking/v1"
@@ -501,23 +499,24 @@ func (r *reconciler) reconcileRoutingVirtualService(cell *v1alpha2.Cell) error {
 	} else if !metav1.IsControlledBy(routingVs, cell) {
 		return fmt.Errorf("cell: %q does not own the VS: %q", cell.Name, routingVs)
 	} else {
-		routingVs, err = func(cell *v1alpha2.Cell, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
-			if !resources.RequireRoutingVsUpdate(cell, routingVs) {
-				return routingVs, nil
-			}
-			desiredVs, err := resources.MakeRoutingVirtualService(cell, r.cellLister, r.compositeLister)
-			if err != nil {
-				r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
-				return nil, err
-			}
-			existingVs := routingVs.DeepCopy()
-			resources.CopyRoutingVs(desiredVs, existingVs)
-			return r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Update(existingVs)
-		}(cell, routingVs)
-		if err != nil {
-			r.logger.Errorf("Failed to update VS %q: %v", name, err)
-			return err
-		}
+		// TODO: find a better solution
+		//routingVs, err = func(cell *v1alpha2.Cell, routingVs *v1alpha3.VirtualService) (*v1alpha3.VirtualService, error) {
+		//	if !resources.RequireRoutingVsUpdate(cell, routingVs) {
+		//		return routingVs, nil
+		//	}
+		//	desiredVs, err := resources.MakeRoutingVirtualService(cell, r.cellLister, r.compositeLister)
+		//	if err != nil {
+		//		r.logger.Errorf("Failed to obtain desired VS %q: %v", desiredVs, err)
+		//		return nil, err
+		//	}
+		//	existingVs := routingVs.DeepCopy()
+		//	resources.CopyRoutingVs(desiredVs, existingVs)
+		//	return r.meshClient.NetworkingV1alpha3().VirtualServices(cell.Namespace).Update(existingVs)
+		//}(cell, routingVs)
+		//if err != nil {
+		//	r.logger.Errorf("Failed to update VS %q: %v", name, err)
+		//	return err
+		//}
 	}
 	resources.StatusFromRoutingVs(cell, routingVs)
 	return nil

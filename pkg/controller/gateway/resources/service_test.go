@@ -304,7 +304,7 @@ func TestCreateOriginalGatewayK8sService(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateOriginalGatewayK8sService(gateway, "original-foo-gw-svc")
+	actual := MakeOriginalGatewayK8sService(gateway, "original-foo-gw-svc")
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("CreateGatewayK8sService (-expected, +actual)\n%v", diff)
