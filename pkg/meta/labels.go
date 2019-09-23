@@ -30,6 +30,7 @@ const (
 	ComponentLabelKey    = mesh.GroupName + "/component"
 	GatewayLabelKey      = mesh.GroupName + "/gateway"
 	TokenServiceLabelKey = mesh.GroupName + "/token-service"
+	TelepresenceLabelKey = mesh.GroupName + "/telepresence"
 
 	VolumeLabelKey = mesh.GroupName + "/volume"
 
