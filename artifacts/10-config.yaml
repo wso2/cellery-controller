@@ -19,57 +19,8 @@ data:
             "password": "ballerina"
         }
     }
-  cell-gateway-setup-config: |+
-    [listenerConfig]
-    host="0.0.0.0"
-    httpPort=8080
-    httpsPort=9095
-    keyStore.path="${ballerina.home}/bre/security/ballerinaKeystore.p12"
-    keyStore.password="ballerina"
-    tokenListenerPort=9096
 
-    [authConfig]
-    authorizationHeader="Authorization"
-    removeAuthHeaderFromOutMessage=false
-
-    [keyManager]
-    serverUrl="https://localhost:9443"
-    username="admin"
-    password="admin"
-    tokenContext="oauth2"
-    timestampSkew=5000
-    verifyHostname=true
-
-    [jwtTokenConfig]
-    issuer="https://sts.cellery.io"
-    audience="@env:{CELL_NAME}"
-    certificateAlias="wso2apim"
-    trustStore.path="${ballerina.home}/bre/security/ballerinaTruststore.p12"
-    trustStore.password="ballerina"
-
-    [jwtConfig]
-    header="X-JWT-Assertion"
-
-    [caching]
-    enabled=true
-    tokenCache.expiryTime=900000
-    tokenCache.capacity=100
-    tokenCache.evictionFactor=0.25
-
-    [analytics]
-    enable=false
-    uploadingTimeSpanInMillis=30000
-    uploadingEndpoint="http://wso2sp-worker.cellery-system:9090/analytics/v1.0/usage/upload-file"
-    rotatingPeriod=30000
-    task.uploadFiles=false
-    username="admin"
-    password="admin"
-
-    [b7a.observability.tracing]
-    enabled=false
-
-  cell-gateway-init-image: wso2cellery/cell-gateway-init
-  cell-gateway-image: wso2cellery/cell-gateway
+  api-publisher-image: wso2cellery/api-publisher
   oidc-filter-image: wso2cellery/envoy-oidc-filter
   skip-tls-verification: "true"
   enable-autoscaling: "true"

@@ -21,6 +21,7 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/meta"
 
@@ -79,7 +80,7 @@ func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*c
 			},
 		},
 		Data: map[string]string{
-			apiConfigKey:     apiConfigJson,
+			apiConfigKey:          apiConfigJson,
 			apiPublisherConfigKey: cfg.StringValue(config.ConfigMapKeyApiPublisherConfig),
 		},
 	}, nil
