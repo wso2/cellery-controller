@@ -60,8 +60,24 @@ func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) e
 		return err
 	} else if !metav1.IsControlledBy(configMap, gateway) {
 		return fmt.Errorf("gateway: %q does not own the ConfigMap: %q", gateway.Name, configMapName)
+	} else {
+		configMap, err = func(gateway *v1alpha2.Gateway, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+			if !resources.RequireGatewayConfigMapUpdate(gateway, configMap) {
+				return configMap, nil
+			}
+			desiredConfigMap, err := resources.CreateGatewayConfigMap(gateway, r.cfg)
+			if err != nil {
+				return nil, err
+			}
+			existingConfigMap := configMap.DeepCopy()
+			resources.CopyGatewayConfigMap(desiredConfigMap, existingConfigMap)
+			return r.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Update(existingConfigMap)
+		}(gateway, configMap)
+		if err != nil {
+			r.logger.Errorf("Failed to update gateway ConfigMap %q: %v", configMapName, err)
+			return err
+		}
 	}
-	// write update
 	resources.StatusFromConfigMap(gateway, configMap)
 	return nil
 }
