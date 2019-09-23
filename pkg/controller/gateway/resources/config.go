@@ -85,6 +85,17 @@ func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*c
 	}, nil
 }
 
+func RequireGatewayConfigMapUpdate(gateway *v1alpha2.Gateway, configMap *corev1.ConfigMap) bool {
+	return gateway.Generation != gateway.Status.ObservedGeneration ||
+		configMap.Generation != gateway.Status.ConfigMapGeneration
+}
+
+func CopyGatewayConfigMap(source, destination *corev1.ConfigMap) {
+	destination.Data = source.Data
+	destination.Labels = source.Labels
+	destination.Annotations = source.Annotations
+}
+
 func StatusFromConfigMap(gateway *v1alpha2.Gateway, configMap *corev1.ConfigMap) {
 	gateway.Status.ConfigMapGeneration = configMap.Generation
 }
