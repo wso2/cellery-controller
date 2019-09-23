@@ -90,7 +90,7 @@ func MakeNetworkPolicy(cell *v1alpha2.Cell) *networkv1.NetworkPolicy {
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									mesh.TelepresenceLabelKey: "telepresence",
+									TelepresenceLabelKey: "telepresence",
 								},
 							},
 						},
