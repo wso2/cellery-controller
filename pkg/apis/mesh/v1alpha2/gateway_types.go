@@ -38,10 +38,7 @@ type GatewaySpec struct {
 	Configurations []corev1.ConfigMap `json:"configurations,omitempty"`
 	Ingress        Ingress            `json:"ingress,omitempty"`
 	Ports          []PortMapping      `json:"ports,omitempty"`
-	Type           GatewayType        `json:"type,omitempty"`
 	Template       corev1.PodSpec     `json:"template,omitempty"`
-
-	//Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
 }
 
 type Ingress struct {
@@ -78,6 +75,10 @@ type ApiPublisherConfig struct {
 	Backend      string `json:"backend"`
 	Context      string `json:"context"`
 	Version      string `json:"version"`
+}
+
+func (ap *ApiPublisherConfig) HasVersion() bool {
+	return len(ap.Version) > 0
 }
 
 type ClusterIngressConfig struct {
@@ -149,20 +150,20 @@ type TCPRoute struct {
 }
 
 type GatewayStatus struct {
-	Type                           GatewayType          `json:"gatewayType"`
-	ServiceName                    string               `json:"serviceName"`
-	Status                         GatewayCurrentStatus `json:"status"`
-	AvailableReplicas              int32                `json:"availableReplicas"`
-	ObservedGeneration             int64                `json:"observedGeneration,omitempty"`
-	DeploymentGeneration           int64                `json:"deploymentGeneration,omitempty"`
-	JobGeneration                  int64                `json:"jobGeneration,omitempty"`
-	ServiceGeneration              int64                `json:"serviceGeneration,omitempty"`
-	VirtualServiceGeneration       int64                `json:"virtualServiceGeneration,omitempty"`
-	IstioGatewayGeneration         int64                `json:"istioGatewayGeneration,omitempty"`
-	ClusterIngressGeneration       int64                `json:"clusterIngressGeneration,omitempty"`
-	ClusterIngressSecretGeneration int64                `json:"clusterIngressSecretGeneration,omitempty"`
-	OidcEnvoyFilterGeneration      int64                `json:"oidcEnvoyFilterGeneration,omitempty"`
-	ConfigMapGeneration            int64                `json:"configMapGeneration,omitempty"`
+	PublisherStatus                PublisherCurrentStatus `json:"gatewayType"`
+	ServiceName                    string                 `json:"serviceName"`
+	Status                         GatewayCurrentStatus   `json:"status"`
+	AvailableReplicas              int32                  `json:"availableReplicas"`
+	ObservedGeneration             int64                  `json:"observedGeneration,omitempty"`
+	DeploymentGeneration           int64                  `json:"deploymentGeneration,omitempty"`
+	JobGeneration                  int64                  `json:"jobGeneration,omitempty"`
+	ServiceGeneration              int64                  `json:"serviceGeneration,omitempty"`
+	VirtualServiceGeneration       int64                  `json:"virtualServiceGeneration,omitempty"`
+	IstioGatewayGeneration         int64                  `json:"istioGatewayGeneration,omitempty"`
+	ClusterIngressGeneration       int64                  `json:"clusterIngressGeneration,omitempty"`
+	ClusterIngressSecretGeneration int64                  `json:"clusterIngressSecretGeneration,omitempty"`
+	OidcEnvoyFilterGeneration      int64                  `json:"oidcEnvoyFilterGeneration,omitempty"`
+	ConfigMapGeneration            int64                  `json:"configMapGeneration,omitempty"`
 }
 
 func (gs *GatewayStatus) ResetServiceName() {
@@ -181,17 +182,17 @@ const (
 	// GatewayCurrentStatusIdle GatewayCurrentStatus = "Idle"
 )
 
-//type GatewayType string
+type PublisherCurrentStatus string
 
-//const (
-//	// GatewayTypeEnvoy uses envoy proxy as the gateway.
-//	GatewayTypeEnvoy GatewayType = "Envoy"
-//
-//	// GatewayTypeMicroGateway uses WSO2 micro-gateway as the gateway.
-//	GatewayTypeMicroGateway GatewayType = "MicroGateway"
-//)
+const (
+	PublisherCurrentStatusUnknown PublisherCurrentStatus = "Unknown"
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+	PublisherCurrentStatusRunning PublisherCurrentStatus = "Running"
+
+	PublisherCurrentStatusSucceeded PublisherCurrentStatus = "Succeeded"
+
+	PublisherCurrentStatusFailed PublisherCurrentStatus = "Failed"
+)
 
 type GatewayList struct {
 	metav1.TypeMeta `json:",inline"`

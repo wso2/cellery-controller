@@ -12,6 +12,9 @@ spec:
       ingress:
         http:
         - context: /info
+          global: true
+          version: 5.0.0
+          authenticate: true
           definitions:
           - path: /
             method: GET
@@ -19,6 +22,11 @@ spec:
           destination: 
             host: hr
             port: 80
+        extensions:
+          apiPublisher:
+            authenticate: true
+            context: /global
+            version: 3.5.1
   components:
   - metadata:
       name: hr
@@ -56,4 +64,4 @@ spec:
           image: docker.io/mirage20/k8s-debug-tools
   sts:
     spec:
-      interceptMode: None
+      interceptMode: Any
