@@ -72,7 +72,7 @@ func DeploymentName(gateway *v1alpha2.Gateway) string {
 }
 
 func JobName(gateway *v1alpha2.Gateway) string {
-	return gateway.Name + "-job"
+	return gateway.Name + "-api-publisher"
 }
 
 // func createGatewaySelector(gateway *v1alpha2.Gateway) *metav1.LabelSelector {

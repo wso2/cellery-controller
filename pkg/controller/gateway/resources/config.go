@@ -39,19 +39,29 @@ type apiConfig struct {
 	GlobalContext string               `json:"globalContext"`
 }
 
+func RequireConfigMap(gateway *v1alpha2.Gateway) bool {
+	return gateway.Spec.Ingress.IngressExtensions.HasApiPublisher()
+}
+
 func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*corev1.ConfigMap, error) {
-	var cellName string
+	globalContext := ""
+	version := "0.1"
 	cellName, ok := gateway.Labels[meta.CellLabelKey]
 	if !ok {
 		cellName = gateway.Name
 	}
-
+	if gateway.Spec.Ingress.IngressExtensions.HasApiPublisher() {
+		globalContext = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Context
+		if gateway.Spec.Ingress.IngressExtensions.ApiPublisher.HasVersion() {
+			version = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Version
+		}
+	}
 	api := &apiConfig{
 		Cell:          cellName,
-		Version:       gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Version,
+		Version:       version,
 		Hostname:      GatewayFullK8sServiceName(gateway),
 		HTTPRoutes:    gateway.Spec.Ingress.HTTPRoutes,
-		GlobalContext: gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Context,
+		GlobalContext: globalContext,
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
 	if err != nil {
@@ -70,7 +80,7 @@ func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*c
 		},
 		Data: map[string]string{
 			apiConfigKey:     apiConfigJson,
-			gatewayConfigKey: cfg.StringValue(config.ConfigMapKeyApiPublisherConfig),
+			apiPublisherConfigKey: cfg.StringValue(config.ConfigMapKeyApiPublisherConfig),
 		},
 	}, nil
 }

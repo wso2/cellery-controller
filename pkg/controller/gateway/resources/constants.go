@@ -25,8 +25,8 @@ const (
 	apiConfigKey  = "api-config"
 	apiConfigFile = "api.json"
 
-	gatewayConfigKey  = "gateway-config"
-	gatewayConfigFile = "gw.json"
+	apiPublisherConfigKey  = "api-publisher-config"
+	apiPublisherConfigFile = "publisher.json"
 
 	gatewaySetupConfigKey  = "gateway-setup-config"
 	gatewaySetupConfigFile = "micro-gw.conf"

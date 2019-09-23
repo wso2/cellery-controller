@@ -27,32 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//func MakeJob(gateway *v1alpha2.Gateway) *batchv1.Job {
-//	return &batchv1.Job{
-//		ObjectMeta: metav1.ObjectMeta{
-//			Name:      JobName(gateway),
-//			Namespace: gateway.Namespace,
-//			Labels:    makeLabels(gateway),
-//			OwnerReferences: []metav1.OwnerReference{
-//				*controller.CreateGatewayOwnerRef(gateway),
-//			},
-//		},
-//		Spec: batchv1.JobSpec{
-//			Template: corev1.PodTemplateSpec{
-//				ObjectMeta: metav1.ObjectMeta{
-//					Labels:      makeLabels(gateway),
-//					Annotations: makePodAnnotations(gateway),
-//				},
-//				Spec: makePodSpec(gateway,
-//					addPorts(gateway),
-//					addConfigMapVolumes(gateway),
-//					withRestartPolicy(corev1.RestartPolicyOnFailure),
-//				),
-//			},
-//		},
-//	}
-//}
-
 func RequireJob(gateway *v1alpha2.Gateway) bool {
 	return gateway.Spec.Ingress.IngressExtensions.HasApiPublisher()
 }
@@ -63,14 +37,15 @@ func RequireJob(gateway *v1alpha2.Gateway) bool {
 //}
 
 func StatusFromJob(gateway *v1alpha2.Gateway, job *batchv1.Job) {
-	gateway.Status.Type = v1alpha2.GatewayTypeJob
-	gateway.Status.AvailableReplicas = job.Status.Active
 	gateway.Status.JobGeneration = job.Generation
-	// fixme add correct status for jobs
 	if job.Status.Active > 0 {
-		gateway.Status.Status = v1alpha2.GatewayCurrentStatusReady
+		gateway.Status.PublisherStatus = v1alpha2.PublisherCurrentStatusRunning
+	} else if job.Status.Succeeded > 0 {
+		gateway.Status.PublisherStatus = v1alpha2.PublisherCurrentStatusSucceeded
+	} else if job.Status.Failed > 0 {
+		gateway.Status.PublisherStatus = v1alpha2.PublisherCurrentStatusFailed
 	} else {
-		gateway.Status.Status = v1alpha2.GatewayCurrentStatusNotReady
+		gateway.Status.PublisherStatus = v1alpha2.PublisherCurrentStatusUnknown
 	}
 }
 
@@ -109,8 +84,8 @@ func MakeJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
 											Path: apiConfigFile,
 										},
 										{
-											Key:  gatewayConfigKey,
-											Path: gatewayConfigFile,
+											Key:  apiPublisherConfigKey,
+											Path: apiPublisherConfigFile,
 										},
 									},
 								},
@@ -127,12 +102,7 @@ func MakeJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
 func makeApiPublisherContainer(gateway *v1alpha2.Gateway, cfg config.Interface) *corev1.Container {
 	return &corev1.Container{
 		Name:  "api-publisher",
-		Image: "docker.io/madusha7/gateway-job:latest",
-		// Ports: []corev1.ContainerPort{
-		// 	{
-		// 		ContainerPort: tokenServiceContainerJWKSPort,
-		// 	},
-		// },
+		Image: "docker.io/madusha7/api-publisher:latest",
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      configVolumeName,

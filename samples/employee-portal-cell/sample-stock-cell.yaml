@@ -44,4 +44,4 @@ spec:
           image: docker.io/mirage20/k8s-debug-tools
   sts:
     spec:
-      interceptMode: None
+      interceptMode: Any
