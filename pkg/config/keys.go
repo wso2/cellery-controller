@@ -27,6 +27,7 @@ const (
 	ConfigMapKeyTokenServiceConfig           = "cell-sts-config"
 	ConfigMapKeyTokenServiceDefaultOpaPolicy = "opa-default-policy"
 	ConfigMapKeyOidcImage                    = "oidc-filter-image"
+	ConfigMapKeyApiPublisherImage            = "api-publisher-image"
 	ConfigMapKeyApiPublisherConfig           = "api-publisher-config"
 	ConfigMapKeySkipTlsVerification          = "skip-tls-verification"
 

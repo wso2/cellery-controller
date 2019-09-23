@@ -20,14 +20,16 @@ package gateway
 
 import (
 	"fmt"
-	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
-	"github.com/cellery-io/mesh-controller/pkg/meta"
+
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
+	"github.com/cellery-io/mesh-controller/pkg/meta"
 )
 
 func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) error {
@@ -109,6 +111,14 @@ func (r *reconciler) reconcileApiPublisherJob(gateway *v1alpha2.Gateway) error {
 		return err
 	} else if !metav1.IsControlledBy(job, gateway) {
 		return fmt.Errorf("component: %q does not own the Job: %q", gateway.Name, jobName)
+	} else {
+		if resources.RequireJobUpdate(gateway, job) {
+			err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Delete(jobName, meta.DeleteWithPropagationBackground())
+			if err != nil {
+				r.logger.Errorf("Failed to delete Job %q: %v", jobName, err)
+				return err
+			}
+		}
 	}
 	resources.StatusFromJob(gateway, job)
 	return nil

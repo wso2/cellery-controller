@@ -19,22 +19,23 @@
 package resources
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/config"
+	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
 func RequireJob(gateway *v1alpha2.Gateway) bool {
 	return gateway.Spec.Ingress.IngressExtensions.HasApiPublisher()
 }
 
-//func RequireJobUpdate(gateway *v1alpha2.Gateway, job *batchv1.Job) bool {
-//	return gateway.Generation != gateway.Status.ObservedGeneration ||
-//		job.Generation != gateway.Status.JobGeneration
-//}
+func RequireJobUpdate(gateway *v1alpha2.Gateway, job *batchv1.Job) bool {
+	return gateway.Generation != gateway.Status.ObservedGeneration ||
+		job.Generation != gateway.Status.JobGeneration
+}
 
 func StatusFromJob(gateway *v1alpha2.Gateway, job *batchv1.Job) {
 	gateway.Status.JobGeneration = job.Generation
@@ -92,7 +93,7 @@ func MakeJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
 							},
 						},
 					},
-					RestartPolicy:corev1.RestartPolicyOnFailure,
+					RestartPolicy: corev1.RestartPolicyOnFailure,
 				},
 			},
 		},
@@ -102,7 +103,7 @@ func MakeJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
 func makeApiPublisherContainer(gateway *v1alpha2.Gateway, cfg config.Interface) *corev1.Container {
 	return &corev1.Container{
 		Name:  "api-publisher",
-		Image: "docker.io/madusha7/api-publisher:latest",
+		Image: cfg.StringValue(config.ConfigMapKeyApiPublisherImage),
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      configVolumeName,
