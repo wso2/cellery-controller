@@ -13,11 +13,7 @@ data:
             "saasApp": true
         },
         "apimBaseUrl": "https://gateway.cellery-system:9443",
-        "tokenEndpoint": "https://gateway.cellery-system:8243/token",
-        "trustStore": {
-            "location": "lib/platform/bre/security/ballerinaTruststore.p12",
-            "password": "ballerina"
-        }
+        "tokenEndpoint": "https://gateway.cellery-system:8243/token"
     }
 
   api-publisher-image: wso2cellery/api-publisher

@@ -398,7 +398,7 @@ func makeIstioProxyContainer(gateway *v1alpha2.Gateway, cfg config.Interface) *c
 		"--connectTimeout",
 		"10s",
 		"--serviceCluster",
-		gateway.Name,
+		gateway.Name + ".$(POD_NAMESPACE)",
 		"--zipkinAddress",
 		cfg.StringValue(config.ConfigMapKeyZipkinAddress),
 		"--proxyAdminPort",
