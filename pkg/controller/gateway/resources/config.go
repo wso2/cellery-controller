@@ -40,7 +40,7 @@ type apiConfig struct {
 	GlobalContext string               `json:"globalContext"`
 }
 
-func RequireConfigMap(gateway *v1alpha2.Gateway) bool {
+func IsApiPublishingRequired(gateway *v1alpha2.Gateway) bool {
 	return gateway.Spec.Ingress.IngressExtensions.HasApiPublisher()
 }
 

@@ -36,11 +36,11 @@ func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) e
 	configMapName := resources.ApiPublisherConfigMap(gateway)
 	configMap, err := r.configMapLister.ConfigMaps(gateway.Namespace).Get(configMapName)
 
-	if !resources.RequireConfigMap(gateway) {
+	if !resources.IsApiPublishingRequired(gateway) {
 		if err == nil && metav1.IsControlledBy(configMap, gateway) {
 			err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Delete(configMapName, meta.DeleteWithPropagationBackground())
 			if err != nil {
-				r.logger.Errorf("Failed to delete config map %q: %v", configMapName, err)
+				r.logger.Errorf("Failed to delete api publisher config map %q: %v", configMapName, err)
 				return err
 			}
 		}
@@ -51,17 +51,17 @@ func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) e
 		desiredConfigMap, err := resources.CreateGatewayConfigMap(gateway, r.cfg)
 		configMap, err = r.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Create(desiredConfigMap)
 		if err != nil {
-			r.logger.Errorf("Failed to create ConfigMap %q: %v", configMapName, err)
-			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create ConfigMap %q: %v", configMapName, err)
+			r.logger.Errorf("Failed to create api publisher ConfigMap %q: %v", configMapName, err)
+			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create api publisher ConfigMap %q: %v", configMapName, err)
 			return err
 		}
-		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created ConfigMap %q",
+		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created Api Publisher ConfigMap %q",
 			configMapName)
 	} else if err != nil {
-		r.logger.Errorf("Failed to retrieve ConfigMap %q: %v", configMapName, err)
+		r.logger.Errorf("Failed to retrieve api publisher ConfigMap %q: %v", configMapName, err)
 		return err
 	} else if !metav1.IsControlledBy(configMap, gateway) {
-		return fmt.Errorf("gateway: %q does not own the ConfigMap: %q", gateway.Name, configMapName)
+		return fmt.Errorf("gateway: %q does not own the api publisher ConfigMap: %q", gateway.Name, configMapName)
 	} else {
 		configMap, err = func(gateway *v1alpha2.Gateway, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			if !resources.RequireGatewayConfigMapUpdate(gateway, configMap) {
@@ -76,7 +76,7 @@ func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) e
 			return r.kubeClient.CoreV1().ConfigMaps(gateway.Namespace).Update(existingConfigMap)
 		}(gateway, configMap)
 		if err != nil {
-			r.logger.Errorf("Failed to update gateway ConfigMap %q: %v", configMapName, err)
+			r.logger.Errorf("Failed to update api publisher ConfigMap %q: %v", configMapName, err)
 			return err
 		}
 	}
@@ -87,11 +87,11 @@ func (r *reconciler) reconcileApiPublisherConfigMap(gateway *v1alpha2.Gateway) e
 func (r *reconciler) reconcileApiPublisherJob(gateway *v1alpha2.Gateway) error {
 	jobName := resources.JobName(gateway)
 	job, err := r.jobLister.Jobs(gateway.Namespace).Get(jobName)
-	if !resources.RequireJob(gateway) {
+	if !resources.RequireApiPublisherJob(gateway) {
 		if err == nil && metav1.IsControlledBy(job, gateway) {
 			err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Delete(jobName, meta.DeleteWithPropagationBackground())
 			if err != nil {
-				r.logger.Errorf("Failed to delete apiPublisher Job %q: %v", jobName, err)
+				r.logger.Errorf("Failed to delete api publisher Job %q: %v", jobName, err)
 				return err
 			}
 		}
@@ -99,28 +99,28 @@ func (r *reconciler) reconcileApiPublisherJob(gateway *v1alpha2.Gateway) error {
 	}
 
 	if errors.IsNotFound(err) {
-		job, err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Create(resources.MakeJob(gateway, r.cfg))
+		job, err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Create(resources.MakeApiPublisherJob(gateway, r.cfg))
 		if err != nil {
-			r.logger.Errorf("Failed to create apiPublisher Job %q: %v", jobName, err)
-			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create apiPublisher Job %q: %v", jobName, err)
+			r.logger.Errorf("Failed to create api publisher Job %q: %v", jobName, err)
+			r.recorder.Eventf(gateway, corev1.EventTypeWarning, "CreationFailed", "Failed to create api publisher Job %q: %v", jobName, err)
 			return err
 		}
-		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created apiPublisher Job %q", jobName)
+		r.recorder.Eventf(gateway, corev1.EventTypeNormal, "Created", "Created api publisher Job %q", jobName)
 	} else if err != nil {
-		r.logger.Errorf("Failed to retrieve apiPublisher Job %q: %v", jobName, err)
+		r.logger.Errorf("Failed to retrieve api publisher Job %q: %v", jobName, err)
 		return err
 	} else if !metav1.IsControlledBy(job, gateway) {
-		return fmt.Errorf("component: %q does not own the Job: %q", gateway.Name, jobName)
+		return fmt.Errorf("component: %q does not own the api publisher Job: %q", gateway.Name, jobName)
 	} else {
-		if resources.RequireJobUpdate(gateway, job) {
+		if resources.RequireApiPublisherJobUpdate(gateway, job) {
 			err = r.kubeClient.BatchV1().Jobs(gateway.Namespace).Delete(jobName, meta.DeleteWithPropagationBackground())
 			if err != nil {
-				r.logger.Errorf("Failed to delete Job %q: %v", jobName, err)
+				r.logger.Errorf("Failed to delete api publisher Job %q: %v", jobName, err)
 				return err
 			}
 		}
 	}
-	resources.StatusFromJob(gateway, job)
+	resources.StatusFromApiPublisherJob(gateway, job)
 	return nil
 }
 

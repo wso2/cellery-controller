@@ -28,16 +28,16 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func RequireJob(gateway *v1alpha2.Gateway) bool {
+func RequireApiPublisherJob(gateway *v1alpha2.Gateway) bool {
 	return gateway.Spec.Ingress.IngressExtensions.HasApiPublisher()
 }
 
-func RequireJobUpdate(gateway *v1alpha2.Gateway, job *batchv1.Job) bool {
+func RequireApiPublisherJobUpdate(gateway *v1alpha2.Gateway, job *batchv1.Job) bool {
 	return gateway.Generation != gateway.Status.ObservedGeneration ||
 		job.Generation != gateway.Status.JobGeneration
 }
 
-func StatusFromJob(gateway *v1alpha2.Gateway, job *batchv1.Job) {
+func StatusFromApiPublisherJob(gateway *v1alpha2.Gateway, job *batchv1.Job) {
 	gateway.Status.JobGeneration = job.Generation
 	if job.Status.Active > 0 {
 		gateway.Status.PublisherStatus = v1alpha2.PublisherCurrentStatusRunning
@@ -50,7 +50,7 @@ func StatusFromJob(gateway *v1alpha2.Gateway, job *batchv1.Job) {
 	}
 }
 
-func MakeJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
+func MakeApiPublisherJob(gateway *v1alpha2.Gateway, cfg config.Interface) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      JobName(gateway),
