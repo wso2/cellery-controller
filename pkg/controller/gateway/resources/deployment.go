@@ -31,7 +31,6 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/ptr"
 )
 
 func MakeDeployment(gateway *v1alpha2.Gateway, cfg config.Interface) (*appsv1.Deployment, error) {
@@ -303,7 +302,7 @@ func createEnvoyGatewayDeployment(gateway *v1alpha2.Gateway, cfg config.Interfac
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: ptr.Int32(1),
+			Replicas: gateway.MinReplicas(),
 			Selector: makeSelector(gateway),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

@@ -102,3 +102,7 @@ func GatewayFullK8sServiceName(gateway *v1alpha2.Gateway) string {
 func IstioDestinationRuleName(gateway *v1alpha2.Gateway) string {
 	return gateway.Name + "-destination-rule"
 }
+
+func HpaName(gw *v1alpha2.Gateway) string {
+	return gw.Name + "-hpa"
+}

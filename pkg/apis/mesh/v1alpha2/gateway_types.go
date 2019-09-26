@@ -19,7 +19,10 @@
 package v1alpha2
 
 import (
+	"k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/cellery-io/mesh-controller/pkg/ptr"
 )
 
 // +genclient
@@ -34,7 +37,16 @@ type Gateway struct {
 }
 
 type GatewaySpec struct {
-	Ingress Ingress `json:"ingress,omitempty"`
+	Ingress       Ingress         `json:"ingress,omitempty"`
+	ScalingPolicy GwScalingPolicy `json:"scalingPolicy,omitempty"`
+	//Type    GatewayType `json:"type,omitempty"`
+
+	//Autoscaling *AutoscalePolicySpec `json:"autoscaling,omitempty"`
+}
+
+type GwScalingPolicy struct {
+	Replicas *int32                   `json:"replicas,omitempty"`
+	Hpa      *HorizontalPodAutoscaler `json:"hpa,omitempty"`
 }
 
 type Ingress struct {
@@ -160,6 +172,7 @@ type GatewayStatus struct {
 	ClusterIngressSecretGeneration int64                  `json:"clusterIngressSecretGeneration,omitempty"`
 	OidcEnvoyFilterGeneration      int64                  `json:"oidcEnvoyFilterGeneration,omitempty"`
 	ConfigMapGeneration            int64                  `json:"configMapGeneration,omitempty"`
+	HpaGeneration                  int64                  `json:"hpaGeneration,omitempty"`
 }
 
 func (gs *GatewayStatus) ResetServiceName() {
@@ -196,4 +209,32 @@ type GatewayList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 	Items           []Gateway `json:"items"`
+}
+
+func (sp *Gateway) IsHpa() bool {
+	return &sp.Spec.ScalingPolicy != nil && sp.Spec.ScalingPolicy.Hpa != nil
+}
+
+func (sp *Gateway) MinReplicas() *int32 {
+	if &sp.Spec.ScalingPolicy != nil && sp.Spec.ScalingPolicy.Hpa != nil {
+		return sp.Spec.ScalingPolicy.Hpa.MinReplicas
+	}
+	if &sp.Spec.ScalingPolicy != nil {
+		return sp.Spec.ScalingPolicy.Replicas
+	}
+	return ptr.Int32(1)
+}
+
+func (sp *Gateway) MaxReplicas() int32 {
+	if &sp.Spec.ScalingPolicy != nil && sp.Spec.ScalingPolicy.Hpa != nil {
+		return sp.Spec.ScalingPolicy.Hpa.MaxReplicas
+	}
+	return 1
+}
+
+func (sp *Gateway) Metrics() []v2beta2.MetricSpec {
+	if &sp.Spec.ScalingPolicy != nil && sp.Spec.ScalingPolicy.Hpa != nil {
+		return sp.Spec.ScalingPolicy.Hpa.Metrics
+	}
+	return nil
 }
