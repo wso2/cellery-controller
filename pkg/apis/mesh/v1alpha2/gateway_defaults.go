@@ -18,6 +18,8 @@
 
 package v1alpha2
 
+import "github.com/cellery-io/mesh-controller/pkg/ptr"
+
 func (g *Gateway) SetDefaults() {
 	g.Spec.SetDefaults()
 	g.Status.SetDefaults()
@@ -27,24 +29,23 @@ func (gs *GatewaySpec) SetDefaults() {
 	// if cs.Type == "" {
 	// 	cs.Type = ComponentTypeDeployment
 	// }
-	// cs.ScalingPolicy.SetDefaults()
+	gs.ScalingPolicy.SetDefaults()
 	// for i, _ := range cs.Ports {
 	// 	cs.Ports[i].SetDefaults()
 	// }
 }
 
-// func (sp *ScalingPolicy) SetDefaults() {
-// 	if sp.Replicas == nil && sp.Hpa == nil && sp.Kpa == nil {
-// 		sp.Replicas = ptr.Int32(1)
-// 	}
-// 	if sp.Hpa != nil && sp.Hpa.MinReplicas == nil {
-// 		sp.Hpa.MinReplicas = ptr.Int32(1)
-// 	}
-
-// 	if sp.Kpa != nil && sp.Kpa.MinReplicas == nil {
-// 		sp.Kpa.MinReplicas = ptr.Int32(0)
-// 	}
-// }
+func (sp *GwScalingPolicy) SetDefaults() {
+	if sp.Hpa != nil {
+		if sp.Hpa.MinReplicas == nil {
+			sp.Hpa.MinReplicas = ptr.Int32(1)
+		}
+		sp.Hpa.MaxReplicas = *sp.Hpa.MinReplicas
+	}
+	if sp.Hpa == nil && sp.Replicas == nil {
+		sp.Replicas = ptr.Int32(1)
+	}
+}
 
 // func (pm *PortMapping) SetDefaults() {
 // 	if pm.Protocol == "" {

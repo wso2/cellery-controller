@@ -36,22 +36,22 @@ type Component struct {
 }
 
 type ComponentSpec struct {
-	Type           ComponentType      `json:"type,omitempty"`
-	ScalingPolicy  ScalingPolicy      `json:"scalingPolicy,omitempty"`
-	Template       corev1.PodSpec     `json:"template,omitempty"`
-	Ports          []PortMapping      `json:"ports,omitempty"`
-	VolumeClaims   []VolumeClaim      `json:"volumeClaims,omitempty"`
-	Configurations []corev1.ConfigMap `json:"configurations,omitempty"`
-	Secrets        []corev1.Secret    `json:"secrets,omitempty"`
+	Type           ComponentType          `json:"type,omitempty"`
+	ScalingPolicy  ComponentScalingPolicy `json:"scalingPolicy,omitempty"`
+	Template       corev1.PodSpec         `json:"template,omitempty"`
+	Ports          []PortMapping          `json:"ports,omitempty"`
+	VolumeClaims   []VolumeClaim          `json:"volumeClaims,omitempty"`
+	Configurations []corev1.ConfigMap     `json:"configurations,omitempty"`
+	Secrets        []corev1.Secret        `json:"secrets,omitempty"`
 }
 
-type ScalingPolicy struct {
+type ComponentScalingPolicy struct {
 	Replicas *int32                   `json:"replicas,omitempty"`
 	Hpa      *HorizontalPodAutoscaler `json:"hpa,omitempty"`
 	Kpa      *KnativePodAutoscaler    `json:"kpa,omitempty"`
 }
 
-func (sp *ScalingPolicy) MinReplicas() int32 {
+func (sp *ComponentScalingPolicy) MinReplicas() int32 {
 	if sp.Hpa != nil {
 		if sp.Hpa.MinReplicas != nil {
 			return *sp.Hpa.MinReplicas
@@ -64,11 +64,11 @@ func (sp *ScalingPolicy) MinReplicas() int32 {
 	return 1
 }
 
-func (sp *ScalingPolicy) IsHpa() bool {
+func (sp *ComponentScalingPolicy) IsHpa() bool {
 	return sp.Hpa != nil
 }
 
-func (sp *ScalingPolicy) IsKpa() bool {
+func (sp *ComponentScalingPolicy) IsKpa() bool {
 	return !sp.IsHpa() && sp.Kpa != nil
 }
 
@@ -78,6 +78,7 @@ type ReplicaRange struct {
 }
 
 type HorizontalPodAutoscaler struct {
+	Overridable  bool `json:"overridable"`
 	ReplicaRange `json:",inline"`
 	Metrics      []autoscalingV2beta2.MetricSpec `json:"metrics,omitempty"`
 }

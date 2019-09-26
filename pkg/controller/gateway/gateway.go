@@ -41,6 +41,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2beta2lister "k8s.io/client-go/listers/autoscaling/v2beta2"
+
 	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/clients"
@@ -67,6 +70,7 @@ type reconciler struct {
 	istioEnvoyFilterLister     istionetwork1alpha3listers.EnvoyFilterLister
 	configMapLister            corev1listers.ConfigMapLister
 	gatewayLister              mesh1alpha2listers.GatewayLister
+	hpaLister                  autoscalingv2beta2lister.HorizontalPodAutoscalerLister
 
 	cfg      config.Interface
 	logger   *zap.SugaredLogger
@@ -94,6 +98,7 @@ func NewController(
 		istioEnvoyFilterLister:     informerset.IstioEnvoyFilters().Lister(),
 		configMapLister:            informerset.ConfigMaps().Lister(),
 		gatewayLister:              informerset.Gateways().Lister(),
+		hpaLister:                  informerset.HorizontalPodAutoscalers().Lister(),
 		cfg:                        cfg,
 		logger:                     logger.Named("gateway-controller"),
 	}
@@ -193,6 +198,7 @@ func (r *reconciler) reconcile(gateway *v1alpha2.Gateway) error {
 	rErrs.Add(r.reconcileDeployment(gateway))
 	rErrs.Add(r.reconcileIstioVirtualService(gateway))
 	rErrs.Add(r.reconcileIstioGateway(gateway))
+	rErrs.Add(r.reconcileHpa(gateway))
 
 	// Extensions
 	rErrs.Add(r.reconcileApiPublisherConfigMap(gateway))
@@ -646,6 +652,52 @@ func (r *reconciler) updateStatus(desired *v1alpha2.Gateway) (*v1alpha2.Gateway,
 		return r.meshClient.MeshV1alpha2().Gateways(desired.Namespace).UpdateStatus(latest)
 	}
 	return desired, nil
+}
+
+func (r *reconciler) reconcileHpa(gw *v1alpha2.Gateway) error {
+	hpaName := resources.HpaName(gw)
+	hpa, err := r.hpaLister.HorizontalPodAutoscalers(gw.Namespace).Get(hpaName)
+	if !resources.RequireHpa(gw) {
+		if err == nil && metav1.IsControlledBy(hpa, gw) {
+			err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Delete(hpaName, &metav1.DeleteOptions{})
+			if err != nil {
+				r.logger.Errorf("Failed to delete HPA %q: %v", hpaName, err)
+				return err
+			}
+		}
+		return nil
+	}
+
+	if errors.IsNotFound(err) {
+		hpa, err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Create(resources.MakeHpa(gw))
+		if err != nil {
+			r.logger.Errorf("Failed to create HPA %q: %v", hpaName, err)
+			r.recorder.Eventf(gw, corev1.EventTypeWarning, "CreationFailed", "Failed to create HPA %q: %v", hpaName, err)
+			return err
+		}
+		r.recorder.Eventf(gw, corev1.EventTypeNormal, "Created", "Created HPA %q", hpaName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve HPA %q: %v", hpaName, err)
+		return err
+	} else if !metav1.IsControlledBy(hpa, gw) {
+		return fmt.Errorf("gw: %q does not own the HPA: %q", gw.Name, hpaName)
+	} else {
+		hpa, err = func(gw *v1alpha2.Gateway, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+			if !resources.RequireHpaUpdate(gw, hpa) {
+				return hpa, nil
+			}
+			desiredHpa := resources.MakeHpa(gw)
+			existingHpa := hpa.DeepCopy()
+			resources.CopyHpa(desiredHpa, existingHpa)
+			return r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Update(existingHpa)
+		}(gw, hpa)
+		if err != nil {
+			r.logger.Errorf("Failed to update HPA %q: %v", hpaName, err)
+			return err
+		}
+	}
+	resources.StatusFromHpa(gw, hpa)
+	return nil
 }
 
 func isAutoscalingEnabled(str string) bool {

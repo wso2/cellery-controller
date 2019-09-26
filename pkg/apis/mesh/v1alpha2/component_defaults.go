@@ -39,7 +39,7 @@ func (cs *ComponentSpec) SetDefaults() {
 	}
 }
 
-func (sp *ScalingPolicy) SetDefaults() {
+func (sp *ComponentScalingPolicy) SetDefaults() {
 	if sp.Replicas == nil && sp.Hpa == nil && sp.Kpa == nil {
 		sp.Replicas = ptr.Int32(1)
 	}
