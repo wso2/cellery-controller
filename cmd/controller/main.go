@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	threadsPerController = 1
+	threadsPerController = 2
 )
 
 var (
