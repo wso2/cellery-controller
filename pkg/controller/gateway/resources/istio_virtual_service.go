@@ -64,6 +64,7 @@ func MakeVirtualService(gateway *v1alpha2.Gateway) *v1alpha3.VirtualService {
 			AppendHeaders: func() map[string]string {
 				if httpRoute.ZeroScale {
 					return map[string]string{
+						// fixme: make this namespace aware
 						"knative-serving-namespace": "default",
 						"knative-serving-revision":  httpRoute.Destination.Host,
 					}
@@ -74,46 +75,36 @@ func MakeVirtualService(gateway *v1alpha2.Gateway) *v1alpha3.VirtualService {
 		httpRoutes = append(httpRoutes, r)
 	}
 
-	// for _, grpcRoute := range gateway.Spec.GRPCRoutes {
-	// 	r := &v1alpha3.HTTPRoute{
-	// 		Match: []*v1alpha3.HTTPMatchRequest{
-	// 			{
-	// 				Port: grpcRoute.Port,
-	// 			},
-	// 		},
-	// 		Route: []*v1alpha3.DestinationWeight{
-	// 			{
-	// 				Destination: &v1alpha3.Destination{
-	// 					Host: func() string {
-	// 						if grpcRoute.ZeroScale {
-	// 							return grpcRoute.BackendHost + "-rev"
-	// 						}
-	// 						return grpcRoute.BackendHost
-	// 					}(),
-	// 					Port: &v1alpha3.PortSelector{
-	// 						Number: func() uint32 {
-	// 							if grpcRoute.ZeroScale {
-	// 								// GRPC service port for knative
-	// 								return 81
-	// 							}
-	// 							return grpcRoute.BackendPort
-	// 						}(),
-	// 					},
-	// 				},
-	// 			},
-	// 		},
-	// 		AppendHeaders: func() map[string]string {
-	// 			if grpcRoute.ZeroScale {
-	// 				return map[string]string{
-	// 					"knative-serving-namespace": "default",
-	// 					"knative-serving-revision":  grpcRoute.BackendHost + "-rev",
-	// 				}
-	// 			}
-	// 			return map[string]string{}
-	// 		}(),
-	// 	}
-	// 	httpRoutes = append(httpRoutes, r)
-	// }
+	for _, grpcRoute := range gateway.Spec.Ingress.GRPCRoutes {
+		r := &v1alpha3.HTTPRoute{
+			Match: []*v1alpha3.HTTPMatchRequest{
+				{
+					Port: grpcRoute.Port,
+				},
+			},
+			Route: []*v1alpha3.DestinationWeight{
+				{
+					Destination: &v1alpha3.Destination{
+						Host: grpcRoute.Destination.Host,
+						Port: &v1alpha3.PortSelector{
+							Number: grpcRoute.Destination.Port,
+						},
+					},
+				},
+			},
+			AppendHeaders: func() map[string]string {
+				if grpcRoute.ZeroScale {
+					return map[string]string{
+						// fixme: make this namespace aware
+						"knative-serving-namespace": "default",
+						"knative-serving-revision":  grpcRoute.Destination.Host,
+					}
+				}
+				return map[string]string{}
+			}(),
+		}
+		httpRoutes = append(httpRoutes, r)
+	}
 
 	var tcpRoutes []*v1alpha3.TCPRoute
 

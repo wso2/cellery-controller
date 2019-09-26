@@ -32,13 +32,25 @@ func MakeIstioGateway(gateway *v1alpha2.Gateway) *v1alpha3.Gateway {
 
 	var gatewayServers []*v1alpha3.Server
 
+	portExist := func(serverPorts []*v1alpha3.Server, port uint32) bool {
+		for i := range serverPorts {
+			if serverPorts[i].Port.Number == port {
+				return true
+			}
+		}
+		return false
+	}
+
 	for _, httpRoute := range gateway.Spec.Ingress.HTTPRoutes {
+		if portExist(gatewayServers, httpRoute.Port) {
+			continue
+		}
 		gatewayServers = append(gatewayServers, &v1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &v1alpha3.Port{
 				Number:   httpRoute.Port,
 				Protocol: "HTTP",
-				Name:     fmt.Sprintf("tcp-%d", httpRoute.Port),
+				Name:     fmt.Sprintf("http-%d", httpRoute.Port),
 			},
 		})
 	}

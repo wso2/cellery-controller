@@ -111,8 +111,20 @@ func createEnvoyGatewayK8sService(gateway *v1alpha2.Gateway) *corev1.Service {
 		})
 	}
 
-	// FIXME: add multiple mapping for same port
+	portExist := func(servicePorts []corev1.ServicePort, port int32) bool {
+		for i := range servicePorts {
+			if servicePorts[i].Port == port {
+				return true
+			}
+		}
+		return false
+	}
+
 	for _, httpRoute := range gateway.Spec.Ingress.HTTPRoutes {
+		// We don't need to add the same port again to the service
+		if portExist(servicePorts, int32(httpRoute.Port)) {
+			continue
+		}
 		servicePorts = append(servicePorts, corev1.ServicePort{
 			Name:       fmt.Sprintf("http2-%d", httpRoute.Port),
 			Protocol:   corev1.ProtocolTCP,
