@@ -84,11 +84,6 @@ func buildInterCellRoutingInfo(cell *v1alpha2.Cell, cellLister listers.CellListe
 		if dependencyKind == "" {
 			return nil, nil, nil, fmt.Errorf("unable to extract dependency kind from annotations")
 		}
-		// retrieve the cell using the cell instance name
-		depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
-		if err != nil {
-			return nil, nil, nil, err
-		}
 		if dependencyKind == routing.CellKind {
 			depCell, err := cellLister.Cells(cell.Namespace).Get(dependencyInst)
 			if err != nil {
@@ -100,7 +95,6 @@ func buildInterCellRoutingInfo(cell *v1alpha2.Cell, cellLister listers.CellListe
 				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCellDependency(cell.Name, dependencyInst, isWebCell)...)
 			}
 		} else if dependencyKind == routing.CompositeKind {
-			// retrieve the cell using the cell instance name
 			depComposite, err := compositeLister.Composites(cell.Namespace).Get(dependencyInst)
 			if err != nil {
 				return nil, nil, nil, err
@@ -113,13 +107,13 @@ func buildInterCellRoutingInfo(cell *v1alpha2.Cell, cellLister listers.CellListe
 			// unknown dependency kind
 			return nil, nil, nil, fmt.Errorf("unknown dependency kind '%s'", dependencyKind)
 		}
-		if len(depCell.Spec.Gateway.Spec.Ingress.TCPRoutes) > 0 {
-			// TCP is not supported atm
-			// TODO: support TCP
-			// hostNames = append(hostNames, buildHostName(dependencyInst))
-			// build tcp routes
-			// intercellTcpRoutes = append(intercellTcpRoutes, buildTcpRoutes(depCell, dependencyInst)...)
-		}
+		//if len(depCell.Spec.Gateway.Spec.Ingress.TCPRoutes) > 0 {
+		// TCP is not supported atm
+		// TODO: support TCP
+		// hostNames = append(hostNames, buildHostName(dependencyInst))
+		// build tcp routes
+		// intercellTcpRoutes = append(intercellTcpRoutes, buildTcpRoutes(depCell, dependencyInst)...)
+		//}
 	}
 
 	return hostNames, intercellHttpRoutes, intercellTcpRoutes, nil
