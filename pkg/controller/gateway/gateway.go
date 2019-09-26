@@ -331,6 +331,7 @@ func (r *reconciler) reconcileDeployment(gateway *v1alpha2.Gateway) error {
 				return err
 			}
 		}
+		gateway.Status.Status = v1alpha2.GatewayCurrentStatusReady
 		return nil
 	}
 
