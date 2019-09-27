@@ -47,9 +47,9 @@ func (gs *GatewaySpec) SetDefaults() {
 func (sp *GwScalingPolicy) SetDefaults() {
 	if sp.Hpa != nil {
 		if sp.Hpa.MinReplicas == nil {
+			// default min replicas = 1
 			sp.Hpa.MinReplicas = ptr.Int32(1)
 		}
-		sp.Hpa.MaxReplicas = *sp.Hpa.MinReplicas
 	}
 	if sp.Hpa == nil && sp.Replicas == nil {
 		sp.Replicas = ptr.Int32(1)

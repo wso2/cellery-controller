@@ -78,7 +78,7 @@ type ReplicaRange struct {
 }
 
 type HorizontalPodAutoscaler struct {
-	Overridable  bool `json:"overridable"`
+	Overridable  *bool `json:"overridable"`
 	ReplicaRange `json:",inline"`
 	Metrics      []autoscalingV2beta2.MetricSpec `json:"metrics,omitempty"`
 }
