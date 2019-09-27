@@ -34,6 +34,7 @@ func makeLabels(component *v1alpha2.Component) map[string]string {
 			VersionLabelKey:                   "v1.0.0",
 			ObservabilityComponentLabelKey:    component.Name,
 			ObservabilityWorkloadTypeLabelKey: string(component.Spec.Type),
+			ComponentLabelKeySource:           "true",
 		},
 		component.Labels,
 		map[string]string{
