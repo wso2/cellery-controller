@@ -26,6 +26,12 @@ func (g *Gateway) SetDefaults() {
 }
 
 func (gs *GatewaySpec) SetDefaults() {
+	for _, h  := range gs.Ingress.HTTPRoutes {
+		if h.Global {
+			gs.Ingress.IngressExtensions.ApiPublisher = &ApiPublisherConfig{}
+			return
+		}
+	}
 	// if cs.Type == "" {
 	// 	cs.Type = ComponentTypeDeployment
 	// }
