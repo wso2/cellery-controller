@@ -45,24 +45,20 @@ func IsApiPublishingRequired(gateway *v1alpha2.Gateway) bool {
 }
 
 func CreateGatewayConfigMap(gateway *v1alpha2.Gateway, cfg config.Interface) (*corev1.ConfigMap, error) {
-	globalContext := ""
-	version := "0.1"
 	cellName, ok := gateway.Labels[meta.CellLabelKey]
 	if !ok {
 		cellName = gateway.Name
 	}
-	if gateway.Spec.Ingress.IngressExtensions.HasApiPublisher() {
-		globalContext = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Context
-		if gateway.Spec.Ingress.IngressExtensions.ApiPublisher.HasVersion() {
-			version = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Version
-		}
-	}
 	api := &apiConfig{
-		Cell:          cellName,
-		Version:       version,
-		Hostname:      GatewayFullK8sServiceName(gateway),
-		HTTPRoutes:    gateway.Spec.Ingress.HTTPRoutes,
-		GlobalContext: globalContext,
+		Cell:       cellName,
+		Hostname:   GatewayFullK8sServiceName(gateway),
+		HTTPRoutes: gateway.Spec.Ingress.HTTPRoutes,
+	}
+	if gateway.Spec.Ingress.IngressExtensions.HasApiPublisher() {
+		api.GlobalContext = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Context
+		if gateway.Spec.Ingress.IngressExtensions.ApiPublisher.HasVersion() {
+			api.Version = gateway.Spec.Ingress.IngressExtensions.ApiPublisher.Version
+		}
 	}
 	apiConfigJsonBytes, err := json.Marshal(api)
 	if err != nil {
