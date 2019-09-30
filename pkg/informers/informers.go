@@ -33,8 +33,9 @@ import (
 
 	"github.com/cellery-io/mesh-controller/pkg/clients"
 	meshinformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions"
+	istioauthenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/authentication/v1alpha1"
 	meshv1alpha2 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/mesh/v1alpha2"
-	istionetwork1alpha3 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/networking/v1alpha3"
+	istionetworkv1alpha3 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/networking/v1alpha3"
 	knativeservingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
 )
 
@@ -52,10 +53,11 @@ type Interface interface {
 	Ingresses() extensionsv1beta1.IngressInformer
 
 	// Istio informers
-	IstioDestinationRules() istionetwork1alpha3.DestinationRuleInformer
-	IstioEnvoyFilters() istionetwork1alpha3.EnvoyFilterInformer
-	IstioGateways() istionetwork1alpha3.GatewayInformer
-	IstioVirtualServices() istionetwork1alpha3.VirtualServiceInformer
+	IstioDestinationRules() istionetworkv1alpha3.DestinationRuleInformer
+	IstioEnvoyFilters() istionetworkv1alpha3.EnvoyFilterInformer
+	IstioGateways() istionetworkv1alpha3.GatewayInformer
+	IstioVirtualServices() istionetworkv1alpha3.VirtualServiceInformer
+	IstioPolicy() istioauthenticationv1alpha1.PolicyInformer
 
 	// Knative serving informers
 	KnativeServingConfigurations() knativeservingv1alpha1.ConfigurationInformer
@@ -135,20 +137,24 @@ func (i *informers) Ingresses() extensionsv1beta1.IngressInformer {
 	return i.kubeInformerFactory.Extensions().V1beta1().Ingresses()
 }
 
-func (i *informers) IstioDestinationRules() istionetwork1alpha3.DestinationRuleInformer {
+func (i *informers) IstioDestinationRules() istionetworkv1alpha3.DestinationRuleInformer {
 	return i.meshInformerFactory.Networking().V1alpha3().DestinationRules()
 }
 
-func (i *informers) IstioEnvoyFilters() istionetwork1alpha3.EnvoyFilterInformer {
+func (i *informers) IstioEnvoyFilters() istionetworkv1alpha3.EnvoyFilterInformer {
 	return i.meshInformerFactory.Networking().V1alpha3().EnvoyFilters()
 }
 
-func (i *informers) IstioGateways() istionetwork1alpha3.GatewayInformer {
+func (i *informers) IstioGateways() istionetworkv1alpha3.GatewayInformer {
 	return i.meshInformerFactory.Networking().V1alpha3().Gateways()
 }
 
-func (i *informers) IstioVirtualServices() istionetwork1alpha3.VirtualServiceInformer {
+func (i *informers) IstioVirtualServices() istionetworkv1alpha3.VirtualServiceInformer {
 	return i.meshInformerFactory.Networking().V1alpha3().VirtualServices()
+}
+
+func (i *informers) IstioPolicy() istioauthenticationv1alpha1.PolicyInformer {
+	return i.meshInformerFactory.Authentication().V1alpha1().Policies()
 }
 
 func (i *informers) KnativeServingConfigurations() knativeservingv1alpha1.ConfigurationInformer {

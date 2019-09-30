@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	istioauthenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
 	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/clients"
@@ -46,8 +47,9 @@ import (
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 	"github.com/cellery-io/mesh-controller/pkg/controller/component/resources"
 	meshclient "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	istioauthenticationv1alpha1listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/authentication/v1alpha1"
 	v1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
-	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	istionetworkv1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
 	kservingv1alpha1listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/serving/v1alpha1"
 	"github.com/cellery-io/mesh-controller/pkg/informers"
 	"github.com/cellery-io/mesh-controller/pkg/meta"
@@ -65,7 +67,8 @@ type reconciler struct {
 	secretLister                corev1listers.SecretLister
 	jobLister                   batchv1listers.JobLister
 	hpaLister                   autoscalingv2beta2lister.HorizontalPodAutoscalerLister
-	istioVirtualServiceLister   istionetwork1alpha3listers.VirtualServiceLister
+	istioVirtualServiceLister   istionetworkv1alpha3listers.VirtualServiceLister
+	istioPolicyLister           istioauthenticationv1alpha1listers.PolicyLister
 	servingConfigurationLister  kservingv1alpha1listers.ConfigurationLister
 	cfg                         config.Interface
 	logger                      *zap.SugaredLogger
@@ -91,6 +94,7 @@ func NewController(
 		jobLister:                   informerset.Jobs().Lister(),
 		hpaLister:                   informerset.HorizontalPodAutoscalers().Lister(),
 		istioVirtualServiceLister:   informerset.IstioVirtualServices().Lister(),
+		istioPolicyLister:           informerset.IstioPolicy().Lister(),
 		servingConfigurationLister:  informerset.KnativeServingConfigurations().Lister(),
 		cfg:                         cfg,
 		logger:                      logger.Named("component-controller"),
@@ -150,6 +154,11 @@ func NewController(
 		Handler:    informers.HandleAll(c.EnqueueControllerOf),
 	})
 
+	informerset.IstioPolicy().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
+		Handler:    informers.HandleAll(c.EnqueueControllerOf),
+	})
+
 	informerset.KnativeServingConfigurations().Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: informers.FilterWithOwnerGroupVersionKind(v1alpha2.SchemeGroupVersion.WithKind("Component")),
 		Handler:    informers.HandleAll(c.EnqueueControllerOf),
@@ -204,6 +213,7 @@ func (r *reconciler) reconcile(component *v1alpha2.Component) error {
 	rErrs.Add(r.reconcileHpa(component))
 	rErrs.Add(r.reconcileServingConfiguration(component))
 	rErrs.Add(r.reconcileServingVirtualService(component))
+	rErrs.Add(r.reconcileTlsPolicy(component))
 
 	for i, _ := range component.Spec.VolumeClaims {
 		rErrs.Add(r.reconcilePersistentVolumeClaim(component, &component.Spec.VolumeClaims[i]))
@@ -538,6 +548,52 @@ func (r *reconciler) reconcileServingVirtualService(component *v1alpha2.Componen
 		}
 	}
 	resources.StatusFromServingVirtualService(component, virtualService)
+	return nil
+}
+
+func (r *reconciler) reconcileTlsPolicy(component *v1alpha2.Component) error {
+	policyName := resources.TlsPolicyName(component)
+	policy, err := r.istioPolicyLister.Policies(component.Namespace).Get(policyName)
+	if !resources.RequireTlsPolicy(component) {
+		if err == nil && metav1.IsControlledBy(policy, component) {
+			err = r.meshClient.AuthenticationV1alpha1().Policies(component.Namespace).Delete(policyName, &metav1.DeleteOptions{})
+			if err != nil {
+				r.logger.Errorf("Failed to delete Tls Policy %q: %v", policyName, err)
+				return err
+			}
+		}
+		return nil
+	}
+
+	if errors.IsNotFound(err) {
+		policy, err = r.meshClient.AuthenticationV1alpha1().Policies(component.Namespace).Create(resources.MakeTlsPolicy(component))
+		if err != nil {
+			r.logger.Errorf("Failed to create Tls Policy %q: %v", policyName, err)
+			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create Tls Policy %q: %v", policyName, err)
+			return err
+		}
+		r.recorder.Eventf(component, corev1.EventTypeNormal, "Created", "Created Tls Policy %q", policyName)
+	} else if err != nil {
+		r.logger.Errorf("Failed to retrieve Tls Policy %q: %v", policyName, err)
+		return err
+	} else if !metav1.IsControlledBy(policy, component) {
+		return fmt.Errorf("component: %q does not own the Tls Policy: %q", component.Name, policyName)
+	} else {
+		policy, err = func(component *v1alpha2.Component, policy *istioauthenticationv1alpha1.Policy) (*istioauthenticationv1alpha1.Policy, error) {
+			if !resources.RequireTlsPolicyUpdate(component, policy) {
+				return policy, nil
+			}
+			desiredPolicy := resources.MakeTlsPolicy(component)
+			existingPolicy := policy.DeepCopy()
+			resources.CopyTlsPolicy(desiredPolicy, existingPolicy)
+			return r.meshClient.AuthenticationV1alpha1().Policies(component.Namespace).Update(existingPolicy)
+		}(component, policy)
+		if err != nil {
+			r.logger.Errorf("Failed to update Tls Policy %q: %v", policyName, err)
+			return err
+		}
+	}
+	resources.StatusFromTlsPolicy(component, policy)
 	return nil
 }
 
