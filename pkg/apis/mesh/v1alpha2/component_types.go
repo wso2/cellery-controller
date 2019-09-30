@@ -115,6 +115,7 @@ type ComponentStatus struct {
 	HpaGeneration                    int64                  `json:"hpaGeneration,omitempty"`
 	ServingConfigurationGeneration   int64                  `json:"servingConfigurationGeneration,omitempty"`
 	ServingVirtualServiceGeneration  int64                  `json:"servingVirtualServiceGeneration,omitempty"`
+	TlsPolicyGeneration              int64                  `json:"TlsPolicyGeneration,omitempty"`
 	PersistantVolumeClaimGenerations map[string]int64       `json:"persistantVolumeClaimGenerations,omitempty"`
 	ConfigMapGenerations             map[string]int64       `json:"configMapGenerations,omitempty"`
 	SecretGenerations                map[string]int64       `json:"secretGenerations,omitempty"`

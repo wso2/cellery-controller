@@ -103,6 +103,10 @@ func ServingVirtualServiceName(component *v1alpha2.Component) string {
 	return component.Name + "-mesh"
 }
 
+func TlsPolicyName(component *v1alpha2.Component) string {
+	return component.Name + "-tls"
+}
+
 func ServingRevisionName(component *v1alpha2.Component) string {
 	return ServingConfigurationName(component) + "-service"
 }
