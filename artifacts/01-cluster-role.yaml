@@ -130,6 +130,18 @@ rules:
   - patch
   - watch
 - apiGroups:
+  - authentication.istio.io
+  resources:
+  - policies
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
   - serving.knative.dev
   resources:
   - configurations
