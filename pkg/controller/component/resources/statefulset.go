@@ -75,9 +75,12 @@ func RequireStatefulSetUpdate(component *v1alpha2.Component, statefulSet *appsv1
 		statefulSet.Generation != component.Status.StatefulSetGeneration
 }
 
-func CopyStatefulSet(source, destination *appsv1.StatefulSet) {
+func CopyStatefulSet(source, destination *appsv1.StatefulSet, component *v1alpha2.Component) {
 	destination.Spec.Template = source.Spec.Template
-	destination.Spec.Replicas = source.Spec.Replicas
+	// If the scaling policy is using HPA, should not update the replicas forcefully since the replica count will be updated by the HPA.
+	if !component.Spec.ScalingPolicy.IsHpa() {
+		destination.Spec.Replicas = source.Spec.Replicas
+	}
 	destination.Spec.Selector = source.Spec.Selector
 	destination.Spec.ServiceName = source.Spec.ServiceName
 	destination.Spec.VolumeClaimTemplates = source.Spec.VolumeClaimTemplates
