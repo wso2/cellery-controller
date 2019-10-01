@@ -1,0 +1,152 @@
+apiVersion: mesh.cellery.io/v1alpha2
+kind: Cell
+metadata:
+  name: todos
+spec:
+  gateway:
+    spec:
+      ingress:
+        http:
+        - context: /
+          definitions:
+          - path: /todos
+            method: GET
+          - path: /todos
+            method: POST
+          - path: /todos/*
+            method: GET
+          - path: /todos/*
+            method: PUT
+          port: 80
+          destination:
+            host: todos
+            port: 80
+  components:
+  - metadata:
+      name: todos
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: docker.io/mirage20/samples-todoapp-todos:latest
+          name: todos
+          env:
+          - name: PORT
+            value: "8080"
+          - name: DATABASE_HOST
+            value: "todos--mysql-db-service"
+          - name: DATABASE_PORT
+            value: "3306"
+          - name: DATABASE_CREDENTIALS_PATH
+            value: "/credentials"
+          - name: DATABASE_NAME
+            value: "todos_db"
+          volumeMounts:
+          - name: db-credentials
+            mountPath: /credentials
+      ports:
+      - port: 80
+        protocol: HTTP
+        targetPort: 8080
+      secrets:
+      - metadata:
+          name: db-credentials
+        stringData:
+          username: root
+          password: root
+  - metadata:
+      name: mysql-db
+    spec:
+      scalingPolicy:
+        replicas: 1
+      template:
+        containers:
+        - image: library/mysql:8.0
+          name: mysql-db
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "root"
+          volumeMounts:
+          - name: data-vol
+            mountPath: /var/lib/mysql
+          - name: init-sql
+            mountPath: /docker-entrypoint-initdb.d
+      ports:
+      - port: 3306
+        protocol: TCP
+        targetPort: 3306
+      volumeClaims:
+      - template:
+          metadata:
+            name: data-vol
+          spec:
+            storageClassName: local-storage
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+      configurations:
+      - metadata:
+          name: init-sql
+        data:
+          init.sql: |
+            CREATE DATABASE  IF NOT EXISTS `todos_db` /*!40100 DEFAULT CHARACTER SET latin1 */;
+            USE `todos_db`;
+            -- MySQL dump 10.13  Distrib 5.7.17, for Linux (x86_64)
+            --
+            -- Host: localhost    Database: todos_db
+            -- ------------------------------------------------------
+            -- Server version	5.7.27-0ubuntu0.16.04.1
+
+            /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+            /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+            /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+            /*!40101 SET NAMES utf8 */;
+            /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+            /*!40103 SET TIME_ZONE='+00:00' */;
+            /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+            /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+            /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+            /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+            --
+            -- Table structure for table `todos`
+            --
+
+            DROP TABLE IF EXISTS `todos`;
+            /*!40101 SET @saved_cs_client     = @@character_set_client */;
+            /*!40101 SET character_set_client = utf8 */;
+            CREATE TABLE `todos` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `title` varchar(45) NOT NULL,
+              `content` text,
+              `done` tinyint(4) NOT NULL,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+            /*!40101 SET character_set_client = @saved_cs_client */;
+
+            --
+            -- Dumping data for table `todos`
+            --
+
+            LOCK TABLES `todos` WRITE;
+            /*!40000 ALTER TABLE `todos` DISABLE KEYS */;
+            INSERT INTO `todos` VALUES (1,'Walk','Walk for 30 min around 6 PM',0),(2,'Pay Bills','Pay electricity and water bills',0);
+            /*!40000 ALTER TABLE `todos` ENABLE KEYS */;
+            UNLOCK TABLES;
+            /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+            /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+            /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+            /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+            /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+            /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+            /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+            /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+            -- Dump completed on 2019-09-30 17:17:53
+  sts:
+    spec:
+      interceptMode: None

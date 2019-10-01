@@ -38,7 +38,8 @@ func MakeSecret(component *v1alpha2.Component, secret *corev1.Secret, cfg config
 				*controller.CreateComponentOwnerRef(component),
 			},
 		},
-		Data: secret.Data,
+		Data:       secret.Data,
+		StringData: secret.StringData,
 	}
 }
 
@@ -49,6 +50,7 @@ func RequireSecretUpdate(component *v1alpha2.Component, secret *corev1.Secret) b
 
 func CopySecret(source, destination *corev1.Secret) {
 	destination.Data = source.Data
+	destination.StringData = source.StringData
 	destination.Labels = source.Labels
 	destination.Annotations = source.Annotations
 }
