@@ -75,10 +75,13 @@ func RequireDeploymentUpdate(component *v1alpha2.Component, deployment *appsv1.D
 		deployment.Generation != component.Status.DeploymentGeneration
 }
 
-func CopyDeployment(source, destination *appsv1.Deployment) {
+func CopyDeployment(source, destination *appsv1.Deployment, component *v1alpha2.Component) {
 	destination.Spec.Template = source.Spec.Template
 	destination.Spec.Selector = source.Spec.Selector
-	destination.Spec.Replicas = source.Spec.Replicas
+	// If the scaling policy is using HPA, should not update the replicas forcefully since the replica count will be updated by the HPA.
+	if !component.Spec.ScalingPolicy.IsHpa() {
+		destination.Spec.Replicas = source.Spec.Replicas
+	}
 	destination.Labels = source.Labels
 	destination.Annotations = source.Annotations
 }

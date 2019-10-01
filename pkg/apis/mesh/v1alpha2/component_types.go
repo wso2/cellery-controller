@@ -65,7 +65,7 @@ func (sp *ComponentScalingPolicy) MinReplicas() int32 {
 }
 
 func (sp *ComponentScalingPolicy) IsHpa() bool {
-	return sp.Hpa != nil
+	return sp != nil && sp.Hpa != nil
 }
 
 func (sp *ComponentScalingPolicy) IsKpa() bool {

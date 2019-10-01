@@ -306,7 +306,7 @@ func (r *reconciler) reconcileDeployment(component *v1alpha2.Component) error {
 			}
 			desiredDeployment := resources.MakeDeployment(component)
 			existingDeployment := deployment.DeepCopy()
-			resources.CopyDeployment(desiredDeployment, existingDeployment)
+			resources.CopyDeployment(desiredDeployment, existingDeployment, component)
 			return r.kubeClient.AppsV1().Deployments(component.Namespace).Update(existingDeployment)
 		}(component, deployment)
 		if err != nil {
@@ -352,7 +352,7 @@ func (r *reconciler) reconcileStatefulSet(component *v1alpha2.Component) error {
 			}
 			desiredStatefulSet := resources.MakeStatefulSet(component)
 			existingStatefulSet := statefulSet.DeepCopy()
-			resources.CopyStatefulSet(desiredStatefulSet, existingStatefulSet)
+			resources.CopyStatefulSet(desiredStatefulSet, existingStatefulSet, component)
 			return r.kubeClient.AppsV1().StatefulSets(component.Namespace).Update(existingStatefulSet)
 		}(component, statefulSet)
 		if err != nil {
