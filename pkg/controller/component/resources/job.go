@@ -39,7 +39,7 @@ func MakeJob(component *v1alpha2.Component) *batchv1.Job {
 			},
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: ptr.Int32(1),
+			BackoffLimit: ptr.Int32(0),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      makeLabels(component),
