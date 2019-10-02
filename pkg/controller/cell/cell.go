@@ -280,7 +280,14 @@ func (r *reconciler) reconcileGateway(cell *v1alpha2.Cell) error {
 	gatewayName := resources.GatewayName(cell)
 	gateway, err := r.gatewayLister.Gateways(cell.Namespace).Get(gatewayName)
 	if errors.IsNotFound(err) {
-		gateway, err = r.meshClient.MeshV1alpha2().Gateways(cell.Namespace).Create(resources.MakeGateway(cell))
+		gateway = resources.MakeGateway(cell)
+		lastAppliedConfig, err := json.Marshal(buildLastAppliedConfig(gateway))
+		if err != nil {
+			r.logger.Errorf("Failed to build Gateway last applied config %v", err)
+			return err
+		}
+		annotate(gateway, corev1.LastAppliedConfigAnnotation, string(lastAppliedConfig))
+		gateway, err = r.meshClient.MeshV1alpha2().Gateways(cell.Namespace).Create(gateway)
 		if err != nil {
 			r.logger.Errorf("Failed to create Gateway %q: %v", gatewayName, err)
 			r.recorder.Eventf(cell, corev1.EventTypeWarning, "CreationFailed", "Failed to create Gateway %q: %v", gatewayName, err)
