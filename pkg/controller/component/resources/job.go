@@ -25,6 +25,7 @@ import (
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/ptr"
 )
 
 func MakeJob(component *v1alpha2.Component) *batchv1.Job {
@@ -38,6 +39,7 @@ func MakeJob(component *v1alpha2.Component) *batchv1.Job {
 			},
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: ptr.Int32(1),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      makeLabels(component),
@@ -49,6 +51,7 @@ func MakeJob(component *v1alpha2.Component) *batchv1.Job {
 					addConfigMapVolumes(component),
 					addSecretVolumes(component),
 					withRestartPolicy(corev1.RestartPolicyOnFailure),
+					withSharedProcessNamespace(),
 				),
 			},
 		},
