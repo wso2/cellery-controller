@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"github.com/cellery-io/mesh-controller/pkg/ptr"
 )
 
 type podSpecOption func(*corev1.PodSpec)
@@ -121,5 +122,11 @@ func addSecretVolumes(component *v1alpha2.Component) podSpecOption {
 func withRestartPolicy(restartPolicy corev1.RestartPolicy) podSpecOption {
 	return func(podSpec *corev1.PodSpec) {
 		podSpec.RestartPolicy = restartPolicy
+	}
+}
+
+func withSharedProcessNamespace() podSpecOption {
+	return func(podSpec *corev1.PodSpec) {
+		podSpec.ShareProcessNamespace = ptr.Bool(true)
 	}
 }
