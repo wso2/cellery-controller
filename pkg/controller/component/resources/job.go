@@ -50,8 +50,6 @@ func MakeJob(component *v1alpha2.Component) *batchv1.Job {
 					addPersistentVolumeClaimVolumes(component),
 					addConfigMapVolumes(component),
 					addSecretVolumes(component),
-					withRestartPolicy(corev1.RestartPolicyOnFailure),
-					withSharedProcessNamespace(),
 				),
 			},
 		},
