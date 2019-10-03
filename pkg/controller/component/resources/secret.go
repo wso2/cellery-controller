@@ -19,16 +19,33 @@
 package resources
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/config"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"github.com/cellery-io/mesh-controller/pkg/crypto"
 )
 
-func MakeSecret(component *v1alpha2.Component, secret *corev1.Secret, cfg config.Interface) *corev1.Secret {
-	// todo: use cfg to decrypt content if required
+func MakeSecret(component *v1alpha2.Component, secret *corev1.Secret, cfg config.Interface) (*corev1.Secret, error) {
+	pvtKey, err := cfg.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	strData := make(map[string]string)
+
+	for k, v := range secret.StringData {
+		vBytes, err := crypto.TryDecrypt(v, pvtKey)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decode/decrypt the key %q: %v", k, err)
+		}
+		strData[k] = string(vBytes)
+	}
+
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      SecretName(component, secret),
@@ -39,8 +56,8 @@ func MakeSecret(component *v1alpha2.Component, secret *corev1.Secret, cfg config
 			},
 		},
 		Data:       secret.Data,
-		StringData: secret.StringData,
-	}
+		StringData: strData,
+	}, nil
 }
 
 func RequireSecretUpdate(component *v1alpha2.Component, secret *corev1.Secret) bool {

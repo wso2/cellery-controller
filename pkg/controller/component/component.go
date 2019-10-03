@@ -655,7 +655,13 @@ func (r *reconciler) reconcileSecret(component *v1alpha2.Component, secretTempla
 	secretName := resources.SecretName(component, secretTemplate)
 	secret, err := r.secretLister.Secrets(component.Namespace).Get(secretName)
 	if errors.IsNotFound(err) {
-		secret, err = r.kubeClient.CoreV1().Secrets(component.Namespace).Create(resources.MakeSecret(component, secretTemplate, r.cfg))
+		secret, err = func(component *v1alpha2.Component, secretTemplate *corev1.Secret) (*corev1.Secret, error) {
+			desiredSecret, err := resources.MakeSecret(component, secretTemplate, r.cfg)
+			if err != nil {
+				return nil, err
+			}
+			return r.kubeClient.CoreV1().Secrets(component.Namespace).Create(desiredSecret)
+		}(component, secretTemplate)
 		if err != nil {
 			r.logger.Errorf("Failed to create Secret %q: %v", secretName, err)
 			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create Secret %q: %v", secretName, err)
@@ -672,7 +678,10 @@ func (r *reconciler) reconcileSecret(component *v1alpha2.Component, secretTempla
 			if !resources.RequireSecretUpdate(component, secret) {
 				return secret, nil
 			}
-			desiredSecret := resources.MakeSecret(component, secretTemplate, r.cfg)
+			desiredSecret, err := resources.MakeSecret(component, secretTemplate, r.cfg)
+			if err != nil {
+				return nil, err
+			}
 			existingSecret := secret.DeepCopy()
 			resources.CopySecret(desiredSecret, existingSecret)
 			return r.kubeClient.CoreV1().Secrets(component.Namespace).Update(existingSecret)
