@@ -92,7 +92,7 @@ func buildInterCellRoutingInfo(cell *v1alpha2.Cell, cellLister listers.CellListe
 			if len(depCell.Spec.Gateway.Spec.Ingress.HTTPRoutes) > 0 {
 				hostNames = append(hostNames, routing.BuildHostNameForCellDependency(dependencyInst))
 				// build http routes
-				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCellDependency(cell.Name, dependencyInst, isWebCell)...)
+				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCellDependency(cell.Name, dependencyInst, isWebCell, CellSrcLabelBulder{})...)
 			}
 		} else if dependencyKind == routing.CompositeKind {
 			depComposite, err := compositeLister.Composites(cell.Namespace).Get(dependencyInst)
@@ -101,7 +101,7 @@ func buildInterCellRoutingInfo(cell *v1alpha2.Cell, cellLister listers.CellListe
 			}
 			if len(depComposite.Spec.Components) > 0 {
 				hostNames = append(hostNames, routing.BuildHostNamesForCompositeDependency(dependencyInst, depComposite.Spec.Components)...)
-				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCompositeDependency(cell.Name, dependencyInst, depComposite.Spec.Components, isWebCell)...)
+				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCompositeDependency(cell.Name, dependencyInst, depComposite.Spec.Components, isWebCell, CellSrcLabelBulder{})...)
 			}
 		} else {
 			// unknown dependency kind
@@ -276,4 +276,13 @@ func Annotate(vs *v1alpha3.VirtualService, name string, value string) {
 		annotations[k] = v
 	}
 	vs.Annotations = annotations
+}
+
+type CellSrcLabelBulder struct{}
+
+func (labelBuilder CellSrcLabelBulder) Get(instance string) map[string]string {
+	return map[string]string{
+		meta.CellLabelKeySource:      instance,
+		meta.ComponentLabelKeySource: "true",
+	}
 }

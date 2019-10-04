@@ -47,7 +47,7 @@ func BuildHostNamesForCompositeDependency(dependencyInst string, components []v1
 	return svcNames
 }
 
-func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInstanceIdBasedRulesRequired bool) []*v1alpha3.HTTPRoute {
+func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInstanceIdBasedRulesRequired bool, builder SrcLabelBulder) []*v1alpha3.HTTPRoute {
 	var routes []*v1alpha3.HTTPRoute
 	if isInstanceIdBasedRulesRequired {
 		routes = append(routes, &v1alpha3.HTTPRoute{
@@ -61,10 +61,7 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 							Exact: "1",
 						},
 					},
-					SourceLabels: map[string]string{
-						meta.CellLabelKeySource:      name,
-						meta.ComponentLabelKeySource: "true",
-					},
+					SourceLabels: builder.Get(name),
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
@@ -86,10 +83,7 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 							Exact: "2",
 						},
 					},
-					SourceLabels: map[string]string{
-						meta.CellLabelKeySource:      name,
-						meta.ComponentLabelKeySource: "true",
-					},
+					SourceLabels: builder.Get(name),
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
@@ -107,10 +101,7 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 				Authority: &v1alpha3.StringMatch{
 					Regex: fmt.Sprintf("^(%s)(--gateway-service)(\\S*)$", dependencyInst),
 				},
-				SourceLabels: map[string]string{
-					meta.CellLabelKeySource:      name,
-					meta.ComponentLabelKeySource: "true",
-				},
+				SourceLabels: builder.Get(name),
 			},
 		},
 		Route: []*v1alpha3.DestinationWeight{
@@ -124,7 +115,7 @@ func BuildHttpRoutesForCellDependency(name string, dependencyInst string, isInst
 	return routes
 }
 
-func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, components []v1alpha2.Component, isInstanceIdBasedRulesRequired bool) []*v1alpha3.HTTPRoute {
+func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, components []v1alpha2.Component, isInstanceIdBasedRulesRequired bool, builder SrcLabelBulder) []*v1alpha3.HTTPRoute {
 	// three virtual services for each
 	// TODO: create upon request from SDK side?
 	var routes []*v1alpha3.HTTPRoute
@@ -141,10 +132,7 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, c
 								Exact: "1",
 							},
 						},
-						SourceLabels: map[string]string{
-							meta.CellLabelKeySource:      name,
-							meta.ComponentLabelKeySource: "true",
-						},
+						SourceLabels: builder.Get(name),
 					},
 				},
 				Route: []*v1alpha3.DestinationWeight{
@@ -166,10 +154,7 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, c
 								Exact: "2",
 							},
 						},
-						SourceLabels: map[string]string{
-							meta.CellLabelKeySource:      name,
-							meta.ComponentLabelKeySource: "true",
-						},
+						SourceLabels: builder.Get(name),
 					},
 				},
 				Route: []*v1alpha3.DestinationWeight{
@@ -187,10 +172,7 @@ func BuildHttpRoutesForCompositeDependency(name string, dependencyInst string, c
 					Authority: &v1alpha3.StringMatch{
 						Regex: fmt.Sprintf("^(%s)(--%s)(\\S*)$", dependencyInst, component.Name),
 					},
-					SourceLabels: map[string]string{
-						meta.CellLabelKeySource:      name,
-						meta.ComponentLabelKeySource: "true",
-					},
+					SourceLabels: builder.Get(name),
 				},
 			},
 			Route: []*v1alpha3.DestinationWeight{
