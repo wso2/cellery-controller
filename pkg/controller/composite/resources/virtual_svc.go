@@ -21,6 +21,8 @@ package resources
 import (
 	"fmt"
 
+	"github.com/cellery-io/mesh-controller/pkg/meta"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
@@ -86,7 +88,7 @@ func buildInterCellRoutingInfo(composite *v1alpha2.Composite, compositeLister li
 			if len(depCell.Spec.Gateway.Spec.Ingress.HTTPRoutes) > 0 {
 				hostNames = append(hostNames, routing.BuildHostNameForCellDependency(dependencyInst))
 				// build http routes
-				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCellDependency(composite.Name, dependencyInst, false)...)
+				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCellDependency(composite.Name, dependencyInst, false, CompositeSrcLabelBulder{})...)
 			}
 		} else if dependencyKind == routing.CompositeKind {
 			// retrieve the cell using the cell instance name
@@ -96,7 +98,7 @@ func buildInterCellRoutingInfo(composite *v1alpha2.Composite, compositeLister li
 			}
 			if len(depComposite.Spec.Components) > 0 {
 				hostNames = append(hostNames, routing.BuildHostNamesForCompositeDependency(dependencyInst, depComposite.Spec.Components)...)
-				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCompositeDependency(composite.Name, dependencyInst, depComposite.Spec.Components, false)...)
+				intercellHttpRoutes = append(intercellHttpRoutes, routing.BuildHttpRoutesForCompositeDependency(composite.Name, dependencyInst, depComposite.Spec.Components, false, CompositeSrcLabelBulder{})...)
 			}
 		} else {
 			// unknown dependency kind
@@ -119,4 +121,13 @@ func CopyRoutingVs(source, destination *v1alpha3.VirtualService) {
 
 func StatusFromRoutingVs(composite *v1alpha2.Composite, vs *v1alpha3.VirtualService) {
 	composite.Status.RoutingVsGeneration = vs.Generation
+}
+
+type CompositeSrcLabelBulder struct{}
+
+func (labelBuilder CompositeSrcLabelBulder) Get(instance string) map[string]string {
+	return map[string]string{
+		meta.CompositeLabelKeySource: instance,
+		meta.ComponentLabelKeySource: "true",
+	}
 }

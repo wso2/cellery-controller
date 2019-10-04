@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
+
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/meta"
 
@@ -89,7 +91,7 @@ func TestBuildHttpRoutesForCellDependency(t *testing.T) {
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCellDependency(instName, dependencyInst, false)
+	actual := BuildHttpRoutesForCellDependency(instName, dependencyInst, false, resources.CompositeSrcLabelBulder{})
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCellDependency (-expected, +actual)\n%v", diff)
 	}
@@ -170,7 +172,7 @@ func TestBuildHttpRoutesForCellDependencyWithInstanceIdBasedRules(t *testing.T) 
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCellDependency(instName, dependencyInst, true)
+	actual := BuildHttpRoutesForCellDependency(instName, dependencyInst, true, resources.CompositeSrcLabelBulder{})
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCellDependency (-expected, +actual)\n%v", diff)
 	}
@@ -206,7 +208,7 @@ func TestBuildHttpRoutesForCompositeDependency(t *testing.T) {
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{component}, false)
+	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{component}, false, resources.CompositeSrcLabelBulder{})
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCompositeDependency (-expected, +actual)\n%v", diff)
 	}
@@ -292,7 +294,7 @@ func TestBuildHttpRoutesForCompositeDependencyWithInstanceBasedRules(t *testing.
 			},
 		},
 	}
-	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{svcTemplate}, true)
+	actual := BuildHttpRoutesForCompositeDependency(instName, dependencyInst, []v1alpha2.Component{svcTemplate}, true, resources.CompositeSrcLabelBulder{})
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("BuildHttpRoutesForCompositeDependency (-expected, +actual)\n%v", diff)
 	}
