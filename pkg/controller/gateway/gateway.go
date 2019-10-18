@@ -41,8 +41,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
-	autoscalingv2beta2lister "k8s.io/client-go/listers/autoscaling/v2beta2"
+	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
+	autoscalingv2beta1lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 
 	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
@@ -70,7 +70,7 @@ type reconciler struct {
 	istioEnvoyFilterLister     istionetwork1alpha3listers.EnvoyFilterLister
 	configMapLister            corev1listers.ConfigMapLister
 	gatewayLister              mesh1alpha2listers.GatewayLister
-	hpaLister                  autoscalingv2beta2lister.HorizontalPodAutoscalerLister
+	hpaLister                  autoscalingv2beta1lister.HorizontalPodAutoscalerLister
 
 	cfg      config.Interface
 	logger   *zap.SugaredLogger
@@ -660,7 +660,7 @@ func (r *reconciler) reconcileHpa(gw *v1alpha2.Gateway) error {
 	hpa, err := r.hpaLister.HorizontalPodAutoscalers(gw.Namespace).Get(hpaName)
 	if !resources.RequireHpa(gw) {
 		if err == nil && metav1.IsControlledBy(hpa, gw) {
-			err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Delete(hpaName, &metav1.DeleteOptions{})
+			err = r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(gw.Namespace).Delete(hpaName, &metav1.DeleteOptions{})
 			if err != nil {
 				r.logger.Errorf("Failed to delete HPA %q: %v", hpaName, err)
 				return err
@@ -670,7 +670,7 @@ func (r *reconciler) reconcileHpa(gw *v1alpha2.Gateway) error {
 	}
 
 	if errors.IsNotFound(err) {
-		hpa, err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Create(resources.MakeHpa(gw))
+		hpa, err = r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(gw.Namespace).Create(resources.MakeHpa(gw))
 		if err != nil {
 			r.logger.Errorf("Failed to create HPA %q: %v", hpaName, err)
 			r.recorder.Eventf(gw, corev1.EventTypeWarning, "CreationFailed", "Failed to create HPA %q: %v", hpaName, err)
@@ -683,14 +683,14 @@ func (r *reconciler) reconcileHpa(gw *v1alpha2.Gateway) error {
 	} else if !metav1.IsControlledBy(hpa, gw) {
 		return fmt.Errorf("gw: %q does not own the HPA: %q", gw.Name, hpaName)
 	} else {
-		hpa, err = func(gw *v1alpha2.Gateway, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+		hpa, err = func(gw *v1alpha2.Gateway, hpa *autoscalingv2beta1.HorizontalPodAutoscaler) (*autoscalingv2beta1.HorizontalPodAutoscaler, error) {
 			if !resources.RequireHpaUpdate(gw, hpa) {
 				return hpa, nil
 			}
 			desiredHpa := resources.MakeHpa(gw)
 			existingHpa := hpa.DeepCopy()
 			resources.CopyHpa(desiredHpa, existingHpa)
-			return r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(gw.Namespace).Update(existingHpa)
+			return r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(gw.Namespace).Update(existingHpa)
 		}(gw, hpa)
 		if err != nil {
 			r.logger.Errorf("Failed to update HPA %q: %v", hpaName, err)

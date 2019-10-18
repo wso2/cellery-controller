@@ -23,7 +23,7 @@
 package v1alpha2
 
 import (
-	v2beta2 "k8s.io/api/autoscaling/v2beta2"
+	v2beta1 "k8s.io/api/autoscaling/v2beta1"
 	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -709,7 +709,7 @@ func (in *HorizontalPodAutoscaler) DeepCopyInto(out *HorizontalPodAutoscaler) {
 	in.ReplicaRange.DeepCopyInto(&out.ReplicaRange)
 	if in.Metrics != nil {
 		in, out := &in.Metrics, &out.Metrics
-		*out = make([]v2beta2.MetricSpec, len(*in))
+		*out = make([]v2beta1.MetricSpec, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

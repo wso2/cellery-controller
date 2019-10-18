@@ -25,7 +25,7 @@ import (
 
 	kubeinformers "k8s.io/client-go/informers"
 	appsv1 "k8s.io/client-go/informers/apps/v1"
-	autoscalingv2beta2 "k8s.io/client-go/informers/autoscaling/v2beta2"
+	autoscalingv2beta1 "k8s.io/client-go/informers/autoscaling/v2beta1"
 	batchv1 "k8s.io/client-go/informers/batch/v1"
 	corev1 "k8s.io/client-go/informers/core/v1"
 	extensionsv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
@@ -43,7 +43,7 @@ type Interface interface {
 	// K8s informers
 	ConfigMaps() corev1.ConfigMapInformer
 	Deployments() appsv1.DeploymentInformer
-	HorizontalPodAutoscalers() autoscalingv2beta2.HorizontalPodAutoscalerInformer
+	HorizontalPodAutoscalers() autoscalingv2beta1.HorizontalPodAutoscalerInformer
 	Jobs() batchv1.JobInformer
 	NetworkPolicies() networkingv1.NetworkPolicyInformer
 	PersistentVolumeClaims() corev1.PersistentVolumeClaimInformer
@@ -105,8 +105,8 @@ func (i *informers) Deployments() appsv1.DeploymentInformer {
 	return i.kubeInformerFactory.Apps().V1().Deployments()
 }
 
-func (i *informers) HorizontalPodAutoscalers() autoscalingv2beta2.HorizontalPodAutoscalerInformer {
-	return i.kubeInformerFactory.Autoscaling().V2beta2().HorizontalPodAutoscalers()
+func (i *informers) HorizontalPodAutoscalers() autoscalingv2beta1.HorizontalPodAutoscalerInformer {
+	return i.kubeInformerFactory.Autoscaling().V2beta1().HorizontalPodAutoscalers()
 }
 
 func (i *informers) Jobs() batchv1.JobInformer {
