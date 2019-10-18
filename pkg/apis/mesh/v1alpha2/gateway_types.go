@@ -19,7 +19,7 @@
 package v1alpha2
 
 import (
-	"k8s.io/api/autoscaling/v2beta2"
+	"k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/ptr"
@@ -232,7 +232,7 @@ func (sp *Gateway) MaxReplicas() int32 {
 	return 1
 }
 
-func (sp *Gateway) Metrics() []v2beta2.MetricSpec {
+func (sp *Gateway) Metrics() []v2beta1.MetricSpec {
 	if &sp.Spec.ScalingPolicy != nil && sp.Spec.ScalingPolicy.Hpa != nil {
 		return sp.Spec.ScalingPolicy.Hpa.Metrics
 	}

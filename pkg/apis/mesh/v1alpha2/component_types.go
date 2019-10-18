@@ -19,7 +19,7 @@
 package v1alpha2
 
 import (
-	autoscalingV2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingV2beta1 "k8s.io/api/autoscaling/v2beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -80,7 +80,7 @@ type ReplicaRange struct {
 type HorizontalPodAutoscaler struct {
 	Overridable  *bool `json:"overridable"`
 	ReplicaRange `json:",inline"`
-	Metrics      []autoscalingV2beta2.MetricSpec `json:"metrics,omitempty"`
+	Metrics      []autoscalingV2beta1.MetricSpec `json:"metrics,omitempty"`
 }
 
 type KnativePodAutoscaler struct {

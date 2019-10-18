@@ -24,7 +24,7 @@ import (
 
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	autoscalingv2beta2lister "k8s.io/client-go/listers/autoscaling/v2beta2"
+	autoscalingv2beta1lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 	batchv1listers "k8s.io/client-go/listers/batch/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -66,7 +66,7 @@ type reconciler struct {
 	configMapLister             corev1listers.ConfigMapLister
 	secretLister                corev1listers.SecretLister
 	jobLister                   batchv1listers.JobLister
-	hpaLister                   autoscalingv2beta2lister.HorizontalPodAutoscalerLister
+	hpaLister                   autoscalingv2beta1lister.HorizontalPodAutoscalerLister
 	istioVirtualServiceLister   istionetworkv1alpha3listers.VirtualServiceLister
 	istioPolicyLister           istioauthenticationv1alpha1listers.PolicyLister
 	servingConfigurationLister  kservingv1alpha1listers.ConfigurationLister
@@ -421,7 +421,7 @@ func (r *reconciler) reconcileHpa(component *v1alpha2.Component) error {
 
 	if !resources.RequireHpa(component) {
 		if err == nil && metav1.IsControlledBy(hpa, component) {
-			err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(component.Namespace).Delete(hpaName, &metav1.DeleteOptions{})
+			err = r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(component.Namespace).Delete(hpaName, &metav1.DeleteOptions{})
 			if err != nil {
 				r.logger.Errorf("Failed to delete HPA %q: %v", hpaName, err)
 				return err
@@ -431,7 +431,7 @@ func (r *reconciler) reconcileHpa(component *v1alpha2.Component) error {
 	}
 
 	if errors.IsNotFound(err) {
-		hpa, err = r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(component.Namespace).Create(resources.MakeHpa(component))
+		hpa, err = r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(component.Namespace).Create(resources.MakeHpa(component))
 		if err != nil {
 			r.logger.Errorf("Failed to create HPA %q: %v", hpaName, err)
 			r.recorder.Eventf(component, corev1.EventTypeWarning, "CreationFailed", "Failed to create HPA %q: %v", hpaName, err)
@@ -444,14 +444,14 @@ func (r *reconciler) reconcileHpa(component *v1alpha2.Component) error {
 	} else if !metav1.IsControlledBy(hpa, component) {
 		return fmt.Errorf("component: %q does not own the HPA: %q", component.Name, hpaName)
 	} else {
-		hpa, err = func(component *v1alpha2.Component, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+		hpa, err = func(component *v1alpha2.Component, hpa *autoscalingv2beta1.HorizontalPodAutoscaler) (*autoscalingv2beta1.HorizontalPodAutoscaler, error) {
 			if !resources.RequireHpaUpdate(component, hpa) {
 				return hpa, nil
 			}
 			desiredHpa := resources.MakeHpa(component)
 			existingHpa := hpa.DeepCopy()
 			resources.CopyHpa(desiredHpa, existingHpa)
-			return r.kubeClient.AutoscalingV2beta2().HorizontalPodAutoscalers(component.Namespace).Update(existingHpa)
+			return r.kubeClient.AutoscalingV2beta1().HorizontalPodAutoscalers(component.Namespace).Update(existingHpa)
 		}(component, hpa)
 		if err != nil {
 			r.logger.Errorf("Failed to update HPA %q: %v", hpaName, err)

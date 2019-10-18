@@ -20,15 +20,15 @@ package resources
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/controller"
 )
 
-func MakeHpa(component *v1alpha2.Component) *autoscalingv2beta2.HorizontalPodAutoscaler {
-	return &autoscalingv2beta2.HorizontalPodAutoscaler{
+func MakeHpa(component *v1alpha2.Component) *autoscalingv2beta1.HorizontalPodAutoscaler {
+	return &autoscalingv2beta1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HpaName(component),
 			Namespace: component.Namespace,
@@ -37,7 +37,7 @@ func MakeHpa(component *v1alpha2.Component) *autoscalingv2beta2.HorizontalPodAut
 				*controller.CreateComponentOwnerRef(component),
 			},
 		},
-		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
+		Spec: autoscalingv2beta1.HorizontalPodAutoscalerSpec{
 			MinReplicas:    component.Spec.ScalingPolicy.Hpa.MinReplicas,
 			MaxReplicas:    component.Spec.ScalingPolicy.Hpa.MaxReplicas,
 			ScaleTargetRef: makeTargetRef(component),
@@ -46,10 +46,10 @@ func MakeHpa(component *v1alpha2.Component) *autoscalingv2beta2.HorizontalPodAut
 	}
 }
 
-func makeTargetRef(component *v1alpha2.Component) autoscalingv2beta2.CrossVersionObjectReference {
+func makeTargetRef(component *v1alpha2.Component) autoscalingv2beta1.CrossVersionObjectReference {
 	kind := "Deployment"
 	name := DeploymentName(component)
-	return autoscalingv2beta2.CrossVersionObjectReference{
+	return autoscalingv2beta1.CrossVersionObjectReference{
 		Kind:       kind,
 		Name:       name,
 		APIVersion: appsv1.SchemeGroupVersion.String(),
@@ -60,12 +60,12 @@ func RequireHpa(component *v1alpha2.Component) bool {
 	return (component.Spec.Type == v1alpha2.ComponentTypeDeployment || component.Spec.Type == v1alpha2.ComponentTypeStatefulSet) && component.Spec.ScalingPolicy.IsHpa()
 }
 
-func RequireHpaUpdate(component *v1alpha2.Component, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) bool {
+func RequireHpaUpdate(component *v1alpha2.Component, hpa *autoscalingv2beta1.HorizontalPodAutoscaler) bool {
 	return component.Generation != component.Status.ObservedGeneration ||
 		hpa.Generation != component.Status.HpaGeneration
 }
 
-func CopyHpa(source, destination *autoscalingv2beta2.HorizontalPodAutoscaler) {
+func CopyHpa(source, destination *autoscalingv2beta1.HorizontalPodAutoscaler) {
 	destination.Spec.ScaleTargetRef = source.Spec.ScaleTargetRef
 	destination.Spec.MinReplicas = source.Spec.MinReplicas
 	destination.Spec.MaxReplicas = source.Spec.MaxReplicas
@@ -74,6 +74,6 @@ func CopyHpa(source, destination *autoscalingv2beta2.HorizontalPodAutoscaler) {
 	destination.Annotations = source.Annotations
 }
 
-func StatusFromHpa(component *v1alpha2.Component, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) {
+func StatusFromHpa(component *v1alpha2.Component, hpa *autoscalingv2beta1.HorizontalPodAutoscaler) {
 	component.Status.HpaGeneration = hpa.Generation
 }
