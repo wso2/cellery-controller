@@ -54,7 +54,7 @@ func MakeSecret(composite *v1alpha2.Composite, cfg config.Interface) (*corev1.Se
 			OrganizationalUnit: []string{"WSO2"},
 			Province:           []string{"West"},
 		},
-		DNSNames:              []string{fmt.Sprintf("%s--sts-service", "composite"), "composite"},
+		DNSNames:              []string{fmt.Sprintf("%s--sts-service", "composite"), "composite", fmt.Sprintf("%s--sts-service.%s", "composite", mesh.SystemNamespace)},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 180),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
@@ -81,7 +81,7 @@ func MakeSecret(composite *v1alpha2.Composite, cfg config.Interface) (*corev1.Se
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      SecretName(composite),
-			Namespace: composite.Namespace,
+			Namespace: mesh.SystemNamespace,
 			Labels:    makeLabels(composite),
 		},
 		Type: mesh.GroupName + "/key-and-cert",
