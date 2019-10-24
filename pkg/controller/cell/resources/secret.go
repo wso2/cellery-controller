@@ -55,7 +55,7 @@ func MakeSecret(cell *v1alpha2.Cell, cfg config.Interface) (*corev1.Secret, erro
 			OrganizationalUnit: []string{"WSO2"},
 			Province:           []string{"West"},
 		},
-		DNSNames:              []string{fmt.Sprintf("%s--sts-service", cell.Name), cell.Name},
+		DNSNames:              []string{fmt.Sprintf("%s--sts-service", cell.Name), fmt.Sprintf("%s--sts-service.%s", cell.Name, "default"), cell.Name},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 180),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,

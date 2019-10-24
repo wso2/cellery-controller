@@ -25,6 +25,7 @@ import (
 
 	"github.com/cellery-io/mesh-controller/pkg/meta"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/clients"
 	"github.com/cellery-io/mesh-controller/pkg/informers"
 
@@ -193,7 +194,7 @@ func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
 
 func (r *reconciler) reconcileSecret(composite *v1alpha2.Composite) error {
 	secretName := resources.SecretName(composite)
-	secret, err := r.secretLister.Secrets(composite.Namespace).Get(resources.SecretName(composite))
+	secret, err := r.secretLister.Secrets(mesh.SystemNamespace).Get(resources.SecretName(composite))
 
 	if errors.IsNotFound(err) {
 		secret, err = func(composite *v1alpha2.Composite) (*corev1.Secret, error) {
@@ -201,7 +202,7 @@ func (r *reconciler) reconcileSecret(composite *v1alpha2.Composite) error {
 			if err != nil {
 				return nil, err
 			}
-			return r.kubeClient.CoreV1().Secrets(composite.Namespace).Create(desiredSecret)
+			return r.kubeClient.CoreV1().Secrets(mesh.SystemNamespace).Create(desiredSecret)
 		}(composite)
 		if err != nil {
 			r.logger.Errorf("Failed to create Secret %q: %v", secretName, err)
@@ -219,9 +220,9 @@ func (r *reconciler) reconcileSecret(composite *v1alpha2.Composite) error {
 
 func (r *reconciler) reconcileTokenService(composite *v1alpha2.Composite) error {
 	tokenServiceName := resources.TokenServiceName(composite)
-	tokenService, err := r.tokenServiceLister.TokenServices(composite.Namespace).Get(tokenServiceName)
+	tokenService, err := r.tokenServiceLister.TokenServices(mesh.SystemNamespace).Get(tokenServiceName)
 	if errors.IsNotFound(err) {
-		tokenService, err = r.meshClient.MeshV1alpha2().TokenServices(composite.Namespace).Create(resources.MakeTokenService(composite))
+		tokenService, err = r.meshClient.MeshV1alpha2().TokenServices(mesh.SystemNamespace).Create(resources.MakeTokenService(composite))
 		if err != nil {
 			r.logger.Errorf("Failed to create TokenService %q: %v", tokenServiceName, err)
 			r.recorder.Eventf(composite, corev1.EventTypeWarning, "CreationFailed", "Failed to create TokenService %q: %v", tokenServiceName, err)

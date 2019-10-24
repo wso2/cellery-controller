@@ -19,6 +19,8 @@
 package resources
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
@@ -87,7 +89,7 @@ func makeGatewayFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
 		FilterConfig: v1alpha3.FilterConfig{
 			GRPCService: v1alpha3.GRPCService{
 				GoogleGRPC: v1alpha3.GoogleGRPC{
-					TargetUri:  ServiceName(tokenService) + ":8082",
+					TargetUri:  fmt.Sprintf("%s.%s:8082", ServiceName(tokenService), tokenService.Namespace),
 					StatPrefix: statPrefix,
 				},
 				Timeout: filterTimeout,
@@ -111,7 +113,7 @@ func makeInboundFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
 		FilterConfig: v1alpha3.FilterConfig{
 			GRPCService: v1alpha3.GRPCService{
 				GoogleGRPC: v1alpha3.GoogleGRPC{
-					TargetUri:  ServiceName(tokenService) + ":8080",
+					TargetUri:  fmt.Sprintf("%s.%s:8080", ServiceName(tokenService), tokenService.Namespace),
 					StatPrefix: statPrefix,
 				},
 				Timeout: filterTimeout,
@@ -135,7 +137,7 @@ func makeOutboundFilter(tokenService *v1alpha2.TokenService) v1alpha3.Filter {
 		FilterConfig: v1alpha3.FilterConfig{
 			GRPCService: v1alpha3.GRPCService{
 				GoogleGRPC: v1alpha3.GoogleGRPC{
-					TargetUri:  ServiceName(tokenService) + ":8081",
+					TargetUri:  fmt.Sprintf("%s.%s:8081", ServiceName(tokenService), tokenService.Namespace),
 					StatPrefix: statPrefix,
 				},
 				Timeout: filterTimeout,

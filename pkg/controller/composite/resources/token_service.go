@@ -21,6 +21,7 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	. "github.com/cellery-io/mesh-controller/pkg/meta"
 )
@@ -29,7 +30,7 @@ func MakeTokenService(composite *v1alpha2.Composite) *v1alpha2.TokenService {
 	return &v1alpha2.TokenService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenServiceName(composite),
-			Namespace: composite.Namespace,
+			Namespace: mesh.SystemNamespace,
 			Labels:    makeLabels(composite),
 		},
 		Spec: v1alpha2.TokenServiceSpec{
