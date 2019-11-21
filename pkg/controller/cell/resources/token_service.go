@@ -69,5 +69,6 @@ func CopyTokenService(source, destination *v1alpha2.TokenService) {
 }
 
 func StatusFromTokenService(cell *v1alpha2.Cell, tokenService *v1alpha2.TokenService) {
+	cell.Status.TokenServiceStatus = tokenService.Status.Status
 	cell.Status.TokenServiceGeneration = tokenService.Generation
 }

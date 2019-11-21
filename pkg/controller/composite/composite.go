@@ -168,7 +168,8 @@ func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
 
 	composite.Status.ActiveComponentCount = activeCount
 	composite.Status.ComponentCount = len(composite.Spec.Components)
-	if composite.Status.ActiveComponentCount == composite.Status.ComponentCount {
+	if composite.Status.TokenServiceStatus == v1alpha2.TokenServiceCurrentStatusReady &&
+		composite.Status.ActiveComponentCount == composite.Status.ComponentCount {
 		composite.Status.Status = v1alpha2.CompositeCurrentStatusReady
 		c := []v1alpha2.CompositeCondition{
 			{

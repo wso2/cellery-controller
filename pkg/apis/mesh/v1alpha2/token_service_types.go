@@ -54,12 +54,13 @@ type OpaPolicy struct {
 }
 
 type TokenServiceStatus struct {
-	ObservedGeneration     int64 `json:"observedGeneration,omitempty"`
-	DeploymentGeneration   int64 `json:"deploymentGeneration,omitempty"`
-	ServiceGeneration      int64 `json:"serviceGeneration,omitempty"`
-	ConfigMapGeneration    int64 `json:"configMapGeneration,omitempty"`
-	OpaConfigMapGeneration int64 `json:"opaConfigMapGeneration,omitempty"`
-	EnvoyFilterGeneration  int64 `json:"envoyFilterGeneration,omitempty"`
+	Status                 TokenServiceCurrentStatus `json:"status"`
+	ObservedGeneration     int64                     `json:"observedGeneration,omitempty"`
+	DeploymentGeneration   int64                     `json:"deploymentGeneration,omitempty"`
+	ServiceGeneration      int64                     `json:"serviceGeneration,omitempty"`
+	ConfigMapGeneration    int64                     `json:"configMapGeneration,omitempty"`
+	OpaConfigMapGeneration int64                     `json:"opaConfigMapGeneration,omitempty"`
+	EnvoyFilterGeneration  int64                     `json:"envoyFilterGeneration,omitempty"`
 }
 
 type InterceptMode string
@@ -73,6 +74,16 @@ const (
 	InterceptModeAny InterceptMode = "Any"
 	// Do not intercept any traffic. This will disable the STS
 	InterceptModeNone InterceptMode = "None"
+)
+
+type TokenServiceCurrentStatus string
+
+const (
+	TokenServiceCurrentStatusUnknown TokenServiceCurrentStatus = "Unknown"
+
+	TokenServiceCurrentStatusReady TokenServiceCurrentStatus = "Ready"
+
+	TokenServiceCurrentStatusNotReady TokenServiceCurrentStatus = "NotReady"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -42,6 +42,7 @@ type CompositeStatus struct {
 	ComponentCount         int                               `json:"componentCount"`
 	ActiveComponentCount   int                               `json:"activeComponentCount"`
 	Status                 CompositeCurrentStatus            `json:"status"`
+	TokenServiceStatus     TokenServiceCurrentStatus         `json:"tokenServiceStatus"`
 	ComponentStatuses      map[string]ComponentCurrentStatus `json:"componentStatuses"`
 	ObservedGeneration     int64                             `json:"observedGeneration,omitempty"`
 	SecretGeneration       int64                             `json:"secretGeneration,omitempty"`
