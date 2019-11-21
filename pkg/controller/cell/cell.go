@@ -189,6 +189,7 @@ func (r *reconciler) reconcile(cell *v1alpha2.Cell) error {
 	cell.Status.ActiveComponentCount = activeCount
 	cell.Status.ComponentCount = len(cell.Spec.Components)
 	if cell.Status.GatewayStatus == v1alpha2.GatewayCurrentStatusReady &&
+		cell.Status.TokenServiceStatus == v1alpha2.TokenServiceCurrentStatusReady &&
 		cell.Status.ActiveComponentCount == cell.Status.ComponentCount {
 		cell.Status.Status = v1alpha2.CellCurrentStatusReady
 		c := []v1alpha2.CellCondition{

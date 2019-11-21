@@ -46,6 +46,7 @@ type CellStatus struct {
 	GatewayServiceName   string                            `json:"gatewayServiceName"`
 	Status               CellCurrentStatus                 `json:"status"`
 	GatewayStatus        GatewayCurrentStatus              `json:"gatewayStatus"`
+	TokenServiceStatus   TokenServiceCurrentStatus         `json:"tokenServiceStatus"`
 	ComponentStatuses    map[string]ComponentCurrentStatus `json:"componentStatuses"`
 	// Status                  string `json:"status"`
 	ObservedGeneration      int64            `json:"observedGeneration,omitempty"`

@@ -45,5 +45,6 @@ func MakeTokenService(composite *v1alpha2.Composite) *v1alpha2.TokenService {
 }
 
 func StatusFromTokenService(composite *v1alpha2.Composite, tokenService *v1alpha2.TokenService) {
+	composite.Status.TokenServiceStatus = tokenService.Status.Status
 	composite.Status.TokenServiceGeneration = tokenService.Generation
 }

@@ -24,6 +24,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
 	"github.com/cellery-io/mesh-controller/pkg/config"
@@ -188,6 +189,13 @@ func makeTokenServiceContainer(tokenService *v1alpha2.TokenService, cfg config.I
 				Value: tokenService.Annotations["mesh.cellery.io/cell-image-org"],
 			},
 		},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.IntOrString{Type: intstr.Int, IntVal: tokenServiceContainerGatewayPort},
+				},
+			},
+		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      configVolumeName,
@@ -255,6 +263,13 @@ func makeJwksContainer(tokenService *v1alpha2.TokenService, cfg config.Interface
 		// 		ContainerPort: tokenServiceContainerJWKSPort,
 		// 	},
 		// },
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.IntOrString{Type: intstr.Int, IntVal: tokenServiceContainerJWKSPort},
+				},
+			},
+		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      keyPairVolumeName,
@@ -285,4 +300,9 @@ func CopyDeployment(source, destination *appsv1.Deployment) {
 
 func StatusFromDeployment(tokenService *v1alpha2.TokenService, deployment *appsv1.Deployment) {
 	tokenService.Status.DeploymentGeneration = deployment.Generation
+	if deployment.Status.AvailableReplicas > 0 {
+		tokenService.Status.Status = v1alpha2.TokenServiceCurrentStatusReady
+	} else {
+		tokenService.Status.Status = v1alpha2.TokenServiceCurrentStatusNotReady
+	}
 }
