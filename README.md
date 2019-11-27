@@ -1,16 +1,16 @@
 # Mesh Controller
 
-[![Build Status](https://travis-ci.org/wso2-cellery/mesh-controller.svg?branch=master)](https://travis-ci.org/wso2-cellery/mesh-controller)
-[![codecov.io](https://codecov.io/gh/wso2-cellery/mesh-controller/branch/master/graph/badge.svg)](https://codecov.io/gh/wso2-cellery/mesh-controller/branch/master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/cellery-io/mesh-controller)](https://goreportcard.com/report/github.com/cellery-io/mesh-controller)
-[![GitHub (pre-)release](https://img.shields.io/github/release/cellery-io/mesh-controller/all.svg)](https://github.com/cellery-io/mesh-controller/releases)
-[![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/releases)
-[![GitHub last commit](https://img.shields.io/github/last-commit/cellery-io/mesh-controller.svg)](https://github.com/cellery-io/mesh-controller/commits/master)
+[![Build Status](https://travis-ci.org/wso2/cellery-controller.svg?branch=master)](https://travis-ci.org/wso2/cellery-controller)
+[![codecov.io](https://codecov.io/gh/wso2/cellery-controller/branch/master/graph/badge.svg)](https://codecov.io/gh/wso2/cellery-controller/branch/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wso2/cellery-controller)](https://goreportcard.com/report/github.com/wso2/cellery-controller)
+[![GitHub (pre-)release](https://img.shields.io/github/release/wso2/cellery-controller/all.svg)](https://github.com/wso2/cellery-controller/releases)
+[![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/wso2/cellery-controller.svg)](https://github.com/wso2/cellery-controller/releases)
+[![GitHub last commit](https://img.shields.io/github/last-commit/wso2/cellery-controller.svg)](https://github.com/wso2/cellery-controller/commits/master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   
-**Note**: If you just wish to get started with trying out Cellery, you can start your journey at [wso2-cellery/sdk](https://github.com/wso2-cellery/sdk) repository.  
+**Note**: If you just wish to get started with trying out Cellery, you can start your journey at [wso2/cellery](https://github.com/wso2/cellery) repository.  
 
-Mesh controller is a Kubernetes implementation for the Cellery mesh (a.k.a Cell Mesh) builds using Istio. To learn more about about Cellery, check out the [cellery-sdk](https://github.com/cellery-io/sdk) repository.
+Mesh controller is a Kubernetes implementation for the Cellery mesh (a.k.a Cell Mesh) builds using Istio. To learn more about about Cellery, check out the [wso2/cellery](https://github.com/wso2/cellery) repository. 
 
 ## Getting Started
 
@@ -18,9 +18,9 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
 
 ### Prerequisites
 
-* Golang v1.11+
-* Kubernetes cluster and client v1.11 
-* Istio v1.0.2
+* Golang v1.12+
+* Kubernetes cluster and client v1.14 
+* Istio v1.2.2
 * GNU Make 4.1+
 * Docker
 
@@ -30,9 +30,9 @@ Mesh Controller requires a Kubernetes cluster with Istio installed in order to w
    
     ```bash
     export GO111MODULE=on
-    cd $GOPATH/src/github.com/cellery-io/
-    git clone https://github.com/cellery-io/mesh-controller.git
-    cd mesh-controller
+    cd $GOPATH/src/cellery.io/
+    git clone https://github.com/wso2/cellery-controller.git
+    cd cellery-controller
     ```
    
 2. Build the controller

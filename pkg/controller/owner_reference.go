@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 )
 
 func CreateCellOwnerRef(obj metav1.Object) *metav1.OwnerReference {

@@ -21,7 +21,7 @@
 package fake
 
 import (
-	v1beta1 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/serving/v1beta1"
+	v1beta1 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/serving/v1beta1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

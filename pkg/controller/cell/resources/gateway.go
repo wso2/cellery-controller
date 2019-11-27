@@ -21,9 +21,9 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	. "github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/controller"
+	. "cellery.io/cellery-controller/pkg/meta"
 )
 
 func MakeGateway(cell *v1alpha2.Cell) *v1alpha2.Gateway {

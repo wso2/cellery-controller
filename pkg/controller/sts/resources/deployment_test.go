@@ -26,10 +26,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts/config"
+	"cellery.io/cellery-controller/pkg/apis/mesh"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/controller/sts/config"
 )
 
 var intOne int32 = 1

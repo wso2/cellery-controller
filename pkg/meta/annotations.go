@@ -18,7 +18,7 @@
 
 package meta
 
-import "github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+import "cellery.io/cellery-controller/pkg/apis/mesh"
 
 const (
 	// https://github.com/istio/istio/blob/master/install/kubernetes/helm/istio/templates/sidecar-injector-configmap.yaml

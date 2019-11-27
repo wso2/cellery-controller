@@ -21,9 +21,9 @@
 package serving
 
 import (
-	internalinterfaces "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
-	v1beta1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/serving/v1beta1"
+	internalinterfaces "cellery.io/cellery-controller/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
+	v1beta1 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/serving/v1beta1"
 )
 
 // Interface provides access to each of this group's versions.

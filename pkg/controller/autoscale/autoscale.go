@@ -34,12 +34,12 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/autoscale/resources"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/mesh/v1alpha1"
-	listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/controller/autoscale/resources"
+	meshclientset "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	meshinformers "cellery.io/cellery-controller/pkg/generated/informers/externalversions/mesh/v1alpha1"
+	listers "cellery.io/cellery-controller/pkg/generated/listers/mesh/v1alpha1"
 )
 
 type autoscalePolicyeHandler struct {

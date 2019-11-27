@@ -26,15 +26,15 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	istionetworkingv1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts/resources"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	"github.com/cellery-io/mesh-controller/pkg/informers"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/clients"
+	"cellery.io/cellery-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/controller/sts/resources"
+	meshclientset "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	"cellery.io/cellery-controller/pkg/informers"
 
 	//appsv1informers "k8s.io/client-go/informers/apps/v1"
 	//corev1informers "k8s.io/client-go/informers/core/v1"
@@ -52,8 +52,8 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 
-	mesh1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
-	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	mesh1alpha2listers "cellery.io/cellery-controller/pkg/generated/listers/mesh/v1alpha2"
+	istionetwork1alpha3listers "cellery.io/cellery-controller/pkg/generated/listers/networking/v1alpha3"
 )
 
 type reconciler struct {

@@ -21,7 +21,7 @@
 package v1alpha2
 
 import (
-	v1alpha2 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	v1alpha2 "cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

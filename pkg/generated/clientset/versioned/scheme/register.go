@@ -21,11 +21,11 @@
 package scheme
 
 import (
-	authenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
-	networkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
-	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
-	meshv1alpha2 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	authenticationv1alpha1 "cellery.io/cellery-controller/pkg/apis/istio/authentication/v1alpha1"
+	networkingv1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	servingv1alpha1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1alpha1"
+	servingv1beta1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1beta1"
+	meshv1alpha2 "cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

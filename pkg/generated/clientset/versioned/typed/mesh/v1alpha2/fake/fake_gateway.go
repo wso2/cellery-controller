@@ -21,7 +21,7 @@
 package fake
 
 import (
-	v1alpha2 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	v1alpha2 "cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

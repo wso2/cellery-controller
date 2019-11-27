@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
+	"cellery.io/cellery-controller/pkg/apis/knative/serving/v1beta1"
 )
 
 // Taken from: https://github.com/knative/serving/tree/release-0.6/pkg/apis/serving/v1alpha1

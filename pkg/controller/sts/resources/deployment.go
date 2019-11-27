@@ -26,10 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/ptr"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/ptr"
 )
 
 func MakeDeployment(tokenService *v1alpha2.TokenService, cfg config.Interface) *appsv1.Deployment {

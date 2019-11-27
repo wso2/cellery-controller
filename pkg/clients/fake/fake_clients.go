@@ -26,8 +26,8 @@ import (
 
 	clientgotesting "k8s.io/client-go/testing"
 
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	meshfake "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/fake"
+	"cellery.io/cellery-controller/pkg/clients"
+	meshfake "cellery.io/cellery-controller/pkg/generated/clientset/versioned/fake"
 )
 
 type fake struct {

@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/knative/serving"
+	"cellery.io/cellery-controller/pkg/apis/knative/serving"
 )
 
 // Taken from: https://github.com/knative/serving/tree/release-0.6/pkg/apis/serving/v1beta1

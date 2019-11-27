@@ -27,11 +27,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
-	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	servingv1alpha1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1alpha1"
+	servingv1beta1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1beta1"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/controller"
 )
 
 func MakeServingConfiguration(component *v1alpha2.Component) *servingv1alpha1.Configuration {

@@ -31,12 +31,12 @@ import (
 	extensionsv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
 	networkingv1 "k8s.io/client-go/informers/networking/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	meshinformers "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions"
-	istioauthenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/authentication/v1alpha1"
-	meshv1alpha2 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/mesh/v1alpha2"
-	istionetworkv1alpha3 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/networking/v1alpha3"
-	knativeservingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
+	"cellery.io/cellery-controller/pkg/clients"
+	meshinformers "cellery.io/cellery-controller/pkg/generated/informers/externalversions"
+	istioauthenticationv1alpha1 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/authentication/v1alpha1"
+	meshv1alpha2 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/mesh/v1alpha2"
+	istionetworkv1alpha3 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/networking/v1alpha3"
+	knativeservingv1alpha1 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/serving/v1alpha1"
 )
 
 type Interface interface {

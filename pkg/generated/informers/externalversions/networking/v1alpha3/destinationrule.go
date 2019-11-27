@@ -23,10 +23,10 @@ package v1alpha3
 import (
 	time "time"
 
-	networkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	versioned "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	networkingv1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	versioned "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	internalinterfaces "cellery.io/cellery-controller/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha3 "cellery.io/cellery-controller/pkg/generated/listers/networking/v1alpha3"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

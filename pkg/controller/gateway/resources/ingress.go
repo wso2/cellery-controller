@@ -24,8 +24,8 @@ package resources
 // 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // 	"k8s.io/apimachinery/pkg/util/intstr"
 
-// 	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-// 	"github.com/cellery-io/mesh-controller/pkg/controller"
+// 	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+// 	"cellery.io/cellery-controller/pkg/controller"
 // )
 
 // func CreateClusterIngress(gateway *v1alpha1.Gateway) *v1beta1.Ingress {

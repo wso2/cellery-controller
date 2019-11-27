@@ -21,7 +21,7 @@ package resources
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 )
 
 type podSpecOption func(*corev1.PodSpec)

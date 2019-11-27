@@ -1,4 +1,4 @@
-module github.com/cellery-io/mesh-controller
+module cellery.io/cellery-controller
 
 go 1.12
 

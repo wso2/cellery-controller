@@ -26,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/apis/mesh"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
 )
 
 func TestCreateClusterIngress(t *testing.T) {

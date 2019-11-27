@@ -21,7 +21,7 @@
 package v1alpha3
 
 import (
-	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	v1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

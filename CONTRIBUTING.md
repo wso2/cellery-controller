@@ -18,7 +18,7 @@ To submit a new feature or bug fix,
 ## Issues
 
 
-We use [GitHub issues](https://github.com/cellery-io/mesh-controller/issues/new) to track bugs, feature requests and questions.
+We use [GitHub issues](https://github.com/wso2/cellery-controller/issues/new) to track bugs, feature requests and questions.
 
 When reporting a bug please include at least Mesh Controller version number and the git commit.
 

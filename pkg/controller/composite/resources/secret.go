@@ -31,9 +31,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/apis/mesh"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/config"
 )
 
 func MakeSecret(composite *v1alpha2.Composite, cfg config.Interface) (*corev1.Secret, error) {

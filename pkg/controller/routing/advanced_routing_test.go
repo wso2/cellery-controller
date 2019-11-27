@@ -22,15 +22,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
+	"cellery.io/cellery-controller/pkg/controller/composite/resources"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/meta"
 
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
+	"cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
 )
 
 func TestBuildHostNameForCellDependency(t *testing.T) {

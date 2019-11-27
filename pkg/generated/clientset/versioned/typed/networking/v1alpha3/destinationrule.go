@@ -23,8 +23,8 @@ package v1alpha3
 import (
 	"time"
 
-	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	scheme "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/scheme"
+	v1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	scheme "cellery.io/cellery-controller/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
