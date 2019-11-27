@@ -21,8 +21,8 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/scheme"
+	v1alpha1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1alpha1"
+	"cellery.io/cellery-controller/pkg/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

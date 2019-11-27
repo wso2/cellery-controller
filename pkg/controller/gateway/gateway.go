@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/meta"
 
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -44,16 +44,16 @@ import (
 	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
 	autoscalingv2beta1lister "k8s.io/client-go/listers/autoscaling/v2beta1"
 
-	istionetworkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	"github.com/cellery-io/mesh-controller/pkg/controller/gateway/resources"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	mesh1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
-	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/informers"
+	istionetworkingv1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/clients"
+	"cellery.io/cellery-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/controller/gateway/resources"
+	meshclientset "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	mesh1alpha2listers "cellery.io/cellery-controller/pkg/generated/listers/mesh/v1alpha2"
+	istionetwork1alpha3listers "cellery.io/cellery-controller/pkg/generated/listers/networking/v1alpha3"
+	"cellery.io/cellery-controller/pkg/informers"
 )
 
 type reconciler struct {

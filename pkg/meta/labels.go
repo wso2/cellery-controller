@@ -18,7 +18,7 @@
 
 package meta
 
-import "github.com/cellery-io/mesh-controller/pkg/apis/mesh"
+import "cellery.io/cellery-controller/pkg/apis/mesh"
 
 const (
 	AppLabelKey     = "app"

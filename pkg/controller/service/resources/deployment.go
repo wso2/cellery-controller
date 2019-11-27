@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/controller"
 )
 
 const readinessInitialDelay = 15

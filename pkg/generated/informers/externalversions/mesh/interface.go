@@ -21,8 +21,8 @@
 package mesh
 
 import (
-	internalinterfaces "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha2 "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/mesh/v1alpha2"
+	internalinterfaces "cellery.io/cellery-controller/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha2 "cellery.io/cellery-controller/pkg/generated/informers/externalversions/mesh/v1alpha2"
 )
 
 // Interface provides access to each of this group's versions.

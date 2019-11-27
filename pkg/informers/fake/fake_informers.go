@@ -28,9 +28,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 
-	v1alpha2 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	clients "github.com/cellery-io/mesh-controller/pkg/clients"
-	informers "github.com/cellery-io/mesh-controller/pkg/informers"
+	v1alpha2 "cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	clients "cellery.io/cellery-controller/pkg/clients"
+	informers "cellery.io/cellery-controller/pkg/informers"
 )
 
 type fake struct {

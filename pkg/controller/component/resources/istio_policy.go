@@ -21,9 +21,9 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	istioauthenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
+	istioauthenticationv1alpha1 "cellery.io/cellery-controller/pkg/apis/istio/authentication/v1alpha1"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/controller"
 )
 
 // See https://istio.io/faq/security/#mysql-with-mtls

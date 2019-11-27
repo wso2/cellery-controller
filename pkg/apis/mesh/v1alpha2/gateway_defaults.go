@@ -18,7 +18,7 @@
 
 package v1alpha2
 
-import "github.com/cellery-io/mesh-controller/pkg/ptr"
+import "cellery.io/cellery-controller/pkg/ptr"
 
 func (g *Gateway) SetDefaults() {
 	g.Spec.SetDefaults()

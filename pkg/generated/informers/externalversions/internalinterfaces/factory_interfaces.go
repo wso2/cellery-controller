@@ -23,7 +23,7 @@ package internalinterfaces
 import (
 	time "time"
 
-	versioned "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	versioned "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

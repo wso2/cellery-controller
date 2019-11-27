@@ -26,17 +26,17 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller/cell"
-	"github.com/cellery-io/mesh-controller/pkg/controller/component"
-	"github.com/cellery-io/mesh-controller/pkg/controller/composite"
-	"github.com/cellery-io/mesh-controller/pkg/controller/gateway"
-	"github.com/cellery-io/mesh-controller/pkg/controller/sts"
-	"github.com/cellery-io/mesh-controller/pkg/informers"
-	"github.com/cellery-io/mesh-controller/pkg/logging"
-	"github.com/cellery-io/mesh-controller/pkg/signals"
-	"github.com/cellery-io/mesh-controller/pkg/version"
+	"cellery.io/cellery-controller/pkg/clients"
+	"cellery.io/cellery-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/controller/cell"
+	"cellery.io/cellery-controller/pkg/controller/component"
+	"cellery.io/cellery-controller/pkg/controller/composite"
+	"cellery.io/cellery-controller/pkg/controller/gateway"
+	"cellery.io/cellery-controller/pkg/controller/sts"
+	"cellery.io/cellery-controller/pkg/informers"
+	"cellery.io/cellery-controller/pkg/logging"
+	"cellery.io/cellery-controller/pkg/signals"
+	"cellery.io/cellery-controller/pkg/version"
 )
 
 const (

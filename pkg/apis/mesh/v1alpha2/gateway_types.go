@@ -22,7 +22,7 @@ import (
 	"k8s.io/api/autoscaling/v2beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/ptr"
+	"cellery.io/cellery-controller/pkg/ptr"
 )
 
 // +genclient

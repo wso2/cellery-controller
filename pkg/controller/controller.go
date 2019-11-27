@@ -32,7 +32,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	meshscheme "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/scheme"
+	meshscheme "cellery.io/cellery-controller/pkg/generated/clientset/versioned/scheme"
 )
 
 type Reconciler interface {

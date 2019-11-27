@@ -32,7 +32,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/cellery-io/mesh-controller/pkg/informers"
+	"cellery.io/cellery-controller/pkg/informers"
 )
 
 type Interface interface {

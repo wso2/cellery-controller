@@ -19,7 +19,7 @@
 package v1alpha1
 
 import (
-	"github.com/cellery-io/mesh-controller/pkg/apis/knative/serving"
+	"cellery.io/cellery-controller/pkg/apis/knative/serving"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

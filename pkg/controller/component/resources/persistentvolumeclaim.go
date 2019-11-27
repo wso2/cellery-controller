@@ -22,8 +22,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	. "github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	. "cellery.io/cellery-controller/pkg/meta"
 )
 
 func MakePersistentVolumeClaim(component *v1alpha2.Component, volumeClaim *v1alpha2.VolumeClaim) *corev1.PersistentVolumeClaim {

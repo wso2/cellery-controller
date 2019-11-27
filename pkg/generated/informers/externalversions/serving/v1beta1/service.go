@@ -23,10 +23,10 @@ package v1beta1
 import (
 	time "time"
 
-	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
-	versioned "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/cellery-io/mesh-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/cellery-io/mesh-controller/pkg/generated/listers/serving/v1beta1"
+	servingv1beta1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1beta1"
+	versioned "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	internalinterfaces "cellery.io/cellery-controller/pkg/generated/informers/externalversions/internalinterfaces"
+	v1beta1 "cellery.io/cellery-controller/pkg/generated/listers/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

@@ -22,16 +22,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/meta"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
-	routing "github.com/cellery-io/mesh-controller/pkg/controller/routing"
-	listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/controller"
+	routing "cellery.io/cellery-controller/pkg/controller/routing"
+	listers "cellery.io/cellery-controller/pkg/generated/listers/mesh/v1alpha2"
 )
 
 func MakeRoutingVirtualService(cell *v1alpha2.Cell, cellLister listers.CellLister, compositeLister listers.CompositeLister) (*v1alpha3.VirtualService, error) {

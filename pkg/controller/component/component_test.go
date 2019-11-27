@@ -28,12 +28,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clienttesting "k8s.io/client-go/testing"
 
-	fakeclients "github.com/cellery-io/mesh-controller/pkg/clients/fake"
-	fakeinformers "github.com/cellery-io/mesh-controller/pkg/informers/fake"
-	"github.com/cellery-io/mesh-controller/pkg/logging"
-	. "github.com/cellery-io/mesh-controller/pkg/testing/apis/apps/v1"
-	. "github.com/cellery-io/mesh-controller/pkg/testing/apis/core/v1"
-	. "github.com/cellery-io/mesh-controller/pkg/testing/apis/mesh/v1alpha2"
+	fakeclients "cellery.io/cellery-controller/pkg/clients/fake"
+	fakeinformers "cellery.io/cellery-controller/pkg/informers/fake"
+	"cellery.io/cellery-controller/pkg/logging"
+	. "cellery.io/cellery-controller/pkg/testing/apis/apps/v1"
+	. "cellery.io/cellery-controller/pkg/testing/apis/core/v1"
+	. "cellery.io/cellery-controller/pkg/testing/apis/mesh/v1alpha2"
 )
 
 var noResyncPeriodFunc = func() time.Duration { return 0 }

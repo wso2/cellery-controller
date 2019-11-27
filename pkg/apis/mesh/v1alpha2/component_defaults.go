@@ -21,7 +21,7 @@ package v1alpha2
 import (
 	"fmt"
 
-	"github.com/cellery-io/mesh-controller/pkg/ptr"
+	"cellery.io/cellery-controller/pkg/ptr"
 )
 
 func (c *Component) SetDefaults() {

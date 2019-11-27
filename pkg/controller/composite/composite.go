@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cellery-io/mesh-controller/pkg/meta"
+	"cellery.io/cellery-controller/pkg/meta"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/clients"
-	"github.com/cellery-io/mesh-controller/pkg/informers"
+	"cellery.io/cellery-controller/pkg/apis/mesh"
+	"cellery.io/cellery-controller/pkg/clients"
+	"cellery.io/cellery-controller/pkg/informers"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -41,16 +41,16 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	"github.com/cellery-io/mesh-controller/pkg/config"
-	"github.com/cellery-io/mesh-controller/pkg/controller"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/config"
+	"cellery.io/cellery-controller/pkg/controller"
 
-	//controller_commons "github.com/cellery-io/mesh-controller/pkg/controller/commons"
-	"github.com/cellery-io/mesh-controller/pkg/controller/composite/resources"
-	routing "github.com/cellery-io/mesh-controller/pkg/controller/routing"
-	meshclientset "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
-	v1alpha2listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/mesh/v1alpha2"
-	istionetwork1alpha3listers "github.com/cellery-io/mesh-controller/pkg/generated/listers/networking/v1alpha3"
+	//controller_commons "cellery.io/cellery-controller/pkg/controller/commons"
+	"cellery.io/cellery-controller/pkg/controller/composite/resources"
+	routing "cellery.io/cellery-controller/pkg/controller/routing"
+	meshclientset "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
+	v1alpha2listers "cellery.io/cellery-controller/pkg/generated/listers/mesh/v1alpha2"
+	istionetwork1alpha3listers "cellery.io/cellery-controller/pkg/generated/listers/networking/v1alpha3"
 )
 
 type reconciler struct {

@@ -23,11 +23,11 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/istio/authentication/v1alpha1"
-	v1alpha3 "github.com/cellery-io/mesh-controller/pkg/apis/istio/networking/v1alpha3"
-	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1alpha1"
-	v1beta1 "github.com/cellery-io/mesh-controller/pkg/apis/knative/serving/v1beta1"
-	v1alpha2 "github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
+	v1alpha1 "cellery.io/cellery-controller/pkg/apis/istio/authentication/v1alpha1"
+	v1alpha3 "cellery.io/cellery-controller/pkg/apis/istio/networking/v1alpha3"
+	servingv1alpha1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1alpha1"
+	v1beta1 "cellery.io/cellery-controller/pkg/apis/knative/serving/v1beta1"
+	v1alpha2 "cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

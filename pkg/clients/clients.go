@@ -25,7 +25,7 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	meshclient "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned"
+	meshclient "cellery.io/cellery-controller/pkg/generated/clientset/versioned"
 )
 
 type Interface interface {

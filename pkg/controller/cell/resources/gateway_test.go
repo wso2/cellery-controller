@@ -25,8 +25,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh"
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha1"
+	"cellery.io/cellery-controller/pkg/apis/mesh"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha1"
 )
 
 var zero int32 = 0

@@ -21,11 +21,11 @@
 package versioned
 
 import (
-	authenticationv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/authentication/v1alpha1"
-	meshv1alpha2 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/mesh/v1alpha2"
-	networkingv1alpha3 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/networking/v1alpha3"
-	servingv1alpha1 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/serving/v1alpha1"
-	servingv1beta1 "github.com/cellery-io/mesh-controller/pkg/generated/clientset/versioned/typed/serving/v1beta1"
+	authenticationv1alpha1 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/authentication/v1alpha1"
+	meshv1alpha2 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/mesh/v1alpha2"
+	networkingv1alpha3 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/networking/v1alpha3"
+	servingv1alpha1 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/serving/v1alpha1"
+	servingv1beta1 "cellery.io/cellery-controller/pkg/generated/clientset/versioned/typed/serving/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

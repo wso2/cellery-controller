@@ -24,9 +24,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/cellery-io/mesh-controller/pkg/apis/mesh/v1alpha2"
-	. "github.com/cellery-io/mesh-controller/pkg/testing/apis/core/v1"
-	. "github.com/cellery-io/mesh-controller/pkg/testing/apis/mesh/v1alpha2"
+	"cellery.io/cellery-controller/pkg/apis/mesh/v1alpha2"
+	. "cellery.io/cellery-controller/pkg/testing/apis/core/v1"
+	. "cellery.io/cellery-controller/pkg/testing/apis/mesh/v1alpha2"
 )
 
 func TestMakeService(t *testing.T) {
