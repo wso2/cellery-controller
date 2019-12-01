@@ -64,8 +64,7 @@ func MakeVirtualService(gateway *v1alpha2.Gateway) *v1alpha3.VirtualService {
 			AppendHeaders: func() map[string]string {
 				if httpRoute.ZeroScale {
 					return map[string]string{
-						// fixme: make this namespace aware
-						"knative-serving-namespace": "default",
+						"knative-serving-namespace": gateway.Namespace,
 						"knative-serving-revision":  httpRoute.Destination.Host,
 					}
 				}
@@ -95,8 +94,7 @@ func MakeVirtualService(gateway *v1alpha2.Gateway) *v1alpha3.VirtualService {
 			AppendHeaders: func() map[string]string {
 				if grpcRoute.ZeroScale {
 					return map[string]string{
-						// fixme: make this namespace aware
-						"knative-serving-namespace": "default",
+						"knative-serving-namespace": gateway.Namespace,
 						"knative-serving-revision":  grpcRoute.Destination.Host,
 					}
 				}
