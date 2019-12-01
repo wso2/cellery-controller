@@ -126,7 +126,7 @@ func MakeServingVirtualService(component *v1alpha2.Component) *v1alpha3.VirtualS
 			Http: []*v1alpha3.HTTPRoute{
 				{
 					AppendHeaders: map[string]string{
-						"knative-serving-namespace": "default",
+						"knative-serving-namespace": component.Namespace,
 						"knative-serving-revision":  ServingRevisionName(component),
 					},
 					Match: []*v1alpha3.HTTPMatchRequest{
@@ -138,13 +138,13 @@ func MakeServingVirtualService(component *v1alpha2.Component) *v1alpha3.VirtualS
 						},
 						{
 							Authority: &v1alpha3.StringMatch{
-								Regex: fmt.Sprintf("^%s\\.default(?::\\d{1,5})?$", ServingRevisionName(component)),
+								Regex: fmt.Sprintf("^%s\\.%s(?::\\d{1,5})?$", ServingRevisionName(component), component.Namespace),
 							},
 							SourceLabels: selector,
 						},
 						{
 							Authority: &v1alpha3.StringMatch{
-								Regex: fmt.Sprintf("^%s\\.default\\.svc\\.cluster\\.local(?::\\d{1,5})?$", ServingRevisionName(component)),
+								Regex: fmt.Sprintf("^%s\\.%s\\.svc\\.cluster\\.local(?::\\d{1,5})?$", ServingRevisionName(component), component.Namespace),
 							},
 							SourceLabels: selector,
 						},
