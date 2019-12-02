@@ -27,4 +27,8 @@ const (
 
 	// Names
 	HTTPServiceName = "http"
+
+	// Headers
+	KnativeServingNamespaceHeader = "knative-serving-namespace"
+	KnativeServingRevisionHeader  = "knative-serving-revision"
 )

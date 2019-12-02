@@ -126,8 +126,8 @@ func MakeServingVirtualService(component *v1alpha2.Component) *v1alpha3.VirtualS
 			Http: []*v1alpha3.HTTPRoute{
 				{
 					AppendHeaders: map[string]string{
-						"knative-serving-namespace": component.Namespace,
-						"knative-serving-revision":  ServingRevisionName(component),
+						controller.KnativeServingNamespaceHeader: component.Namespace,
+						controller.KnativeServingRevisionHeader:  ServingRevisionName(component),
 					},
 					Match: []*v1alpha3.HTTPMatchRequest{
 						{
