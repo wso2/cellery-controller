@@ -165,6 +165,10 @@ func makeTokenServiceContainer(tokenService *v1alpha2.TokenService, cfg config.I
 				Value: tokenService.Spec.InstanceName,
 			},
 			{
+				Name:  "CELL_NAMESPACE",
+				Value: tokenService.Namespace,
+			},
+			{
 				Name:  "VALIDATE_SERVER_CERT",
 				Value: "true",
 			},
