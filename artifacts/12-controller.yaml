@@ -17,5 +17,5 @@ spec:
     spec:
       containers:
       - name: controller
-        image: ${DOCKER_REPO}/mesh-controller:${CONTROLLER_IMAGE_TAG}
+        image: wso2cellery/mesh-controller:latest
       serviceAccountName: controller

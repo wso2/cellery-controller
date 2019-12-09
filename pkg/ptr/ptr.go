@@ -25,3 +25,7 @@ func Bool(b bool) *bool {
 func Int32(i32 int32) *int32 {
 	return &i32
 }
+
+func String(str string) *string {
+	return &str
+}

@@ -21,7 +21,7 @@ BUILD_ROOT := $(PROJECT_ROOT)/$(BUILD_DIRECTORY)
 GO_FILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/generated/*")
 GIT_REVISION := $(shell git rev-parse --verify HEAD)
 
-MAIN_PACKAGES := controller
+MAIN_PACKAGES := controller webhook
 BUILD_TARGETS := $(addprefix build., $(MAIN_PACKAGES))
 TEST_TARGETS := $(addprefix test., $(MAIN_PACKAGES))
 CONTROLLER_YAML_NAME := mesh-controller.yaml
