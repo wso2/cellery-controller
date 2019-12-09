@@ -24,8 +24,10 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/pem"
 	"fmt"
 	"strings"
 	"unicode"
@@ -137,4 +139,26 @@ func removeSpace(str string) string {
 		}
 	}
 	return b.String()
+}
+
+func ParsePrivateKey(keyPemBytes []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(keyPemBytes)
+	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse private key: %v", err)
+	}
+	key, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("non rsa private key")
+	}
+	return key, nil
+}
+
+func ParseCertificate(certPemBytes []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(certPemBytes)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse x509 certificate : %v", err)
+	}
+	return cert, nil
 }

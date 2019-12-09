@@ -1,7 +1,5 @@
-// +build !windows
-
 /*
- * Copyright (c) 2018 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2019 WSO2 Inc. (http:www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -18,11 +16,17 @@
  * under the License.
  */
 
-package signals
+package apis
 
 import (
-	"os"
-	"syscall"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
+type Defaultable interface {
+	SetDefaults()
+	runtime.Object
+}
+
+type Validatable interface {
+	Validate() error
+}
