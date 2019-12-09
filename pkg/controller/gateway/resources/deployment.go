@@ -450,6 +450,10 @@ func makeOidcContainer(gateway *v1alpha2.Gateway, cfg config.Interface) (*corev1
 
 	envVars := []corev1.EnvVar{
 		{
+			Name:  "CELL_NAMESPACE",
+			Value: gateway.Namespace,
+		},
+		{
 			Name:  "PROVIDER_URL",
 			Value: oidc.ProviderUrl,
 		},
