@@ -3,6 +3,8 @@ on: [push]
 jobs:
 
   build:
+    # TODO: Remove below condition once GitHub actions are enabled
+    if: false
     name: Build
     runs-on: ubuntu-18.04
     steps:
