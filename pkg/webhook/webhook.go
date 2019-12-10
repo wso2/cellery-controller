@@ -63,7 +63,11 @@ func NewServer(kubeClient kubernetes.Interface, opt ServerOptions, logger *zap.S
 		options:    &opt,
 		logger:     logger.Named("admission-webhook"),
 		validators: map[schema.GroupVersionKind]func() apis.Validatable{
-			v1alpha2.SchemeGroupVersion.WithKind("Component"): func() apis.Validatable { return &v1alpha2.Component{} },
+			v1alpha2.SchemeGroupVersion.WithKind("Component"):    func() apis.Validatable { return &v1alpha2.Component{} },
+			v1alpha2.SchemeGroupVersion.WithKind("Gateway"):      func() apis.Validatable { return &v1alpha2.Gateway{} },
+			v1alpha2.SchemeGroupVersion.WithKind("TokenService"): func() apis.Validatable { return &v1alpha2.TokenService{} },
+			v1alpha2.SchemeGroupVersion.WithKind("Cell"):         func() apis.Validatable { return &v1alpha2.Cell{} },
+			v1alpha2.SchemeGroupVersion.WithKind("Composite"):    func() apis.Validatable { return &v1alpha2.Composite{} },
 		},
 	}
 }
