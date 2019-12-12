@@ -21,14 +21,15 @@ package v1alpha2
 import (
 	"fmt"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	//apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func (c *Component) Validate() error {
-	var allErrs field.ErrorList
-	allErrs = append(allErrs, c.Spec.Validate(field.NewPath("spec"))...)
-	return apierrors.NewInvalid(c.GroupVersionKind().GroupKind(), c.Name, allErrs)
+	//var allErrs field.ErrorList
+	//allErrs = append(allErrs, c.Spec.Validate(field.NewPath("spec"))...)
+	//return apierrors.NewInvalid(c.GroupVersionKind().GroupKind(), c.Name, allErrs)
+	return nil
 }
 
 func (cs *ComponentSpec) Validate(fldPath *field.Path) field.ErrorList {
