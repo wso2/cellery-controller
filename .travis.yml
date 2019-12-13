@@ -23,9 +23,9 @@ before_script:
 script:
 - test -z "$(make code.format-check| tee /dev/stderr)"
 - make verify-codegen
-- make build.controller
-- make docker.controller
-- make test.controller
+- make build
+- make docker
+- make test
 - git diff --exit-code
 
 after_success:
@@ -33,7 +33,7 @@ after_success:
 
 deploy:
   provider: script
-  script: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make docker-push.controller
+  script: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make docker-push
   on:
     branch: master
   skip_cleanup: true
