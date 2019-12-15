@@ -18,6 +18,8 @@
 
 package v1alpha2
 
-func (c *Gateway) Validate() error {
+import "k8s.io/apimachinery/pkg/util/validation/field"
+
+func (c *Gateway) Validate() field.ErrorList {
 	return nil
 }

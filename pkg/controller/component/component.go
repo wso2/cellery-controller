@@ -203,7 +203,7 @@ func (r *reconciler) Reconcile(key string) error {
 }
 
 func (r *reconciler) reconcile(component *v1alpha2.Component) error {
-	component.SetDefaults()
+	component.Default()
 	rErrs := &controller.ReconcileErrors{}
 
 	rErrs.Add(r.reconcileService(component))

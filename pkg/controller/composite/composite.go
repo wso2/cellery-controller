@@ -141,7 +141,7 @@ func (r *reconciler) Reconcile(key string) error {
 }
 
 func (r *reconciler) reconcile(composite *v1alpha2.Composite) error {
-	composite.SetDefaults()
+	composite.Default()
 	rErrs := &controller.ReconcileErrors{}
 
 	rErrs.Add(r.reconcileSecret(composite))

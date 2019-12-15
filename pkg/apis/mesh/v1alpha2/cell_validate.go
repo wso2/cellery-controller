@@ -18,6 +18,22 @@
 
 package v1alpha2
 
-func (c *Cell) Validate() error {
-	return nil
+import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
+)
+
+func (c *Cell) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, c.Spec.Validate(field.NewPath("spec"))...)
+	return allErrs
+}
+
+func (cs *CellSpec) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	fldPathComponent := fldPath.Child("components")
+	for i, cmp := range cs.Components {
+		idxPath := fldPathComponent.Index(i)
+		allErrs = append(allErrs, cmp.Spec.Validate(idxPath.Child("spec"))...)
+	}
+	return allErrs
 }

@@ -33,6 +33,10 @@ import (
 	"cellery.io/cellery-controller/pkg/webhook"
 )
 
+const (
+	componentName = "Webhook"
+)
+
 var (
 	masterURL  string
 	kubeconfig string
@@ -50,7 +54,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info(version.String())
+	logger.Info(version.String(componentName))
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {

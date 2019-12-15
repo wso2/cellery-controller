@@ -20,16 +20,14 @@ package v1alpha2
 
 import (
 	"fmt"
-
 	//apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func (c *Component) Validate() error {
-	//var allErrs field.ErrorList
-	//allErrs = append(allErrs, c.Spec.Validate(field.NewPath("spec"))...)
-	//return apierrors.NewInvalid(c.GroupVersionKind().GroupKind(), c.Name, allErrs)
-	return nil
+func (c *Component) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, c.Spec.Validate(field.NewPath("spec"))...)
+	return allErrs
 }
 
 func (cs *ComponentSpec) Validate(fldPath *field.Path) field.ErrorList {
@@ -40,5 +38,7 @@ func (cs *ComponentSpec) Validate(fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("type"), cs.Type,
 			fmt.Sprintf("must be one of '%s', '%s', '%s'", ComponentTypeDeployment, ComponentTypeJob, ComponentTypeStatefulSet)))
 	}
+	allErrs = append(allErrs, ValidatePodSpec(&cs.Template, fldPath.Child("template"))...)
+
 	return allErrs
 }

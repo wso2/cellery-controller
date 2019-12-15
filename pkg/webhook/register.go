@@ -20,6 +20,9 @@ package webhook
 
 import (
 	"fmt"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -83,6 +86,11 @@ func (s *server) registerValidatingWebhook(ownerRef *metav1.OwnerReference, caCe
 }
 
 func (s *server) makeMutatingWebhookConfiguration(ownerRef *metav1.OwnerReference, caCertPEM []byte) *admissionregistrationv1beta1.MutatingWebhookConfiguration {
+	var resources []schema.GroupVersionResource
+	for gvk := range s.defaulters {
+		plural := fmt.Sprintf("%ss", strings.ToLower(gvk.Kind))
+		resources = append(resources, gvk.GroupVersion().WithResource(plural))
+	}
 	return &admissionregistrationv1beta1.MutatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            s.options.MutatingWebhookName,
@@ -91,7 +99,7 @@ func (s *server) makeMutatingWebhookConfiguration(ownerRef *metav1.OwnerReferenc
 		Webhooks: []admissionregistrationv1beta1.MutatingWebhook{
 			{
 				Name:                    s.options.MutatingWebhookName,
-				Rules:                   makeWebhookRules(),
+				Rules:                   makeWebhookRules(resources),
 				ClientConfig:            makeClientConfig(s.options.ServiceName, s.options.Namespace, pathMutate, caCertPEM),
 				FailurePolicy:           failurePolicy(),
 				AdmissionReviewVersions: admissionReviewVersions(),
@@ -101,6 +109,11 @@ func (s *server) makeMutatingWebhookConfiguration(ownerRef *metav1.OwnerReferenc
 }
 
 func (s *server) makeValidatingWebhookConfiguration(ownerRef *metav1.OwnerReference, caCertPEM []byte) *admissionregistrationv1beta1.ValidatingWebhookConfiguration {
+	var resources []schema.GroupVersionResource
+	for gvk := range s.validators {
+		plural := fmt.Sprintf("%ss", strings.ToLower(gvk.Kind))
+		resources = append(resources, gvk.GroupVersion().WithResource(plural))
+	}
 	return &admissionregistrationv1beta1.ValidatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            s.options.ValidatingWebhookName,
@@ -109,7 +122,7 @@ func (s *server) makeValidatingWebhookConfiguration(ownerRef *metav1.OwnerRefere
 		Webhooks: []admissionregistrationv1beta1.ValidatingWebhook{
 			{
 				Name:                    s.options.ValidatingWebhookName,
-				Rules:                   makeWebhookRules(),
+				Rules:                   makeWebhookRules(resources),
 				ClientConfig:            makeClientConfig(s.options.ServiceName, s.options.Namespace, pathValidate, caCertPEM),
 				FailurePolicy:           failurePolicy(),
 				AdmissionReviewVersions: admissionReviewVersions(),
@@ -118,22 +131,24 @@ func (s *server) makeValidatingWebhookConfiguration(ownerRef *metav1.OwnerRefere
 	}
 }
 
-func makeWebhookRules() []admissionregistrationv1beta1.RuleWithOperations {
+func makeWebhookRules(resources []schema.GroupVersionResource) []admissionregistrationv1beta1.RuleWithOperations {
 	scope := admissionregistrationv1beta1.NamespacedScope
-	return []admissionregistrationv1beta1.RuleWithOperations{
-		{
+	var rules []admissionregistrationv1beta1.RuleWithOperations
+	for _, gvr := range resources {
+		rules = append(rules, admissionregistrationv1beta1.RuleWithOperations{
 			Operations: []admissionregistrationv1beta1.OperationType{
 				admissionregistrationv1beta1.Create,
 				admissionregistrationv1beta1.Update,
 			},
 			Rule: admissionregistrationv1beta1.Rule{
-				APIGroups:   []string{"mesh.cellery.io"},
-				APIVersions: []string{"v1alpha2"},
-				Resources:   []string{"cells", "composites", "gateways", "components", "tokenservices"},
+				APIGroups:   []string{gvr.Group},
+				APIVersions: []string{gvr.Version},
+				Resources:   []string{gvr.Resource},
 				Scope:       &scope,
 			},
-		},
+		})
 	}
+	return rules
 }
 
 func makeClientConfig(svcName, namespace, path string, caCertPEM []byte) admissionregistrationv1beta1.WebhookClientConfig {

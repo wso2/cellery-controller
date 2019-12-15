@@ -191,7 +191,7 @@ func (r *reconciler) Reconcile(key string) error {
 }
 
 func (r *reconciler) reconcile(gateway *v1alpha2.Gateway) error {
-	gateway.SetDefaults()
+	gateway.Default()
 	rErrs := &controller.ReconcileErrors{}
 
 	rErrs.Add(r.reconcileService(gateway))
