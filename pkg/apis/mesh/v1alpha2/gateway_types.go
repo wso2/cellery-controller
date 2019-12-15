@@ -33,7 +33,7 @@ type Gateway struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   GatewaySpec   `json:"spec"`
-	Status GatewayStatus `json:"status"`
+	Status GatewayStatus `json:"status,omitempty"`
 }
 
 type GatewaySpec struct {

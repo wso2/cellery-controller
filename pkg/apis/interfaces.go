@@ -19,14 +19,18 @@
 package apis
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-type Defaultable interface {
-	SetDefaults()
+type Defaulter interface {
+	Default()
 	runtime.Object
 }
 
-type Validatable interface {
-	Validate() error
+type Validator interface {
+	metav1.Object
+	runtime.Object
+	Validate() field.ErrorList
 }

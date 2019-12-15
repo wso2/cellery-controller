@@ -18,13 +18,17 @@
 
 package v1alpha2
 
-func (c *Cell) SetDefaults() {
+func (c *Cell) Default() {
 	c.Spec.SetDefaults()
 	c.Status.SetDefaults()
 }
 
 func (cs *CellSpec) SetDefaults() {
-
+	cs.Gateway.Spec.SetDefaults()
+	for i, _ := range cs.Components {
+		cs.Components[i].Spec.Default()
+	}
+	cs.TokenService.Spec.SetDefaults()
 }
 
 func (cstat *CellStatus) SetDefaults() {

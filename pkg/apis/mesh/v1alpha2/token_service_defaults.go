@@ -18,7 +18,7 @@
 
 package v1alpha2
 
-func (t *TokenService) SetDefaults() {
+func (t *TokenService) Default() {
 	t.Spec.SetDefaults()
 	t.Status.SetDefaults()
 }

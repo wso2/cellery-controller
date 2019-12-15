@@ -30,7 +30,7 @@ type TokenService struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   TokenServiceSpec   `json:"spec"`
-	Status TokenServiceStatus `json:"status"`
+	Status TokenServiceStatus `json:"status,omitempty"`
 }
 
 type TokenServiceTemplateSpec struct {

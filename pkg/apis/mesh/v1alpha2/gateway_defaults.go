@@ -20,7 +20,7 @@ package v1alpha2
 
 import "cellery.io/cellery-controller/pkg/ptr"
 
-func (g *Gateway) SetDefaults() {
+func (g *Gateway) Default() {
 	g.Spec.SetDefaults()
 	g.Status.SetDefaults()
 }

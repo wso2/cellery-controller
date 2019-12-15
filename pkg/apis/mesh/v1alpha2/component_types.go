@@ -32,7 +32,7 @@ type Component struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   ComponentSpec   `json:"spec"`
-	Status ComponentStatus `json:"status"`
+	Status ComponentStatus `json:"status,omitempty"`
 }
 
 type ComponentSpec struct {

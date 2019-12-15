@@ -21,7 +21,6 @@ package config
 import (
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"strconv"
 	"sync"
@@ -32,6 +31,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"cellery.io/cellery-controller/pkg/crypto"
 	"cellery.io/cellery-controller/pkg/informers"
 )
 
@@ -193,7 +193,7 @@ func (c *config) updateSecrets(obj interface{}) {
 	}
 
 	if keyBytes, ok := secret.Data[SecretKeyPrivateKey]; ok {
-		privateKey, err := parsePrivateKey(keyBytes)
+		privateKey, err := crypto.ParsePrivateKey(keyBytes)
 		if err != nil {
 			c.logger.Errorf("Error while parsing %q from the secret %s/%s: %v", SecretKeyPrivateKey, c.namespace, c.secretName, err)
 		} else {
@@ -204,7 +204,7 @@ func (c *config) updateSecrets(obj interface{}) {
 	}
 
 	if certBytes, ok := secret.Data[SecretKeyCertificate]; ok {
-		cert, err := parseCertificate(certBytes)
+		cert, err := crypto.ParseCertificate(certBytes)
 		if err != nil {
 			c.logger.Errorf("Error while parsing %q from the secret %s/%s: %v", SecretKeyCertificate, c.namespace, c.secretName, err)
 		} else {
@@ -220,26 +220,4 @@ func (c *config) updateSecrets(obj interface{}) {
 		c.logger.Errorf("Missing key %q in secret %s/%s", SecretKeyCertificateBundle, c.namespace, c.secretName)
 	}
 
-}
-
-func parsePrivateKey(keyBytes []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(keyBytes)
-	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("cannot parse private key: %v", err)
-	}
-	key, ok := parsedKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, fmt.Errorf("non rsa private key")
-	}
-	return key, nil
-}
-
-func parseCertificate(certBytes []byte) (*x509.Certificate, error) {
-	block, _ := pem.Decode(certBytes)
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("cannot parse x509 certificate : %v", err)
-	}
-	return cert, nil
 }

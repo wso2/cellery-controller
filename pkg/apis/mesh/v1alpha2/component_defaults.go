@@ -24,22 +24,22 @@ import (
 	"cellery.io/cellery-controller/pkg/ptr"
 )
 
-func (c *Component) SetDefaults() {
-	c.Spec.SetDefaults()
-	c.Status.SetDefaults()
+func (c *Component) Default() {
+	c.Spec.Default()
+	c.Status.Default()
 }
 
-func (cs *ComponentSpec) SetDefaults() {
+func (cs *ComponentSpec) Default() {
 	if cs.Type == "" {
 		cs.Type = ComponentTypeDeployment
 	}
-	cs.ScalingPolicy.SetDefaults()
+	//cs.ScalingPolicy.Default()
 	for i, _ := range cs.Ports {
-		cs.Ports[i].SetDefaults()
+		cs.Ports[i].Default()
 	}
 }
 
-func (sp *ComponentScalingPolicy) SetDefaults() {
+func (sp *ComponentScalingPolicy) Default() {
 	if sp.Replicas == nil && sp.Hpa == nil && sp.Kpa == nil {
 		sp.Replicas = ptr.Int32(1)
 	}
@@ -52,7 +52,7 @@ func (sp *ComponentScalingPolicy) SetDefaults() {
 	}
 }
 
-func (pm *PortMapping) SetDefaults() {
+func (pm *PortMapping) Default() {
 	if pm.Protocol == "" {
 		pm.Protocol = ProtocolTCP
 	}
@@ -61,7 +61,7 @@ func (pm *PortMapping) SetDefaults() {
 	}
 }
 
-func (cstat *ComponentStatus) SetDefaults() {
+func (cstat *ComponentStatus) Default() {
 	if cstat.Status == "" {
 		cstat.Status = ComponentCurrentStatusUnknown
 	}

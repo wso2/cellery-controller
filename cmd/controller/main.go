@@ -41,6 +41,7 @@ import (
 
 const (
 	threadsPerController = 2
+	componentName        = "Controller"
 )
 
 var (
@@ -60,7 +61,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	logger.Info(version.String())
+	logger.Info(version.String(componentName))
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {

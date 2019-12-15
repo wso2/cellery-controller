@@ -161,7 +161,7 @@ func (r *reconciler) Reconcile(key string) error {
 }
 
 func (r *reconciler) reconcile(cell *v1alpha2.Cell) error {
-	cell.SetDefaults()
+	cell.Default()
 	rErrs := &controller.ReconcileErrors{}
 
 	rErrs.Add(r.reconcileNetworkPolicy(cell))

@@ -156,7 +156,7 @@ func (r *reconciler) Reconcile(key string) error {
 }
 
 func (r *reconciler) reconcile(tokenService *v1alpha2.TokenService) error {
-	tokenService.SetDefaults()
+	tokenService.Default()
 	rErrs := &controller.ReconcileErrors{}
 	rErrs.Add(r.reconcileService(tokenService))
 	rErrs.Add(r.reconcileConfigMap(tokenService))

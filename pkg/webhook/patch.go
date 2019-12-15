@@ -16,24 +16,31 @@
  * under the License.
  */
 
-package version
+package webhook
 
 import (
-	"fmt"
-	"runtime"
+	"encoding/json"
+	"regexp"
+
+	"github.com/mattbaird/jsonpatch"
 )
 
-var (
-	buildVersion     = "unknown"
-	buildGitRevision = "unknown"
-	buildTime        = "unknown"
-)
+var statusFieldRegexp = regexp.MustCompile("^/.+/status")
 
-func String(component string) string {
-	return fmt.Sprintf("%v [Version: %v, Git Revision: %v, Go Version: %v, Build Time: %v]",
-		component,
-		buildVersion,
-		buildGitRevision,
-		runtime.Version(),
-		buildTime)
+func CreatePatch(originalJson []byte, modified interface{}) ([]byte, error) {
+	modifiedJson, err := json.Marshal(modified)
+	if err != nil {
+		return nil, err
+	}
+	patches, err := jsonpatch.CreatePatch(originalJson, modifiedJson)
+	var filteredPatches []jsonpatch.JsonPatchOperation
+	for _, p := range patches {
+		if !statusFieldRegexp.MatchString(p.Path) {
+			filteredPatches = append(filteredPatches, p)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(filteredPatches)
 }

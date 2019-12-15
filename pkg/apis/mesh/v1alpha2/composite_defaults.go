@@ -18,13 +18,15 @@
 
 package v1alpha2
 
-func (c *Composite) SetDefaults() {
+func (c *Composite) Default() {
 	c.Spec.SetDefaults()
 	c.Status.SetDefaults()
 }
 
 func (cs *CompositeSpec) SetDefaults() {
-
+	for i, _ := range cs.Components {
+		cs.Components[i].Spec.Default()
+	}
 }
 
 func (cstat *CompositeStatus) SetDefaults() {

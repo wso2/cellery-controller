@@ -54,20 +54,28 @@ type server struct {
 	kubeClient kubernetes.Interface
 	options    *ServerOptions
 	logger     *zap.SugaredLogger
-	validators map[schema.GroupVersionKind]func() apis.Validatable
+	defaulters map[schema.GroupVersionKind]apis.Defaulter
+	validators map[schema.GroupVersionKind]apis.Validator
 }
 
 func NewServer(kubeClient kubernetes.Interface, opt ServerOptions, logger *zap.SugaredLogger) *server {
 	return &server{
 		kubeClient: kubeClient,
 		options:    &opt,
-		logger:     logger.Named("admission-webhook"),
-		validators: map[schema.GroupVersionKind]func() apis.Validatable{
-			v1alpha2.SchemeGroupVersion.WithKind("Component"):    func() apis.Validatable { return &v1alpha2.Component{} },
-			v1alpha2.SchemeGroupVersion.WithKind("Gateway"):      func() apis.Validatable { return &v1alpha2.Gateway{} },
-			v1alpha2.SchemeGroupVersion.WithKind("TokenService"): func() apis.Validatable { return &v1alpha2.TokenService{} },
-			v1alpha2.SchemeGroupVersion.WithKind("Cell"):         func() apis.Validatable { return &v1alpha2.Cell{} },
-			v1alpha2.SchemeGroupVersion.WithKind("Composite"):    func() apis.Validatable { return &v1alpha2.Composite{} },
+		logger:     logger.Named("webhook"),
+		defaulters: map[schema.GroupVersionKind]apis.Defaulter{
+			v1alpha2.SchemeGroupVersion.WithKind("Component"):    &v1alpha2.Component{},
+			v1alpha2.SchemeGroupVersion.WithKind("Gateway"):      &v1alpha2.Gateway{},
+			v1alpha2.SchemeGroupVersion.WithKind("TokenService"): &v1alpha2.TokenService{},
+			v1alpha2.SchemeGroupVersion.WithKind("Cell"):         &v1alpha2.Cell{},
+			v1alpha2.SchemeGroupVersion.WithKind("Composite"):    &v1alpha2.Composite{},
+		},
+		validators: map[schema.GroupVersionKind]apis.Validator{
+			v1alpha2.SchemeGroupVersion.WithKind("Component"):    &v1alpha2.Component{},
+			v1alpha2.SchemeGroupVersion.WithKind("Gateway"):      &v1alpha2.Gateway{},
+			v1alpha2.SchemeGroupVersion.WithKind("TokenService"): &v1alpha2.TokenService{},
+			v1alpha2.SchemeGroupVersion.WithKind("Cell"):         &v1alpha2.Cell{},
+			v1alpha2.SchemeGroupVersion.WithKind("Composite"):    &v1alpha2.Composite{},
 		},
 	}
 }
@@ -139,32 +147,60 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) mutate(req *admissionv1beta1.AdmissionRequest) *admissionv1beta1.AdmissionResponse {
-	// todo: implement defaulting mutations
-	return &admissionv1beta1.AdmissionResponse{Allowed: true}
-}
-
-func (s *server) validate(req *admissionv1beta1.AdmissionRequest) *admissionv1beta1.AdmissionResponse {
-	logger := s.makeLogger("validating", req)
-
-	logger.Info("Validating object")
+	logger := s.makeLogger("mutating", req)
+	logger.Info("Mutating object")
 
 	gvk := SchemaGroupVersionKind(req.Kind)
-	fn, ok := s.validators[gvk]
+	defaulter, ok := s.defaulters[gvk]
 	if !ok {
 		logger.Errorf("Unknown kind %v", gvk)
 		return makeErrorResponse("unknown kind %v", gvk)
 	}
-	obj := fn()
+
+	obj := defaulter.DeepCopyObject().(apis.Defaulter)
+	if err := json.Unmarshal(req.Object.Raw, &obj); err != nil {
+		logger.Errorf("Cannot not unmarshal raw object: %v", err)
+		return makeErrorResponse("cannot not unmarshal raw object: %v", err)
+	}
+	obj.Default()
+	patch, err := CreatePatch(req.Object.Raw, obj)
+	if err != nil {
+		logger.Errorf("Cannot create json patch: %v", err)
+		return makeErrorResponse("cannot create json patch: %v", err)
+	}
+	logger.Infof("Patch created: %s", string(patch))
+	return &admissionv1beta1.AdmissionResponse{
+		Allowed: true,
+		Patch:   patch,
+		PatchType: func() *admissionv1beta1.PatchType {
+			pt := admissionv1beta1.PatchTypeJSONPatch
+			return &pt
+		}(),
+	}
+}
+
+func (s *server) validate(req *admissionv1beta1.AdmissionRequest) *admissionv1beta1.AdmissionResponse {
+	logger := s.makeLogger("validating", req)
+	logger.Info("Validating object")
+
+	gvk := SchemaGroupVersionKind(req.Kind)
+	validator, ok := s.validators[gvk]
+	if !ok {
+		logger.Errorf("Unknown kind %v", gvk)
+		return makeErrorResponse("unknown kind %v", gvk)
+	}
+	obj := validator.DeepCopyObject().(apis.Validator)
 	if err := json.Unmarshal(req.Object.Raw, &obj); err != nil {
 		logger.Errorf("Cannot not unmarshal raw object: %v", err)
 		return makeErrorResponse("cannot not unmarshal raw object: %v", err)
 	}
 
-	if err := obj.Validate(); err != nil {
+	if allErrs := obj.Validate(); len(allErrs) > 0 {
+		err := apierrors.NewInvalid(obj.GetObjectKind().GroupVersionKind().GroupKind(), obj.GetName(), allErrs)
 		logger.Errorf("Validation failed: %v", err)
 		return makeErrorResponse("validation failed: %v", err)
 	}
-
+	logger.Info("Validation success")
 	return &admissionv1beta1.AdmissionResponse{Allowed: true}
 }
 
