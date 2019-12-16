@@ -21,6 +21,8 @@ package v1alpha2
 import (
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"cellery.io/cellery-controller/pkg/ptr"
 )
 
@@ -33,7 +35,16 @@ func (cs *ComponentSpec) Default() {
 	if cs.Type == "" {
 		cs.Type = ComponentTypeDeployment
 	}
-	//cs.ScalingPolicy.Default()
+	cs.ScalingPolicy.Default()
+
+	for i := range cs.Template.Containers {
+		for j := range cs.Template.Containers[i].Ports {
+			if len(cs.Template.Containers[i].Ports[j].Protocol) == 0 {
+				cs.Template.Containers[i].Ports[j].Protocol = corev1.ProtocolTCP
+			}
+		}
+	}
+
 	for i, _ := range cs.Ports {
 		cs.Ports[i].Default()
 	}
