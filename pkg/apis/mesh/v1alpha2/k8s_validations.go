@@ -1732,9 +1732,9 @@ func ValidateVolumeMounts(mounts []corev1.VolumeMount, voldevices map[string]str
 		if len(mnt.Name) == 0 {
 			allErrs = append(allErrs, field.Required(idxPath.Child("name"), ""))
 		}
-		if !IsMatchedVolume(mnt.Name, volumes) {
-			allErrs = append(allErrs, field.NotFound(idxPath.Child("name"), mnt.Name))
-		}
+		//if !IsMatchedVolume(mnt.Name, volumes) {
+		//	allErrs = append(allErrs, field.NotFound(idxPath.Child("name"), mnt.Name))
+		//}
 		if len(mnt.MountPath) == 0 {
 			allErrs = append(allErrs, field.Required(idxPath.Child("mountPath"), ""))
 		}
